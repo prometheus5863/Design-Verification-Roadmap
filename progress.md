@@ -7,7 +7,7 @@ Last updated: 2026-08-22
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
 - [x] Sequential logic review (latches vs. flip-flops, FSMs, timing basics)
-- [ ] Verilog-2001 fundamentals (modules, always blocks, blocking vs.
+- [x] Verilog-2001 fundamentals (modules, always blocks, blocking vs.
       non-blocking assignment)
 - [ ] Synthesizable coding style + simple self-checking testbenches
 - [ ] Milestone: synchronous FIFO or FSM design + directed testbench
