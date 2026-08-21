@@ -2,11 +2,11 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
-- [ ] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
-- [ ] Sequential logic review (latches vs. flip-flops, FSMs, timing basics)
+- [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
+- [x] Sequential logic review (latches vs. flip-flops, FSMs, timing basics)
 - [ ] Verilog-2001 fundamentals (modules, always blocks, blocking vs.
       non-blocking assignment)
 - [ ] Synthesizable coding style + simple self-checking testbenches
