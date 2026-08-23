@@ -1,0 +1,12 @@
+$ iverilog -g2001 -o sim examples/phase1/shift_register_blocking_vs_nonblocking.v
+$ vvp sim
+(run with Icarus Verilog 10.3, Ubuntu 22.04 amd64, 2026-08-23 -- retroactively
+ verifying the 2026-08-22 example, which noted at the time that no simulator
+ was available in that session)
+
+---------------------------------------------------------
+Test complete after 12 driven cycles.
+errors_correct (DUT vs reference model)      = 0
+cycles where BUGGY q2 != CORRECT/reference q2 = 5
+PASS: shift_reg_correct matches the reference model on every checked cycle.
+EXPECTED: shift_reg_buggy diverges from correct behavior, demonstrating the blocking-assignment bug described in the accompanying notes.

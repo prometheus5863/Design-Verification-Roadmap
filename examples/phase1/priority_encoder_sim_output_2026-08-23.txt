@@ -1,0 +1,9 @@
+$ iverilog -g2012 -o sim examples/phase1/priority_encoder_style_and_testbench.v
+$ vvp sim
+(run with Icarus Verilog 10.3, Ubuntu 22.04 amd64, 2026-08-23)
+
+Running exhaustive 4-bit priority encoder self-check (16 vectors)...
+[FAIL][latch_bug] in=0000: got valid=x enc=xx, expected valid=0 enc=00
+---------------------------------------------------------
+PASS: priority_encoder_correct matched reference on all 16 vectors.
+EXPECTED-FAIL: priority_encoder_latch_bug had 1 mismatch(es) out of 16 vectors (demonstrates the missing-case/latch-inference bug -- expected to fail specifically on in=4'b0000, where valid/enc are left at their stale simulation value instead of the specified valid=0).
