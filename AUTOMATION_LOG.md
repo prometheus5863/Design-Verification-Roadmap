@@ -109,3 +109,92 @@ same tooling limitation.
 
 **Commits this run:** 2 (combinational/sequential logic review notes,
 Verilog fundamentals + blocking/non-blocking notes and code).
+
+---
+
+## 2026-08-23 — Phase 1 complete; tooling blocker resolved
+
+**Status:** Third automation run. Repo state at start: README (6-phase
+roadmap), progress.md (Phase 1's first 3 items done, "Synthesizable
+coding style..." and the Phase 1 milestone still unstarted),
+AUTOMATION_LOG.md through 2026-08-22. Every prior session had flagged
+the same tooling blocker: no Icarus Verilog available, no root/apt
+access to install it.
+
+**Work done:**
+
+1. **Tooling blocker resolved.** Found that Icarus Verilog's Ubuntu
+   22.04 ("jammy") `.deb` package can be downloaded directly from the
+   public Ubuntu archive and extracted with `dpkg-deb -x`, which only
+   unpacks files and does not require install/root privileges (unlike
+   `apt-get install`, which fails on a dpkg lock permission error in
+   this sandbox). The extracted `iverilog`/`vvp` binaries need `-B`/`-M`
+   flags pointing at the extracted (non-standard-path) helper-library
+   directory. Scripted as `tools/setup_iverilog.sh` for future sessions
+   to reuse without rediscovering this. Verified working: Icarus
+   Verilog 10.3.
+
+2. **Study notes + code**
+   (`notes/2026-08-23-synthesizable-coding-style-and-self-checking-testbenches.md`,
+   `examples/phase1/priority_encoder_style_and_testbench.v`): Covers the
+   practical synthesis/simulation-mismatch checklist (incomplete
+   sensitivity lists, latch inference from incomplete case/if coverage,
+   mixed blocking/non-blocking, RTL delays, multi-driver signals,
+   combinational feedback, reset style consistency) and the
+   self-checking testbench pattern (independent reference model,
+   reusable stimulus tasks, error-counting checker). Companion example:
+   a clean vs. deliberately-buggy (missing-case, latch-inferring)
+   priority encoder with an exhaustive 16-vector self-checking
+   testbench. **Actually compiled and run** this session (using the
+   newly-working Icarus Verilog) — both the clean and buggy variants
+   behaved exactly as predicted; captured output committed
+   (`examples/phase1/priority_encoder_sim_output_2026-08-23.txt`). Also
+   retroactively compiled and ran the 2026-08-22 shift-register example,
+   which that session could not simulate — it also matched its
+   previously hand-derived expected behavior exactly
+   (`examples/phase1/shift_register_sim_output_2026-08-23.txt`). Marked
+   "Synthesizable coding style + simple self-checking testbenches" done
+   in `progress.md`.
+
+3. **Phase 1 milestone completed**
+   (`examples/phase1_milestone/sync_fifo.v`,
+   `sync_fifo_directed_tb.v`): parameterized single-clock synchronous
+   FIFO (extra-pointer-bit full/empty technique, first-word-fall-through
+   read) with a directed, self-checking testbench (independent
+   SystemVerilog-queue reference model, 7 test phases: reset,
+   fill-to-full, illegal-push-while-full, drain-to-empty with ordering
+   check, illegal-pop-while-empty, wrap-around stress, simultaneous
+   push+pop). Compiled and run with Icarus Verilog 10.3: **138 checks, 0
+   errors**, all phases pass. Captured console output and a real,
+   non-empty VCD waveform dump both committed as evidence
+   (`sync_fifo_sim_output_2026-08-23.txt`, `sync_fifo_wave.vcd` — GTKWave
+   itself is not available in this sandbox, so the waveform has not been
+   visually inspected, only confirmed to be a real, populated dump).
+   Two Icarus-10.3-specific language-support gaps were hit and worked
+   around (no immediate `assert` statement support; `void'(...)` cast
+   syntax not accepted) and documented for future sessions. Marked the
+   Phase 1 milestone done in `progress.md`.
+
+**Phase 1 (Digital Logic & HDL Fundamentals) is now fully complete.**
+
+**Web search availability:** WebSearch was available this session but
+was not used, since all of today's content (synthesizable-style
+conventions, FIFO design technique, self-checking testbench structure)
+is stable, standard digital-design/verification knowledge rather than
+time-sensitive information — consistent with the previous two sessions'
+approach to comparable foundational content.
+
+**Next run should:** begin Phase 2 (SystemVerilog for Verification),
+starting with SV data types and interfaces/modports per the roadmap
+README. `tools/setup_iverilog.sh` should be reused directly rather than
+re-solved. Icarus Verilog 10.3's SystemVerilog support is reasonable but
+incomplete (see the two gaps found and documented today) — Phase 2's
+OOP/randomization/functional-coverage constructs are more advanced
+SystemVerilog than anything exercised so far, and should be spot-checked
+against this simulator early in that work rather than assumed to
+compile, given the gaps already found in even fairly basic constructs.
+
+**Commits this run:** 5 (synthesizable-style notes + example + sim
+evidence + tools/setup_iverilog.sh, progress.md update for that item,
+Phase 1 milestone FIFO design + testbench + sim evidence + waveform, this
+AUTOMATION_LOG.md update).
