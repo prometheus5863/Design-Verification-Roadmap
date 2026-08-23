@@ -1,0 +1,12 @@
+$ iverilog -g2012 -o sim sync_fifo.v sync_fifo_directed_tb.v
+$ vvp sim
+(run with Icarus Verilog 10.3, Ubuntu 22.04 amd64, 2026-08-23)
+
+VCD info: dumpfile sync_fifo_wave.vcd opened for output.
+ERROR: sync_fifo.v:89: sync_fifo: wr_en asserted while full=1 at time 115000 -- write dropped, pointer not advanced (protocol violation, not a design feature)
+       Time: 115000 Scope: tb_sync_fifo.dut
+ERROR: sync_fifo.v:108: sync_fifo: rd_en asserted while empty=1 at time 205000 -- read ignored, pointer not advanced (protocol violation, not a design feature)
+       Time: 205000 Scope: tb_sync_fifo.dut
+---------------------------------------------------------
+Total checks = 138, errors = 0
+PASS: sync_fifo matched the reference model on every checked cycle across all 7 directed test phases.

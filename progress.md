@@ -10,7 +10,7 @@ Last updated: 2026-08-23
 - [x] Verilog-2001 fundamentals (modules, always blocks, blocking vs.
       non-blocking assignment)
 - [x] Synthesizable coding style + simple self-checking testbenches
-- [ ] Milestone: synchronous FIFO or FSM design + directed testbench
+- [x] Milestone: synchronous FIFO or FSM design + directed testbench
       (Icarus Verilog + GTKWave)
 
 ## Phase 2 — SystemVerilog for Verification
