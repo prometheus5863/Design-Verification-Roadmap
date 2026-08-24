@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -14,7 +14,7 @@ Last updated: 2026-08-23
       (Icarus Verilog + GTKWave)
 
 ## Phase 2 — SystemVerilog for Verification
-- [ ] SV data types, interfaces/modports
+- [x] SV data types, interfaces/modports
 - [ ] OOP testbench components (transactions, generators, drivers,
       monitors, scoreboards)
 - [ ] Randomization (`rand`/`randc`, constraints, `randomize()`, `dist`)
