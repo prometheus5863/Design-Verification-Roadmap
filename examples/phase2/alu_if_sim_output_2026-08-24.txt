@@ -1,0 +1,17 @@
+VCD info: dumpfile alu_if_wave.vcd opened for output.
+PASS [op=ALU_ADD a=10 b=20]: result=30 flags={z,c,ovf}=000
+PASS [op=ALU_ADD a=255 b=1]: result=0 flags={z,c,ovf}=110
+PASS [op=ALU_ADD a=127 b=1]: result=128 flags={z,c,ovf}=001
+PASS [op=ALU_SUB a=5 b=5]: result=0 flags={z,c,ovf}=100
+PASS [op=ALU_SUB a=0 b=1]: result=255 flags={z,c,ovf}=010
+PASS [op=ALU_SUB a=128 b=1]: result=127 flags={z,c,ovf}=001
+PASS [op=ALU_AND a=240 b=15]: result=0 flags={z,c,ovf}=100
+PASS [op=ALU_AND a=170 b=85]: result=0 flags={z,c,ovf}=100
+PASS [op=ALU_OR a=240 b=15]: result=255 flags={z,c,ovf}=000
+PASS [op=ALU_OR a=170 b=85]: result=255 flags={z,c,ovf}=000
+PASS [op=ALU_XOR a=255 b=255]: result=0 flags={z,c,ovf}=100
+PASS [op=ALU_XOR a=170 b=15]: result=165 flags={z,c,ovf}=000
+------------------------------------------------------
+alu_if_tb: 12 checks run, 0 errors
+RESULT: ALL CHECKS PASSED
+------------------------------------------------------
