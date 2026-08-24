@@ -198,3 +198,81 @@ compile, given the gaps already found in even fairly basic constructs.
 evidence + tools/setup_iverilog.sh, progress.md update for that item,
 Phase 1 milestone FIFO design + testbench + sim evidence + waveform, this
 AUTOMATION_LOG.md update).
+
+---
+
+## 2026-08-24 — Phase 2 begins: SV data types + interfaces/modports
+
+**Status:** Fourth automation run. Repo state at start: Phase 1 fully
+complete (per 2026-08-23), Phase 2 not yet started, `tools/
+setup_iverilog.sh` working (Icarus Verilog 10.3).
+
+**Work done:**
+
+1. **Study notes**
+   (`notes/2026-08-24-systemverilog-data-types-interfaces-modports.md`):
+   Covers SV data types relevant to verification (`logic` vs. 2-state
+   types and why RTL/DUT signals should stay 4-state, packed vs.
+   unpacked arrays, `enum`, packed `struct`) and the interface/modport
+   connection idiom (single point of definition for both sides' views,
+   direction-checked at compile time -- the reason to use one at all,
+   and the same pattern a UVM virtual interface wraps in Phase 4).
+
+2. **Code + results** (`examples/phase2/alu_if_and_dut.sv`,
+   `examples/phase2/alu_if_tb.sv`,
+   `examples/phase2/alu_if_sim_output_2026-08-24.txt`,
+   `examples/phase2/alu_if_wave.vcd`): An 8-bit, one-cycle-latency ALU
+   (ADD/SUB/AND/OR/XOR) using a packed enum opcode (`alu_op_e`), a packed
+   struct for status flags (`alu_flags_s`), and an `alu_if` interface
+   with `dut`/`tb` modports. Directed, self-checking testbench: 12
+   vectors covering every opcode plus carry/overflow/zero corner cases,
+   with an independent reference model. **Actually compiled and run**
+   with Icarus Verilog 10.3: all 12 checks pass; a real, non-empty VCD
+   waveform was also captured.
+
+   Getting this to compile surfaced substantially more Icarus 10.3 SV
+   gaps than the two found on 2026-08-23, each confirmed with a minimal
+   standalone repro before being worked around (full detail and repro
+   descriptions in today's notes file, Section 5): interfaces cannot be
+   used as module ports in any syntax form; `always_comb`/`always_ff`/
+   `unique case` do not compile at all (plain `always @*`/
+   `always @(posedge ... or negedge ...)`/`case` -- already this repo's
+   Phase 1 style -- were used instead); SV assignment-pattern syntax
+   (`'{default: ...}`) does not compile for a struct target; declaring
+   an enum-typed variable inside a task or function scope (as a local or
+   an argument) crashes the compiler with an internal assertion
+   (packed-struct locals/arguments do not trigger this); explicit enum
+   casts and `enum.name()` are both rejected; `%p` is an unsupported
+   `$display` format; and functions cannot have `output` arguments
+   (worked around by using a `task` for the reference model instead, as
+   Phase 1 already did). Net assessment recorded in the notes: this
+   Icarus 10.3 build's practical SV support is closer to "Verilog-2001
+   plus typedef enum/struct declarations and always @* procedural
+   blocks" than to full IEEE 1800-2017 support -- directly relevant
+   heading into classes/randomization/coverage, which are all more
+   advanced SV than anything exercised today.
+
+3. **Progress tracking**: marked "SV data types, interfaces/modports"
+   done in `progress.md`.
+
+**Web search availability:** WebSearch was available this session but
+was not used, since today's content (SV data type semantics, interface/
+modport syntax and rationale, IEEE 1800 LRM behavior) is stable,
+standard language-reference material rather than time-sensitive
+information, consistent with prior sessions' approach to comparable
+foundational content. All of today's *tooling-gap* findings (Section 5
+of the notes) came from direct experimentation with the installed
+Icarus Verilog 10.3, not from search.
+
+**Next run should:** continue Phase 2 with "OOP testbench components
+(transactions, generators, drivers, monitors, scoreboards)." Given the
+enum-in-task/function crash and the no-function-output-arguments gap
+found today, class member declarations are untested territory and
+should be spot-checked with a minimal repro (e.g. a `transaction` class
+with a single `alu_op_e`-typed field) before writing a full class
+hierarchy, exactly as today's session did before committing to the
+interface/modport design.
+
+**Commits this run:** 3 (SV data types + interfaces/modports study
+notes, alu_if example code + compiled/simulated evidence, progress.md
+update; this AUTOMATION_LOG.md update commit makes 4).
