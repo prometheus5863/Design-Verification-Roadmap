@@ -361,3 +361,105 @@ example, exactly as today's session did for OOP components.
 **Commits this run:** 3 (OOP testbench example code + compiled/simulated
 evidence, study notes, progress.md update; this AUTOMATION_LOG.md update
 commit makes 4).
+
+---
+
+## 2026-08-26
+
+**Status:** Sixth automation run.
+
+**Repo state at start:** Phase 1 complete; Phase 2's first two items (SV
+data types/interfaces, OOP testbench components) complete as of
+2026-08-24/25. 2026-08-25's notes flagged that a quick probe suggested
+`randomize()` might not elaborate on this Icarus Verilog 10.3 build, and
+recommended opening today's session with a dedicated set of minimal
+repros before designing the milestone example -- exactly what this
+session did.
+
+**Work done:**
+
+1. **Tooling investigation + study notes**
+   (`notes/2026-08-26-randomization-rand-randc-constraints.md`): Ran a
+   dedicated set of minimal repros (kept in `/tmp/repro/`, not committed)
+   covering `rand`/`randc` field declarations, `constraint` blocks,
+   `inside`, `randomize()`, `randomize() with {...}`, and `dist`.
+   **Confirmed decisively: this Icarus Verilog 10.3 build has no
+   constrained-random support at all** -- `randomize()` is not
+   implemented for any class ("No function named `f.randomize' found in
+   this context" at elaboration), and `constraint`/`inside`/`dist` are
+   all explicitly rejected by the parser ("sorry: ... not supported
+   yet"). `rand`/`randc` field *declarations* parse fine on their own --
+   it is specifically the solver/method machinery that is absent. This
+   resolves 2026-08-25's open suspicion and is a materially bigger gap
+   than any found on 2026-08-23/24/25 (those had usable in-language
+   workarounds; this one does not -- native constrained-random simply
+   isn't present on this build). Also documents standard SV
+   randomization concepts (rand/randc semantics, constraint combination,
+   randomize() with, dist weighting) independent of the tooling finding.
+   WebSearch was available but not used, since this content is stable
+   IEEE 1800 LRM / standard textbook material, consistent with prior
+   sessions' approach; all tooling-gap findings came from direct
+   experimentation.
+
+2. **Two further, previously-undocumented tooling gaps found while
+   building today's example** (added to the notes file, Section 2):
+   inline class-instance declaration+construction (`Foo f = new();`)
+   does not parse (the two-statement `Foo f; f = new();` form -- already
+   used everywhere in this repo, it turns out by necessity -- works);
+   and calling a function whose return value is discarded ("called as a
+   task") from *within* another class task/function crashes the
+   elaborator, though the identical call works fine from a top-level
+   `initial` block. A third gap, found and worked around while
+   implementing the example itself (documented in the example file's own
+   header rather than the notes file, since it's implementation-specific
+   to today's code): unpacked fixed-size arrays as **class properties**
+   are fundamentally broken on this build (both assignment from within a
+   class method and external indexing crash with different assertions),
+   and SV queues inside classes are explicitly unsupported -- worked
+   around by moving the randc-like corner-value queue to module-level
+   (non-class) storage, which works fine (already proven safe by
+   `sync_fifo.v`'s memory array).
+
+3. **Code + results**
+   (`examples/phase2/alu_manual_constrained_random.sv`,
+   `alu_manual_constrained_random_sim_output_2026-08-26.txt`,
+   `alu_manual_constrained_random_wave.vcd`): Since native
+   `randomize()`/`constraint` are unavailable, built a hand-written
+   equivalent demonstrating the same concepts against the existing
+   `alu_dut` (reused unmodified): a manual `dist`-like weighted opcode
+   picker (cumulative-weight table + single `$urandom_range` draw,
+   biasing ALU_SUB to ~3/7 weight vs. uniform 1/5, since SUB's
+   borrow/overflow logic is the ALU's most bug-prone corner per the
+   2026-08-22 notes) and a manual `randc`-like corner-value queue
+   (Fisher-Yates shuffle + pointer over the 5 classic 8-bit boundary
+   values 0x00/0xFF/0x80/0x7F/0x01, guaranteeing each appears exactly
+   once per cycle by construction, applied to the `a` operand every 4th
+   transaction). Reused the existing scoreboard pattern unmodified for
+   checking. **Actually compiled and run** with Icarus Verilog 10.3: 20
+   transactions, 20/20 checks passed; op_raw histogram confirmed the
+   dist-like bias (SUB=13/20 vs. uniform ~4/20); corner-value coverage
+   confirmed the randc-like guarantee (all 5 corners hit exactly once
+   across the 5 corner-draw slots in 20 transactions). Real, non-empty
+   VCD waveform captured and committed alongside the console output.
+
+4. **Progress tracking**: marked "Randomization (rand/randc, constraints,
+   randomize(), dist)" done in `progress.md`, with an explicit caveat
+   noting the native-tooling gap and the workaround used, rather than a
+   bare checkmark that would misleadingly imply real constraint-solver
+   experience was exercised.
+
+**Next run should:** continue Phase 2 with "Functional coverage
+(`covergroup`/`coverpoint`/`cross`)." Given today's pattern of finding
+new gaps specifically when a construct is combined with classes (arrays,
+inline construction, nested void calls), the next session should open
+with minimal repros of `covergroup` both as a class member and at module
+level before committing to a design -- `covergroup`/`coverpoint`/`cross`
+are unexercised by anything in this repo so far and, like `randomize()`,
+could plausibly be entirely unimplemented on this build rather than
+partially supported; that should be established with a repro in the
+first few minutes of that session rather than assumed either way.
+
+**Commits this run:** 4 (randomization study notes + tooling-gap
+findings, manual constrained-random ALU example + compiled/simulated
+evidence, progress.md update, this AUTOMATION_LOG.md update commit
+makes 4).
