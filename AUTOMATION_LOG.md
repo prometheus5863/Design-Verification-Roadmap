@@ -276,3 +276,88 @@ interface/modport design.
 **Commits this run:** 3 (SV data types + interfaces/modports study
 notes, alu_if example code + compiled/simulated evidence, progress.md
 update; this AUTOMATION_LOG.md update commit makes 4).
+
+---
+
+## 2026-08-25
+
+**Status:** Fifth automation run.
+
+**Repo state at start:** Phase 1 complete; Phase 2's first item ("SV
+data types, interfaces/modports") complete as of 2026-08-24, with that
+session's own notes flagging "OOP testbench components
+(generator/driver/monitor/scoreboard as separate class objects)" as the
+next item -- exactly matching `progress.md`'s next unchecked box, so
+that was today's target.
+
+**Work done:**
+
+1. **Tooling investigation + code**
+   (`examples/phase2/alu_oop_tb_components.sv`,
+   `examples/phase2/alu_oop_tb_sim_output_2026-08-25.txt`,
+   `examples/phase2/alu_oop_tb_wave.vcd`): Before writing the full
+   example, ran ~10 minimal standalone repros against the installed
+   Icarus Verilog 10.3 build to find out which class-related SV
+   constructs a generator/scoreboard testbench would actually need
+   (classes calling into other classes' tasks had not been exercised by
+   any prior example in this repo). Found: `mailbox`/`semaphore` are not
+   implemented at all; a class cannot hold a `virtual <interface>`
+   member (the exact mechanism a real driver/monitor class needs to
+   reach DUT pins); a class handle can be returned via a task's `output`
+   argument but NOT as an `input` argument or a function return value;
+   `ref` arguments fail outright; queues/arrays of class-handle type
+   crash or reject variable indexing (built-in-scalar-type queues work
+   fine); `$sformatf()` is unimplemented; `checker` is a reserved
+   identifier; and, most dangerously, `n++` on a class member field
+   silently under-accumulates across repeated calls with no error,
+   while `n = n + 1` works correctly. Designed the example around these
+   confirmed-working constructs rather than discovering the gaps
+   mid-file: `alu_transaction` (stimulus encapsulation + manual
+   `$urandom_range`-based fill), `alu_generator` (hands back one
+   transaction at a time via an `output` arg), `alu_scoreboard`
+   (independent reference model + persistent checks/errors counters
+   using the explicit-increment form). Driver/monitor stayed procedural
+   given the virtual-interface gap. Compiled and ran against the
+   existing `alu_dut` (reused unmodified from `alu_if_and_dut.sv`): 12
+   pseudo-random transactions, 12/12 passed against the scoreboard's own
+   model; separately verified with a throwaway negative-path repro that
+   the scoreboard actually flags a wrong result rather than always
+   passing, before discarding that repro.
+
+2. **Study notes**
+   (`notes/2026-08-25-oop-testbench-components.md`): Covers the standard
+   transaction/generator/driver/monitor/scoreboard architecture and why
+   it replaces a monolithic directed testbench (Sutherland & Spear ch.
+   9-10; ChipVerify; Sunburst Design/SNUG background -- same source
+   family as prior sessions), then documents the full tooling
+   investigation from item 1 as a reference table, and flags two
+   forward-looking risks: `randomize()` itself also appears unsupported
+   on this build (briefly probed, not the focus this session -- needs a
+   proper confirming repro at the start of the Randomization milestone),
+   and full UVM (Phase 4) will need a different simulator entirely given
+   how many of today's gaps (virtual interfaces, TLM-like channels,
+   polymorphic handle containers) UVM's base classes depend on
+   simultaneously.
+
+3. **Progress tracking**: marked "OOP testbench components (transactions,
+   generators, drivers, monitors, scoreboards)" done in `progress.md`.
+
+**Web search availability:** WebSearch was available this session but
+was not used for the methodology background (transaction/generator/
+driver/monitor/scoreboard architecture is stable, standard verification
+knowledge), consistent with prior sessions' approach to comparable
+foundational content. All of today's tooling-gap findings came from
+direct experimentation with the installed Icarus Verilog 10.3, not from
+search.
+
+**Next run should:** continue Phase 2 with "Randomization (`rand`/
+`randc`, constraints, `randomize()`, `dist`)." Given today's finding
+that plain `randomize()` calls already failed to elaborate in passing,
+the next session should open with a proper, dedicated set of minimal
+repros (a `rand` field, a `constraint` block, `randomize()`,
+`randomize() with {...}`, and `randc`) before designing that milestone's
+example, exactly as today's session did for OOP components.
+
+**Commits this run:** 3 (OOP testbench example code + compiled/simulated
+evidence, study notes, progress.md update; this AUTOMATION_LOG.md update
+commit makes 4).
