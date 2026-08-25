@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-25
+Last updated: 2026-08-26
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -17,7 +17,12 @@ Last updated: 2026-08-25
 - [x] SV data types, interfaces/modports
 - [x] OOP testbench components (transactions, generators, drivers,
       monitors, scoreboards)
-- [ ] Randomization (`rand`/`randc`, constraints, `randomize()`, `dist`)
+- [x] Randomization (`rand`/`randc`, constraints, `randomize()`, `dist`)
+      -- concepts covered; native `randomize()`/`constraint`/`inside`/`dist`
+      confirmed UNAVAILABLE on this build's Icarus Verilog 10.3 (see
+      notes/2026-08-26-*.md); demonstrated via hand-written
+      `$urandom_range`-based equivalents instead (manual weighted-`dist`
+      opcode picker, manual `randc`-like corner-value queue)
 - [ ] Functional coverage (`covergroup`/`coverpoint`/`cross`)
 - [ ] Basic SVA (`assert property`, immediate vs. concurrent)
 - [ ] Milestone: constrained-random SV testbench w/ scoreboard + coverage
