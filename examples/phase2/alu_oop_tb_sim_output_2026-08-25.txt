@@ -1,0 +1,18 @@
+VCD info: dumpfile alu_oop_tb_wave.vcd opened for output.
+PASS [txn 0, ALU_ADD]: a=146 b=64 result=210 flags={z,c,ovf}=000
+PASS [txn 1, ALU_OR]: a=49 b=134 result=183 flags={z,c,ovf}=000
+PASS [txn 2, ALU_AND]: a=50 b=9 result=0 flags={z,c,ovf}=100
+PASS [txn 3, ALU_OR]: a=134 b=187 result=191 flags={z,c,ovf}=000
+PASS [txn 4, ALU_XOR]: a=246 b=198 result=48 flags={z,c,ovf}=000
+PASS [txn 5, ALU_SUB]: a=99 b=98 result=1 flags={z,c,ovf}=000
+PASS [txn 6, ALU_ADD]: a=242 b=59 result=45 flags={z,c,ovf}=010
+PASS [txn 7, ALU_AND]: a=199 b=249 result=193 flags={z,c,ovf}=000
+PASS [txn 8, ALU_OR]: a=116 b=98 result=118 flags={z,c,ovf}=000
+PASS [txn 9, ALU_ADD]: a=94 b=22 result=116 flags={z,c,ovf}=000
+PASS [txn 10, ALU_SUB]: a=49 b=133 result=172 flags={z,c,ovf}=011
+PASS [txn 11, ALU_SUB]: a=144 b=213 result=187 flags={z,c,ovf}=010
+------------------------------------------------------
+alu_scoreboard: 12 checks, 0 errors
+RESULT: ALL CHECKS PASSED
+------------------------------------------------------
+alu_generator produced 12 transactions total
