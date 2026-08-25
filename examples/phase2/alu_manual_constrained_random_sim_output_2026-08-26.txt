@@ -1,0 +1,28 @@
+$ iverilog -g2012 -o sim alu_if_and_dut.sv alu_manual_constrained_random.sv && vvp sim
+VCD info: dumpfile alu_manual_constrained_random_wave.vcd opened for output.
+PASS [txn 0, ALU_SUB       ]: a=4 b=146 result=114 flags={z,c,ovf}=010
+PASS [txn 1, ALU_SUB       ]: a=198 b=49 result=149 flags={z,c,ovf}=000
+PASS [txn 2, ALU_ADD       ]: a=128 b=50 result=178 flags={z,c,ovf}=000
+PASS [txn 3, ALU_OR CORNER]: a=0 b=134 result=134 flags={z,c,ovf}=000
+PASS [txn 4, ALU_SUB       ]: a=85 b=99 result=242 flags={z,c,ovf}=010
+PASS [txn 5, ALU_SUB       ]: a=9 b=242 result=23 flags={z,c,ovf}=010
+PASS [txn 6, ALU_XOR       ]: a=103 b=199 result=160 flags={z,c,ovf}=000
+PASS [txn 7, ALU_SUB CORNER]: a=255 b=116 result=139 flags={z,c,ovf}=000
+PASS [txn 8, ALU_SUB       ]: a=22 b=174 result=104 flags={z,c,ovf}=010
+PASS [txn 9, ALU_SUB       ]: a=133 b=50 result=83 flags={z,c,ovf}=001
+PASS [txn 10, ALU_SUB       ]: a=213 b=64 result=149 flags={z,c,ovf}=000
+PASS [txn 11, ALU_SUB CORNER]: a=128 b=78 result=50 flags={z,c,ovf}=001
+PASS [txn 12, ALU_ADD       ]: a=41 b=9 result=50 flags={z,c,ovf}=000
+PASS [txn 13, ALU_SUB       ]: a=1 b=181 result=76 flags={z,c,ovf}=010
+PASS [txn 14, ALU_SUB       ]: a=103 b=87 result=16 flags={z,c,ovf}=000
+PASS [txn 15, ALU_SUB CORNER]: a=1 b=145 result=112 flags={z,c,ovf}=010
+PASS [txn 16, ALU_ADD       ]: a=249 b=101 result=94 flags={z,c,ovf}=010
+PASS [txn 17, ALU_AND       ]: a=108 b=197 result=68 flags={z,c,ovf}=000
+PASS [txn 18, ALU_SUB       ]: a=245 b=188 result=57 flags={z,c,ovf}=000
+PASS [txn 19, ALU_XOR CORNER]: a=127 b=219 result=164 flags={z,c,ovf}=000
+------------------------------------------------------
+alu_scoreboard: 20 checks, 0 errors
+RESULT: ALL CHECKS PASSED
+------------------------------------------------------
+op_raw histogram: ADD=3 SUB=13 AND=1 OR=1 XOR=2 (expect SUB notably above uniform ~20/5 each)
+corner-value coverage (5 corners, 5 draws): 0x00=1 0xFF=1 0x80=1 0x7F=1 0x01=1 (expect each exactly 1, one full randc-like cycle)
