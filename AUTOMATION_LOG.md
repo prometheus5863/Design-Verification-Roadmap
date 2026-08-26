@@ -463,3 +463,92 @@ first few minutes of that session rather than assumed either way.
 findings, manual constrained-random ALU example + compiled/simulated
 evidence, progress.md update, this AUTOMATION_LOG.md update commit
 makes 4).
+
+---
+
+## 2026-08-26 (second session)
+
+**Status:** Seventh automation run. See the graphene thesis repo's
+AUTOMATION_LOG.md (2026-08-26, second session entry) for the same
+dating note: the previous "## 2026-08-26" entry above was actually
+written the evening before in UTC terms (host clock is IST); this
+session genuinely started ~14 hours later at 2026-08-26 17:38 UTC.
+
+**Repo state at start:** Phase 1 complete; Phase 2's first three items
+(SV data types/interfaces, OOP testbench components, randomization) done
+as of 2026-08-24/25/26-first-session. `progress.md`'s next unchecked item:
+"Functional coverage (`covergroup`/`coverpoint`/`cross`)." The
+2026-08-26 first-session notes explicitly recommended opening this
+session with minimal `covergroup` repros before designing an example,
+given the possibility it could be entirely unimplemented like
+`randomize()` turned out to be -- exactly what this session did.
+
+**Work done:**
+
+1. **Tooling investigation + study notes**
+   (`notes/2026-08-26-functional-coverage-covergroup-gap.md`): A minimal
+   module-scope `covergroup`/`coverpoint` repro (kept in `/tmp/repro/`,
+   not committed) confirmed the parser does not recognize the
+   `covergroup` keyword at all -- a parse-level rejection, so no
+   separate class-member repro was needed to establish the same result
+   would hold there too. This is a bigger, cleaner-cut gap than most
+   2026-08-23/24/25 findings (which had partial-support nuances) and
+   matches the same category as 2026-08-26 first session's
+   `randomize()`/`constraint` result: an entire IEEE 1800 verification
+   feature area absent from this build. Notes also cover standard
+   covergroup/coverpoint/cross/bins/`option.at_least` semantics and the
+   coverage-as-stopping-criterion methodology point, independent of the
+   tooling finding.
+
+2. **A second tooling gap found while building the example**: an
+   explicit `int'(op_raw)` cast of a `logic [2:0]` value crashes the
+   elaborator (`assert: elab_expr.cc:2630`, "cast type and subject
+   differ in signedness"); worked around with a plain assignment
+   instead. Documented in both the notes and the example file's header.
+
+3. **Code + results**
+   (`examples/phase2/alu_manual_functional_coverage.sv`,
+   `alu_manual_functional_coverage_sim_output_2026-08-26.txt`,
+   `alu_manual_functional_coverage_wave.vcd`): Hand-implemented
+   functional-coverage model reusing `alu_dut`, the scoreboard, and the
+   dist-like/randc-like generators from `alu_manual_constrained_random.sv`
+   (2026-08-26 first session) unmodified: a 5-bin opcode coverpoint, a
+   3-bin operand-corner (ZERO/MAX/MID) coverpoint, a 15-cell cross
+   between them, `at_least`-N-style closure targets, and a
+   coverage-driven simulation loop that stops generating new stimulus
+   once overall coverage reaches 100% (capped at 4000 transactions so a
+   badly-tuned generator can't hang the run). Before committing to a
+   corner-value draw rate, actually measured (not assumed) both a 1-in-4
+   (matching the existing randomization example) and a 1-in-2 rate
+   against the 4000-transaction cap -- both closed comfortably (252 and
+   384 transactions respectively; 1-in-4 closed *faster* in this run,
+   the opposite of the naive expectation, a reminder that with this
+   build's deterministically-seeded `$urandom` this is one fixed draw
+   sequence per rate, not a general statistical claim) -- and kept the
+   established 1-in-4 rate rather than introducing an unmotivated
+   difference from the existing file. Compiled and run with Icarus
+   Verilog 10.3: 252 transactions, 0 scoreboard errors, all coverage
+   bins (op, a_corner, and the 15-bin cross) closed at 100%. Real,
+   non-empty VCD waveform captured and committed alongside the console
+   output.
+
+4. **Progress tracking**: marked "Functional coverage
+   (covergroup/coverpoint/cross)" done in `progress.md`, with the same
+   explicit-caveat style used for the 2026-08-26 first-session
+   randomization entry (native tooling gap + workaround stated, not a
+   bare checkmark).
+
+**Next run should:** continue Phase 2 with "Basic SVA (`assert
+property`, immediate vs. concurrent)." The 2026-08-23 notes already
+found that *immediate* `assert` statements are unsupported on this
+build; concurrent `assert property` (a materially different, more
+complex SVA construct built on sequence/property expressions) has not
+been tested at all and, given the pattern established across every
+session since 2026-08-25 (constrained-random and now functional
+coverage both entirely absent), should not be assumed to work --
+confirm with a minimal repro before designing that session's example,
+exactly as this session and the previous one did.
+
+**Commits this run:** 4 (functional-coverage study notes, coverage
+model code + compiled/simulated evidence, progress.md update, this log
+entry).
