@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-26
+Last updated: 2026-08-26 (second session)
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -23,7 +23,14 @@ Last updated: 2026-08-26
       notes/2026-08-26-*.md); demonstrated via hand-written
       `$urandom_range`-based equivalents instead (manual weighted-`dist`
       opcode picker, manual `randc`-like corner-value queue)
-- [ ] Functional coverage (`covergroup`/`coverpoint`/`cross`)
+- [x] Functional coverage (`covergroup`/`coverpoint`/`cross`)
+      -- concepts covered; native `covergroup` confirmed UNAVAILABLE on
+      this build's Icarus Verilog 10.3 (parser does not recognize the
+      keyword at all -- see
+      notes/2026-08-26-functional-coverage-covergroup-gap.md);
+      demonstrated via a hand-written bin-counter + cross model with an
+      at_least-N closure target and a coverage-driven stimulus-stopping
+      loop instead
 - [ ] Basic SVA (`assert property`, immediate vs. concurrent)
 - [ ] Milestone: constrained-random SV testbench w/ scoreboard + coverage
       for a small DUT
