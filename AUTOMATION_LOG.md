@@ -552,3 +552,112 @@ exactly as this session and the previous one did.
 **Commits this run:** 4 (functional-coverage study notes, coverage
 model code + compiled/simulated evidence, progress.md update, this log
 entry).
+
+---
+
+## 2026-08-28
+
+**Status:** Eighth automation run. No run is recorded for 2026-08-27 in
+this log or in `git log` -- the previous entry (2026-08-26, second
+session) is the most recent prior activity, so this run picked up
+directly from its "next run should" recommendation rather than assuming
+an intervening day's work exists.
+
+**Environment note:** this session's container had no `iverilog`
+preinstalled, but -- unlike the 2026-08-22/23 sessions that motivated
+writing `tools/setup_iverilog.sh` as a no-root workaround -- this
+session's container had working root/`apt-get` access, and the
+distribution default pulled in Icarus Verilog 12.0 (not the 10.3 every
+prior session's findings are based on). To keep today's findings
+directly comparable to the existing tooling-gap corpus, this session
+used `tools/setup_iverilog.sh` (confirmed via `iverilog -V` -> 10.3) as
+the authoritative toolchain rather than the apt-installed version; the
+12.0 result is recorded as a secondary, clearly-labeled data point in
+today's notes rather than the basis for the committed example. Flagged
+as a real (if minor) environment-stability finding: this repo's sandbox
+is not identical session-to-session.
+
+**Repo state at start:** Phase 1 complete; Phase 2's first four items
+(SV data types/interfaces, OOP testbench components, randomization,
+functional coverage) complete as of 2026-08-24 through 2026-08-26.
+`progress.md`'s next unchecked item: "Basic SVA (`assert property`,
+immediate vs. concurrent)." The 2026-08-26 (second session) notes
+explicitly recommended confirming with a minimal repro before designing
+an example, given the established pattern of native SV features turning
+out to be entirely absent rather than partially supported -- exactly
+what this session did.
+
+**Work done:**
+
+1. **Tooling investigation + study notes**
+   (`notes/2026-08-28-sva-immediate-vs-concurrent-assertions.md`):
+   Minimal repros against the genuine pinned Icarus Verilog 10.3
+   confirmed immediate assertions are still not implemented ("sorry:
+   Simple immediate assertion statements not implemented" -- re-verifying
+   rather than assuming the 2026-08-23 finding still holds, per this
+   repo's established practice), and additionally confirmed concurrent
+   assertions (`assert property`, and a standalone `property...
+   endproperty` block on its own) are also not supported ("sorry:
+   concurrent_assertion_item not supported"). Net result: neither SVA
+   syntax flavor is available on this build at all -- a total gap in the
+   same category as 2026-08-26's randomize()/covergroup findings, not a
+   partial-support nuance. As a secondary, explicitly-labeled data point,
+   the same repros were also run against the apt-installed Icarus Verilog
+   12.0: immediate assertions work there, concurrent assertions still do
+   not. Notes also cover standard SVA concepts (sequences, properties,
+   `|->`/`|=>` implication, `disable iff`, `assert`/`assume`/`cover`, and
+   why assertion-based checking is architecturally distinct from
+   scoreboard-based checking) independent of the tooling finding.
+   WebSearch/WebFetch were available but not used for the concept
+   material (stable IEEE 1800 LRM content), consistent with prior
+   sessions' judgment on this point.
+
+2. **Code + results**
+   (`examples/phase2/alu_sva_checker.sv`,
+   `alu_sva_checker_sim_output_2026-08-28.txt`,
+   `alu_sva_checker_wave.vcd`): Since neither native assertion flavor is
+   available, built a dedicated assertion-STYLE checker for the existing
+   `alu_dut` (reused unmodified): an independent reference model (carry/
+   borrow via comparison rather than a widened add/subtract; overflow via
+   a sign-extended-truncation check rather than a sign-bit XOR --
+   deliberately different arithmetic formulations from the DUT's own, so
+   a shared bug in "the obvious way to compute this" cannot silently
+   cancel out between DUT and checker) checked against DUT outputs every
+   cycle via the established `if (!cond) $error(...)` idiom, structured
+   as a separate checker task decoupled from stimulus application (the
+   architectural point a real concurrent-assertion-based checker would
+   also embody, independent of concrete syntax). Includes one deliberate,
+   clearly-labeled corrupted-expectation case (mirroring
+   `sync_fifo_directed_tb.v`'s illegal-push/illegal-pop pattern) proving
+   the checker actually fires rather than only ever passing. Two further
+   tooling gaps found and worked around while building this file
+   (documented in both the notes and the example's own header): a
+   `function` with `output` arguments is rejected on this build (worked
+   around with a `task` instead); `enum_value.name()` in a `$error`
+   format argument is rejected (worked around by printing the raw
+   enum value with `%0d`). Compiled and run with the pinned Icarus
+   Verilog 10.3: 15 checks total, 14/14 real checks matched the
+   independent reference model, and the one deliberate corrupted-
+   expectation case correctly failed with the expected message. Real,
+   non-empty VCD waveform captured and committed alongside the console
+   output.
+
+3. **Progress tracking**: marked "Basic SVA (assert property, immediate
+   vs. concurrent)" done in `progress.md`, with the same explicit-caveat
+   style used for the 2026-08-26 randomization/coverage entries (total
+   tooling gap + workaround stated, not a bare checkmark).
+
+**Next run should:** continue with Phase 2's final remaining item, the
+phase milestone itself: "constrained-random SV testbench w/ scoreboard +
+coverage for a small DUT" -- integrating the manual-workaround
+randomization (2026-08-26), functional-coverage (2026-08-26 second
+session), and assertion-style checker (this session) into one combined
+testbench for a single DUT, rather than the three separate demonstration
+files that exist today. Before starting, run `iverilog -V` and compare
+against this session's pinned-10.3 approach (Section 0 of today's notes)
+-- do not assume the same toolchain setup path is needed without
+checking first, given today's environment finding.
+
+**Commits this run:** 3 (SVA study notes + tooling findings, assertion-
+style checker code + compiled/simulated evidence, progress.md update;
+this AUTOMATION_LOG.md update commit makes 4).
