@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-26 (second session)
+Last updated: 2026-08-28
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -31,7 +31,16 @@ Last updated: 2026-08-26 (second session)
       demonstrated via a hand-written bin-counter + cross model with an
       at_least-N closure target and a coverage-driven stimulus-stopping
       loop instead
-- [ ] Basic SVA (`assert property`, immediate vs. concurrent)
+- [x] Basic SVA (`assert property`, immediate vs. concurrent)
+      -- concepts covered (sequences, properties, |->/|=>, disable iff,
+      assert/assume/cover); native immediate assertions AND concurrent
+      `assert property` both confirmed UNAVAILABLE on this build's Icarus
+      Verilog 10.3 (see notes/2026-08-28-*.md) -- a total gap, not a
+      partial one, matching the randomize()/covergroup pattern; demonstrated
+      via a dedicated assertion-style checker (independent reference model
+      + `if/$error` idiom) for the existing ALU DUT instead, including a
+      deliberate expected-fail case proving the checker works
+      (examples/phase2/alu_sva_checker.sv)
 - [ ] Milestone: constrained-random SV testbench w/ scoreboard + coverage
       for a small DUT
 
