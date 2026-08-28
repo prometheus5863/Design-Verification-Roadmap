@@ -1,0 +1,7 @@
+VCD info: dumpfile alu_sva_checker_wave.vcd opened for output.
+ERROR: alu_sva_checker.sv:204: [326000] deliberate corrupted-expectation check: EXPECTED-FAIL (deliberate): result=30 did not match deliberately-wrong expected=cf (real expected was 30) -- this failure is correct and proves the checker works
+       Time: 326000  Scope: alu_sva_checker_tb.apply_and_check
+--------------------------------------------------------
+Total checks = 15, passed = 14, deliberate-fail cases = 1
+PASS: all real checks matched the independent reference model; the one deliberate corrupted-expectation case correctly failed above.
+alu_sva_checker.sv:264: $finish called at 326000 (1ps)
