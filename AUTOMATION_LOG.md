@@ -661,3 +661,96 @@ checking first, given today's environment finding.
 **Commits this run:** 3 (SVA study notes + tooling findings, assertion-
 style checker code + compiled/simulated evidence, progress.md update;
 this AUTOMATION_LOG.md update commit makes 4).
+
+---
+
+## 2026-08-29 — Phase 2 milestone: combined testbench; Phase 2 complete
+
+**Status:** Ninth automation run.
+
+**Repo state at start:** Phase 1 complete; Phase 2's first four items (SV
+data types/interfaces, OOP testbench components, randomization,
+functional coverage, and basic SVA) all complete as of 2026-08-24 through
+2026-08-28. `progress.md`'s only remaining Phase 2 item: the phase
+milestone itself, "constrained-random SV testbench w/ scoreboard +
+coverage for a small DUT." The 2026-08-28 entry explicitly recommended
+integrating the three existing manual-workaround examples
+(randomization, functional coverage, assertion-style checker) into one
+combined testbench for this milestone, rather than leaving them as three
+separate demonstration files -- exactly what this session did.
+
+**Environment note:** as in 2026-08-28, this session's container had
+working root/`apt-get` access and the distribution default pulled in
+Icarus Verilog 12.0. Checked `iverilog -V` before starting, per the
+2026-08-28 entry's explicit recommendation, and again used
+`tools/setup_iverilog.sh` (pinned Icarus Verilog 10.3) as the
+authoritative toolchain for direct comparability with the existing
+gap corpus. As a secondary data point, also compiled and ran today's new
+file against the apt-installed 12.0: it compiled cleanly but `vvp`
+segfaulted immediately at simulation start, producing no output at all --
+a genuine 12.0-vs-10.3 compatibility difference, not investigated
+further, and not the basis for today's committed result.
+
+**Work done:**
+
+1. **Code + results**
+   (`examples/phase2_milestone/alu_combined_tb.sv`,
+   `alu_combined_sim_output_2026-08-29.txt`, `alu_combined_wave.vcd`):
+   Combined, in one testbench module driving one `alu_dut` instance: the
+   transaction class + dist-like weighted opcode generator + randc-like
+   corner-value generator from `alu_manual_constrained_random.sv`
+   (2026-08-26); the coverpoint/cross bin-counting functional-coverage
+   model + coverage-driven stopping criterion from
+   `alu_manual_functional_coverage.sv` (2026-08-26, second session); and,
+   run independently alongside the existing scoreboard on every
+   transaction (deliberately NOT merged into one shared reference model --
+   see the file header and today's notes for why keeping two
+   independently-formulated checks matters architecturally), the
+   assertion-style checker from `alu_sva_checker.sv` (2026-08-28). All
+   three sources' logic was reused essentially unmodified; no new Icarus
+   10.3 tooling gaps were found while integrating them, and the combined
+   file compiled and ran cleanly on the first attempt. **Actually
+   compiled and run** with the pinned Icarus Verilog 10.3: 252 scoreboard
+   checks / 0 errors; 253 assertion-checker checks (252 real + 1
+   deliberate corrupted-expectation case, which correctly failed) / 252
+   passed; all three functional-coverage components (5-bin op
+   coverpoint, 3-bin a_corner coverpoint, 15-bin cross) closed at 100%
+   after 252 transactions. Real, non-empty VCD waveform (11155 lines)
+   captured alongside the console output. Testbench's own final verdict:
+   PASS.
+
+2. **Study notes**
+   (`notes/2026-08-29-phase2-milestone-combined-testbench.md`): Documents
+   the integration approach and rationale (why two independently-
+   formulated checkers rather than one shared model), the re-confirmed
+   tooling status (no new gaps), the 12.0 segfault finding, and the full
+   results.
+
+3. **Progress tracking**: marked the Phase 2 milestone done in
+   `progress.md`, with the same explicit-caveat style used throughout
+   this phase (native constrained-random/coverage/SVA are all
+   hand-implemented workarounds on this build, stated plainly).
+
+**Phase 2 (SystemVerilog for Verification) is now fully complete.**
+
+**Web search availability:** WebSearch/WebFetch were available this
+session but not used -- today's work was pure integration of
+already-researched, already-verified-working prior content, with no new
+conceptual or literature material requiring search.
+
+**Next run should:** begin Phase 3 (Verification Methodology
+Fundamentals): layered testbench architecture concepts, TLM basics, and
+verification planning, per the roadmap README. Phase 3's milestone is a
+written verification plan (markdown, in this repo) for a moderately
+complex DUT (README suggests a simple APB/AHB-lite peripheral or a UART)
+that becomes the spec for the Phase 4 UVM testbench -- unlike Phase 2,
+this milestone is a planning document rather than simulator-dependent
+code, so tooling-gap risk is lower for the deliverable itself, though any
+illustrative snippets should still be spot-checked against this build's
+established gap list (SV data types/interfaces mostly usable;
+classes/OOP usable with the documented workarounds; randomize()/
+covergroup/SVA all absent) before being presented as running examples.
+
+**Commits this run:** 2 (combined milestone testbench code + notes +
+compiled/simulated evidence, progress.md update; this AUTOMATION_LOG.md
+update commit makes 3).
