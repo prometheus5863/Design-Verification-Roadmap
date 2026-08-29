@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-28
+Last updated: 2026-08-29
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -41,8 +41,21 @@ Last updated: 2026-08-28
       + `if/$error` idiom) for the existing ALU DUT instead, including a
       deliberate expected-fail case proving the checker works
       (examples/phase2/alu_sva_checker.sv)
-- [ ] Milestone: constrained-random SV testbench w/ scoreboard + coverage
-      for a small DUT
+- [x] Milestone: constrained-random SV testbench w/ scoreboard + coverage
+      for a small DUT -- integrates the manual-workaround randomization,
+      functional-coverage, and assertion-style-checker examples above
+      into one combined testbench (`examples/phase2_milestone/alu_combined_tb.sv`)
+      reusing `alu_dut` unmodified; runs a scoreboard AND an
+      independently-formulated assertion-style checker on every
+      transaction (deliberately two different reference-model
+      formulations, not one checked twice). Compiled/run with the pinned
+      Icarus Verilog 10.3: 252 scoreboard checks/0 errors, 253
+      assertion-checker checks (252 real + 1 deliberate fail, which
+      correctly failed)/252 passed, all coverage (op/a_corner/cross)
+      closed at 100% after 252 transactions. See
+      notes/2026-08-29-phase2-milestone-combined-testbench.md.
+
+**Phase 2 (SystemVerilog for Verification) is now fully complete.**
 
 ## Phase 3 — Verification Methodology Fundamentals
 - [ ] Layered testbench architecture concepts
