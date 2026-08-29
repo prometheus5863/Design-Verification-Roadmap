@@ -1,0 +1,20 @@
+VCD info: dumpfile alu_combined_wave.vcd opened for output.
+ASSERTION-CHECK EXPECTED-FAIL (deliberate) [deliberate corrupted-expectation check]: result=30 did not match deliberately-wrong expected=cf (real expected was 30) -- this failure is correct and proves the checker works
+------------------------------------------------------
+alu_scoreboard: 252 checks, 0 errors
+RESULT: ALL SCOREBOARD CHECKS PASSED
+------------------------------------------------------
+------------------------------------------------------
+ASSERTION-STYLE CHECKER REPORT (independent 2nd reference model)
+  checks run = 253, passed = 252, deliberate-fail cases = 1
+  PASS: all real assertion-checks matched; the one deliberate corrupted-expectation case correctly failed above.
+------------------------------------------------------
+FUNCTIONAL COVERAGE REPORT (manual model -- covergroup unavailable)
+  coverpoint op         : 100.0% (bins >= 8 hits / 5 bins)
+  coverpoint a_corner    : 100.0% (bins >= 8 hits / 3 bins)
+  cross op_x_corner      : 100.0% (bins >= 1 hit / 15 bins)
+  OVERALL (mean)         : 100.0%
+  COVERAGE CLOSED after 252 transactions.
+------------------------------------------------------
+MILESTONE RESULT: PASS -- scoreboard clean, assertion-style checker clean (deliberate fail case excluded), coverage closed.
+examples/phase2_milestone/alu_combined_tb.sv:495: $finish called at 5095000 (1ps)
