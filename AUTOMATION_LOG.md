@@ -754,3 +754,86 @@ covergroup/SVA all absent) before being presented as running examples.
 **Commits this run:** 2 (combined milestone testbench code + notes +
 compiled/simulated evidence, progress.md update; this AUTOMATION_LOG.md
 update commit makes 3).
+
+## 2026-08-31 — Phase 3 begins: layered testbench architecture + TLM basics
+
+**Status:** Tenth automation run (first run after a two-day gap; no
+2026-08-30 session occurred).
+
+**Repo state at start:** Phase 1 and Phase 2 both fully complete as of
+2026-08-29. `progress.md`'s first unchecked item: Phase 3's "Layered
+testbench architecture concepts," per the README's phase ordering.
+
+**Work done:**
+
+1. **Study notes**
+   (`notes/2026-08-31-layered-testbench-architecture-and-tlm-basics.md`):
+   Covers two `progress.md` items together -- "Layered testbench
+   architecture concepts" and "TLM basics" -- since TLM is the
+   mechanism the architecture's layers communicate through and the two
+   don't separate cleanly. WebSearch/WebFetch were available and used
+   (Maven Silicon and Verification Guide testbench-architecture
+   write-ups; ChipVerify's TLM analysis-port page) alongside stable
+   IEEE 1800/UVM methodology background. Covers: why a layered
+   architecture over a directed testbench (reuse; separating stimulus
+   from checking so randomized/coverage-driven stimulus becomes
+   possible later); the standard layer roles (transaction, sequencer/
+   generator, driver, monitor, agent, scoreboard, environment, test);
+   TLM's port/export/imp roles and analysis-port broadcast (`write()`)
+   semantics and why decoupled channels (not direct object references)
+   are what makes the layers reusable.
+
+   Section 4 goes further than a generic conceptual writeup: it
+   synthesizes this repo's own already-logged Phase 2 tooling gaps
+   (`mailbox` unimplemented, a class cannot hold a `virtual <interface>`
+   member, class handles cannot be passed as `input`/`ref` arguments or
+   stored in queues/arrays -- all from
+   `notes/2026-08-25-oop-testbench-components.md`) into one unified
+   explanation: this repo's pinned Icarus Verilog 10.3 build cannot
+   express a driver or monitor as a real class object at all (only
+   transaction/generator/scoreboard), which is *why* Phase 2's OOP and
+   milestone examples always left DUT pin-driving/sampling as
+   procedural code adjacent to the transaction hand-off rather than
+   inside separate driver/monitor classes -- previously stated as
+   individual tooling notes without this connecting explanation.
+   Confirms (does not overturn) the 2026-08-25 conclusion that Phase 4's
+   real UVM milestone will need a different simulator. No new example
+   code file was added this session: a fresh illustrative snippet would
+   either duplicate `alu_oop_tb_components.sv`/`alu_combined_tb.sv` or
+   re-hit the same already-documented gaps without adding anything, so
+   this session's contribution is the synthesis/explanation rather than
+   another compiled artifact.
+
+2. **Progress tracking**: marked both "Layered testbench architecture
+   concepts" and "TLM basics" done in `progress.md`, with the same
+   explicit-caveat style used throughout Phase 2 (what's conceptually
+   covered vs. what this specific toolchain can/cannot demonstrate,
+   stated plainly rather than glossed over).
+
+**Environment note:** `apt-get install iverilog` succeeded this session
+(pulled the distribution default, 12.0, same as 2026-08-28/2026-08-29);
+`tools/setup_iverilog.sh` (pinned 10.3) was also sourced successfully
+for continuity with the existing gap corpus, though no code was
+compiled either way this session since today's work was notes-only.
+
+**Not yet covered (candidates for future runs):**
+- Remaining Phase 3 items: verification planning (features -> checks ->
+  coverage -> tests) and directed-vs-constrained-random-vs-coverage-
+  driven trade-offs, both of which presuppose today's vocabulary
+- Phase 3 milestone: a written verification plan (markdown) for a
+  moderately complex DUT (README suggests a simple APB/AHB-lite
+  peripheral or a UART), to become the Phase 4 UVM testbench's spec
+- Before Phase 4 (UVM) begins in earnest, resolve the toolchain
+  question flagged again this session and originally raised
+  2026-08-25: this Icarus 10.3 build cannot host a real UVM
+  environment (no virtual-interface class members, no mailbox, no
+  class-handle containers) -- a different simulator or toolchain
+  strategy needs to be chosen before Phase 4's coding milestones,
+  not discovered mid-Phase-4
+
+**Web search availability:** WebSearch/WebFetch were both available and
+used this session.
+
+**Commits this run:** 2 (layered-testbench-architecture + TLM-basics
+study notes, progress.md update; this AUTOMATION_LOG.md entry commit
+makes 3).
