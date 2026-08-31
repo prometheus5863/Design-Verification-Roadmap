@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-29
+Last updated: 2026-08-31
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -58,8 +58,24 @@ Last updated: 2026-08-29
 **Phase 2 (SystemVerilog for Verification) is now fully complete.**
 
 ## Phase 3 — Verification Methodology Fundamentals
-- [ ] Layered testbench architecture concepts
-- [ ] TLM basics
+- [x] Layered testbench architecture concepts -- transaction/sequencer-
+      generator/driver/monitor/agent/scoreboard/environment/test roles
+      and why each exists (reuse, separation of stimulus from checking);
+      see notes/2026-08-31-layered-testbench-architecture-and-tlm-
+      basics.md, Sections 1-2. Section 4 synthesizes this repo's own
+      Phase 2 tooling-gap findings (no mailbox, no virtual-interface
+      class member, no class-handle in/ref args or containers) into a
+      unified explanation of why driver/monitor could only be
+      demonstrated as procedural code, not real class objects, on the
+      pinned Icarus Verilog 10.3 build -- and why Phase 4's real UVM
+      milestone will need a different simulator
+- [x] TLM basics -- port/export/imp roles, analysis-port broadcast
+      semantics (`write()`), and why decoupled channels (not direct
+      references between layer objects) are what make the layers above
+      independently reusable; see notes/2026-08-31-*.md, Section 3.
+      Connects directly to the already-documented `mailbox`-unavailable
+      finding from 2026-08-25 as a concrete instance of "this build
+      lacks a TLM channel type," not a separate issue
 - [ ] Verification planning (features -> checks -> coverage -> tests)
 - [ ] Directed vs. constrained-random vs. coverage-driven trade-offs
 - [ ] Milestone: written verification plan for a chosen DUT
