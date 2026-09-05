@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-08-31
+Last updated: 2026-09-05
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -76,9 +76,32 @@ Last updated: 2026-08-31
       Connects directly to the already-documented `mailbox`-unavailable
       finding from 2026-08-25 as a concrete instance of "this build
       lacks a TLM channel type," not a separate issue
-- [ ] Verification planning (features -> checks -> coverage -> tests)
-- [ ] Directed vs. constrained-random vs. coverage-driven trade-offs
-- [ ] Milestone: written verification plan for a chosen DUT
+- [x] Verification planning (features -> checks -> coverage -> tests)
+      -- the features/checks/coverage/tests chain, sign-off criteria, and
+      why a vplan is written spec-first before testbench code; grounded
+      against a real open-source project's own planning guide (OpenHW
+      Group CORE-V-VERIF) and ChipVerify's vplan template; see
+      notes/2026-09-05-verification-planning-and-stimulus-strategy-
+      tradeoffs.md, Section 1
+- [x] Directed vs. constrained-random vs. coverage-driven trade-offs
+      -- strengths/weaknesses of each and the recommended CRV-then-
+      directed-gap-filling hybrid; connected back to this repo's own
+      Phase 2 milestone (`alu_combined_tb.sv`) as an already-built,
+      hand-implemented instance of the coverage-driven loop; see
+      notes/2026-09-05-*.md, Section 2
+- [x] Milestone: written verification plan for a chosen DUT --
+      `verification_plans/uart_controller_verification_plan.md`: a full
+      9-feature (F1-F9) verification plan for a UART controller with
+      register interface, TX/RX FIFOs, and an interrupt output (the same
+      DUT already named in this repo's Phase 6 capstone description),
+      with per-feature checks, functional-coverage coverpoints/crosses,
+      an explicit per-feature directed/random/coverage-driven strategy
+      assignment, a 14-test test list, and stated sign-off criteria. No
+      RTL or testbench code written yet -- this is deliberately a
+      spec-first planning document, to become the Phase 4 UVM
+      testbench's spec per the README's stated milestone
+
+**Phase 3 (Verification Methodology Fundamentals) is now fully complete.**
 
 ## Phase 4 — UVM
 - [ ] UVM class hierarchy, phases, factory pattern
@@ -103,7 +126,11 @@ Last updated: 2026-08-31
 - [ ] Interview-prep pass (common question patterns)
 - [ ] Capstone: UVM verification environment for register-mapped
       peripheral (UART/SPI controller with interrupt + FIFO datapath)
-      - [ ] Verification plan written
+      - [~] Verification plan written -- early draft completed in Phase 3
+            (`verification_plans/uart_controller_verification_plan.md`,
+            2026-09-05); to be revisited/revised once Phase 4 RTL and
+            testbench bring-up experience is available (see that plan's
+            Section 7)
       - [ ] Full UVM environment built
       - [ ] SVA protocol checkers added
       - [ ] Functional coverage report + closure target stated
