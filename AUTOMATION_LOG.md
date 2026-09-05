@@ -837,3 +837,100 @@ used this session.
 **Commits this run:** 2 (layered-testbench-architecture + TLM-basics
 study notes, progress.md update; this AUTOMATION_LOG.md entry commit
 makes 3).
+
+## 2026-09-05 — Phase 3 completes: verification planning + UART verification plan
+
+**Status:** Eleventh automation run (first run after a five-day gap; no
+sessions occurred 2026-09-01 through 2026-09-04).
+
+**Repo state at start:** Phase 1 and Phase 2 fully complete. Phase 3's
+first two items (layered testbench architecture, TLM basics) were
+completed 2026-08-31; the remaining three `progress.md` items --
+verification planning, directed/CRV/CDV trade-offs, and the Phase 3
+milestone (a written verification plan for a chosen DUT) -- were still
+unchecked.
+
+**Work done:**
+
+1. **Study notes**
+   (`notes/2026-09-05-verification-planning-and-stimulus-strategy-
+   tradeoffs.md`): Covers the two remaining conceptual `progress.md`
+   items together, since the planning process is what decides which
+   stimulus strategy applies per feature. WebSearch/WebFetch were
+   available and used (all three fetches succeeded this session, unusual
+   compared to several prior sessions' partial access failures): OpenHW
+   Group's CORE-V-VERIF project's own verification-planning guide (a
+   real, in-production open-source RISC-V project, used for the
+   features->checks->coverage->tests column structure and its RV32I
+   ADDI "minimal sufficient coverage" worked example), ChipVerify's
+   seven-section vplan template (incl. its own UART-parity coverage
+   worked example, reused directly in today's plan since it's this
+   session's actual chosen DUT), and "The Art of Verification"'s
+   directed-vs-constrained-random trade-off discussion (strengths/
+   weaknesses of each, and the recommended CRV-then-directed-gap-filling
+   hybrid). Connected the trade-off discussion back to this repo's own
+   Phase 2 milestone (`alu_combined_tb.sv`, 2026-08-29) as an
+   already-built, hand-implemented instance of the coverage-driven loop
+   being described.
+
+2. **Verification plan (Phase 3 milestone)**
+   (`verification_plans/uart_controller_verification_plan.md`, new file/
+   new top-level folder): A full spec-first verification plan for a UART
+   controller with a register interface (6-register APB-lite-style map),
+   TX/RX FIFOs (8 deep), and an interrupt output -- deliberately the same
+   DUT already named in this repo's own README as the Phase 6 capstone
+   project, so this doubles as an early capstone vplan draft rather than
+   a one-off exercise DUT needing later re-planning. Nine features
+   (F1-F9: register access, TX/RX data paths, parity, TX/RX FIFO
+   management incl. overrun, baud-rate generation, interrupt generation,
+   loopback mode), each with stated checks, functional-coverage
+   coverpoints/crosses, and an explicit directed/constrained-random/
+   coverage-driven strategy assignment reasoned from today's trade-off
+   notes (7 directed tests total, everything else CRV/CDV) -- plus a
+   14-test test list, a coverage plan (100% functional coverage target,
+   95% code coverage target once RTL exists), sign-off criteria, and an
+   explicit "out of scope for v1" section (configurable data-bit width,
+   APB wait states, CDC, flow control, break detection) rather than
+   silently omitting them. No RTL or testbench code exists for this DUT
+   yet -- entirely a planning artifact, as the README's Phase 3 milestone
+   description calls for.
+
+3. **Progress tracking**: marked all three remaining Phase 3 items done
+   in `progress.md` (verification planning, trade-offs, and the milestone
+   itself), added the "Phase 3 is now fully complete" marker (matching
+   the style used for Phase 2), and updated the Phase 6 capstone's
+   "Verification plan written" sub-item to `[~]` (in progress) noting
+   today's document as an early draft to be revised once Phase 4
+   RTL/bring-up experience exists, rather than marking it fully done at
+   the capstone level.
+
+**Environment note:** `apt-get install iverilog` succeeded this session
+(pulled the distribution default, 12.0); `tools/setup_iverilog.sh` (pinned
+10.3) was also sourced successfully. Neither was actually needed this
+session since today's work was planning/notes-only (no RTL or testbench
+code was written) -- sourced anyway for continuity, consistent with the
+2026-08-31 session's practice.
+
+**Phase 3 (Verification Methodology Fundamentals) is now fully complete.**
+
+**Not yet covered (candidates for future runs):**
+- Phase 4 (UVM) begins next per the roadmap. Before its coding milestones,
+  the toolchain question flagged repeatedly since 2026-08-25 (this repo's
+  pinned Icarus 10.3 build cannot host a real UVM environment: no
+  virtual-interface class members, no `mailbox`, no class-handle
+  containers) still needs a concrete resolution -- not discovered
+  mid-Phase-4.
+- No UART RTL exists yet anywhere in this repo -- today's verification
+  plan is spec-first; Phase 4 will need the DUT written (or sourced)
+  before any of today's planned tests can actually be coded and run.
+- Today's plan flags its own open item: the F7 baud-rate tolerance number
+  cannot be finalized without real RTL to measure rounding/timing
+  behavior against.
+
+**Web search availability:** WebSearch/WebFetch were both available and
+used this session; all three fetches succeeded (no access failures to
+record this session, unlike several prior sessions in this log).
+
+**Commits this run:** 3 (verification-planning + trade-offs study notes,
+UART verification plan, progress.md update; this AUTOMATION_LOG.md entry
+commit makes 4).
