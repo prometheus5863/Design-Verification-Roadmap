@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-09-05
+Last updated: 2026-09-06
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -104,11 +104,45 @@ Last updated: 2026-09-05
 **Phase 3 (Verification Methodology Fundamentals) is now fully complete.**
 
 ## Phase 4 — UVM
-- [ ] UVM class hierarchy, phases, factory pattern
-- [ ] TLM ports/exports/analysis ports, sequences/sequencers
-- [ ] Drivers, monitors, active/passive agents
+
+**Toolchain resolved 2026-09-06** -- every Phase 2/3 session since
+2026-08-25 flagged that this repo's pinned Icarus Verilog build cannot
+compile SystemVerilog classes at all, making a *native* SV-UVM
+environment impossible here. Resolved by adopting
+[uvm-python](https://github.com/tpoikela/uvm-python) (a Python/cocotb
+port of UVM 1.2 that runs on Icarus) instead of a different HDL
+simulator or a commercial one this environment doesn't have a license
+for. See notes/2026-09-06-uvm-python-toolchain-resolution.md for the
+research/decision writeup (including two real installation/version
+gotchas: `python-constraint` needs `--use-pep517`, and uvm-python 0.4.0
+requires `cocotb<2.0`, not the latest cocotb 2.x).
+
+- [x] UVM class hierarchy, phases, factory pattern -- real (not
+      hand-rolled) `UVMComponent`/`UVMTest`/`UVMEnv`/`UVMAgent` hierarchy
+      with `build_phase`/`connect_phase`/`run_phase` and
+      objection-based termination, factory-registered via
+      `uvm_component_utils`/`uvm_object_utils`, running against the
+      Phase 2 `alu_dut` on the pinned Icarus build via uvm-python; see
+      `examples/phase4_uvm_python/alu_uvm_tb.py` and its sim output log
+      (`driven=40 sampled=40 checked=40 errors=0`, `TESTS=1 PASS=1`)
+- [~] TLM ports/exports/analysis ports, sequences/sequencers -- a real
+      `UVMSequence`/`UVMSequencer`/`UVMDriver` pull-mode handshake and a
+      real `UVMAnalysisPort`/`uvm_analysis_imp_decl` broadcast from
+      monitor to scoreboard are both demonstrated (the actual TLM
+      channel type `notes/2026-08-31-*.md` Section 3 could only describe
+      conceptually); virtual sequencers and multiple concurrent
+      sequences are not yet exercised
+- [~] Drivers, monitors, active/passive agents -- real `UVMDriver`/
+      `UVMMonitor` classes demonstrated (see above); the agent built so
+      far is active-only, so the active/passive distinction itself is
+      not yet exercised
 - [ ] UVM environment, virtual sequencers, scoreboards via analysis ports
-- [ ] Configuration (`uvm_config_db`, factory overrides)
+      -- environment + scoreboard-via-analysis-port done above; virtual
+      sequencers not yet
+- [ ] Configuration (`uvm_config_db`, factory overrides) -- plain
+      `UVMConfigDb.set`/`get` demonstrated (passing the cocotb DUT handle
+      into the environment); factory *overrides* specifically not yet
+      demonstrated
 - [ ] RAL basics (overview level)
 - [ ] Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target
 
