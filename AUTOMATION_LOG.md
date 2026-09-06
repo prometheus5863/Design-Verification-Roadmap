@@ -934,3 +934,99 @@ record this session, unlike several prior sessions in this log).
 **Commits this run:** 3 (verification-planning + trade-offs study notes,
 UART verification plan, progress.md update; this AUTOMATION_LOG.md entry
 commit makes 4).
+
+## 2026-09-06 — Phase 4 toolchain resolved: real UVM environment via uvm-python
+
+**Status:** Twelfth automation run.
+
+**Repo state at start:** Phases 1-3 fully complete. Phase 4 (UVM) not yet
+started. Every Phase 2/3 session since 2026-08-25 had flagged the same
+standing blocker: this repo's pinned Icarus Verilog build cannot compile
+SystemVerilog classes at all (no `mailbox`, no `virtual <interface>`
+class members, no class handles as `input`/`ref` args or in
+queues/arrays), so a native SV-UVM environment is impossible here. The
+2026-09-05 session's "not yet covered" list repeated this again as the
+thing to resolve before Phase 4's coding milestones begin. This session
+prioritized that resolution directly, with a real running artifact, over
+starting Phase 4's conceptual notes on top of an unresolved toolchain
+question.
+
+**Work done:**
+
+1. **Research notes**
+   (`notes/2026-09-06-uvm-python-toolchain-resolution.md`): WebSearch and
+   WebFetch were both available and used (all fetches succeeded). Weighed
+   three options: a different HDL simulator (rejected -- Verilator has no
+   class support either, and a commercial simulator isn't licensed here);
+   bare cocotb (real class-based driver/monitor, but no UVM factory/
+   phasing/hierarchy, so it wouldn't actually satisfy the Phase 4
+   checklist items); and uvm-python
+   (https://github.com/tpoikela/uvm-python), a Python/cocotb port of UVM
+   1.2 whose own docs state Icarus Verilog is "fully supported and
+   recommended." Chose uvm-python. Also documents two real,
+   reproducible installation gotchas hit and fixed this session:
+   `python-constraint` (a `cocotb-coverage` dependency) fails to build
+   against modern `setuptools` unless installed with `--use-pep517`
+   first, and uvm-python 0.4.0 is incompatible with the latest cocotb
+   (2.1.0 -- `cocotb.utils.simulator` was removed in cocotb 2.x) and
+   needs `cocotb<2.0` pinned explicitly.
+
+2. **Code + results** (`examples/phase4_uvm_python/`): A real UVM
+   environment (`AluSeqItem`/`AluRandomSequence` as genuine
+   `UVMSequenceItem`/`UVMSequence` classes, `AluDriver`/`UVMSequencer` via
+   the actual pull-mode `seq_item_port` handshake, `AluMonitor`
+   broadcasting over a real `UVMAnalysisPort`, `AluScoreboard` receiving
+   via `uvm_analysis_imp_decl`, `AluAgent`/`AluEnv`/`AluTest` component
+   hierarchy, all factory-registered via `uvm_component_utils`/
+   `uvm_object_utils`, driven by the standard phase machine with
+   objection-based termination) running against the unmodified Phase 2
+   `alu_dut` (`examples/phase2/alu_if_and_dut.sv`) on this repo's pinned
+   Icarus build. Two genuine bugs were found and fixed while bringing
+   this up (both documented in the code's comments, not silently
+   patched): uvm-python enforces that `run_test()` must be called at
+   simulation time 0 with no preceding delay, which required moving DUT
+   reset from the cocotb test function into `AluTest.run_phase`; and a
+   driver/monitor edge-alignment race silently dropped the first
+   transaction (`driven=40` but `sampled=39`, found via added
+   driven/valid_seen/result_valid_seen/sampled instrumentation and
+   per-transaction sim-time prints), root-caused to the first
+   transaction's `valid` assertion coinciding with the same simulation
+   timestep as the monitor's `RisingEdge` sampling coroutine, fixed by
+   having the driver explicitly synchronize to `FallingEdge` every
+   iteration rather than relying on incidental timing. Final result:
+   `driven=40 sampled=40 checked=40 errors=0`, `TESTS=1 PASS=1`
+   (`alu_uvm_tb_sim_output_2026-09-06.txt`).
+
+3. **Progress tracking**: marked "UVM class hierarchy, phases, factory
+   pattern" done in `progress.md`, marked "TLM ports/exports/analysis
+   ports, sequences/sequencers" and "Drivers, monitors, active/passive
+   agents" as in-progress (`[~]`) with explicit notes on what is and
+   isn't yet demonstrated (virtual sequencers, multiple concurrent
+   sequences, and the active/passive agent distinction are not yet
+   covered), and added a toolchain-resolution note at the top of the
+   Phase 4 section pointing to today's research notes.
+
+**Not yet covered (candidates for future runs):**
+- Virtual sequencers and multiple concurrent sequences (Phase 4 checklist
+  item only partially covered by today's single-sequence example)
+- Factory *overrides* specifically (today's config_db usage is plain
+  `set`/`get`, not an override)
+- RAL (register abstraction layer) basics -- uvm-python claims partial
+  support per its own docs but nothing has exercised it yet
+- The `cocotb-coverage`-wants-`cocotb>=2.0` vs. `uvm-python`-needs-
+  `cocotb<2.0` version conflict noted in today's research notes is
+  unresolved; matters if a future session needs `cocotb-coverage`'s
+  functional-coverage primitives under uvm-python
+- The actual Phase 4 milestone (a full UVM testbench w/ 2-3 sequences/
+  tests + coverage target, per the README) needs a larger DUT than the
+  8-bit ALU and has not been attempted yet -- today's work is a
+  toolchain proof-of-concept, not the milestone itself
+- Graphene-repo-side "not yet covered" items are tracked separately in
+  that repo's own AUTOMATION_LOG.md, not here
+
+**Web search availability:** WebSearch/WebFetch were both available and
+used this session; all fetches succeeded.
+
+**Commits this run:** 3 (uvm-python toolchain research notes, the
+alu_uvm_tb.py UVM environment + Makefile + sim output, progress.md
+update; this AUTOMATION_LOG.md entry commit makes 4).
