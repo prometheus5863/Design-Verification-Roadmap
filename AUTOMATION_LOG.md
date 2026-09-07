@@ -1030,3 +1030,104 @@ used this session; all fetches succeeded.
 **Commits this run:** 3 (uvm-python toolchain research notes, the
 alu_uvm_tb.py UVM environment + Makefile + sim output, progress.md
 update; this AUTOMATION_LOG.md entry commit makes 4).
+
+## 2026-09-07 — Phase 4: factory overrides (closes the Configuration checklist item)
+
+**Status:** Thirteenth automation run.
+
+**Repo state at start:** Phases 1-3 fully complete. Phase 4 toolchain
+resolved 2026-09-06 (uvm-python on the pinned Icarus build); the "UVM
+class hierarchy, phases, factory pattern" checklist item done, "TLM
+ports/exports/analysis ports, sequences/sequencers" and "Drivers,
+monitors, active/passive agents" in progress (`[~]`), and "Configuration
+(`uvm_config_db`, factory overrides)" only half-done: plain
+`UVMConfigDb.set`/`get` demonstrated, factory overrides explicitly
+flagged as not yet demonstrated. This session closed that remaining
+half.
+
+**Work done:**
+
+1. **Toolchain reinstall.** This run started in a fresh container with
+   none of 2026-09-06's toolchain present (no iverilog, no cocotb, no
+   uvm-python). Reinstalled via the exact documented sequence
+   (`notes/2026-09-06-uvm-python-toolchain-resolution.md`): `apt-get
+   install iverilog` (12.0), `pip install --use-pep517
+   python-constraint`, `pip install uvm-python` (pulls in `cocotb>=2.0`),
+   then `pip install "cocotb<2.0"` again to re-pin it (uvm-python 0.4.0
+   is still incompatible with cocotb 2.x, confirmed unchanged). Re-ran
+   the existing `alu_uvm_tb.py` test first, unmodified, to confirm the
+   reinstalled toolchain reproduces 2026-09-06's exact result
+   (`driven=40 sampled=40 checked=40 errors=0`) before writing anything
+   new.
+
+2. **Bug fix + gap analysis**
+   (`examples/phase4_uvm_python/alu_uvm_tb.py`,
+   `notes/2026-09-07-factory-overrides-and-config-db.md` Section 2):
+   found that `AluAgent.build_phase`/`AluEnv.build_phase` created every
+   child via direct Python constructor calls rather than
+   `<Class>.type_id.create(name, parent)` -- harmless for 2026-09-06's
+   purposes (no override was in use) but a silent trap for today's work,
+   since a factory override only takes effect if creation is actually
+   routed through the factory; registering one against a component whose
+   parent constructs it directly would succeed with no error and then
+   simply never be consulted. Fixed by routing all child creation
+   (`sequencer`, `driver`, `monitor`, `agent`, `scoreboard`) through
+   `type_id.create()`. Verified behavior-preserving: re-ran the baseline
+   test, got the identical `driven=40 ... errors=0` result.
+
+3. **Code + results**
+   (`examples/phase4_uvm_python/alu_uvm_factory_override_common.py`,
+   `alu_uvm_factory_type_override_tb.py`,
+   `alu_uvm_factory_inst_override_tb.py`, two new Makefiles, two sim
+   output logs): implemented both UVM factory override entry points --
+   `set_type_override` (global) and `set_inst_override` (path-specific,
+   `"uvm_test_top.env.scoreboard"`) -- each substituting a shared
+   drop-in `AluScoreboardOpHistogram(AluScoreboard)` (identical checking
+   behavior via `super().write_alu()`, plus a per-opcode pass/fail
+   histogram reported through a `report_phase` override, a UVM phase not
+   otherwise used anywhere in this repo) for the environment's plain
+   `AluScoreboard`, with zero changes to `AluEnv`/`AluAgent` source.
+   Found and fixed a verification-timing bug while writing these: the
+   first version asserted the override's effect immediately after
+   `super().build_phase()` inside the test's own `build_phase`, which
+   failed with `self.env.scoreboard is a NoneType` -- not because the
+   override didn't work, but because UVM's topdown build traversal
+   hasn't yet invoked the newly-constructed `env`'s own `build_phase()`
+   at that point. Fixed by moving the verification to `connect_phase`,
+   which UVM guarantees only runs after the whole tree's build phase has
+   completed. Both tests now pass with a real, checked assertion (not
+   just log output) confirming the override took effect, plus the
+   printed per-opcode histogram (`ADD/SUB/AND/OR/XOR pass/fail`, 40/40
+   total transactions, 0 failures, matching the baseline scoreboard's own
+   result). Full design writeup, including why the two tests'
+   *observable* results are identical in this single-scoreboard
+   environment (stated explicitly rather than implied otherwise), in
+   `notes/2026-09-07-factory-overrides-and-config-db.md`.
+
+4. **Progress tracking** (`progress.md`): marked "Configuration
+   (`uvm_config_db`, factory overrides)" `[x]`, with a summary of what
+   was demonstrated and a pointer to today's notes file for the
+   `type_id.create()` prerequisite fix.
+
+**Not yet covered (candidates for future runs):**
+- Virtual sequencers and multiple concurrent sequences (still open from
+  2026-09-06 -- today's work did not touch this)
+- Active/passive agent distinction (still open -- today's agent remains
+  active-only)
+- RAL (register abstraction layer) basics -- still unexercised
+- The actual Phase 4 milestone (a full UVM testbench w/ 2-3 sequences/
+  tests + coverage target) needs a larger DUT than the 8-bit ALU and has
+  not been attempted
+- A behavioral contrast between type and instance overrides (as opposed
+  to just demonstrating both API calls correctly) would need a second
+  `AluScoreboard` instance elsewhere in a larger environment -- not
+  present in this repo's single-scoreboard ALU testbench
+
+**Web search availability:** Not needed this session (toolchain-internal
+UVM/factory-API investigation and hands-on debugging, not a literature
+review).
+
+**Commits this run:** 3 (factory-overrides research/design notes, the
+alu_uvm_tb.py factory-create fix + new factory-override testbench files
++ sim output logs, progress.md update; this AUTOMATION_LOG.md entry
+commit makes 4).
