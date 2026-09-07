@@ -2,7 +2,7 @@
 
 Status legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 
 ## Phase 1 — Digital Logic & HDL Fundamentals
 - [x] Combinational logic review (Boolean algebra, muxes, encoders, ALUs)
@@ -139,10 +139,21 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
 - [ ] UVM environment, virtual sequencers, scoreboards via analysis ports
       -- environment + scoreboard-via-analysis-port done above; virtual
       sequencers not yet
-- [ ] Configuration (`uvm_config_db`, factory overrides) -- plain
+- [x] Configuration (`uvm_config_db`, factory overrides) -- plain
       `UVMConfigDb.set`/`get` demonstrated (passing the cocotb DUT handle
-      into the environment); factory *overrides* specifically not yet
-      demonstrated
+      into the environment, 2026-09-06); factory overrides demonstrated
+      2026-09-07 via both API entry points -- a global type override
+      (`examples/phase4_uvm_python/alu_uvm_factory_type_override_tb.py`)
+      and a path-specific instance override
+      (`alu_uvm_factory_inst_override_tb.py`) -- both substituting a
+      drop-in `AluScoreboardOpHistogram` for `AluScoreboard` with no
+      changes to `AluEnv`/`AluAgent` source, and both verified (not just
+      logged) via a runtime-type assertion in `connect_phase`. Required
+      a prerequisite fix to `AluEnv.build_phase`/`AluAgent.build_phase`
+      (child creation routed through `<Class>.type_id.create()` rather
+      than direct constructor calls, otherwise overrides register but
+      are silently never consulted) -- see
+      notes/2026-09-07-factory-overrides-and-config-db.md, Section 2
 - [ ] RAL basics (overview level)
 - [ ] Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target
 
