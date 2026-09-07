@@ -308,9 +308,22 @@ class AluAgent(UVMAgent):
 
     def build_phase(self, phase):
         super().build_phase(phase)
-        self.sequencer = UVMSequencer("sequencer", self)
-        self.driver = AluDriver("driver", self)
-        self.monitor = AluMonitor("monitor", self)
+        # Create every child through its own type_id.create() rather than
+        # calling the Python constructor directly. This is not
+        # cosmetic: the UVM factory can only substitute a different
+        # concrete class for one of these components (a "factory
+        # override" -- see alu_uvm_factory_override_tb.py) if creation
+        # is actually routed through the factory. A direct constructor
+        # call such as `AluDriver("driver", self)` bypasses the factory
+        # entirely, silently making an override registered against
+        # AluDriver's type_id a no-op. (Fixed 2026-09-07 -- the
+        # 2026-09-06 version of this file predates any factory-override
+        # use and called constructors directly throughout, which worked
+        # for that session's purposes but would have made today's
+        # override demo not actually demonstrate anything.)
+        self.sequencer = UVMSequencer.type_id.create("sequencer", self)
+        self.driver = AluDriver.type_id.create("driver", self)
+        self.monitor = AluMonitor.type_id.create("monitor", self)
 
     def connect_phase(self, phase):
         super().connect_phase(phase)
@@ -328,8 +341,12 @@ class AluEnv(UVMEnv):
 
     def build_phase(self, phase):
         super().build_phase(phase)
-        self.agent = AluAgent("agent", self)
-        self.scoreboard = AluScoreboard("scoreboard", self)
+        # See AluAgent.build_phase's comment: routed through the factory
+        # (type_id.create) rather than direct construction, specifically
+        # so alu_uvm_factory_override_tb.py's scoreboard override has
+        # something real to substitute into.
+        self.agent = AluAgent.type_id.create("agent", self)
+        self.scoreboard = AluScoreboard.type_id.create("scoreboard", self)
 
     def connect_phase(self, phase):
         super().connect_phase(phase)

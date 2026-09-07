@@ -1,0 +1,86 @@
+rm -f results.xml
+"make" -f Makefile.factory_type_override results.xml
+make[1]: Entering directory '/tmp/work/Design-Verification-Roadmap/examples/phase4_uvm_python'
+mkdir -p sim_build_factory_type_override
+/usr/bin/iverilog -o sim_build_factory_type_override/sim.vvp -D COCOTB_SIM=1 -s alu_dut -g2012 -f sim_build_factory_type_override/cmds.f  /tmp/work/Design-Verification-Roadmap/examples/phase4_uvm_python/alu_if_and_dut.sv
+rm -f results.xml
+MODULE=alu_uvm_factory_type_override_tb TESTCASE= TOPLEVEL=alu_dut TOPLEVEL_LANG=verilog \
+         /usr/bin/vvp -M /usr/local/lib/python3.11/dist-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build_factory_type_override/sim.vvp  
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 12.0 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /usr/local/lib/python3.11/dist-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1788803738
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test alu_uvm_factory_type_override_tb.test_alu_uvm_type_override
+     0.00ns INFO     cocotb.regression                  running test_alu_uvm_type_override (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test AluTestTypeOverride...
+UVM_INFO @ 0.0NS: uvm_test_top [OVERRIDE_CHECK] factory type override confirmed: env.scoreboard is a AluScoreboardOpHistogram
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+UVM_INFO @ 925.0NS: uvm_test_top [SUMMARY] driven=40 valid_seen=40 result_valid_seen=40 sampled=40 checked=40 errors=0 (expected all == 40)
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 925.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 925.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_phase.py(63) @ 925.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+UVM_INFO @ 925.0NS: uvm_test_top.env.scoreboard [OPHIST] Per-opcode histogram (40 total transactions):
+  ADD  pass=  3 fail=  0
+  SUB  pass=  9 fail=  0
+  AND  pass=  9 fail=  0
+  OR   pass= 12 fail=  0
+  XOR  pass=  7 fail=  0
+UVM_INFO /usr/local/lib/python3.11/dist-packages/uvm/base/uvm_report_server.py(568) @ 925.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 20
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[OVERRIDE_CHECK] 1
+[PH_READY_TO_END] 13
+[SUMMARY] 1
+[PH/TRC/EXE/ALLDROP] 1
+[OPHIST] 1
+
+UVM_INFO @ 925.0NS: reporter [FINISH] $finish was reached in run_test()
+   925.00ns INFO     cocotb.regression                  test_alu_uvm_type_override passed
+   925.00ns INFO     cocotb.regression                  *********************************************************************************************************************
+                                                        ** TEST                                                         STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *********************************************************************************************************************
+                                                        ** alu_uvm_factory_type_override_tb.test_alu_uvm_type_override   PASS         925.00           0.25       3751.81  **
+                                                        *********************************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                               925.00           0.61       1527.82  **
+                                                        *********************************************************************************************************************
+                                                        
+make[1]: Leaving directory '/tmp/work/Design-Verification-Roadmap/examples/phase4_uvm_python'

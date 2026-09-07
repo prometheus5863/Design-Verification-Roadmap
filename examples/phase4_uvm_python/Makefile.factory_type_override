@@ -1,0 +1,17 @@
+# Factory type-override demo (see alu_uvm_factory_type_override_tb.py).
+# Separate sim_build dir from the baseline Makefile and from
+# Makefile.factory_inst_override so all three can be run back-to-back
+# without one invocation's build artifacts confusing another.
+#
+# Run with: make -f Makefile.factory_type_override
+
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
+
+VERILOG_SOURCES += $(PWD)/alu_if_and_dut.sv
+
+TOPLEVEL = alu_dut
+MODULE = alu_uvm_factory_type_override_tb
+SIM_BUILD = sim_build_factory_type_override
+
+include $(shell cocotb-config --makefiles)/Makefile.sim
