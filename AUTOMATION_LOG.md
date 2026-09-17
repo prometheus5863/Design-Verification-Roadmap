@@ -1131,3 +1131,155 @@ review).
 alu_uvm_tb.py factory-create fix + new factory-override testbench files
 + sim output logs, progress.md update; this AUTOMATION_LOG.md entry
 commit makes 4).
+
+---
+
+## 2026-09-17 — Phase 4: the UART DUT gets written, and a testbench that passed against broken RTL
+
+**Status:** Phase 4 in progress. The Phase 4 milestone had been gated
+since 2026-09-05 on a DUT that did not exist; it exists now and is
+verified. Note on repo history: the last commit before this session was
+2026-09-07, so the 2026-09-08..09-16 window has no sessions recorded
+here (see "Automation health" below — this was a broken-automation gap,
+not a decision to pause).
+
+**Work done:**
+
+1. **DUT RTL** (`rtl/uart_controller.v`, 394 lines, Verilog-2001): the
+   UART controller specified by
+   `verification_plans/uart_controller_verification_plan.md` Section 1 —
+   APB-lite register interface (`pready` tied high per the Section 1.2
+   scope reduction), all six registers of the Section 1 map, 8-entry x
+   8-bit TX/RX FIFOs in a single clock domain, a 16x-oversample baud
+   generator giving bit rate `clk/(16*(div+1))`, TX/RX framing FSMs
+   (start, 8 data LSB-first, optional even/odd parity, 1 or 2 stop bits,
+   mid-bit RX sampling with start-bit glitch rejection),
+   `CTRL.loopback_en`, and a masked level `irq`. Written in
+   Verilog-2001 specifically so it runs on the pinned Icarus 10.3
+   build: the class-support wall logged since 2026-08-25 applies to
+   class-based *testbenches*, not to synthesizable RTL. The Phase 1-3
+   8-bit ALU was never going to carry this plan's nine features (no
+   registers, no FIFOs, no serial framing, no interrupt), which is why
+   the milestone was stuck.
+
+   **Contradicts the verification plan, deliberately and explicitly:**
+   the plan (Section 1) calls all seven STATUS bits "live status". The
+   four occupancy bits are combinational as specified, but the three
+   error bits (`frame_err`, `parity_err`, `overrun_err`) are
+   implemented **sticky, cleared on a STATUS read** (16550 LSR style).
+   A truly combinational error bit is asserted for one clock cycle and
+   therefore cannot be observed by any register read at all, which
+   would make the plan's own F4 and F6 checks untestable. Stated in the
+   RTL header comment, the notes file, `progress.md` and here rather
+   than quietly changing the plan text; the vplan needs a v2 revision
+   to match (its Section 7 explicitly anticipated RTL-informed
+   corrections of this kind).
+
+2. **Bring-up regression** (`examples/phase4_rtl_bringup/
+   uart_controller_tb.v` + committed sim output log): 60 directed
+   self-checking tests, T1-T12, mapped to plan features F1-F9 — reset
+   values; register R/W with bit masking, ignored writes to read-only
+   STATUS, a defined read of write-only TX_DATA, and a no-hang
+   undefined-address read; loopback framing across no/even/odd parity
+   and 1 and 2 stop bits; TX FIFO fill, `tx_full`, write-while-full as
+   a safe no-op, and in-order drain of all eight bytes; RX overrun
+   (9th byte dropped, `overrun_err` set, existing eight entries
+   intact); measured TX bit period against `16*(div+1)*clk`; interrupt
+   masking; and two negative tests driven from a standalone bit-level
+   RX driver (corrupted parity, bad stop bit). Result: **60 passed, 0
+   failed.** Every check prints expected vs. actual and increments a
+   failure counter, with `$fatal` on failure and a global watchdog, so
+   neither a broken nor a hung DUT can pass quietly.
+
+   Deliberately **not** a UVM testbench: bringing up a new DUT inside a
+   brand-new UVM environment makes every failure ambiguous between a
+   DUT bug and a UVM bug. The UVM environment now gets built against a
+   DUT already known good. The plan's Section 2.4 prediction that
+   corrupted-parity testing would require a standalone RX bit-driver
+   (unreachable via loopback, since a working TX never sends bad
+   parity) held exactly.
+
+3. **The actual finding of the session** (`notes/2026-09-17-uart-rtl-
+   bringup-and-status-polling-hazard.md`, plus
+   `examples/phase4_rtl_bringup/mutation_test_report_2026-09-17.txt`):
+   the first complete version of this regression reported 55 passed, 0
+   failed — and went on reporting 55 passed, 0 failed against RTL
+   deliberately mutated to compute even parity where odd was required.
+   Mutation testing (inject one defect into a copy of the RTL, require
+   the regression to fail) is what exposed it.
+
+   Root cause: `parity_err` is read-to-clear, and the testbench's wait
+   helper polled STATUS in a loop until `rx_avail` came up — so by the
+   time the test read STATUS to check `parity_err`, its own polling
+   loop had already cleared it. The check was not weak and the injected
+   bug was not subtle; the *measurement apparatus* had a side effect on
+   the thing being measured. This generalises to any register interface
+   with read-to-clear or read-destructive fields (RX FIFO pops, W1C
+   interrupt flags, clear-on-read counters), and it reappears in UVM as
+   a monitor or `wait_for_status()` utility issuing real bus reads.
+   Fixed by replacing the poll with a counted `wait_bits()` and
+   checking every field from a single STATUS snapshot. After the fix:
+   60 checks, and all five injected mutations detected (m1 TX odd
+   parity 59/60 FAILED, m2 overrun overwrites 56/60 FAILED, m3 `irq`
+   ignores mask 57/60 FAILED, m4 RX samples at bit edge 36/60 FAILED,
+   m5 baud reload off by one 25/60 FAILED).
+
+   Worth noting honestly: m1 is caught by exactly *one* check, because
+   loopback is this suite's only TX-parity observation point. That is
+   thin, and it is a concrete argument for the plan's Section 2.2
+   `tx`-line monitor with an independent reference bit-stream
+   generator — which belongs in the UVM environment.
+
+4. **Progress tracking** (`progress.md`): recorded the DUT under Phase
+   4, marked the milestone as no longer blocked on a missing DUT (what
+   remains is the UVM environment itself), and flagged the Phase 6
+   capstone vplan as needing a v2 revision for the STATUS sticky-bit
+   correction.
+
+**Not yet covered (candidates for future runs):**
+- The Phase 4 UVM environment against the now-verified `uart_controller`
+  RTL: register-bus agent, serial-line agent (including the standalone
+  RX bit-driver F4 needs), reference-model scoreboard, functional
+  coverage collector — this is now the single clear next step, and is
+  no longer blocked on anything
+- A `tx`-line monitor with an independent reference bit-stream generator
+  (plan Section 2.2's actual specified check) — the concrete fix for
+  m1's thin single-check detection
+- vplan v2 revision: the STATUS sticky/read-to-clear correction, and
+  finalising the F7 baud tolerance now that real RTL exists to measure
+  (plan Section 6, sign-off item 5, was explicitly left open pending RTL)
+- RAL basics — still untouched; note the UART now gives it a real
+  register map to model, which the ALU never did
+- Virtual sequencers and multiple concurrent sequences (open since
+  2026-09-06; untouched again today)
+- Active/passive agent distinction (open; the existing ALU agent remains
+  active-only). The UART's loopback vs. external-RX modes are a natural
+  home for a passive monitor-only agent
+- Constrained-random and coverage-driven stimulus for the UART (plan
+  Sections 2-3 assign most features to CRV); today's suite is entirely
+  directed, by design, since its job was DUT bring-up
+- Code coverage measurement (plan Section 5 targets 95%) — not attempted;
+  Icarus has no native coverage support, so this needs its own toolchain
+  investigation
+
+**Automation health (needs Harsh's attention, reported separately):**
+This session ran interactively rather than unattended, and found why the
+2026-09-08..09-16 gap exists: the scheduled task's device shell has no
+GitHub push credentials (`git push` fails with `could not read Username
+for 'https://github.com'`; no credential helper, no `gh`, and SSH cannot
+resolve github.com through the HTTPS-only proxy), and the session VM is
+rebuilt per run so nothing persists. Separately, `git` cannot operate
+inside the connected folder at all, because it must unlink its own
+`.git/*.lock` files and deletion in connected folders is denied. Today's
+commits were therefore made in the session's own scratch clone and
+delivered as git bundles for Harsh to push manually. Until credentials
+are resolved, unattended runs cannot push.
+
+**Web search availability:** Not needed this session — RTL design against
+an already-researched in-repo specification plus hands-on debugging, not
+a literature review. No fetches attempted, so no access failures to
+record.
+
+**Commits this run:** 4 (UART RTL; bring-up regression + sim output log +
+mutation report; the read-to-clear/mutation-testing notes file;
+progress.md update). This AUTOMATION_LOG.md entry commit makes 5.
