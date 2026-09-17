@@ -155,7 +155,30 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
       are silently never consulted) -- see
       notes/2026-09-07-factory-overrides-and-config-db.md, Section 2
 - [ ] RAL basics (overview level)
+- [x] **DUT for the Phase 4 milestone exists (2026-09-17)** -- the
+      milestone had been gated since 2026-09-05 on a DUT that did not
+      exist: the UART verification plan was written spec-first and its
+      own Section 7 flagged the RTL as a Phase 4 dependency, and the
+      Phase 1-3 8-bit ALU is too small to carry the plan's 9 features
+      (no registers, no FIFOs, no serial framing, no interrupt).
+      `rtl/uart_controller.v` (394 lines, Verilog-2001, compiles and
+      simulates on the pinned Icarus 10.3 build) now implements the
+      plan's Section 1 spec in full: APB-lite register interface, all
+      six registers, 8-entry TX/RX FIFOs, 16x-oversample baud
+      generator, TX/RX framing FSMs with parity and 1-2 stop bits,
+      loopback mode and a masked level interrupt. Brought up against a
+      directed self-checking regression
+      (`examples/phase4_rtl_bringup/uart_controller_tb.v`, 60 checks
+      T1-T12 mapped to plan features F1-F9): **60 passed, 0 failed**.
+      Deliberately NOT a UVM testbench -- bringing up a new DUT inside
+      a new UVM environment makes every failure ambiguous between the
+      two; the UVM environment is now built against a known-good DUT.
+      See notes/2026-09-17-uart-rtl-bringup-and-status-polling-hazard.md
 - [ ] Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target
+      -- **no longer blocked on a missing DUT** as of 2026-09-17 (see
+      above); what remains is the UVM environment itself (register-bus
+      and serial agents, reference-model scoreboard, functional-coverage
+      collector) against the now-verified `uart_controller` RTL
 
 ## Phase 5 — Assertions & Formal Verification
 - [ ] SVA in depth (sequences, properties, local variables, assume/assert/cover)
@@ -172,6 +195,12 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
 - [ ] Capstone: UVM verification environment for register-mapped
       peripheral (UART/SPI controller with interrupt + FIFO datapath)
       - [~] Verification plan written -- early draft completed in Phase 3
+            (needs a v2 revision as of 2026-09-17: the RTL bring-up found
+            that the plan's "live status" wording cannot hold for the
+            three STATUS error bits, which must be sticky/read-to-clear
+            to be observable through a register read at all; the plan's
+            own Section 7 anticipated exactly this kind of RTL-informed
+            correction)
             (`verification_plans/uart_controller_verification_plan.md`,
             2026-09-05); to be revisited/revised once Phase 4 RTL and
             testbench bring-up experience is available (see that plan's
