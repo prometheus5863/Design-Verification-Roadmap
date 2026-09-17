@@ -1,0 +1,30 @@
+# Mutation test report -- examples/phase4_rtl_bringup/uart_controller_tb.v
+#
+# Purpose: a self-checking testbench that cannot fail is worthless. Each
+# mutation below is a single deliberate defect injected into a COPY of
+# rtl/uart_controller.v (the committed RTL is untouched); the bring-up
+# regression is then re-run against the mutant. A mutation that still
+# reports REGRESSION PASSED is a hole in the testbench, not a success.
+#
+# Run date: 2026-09-17
+#
+# Mutations:
+#   m1  TX odd-parity generation uses even parity instead
+#   m2  RX overrun overwrites the FIFO instead of dropping the byte
+#   m3  irq ignores the INT_EN mask
+#   m4  RX samples data at the bit edge instead of mid-bit
+#   m5  baud reload is (div+1) instead of div, skewing the bit period
+
+m1 : === SUMMARY: 59 passed, 1 failed === REGRESSION FAILED 
+m2 : === SUMMARY: 56 passed, 4 failed === REGRESSION FAILED 
+m3 : === SUMMARY: 57 passed, 3 failed === REGRESSION FAILED 
+m4 : === SUMMARY: 36 passed, 24 failed === REGRESSION FAILED 
+m5 : === SUMMARY: 25 passed, 35 failed === REGRESSION FAILED 
+
+Baseline (unmutated RTL): === SUMMARY: 60 passed, 0 failed ===
+
+All 5 mutations are detected. Note the history: with an earlier
+STATUS-polling wait loop, m1 was NOT detected (55/55 passed against
+broken odd-parity RTL) because reading STATUS clears the sticky
+parity_err bit. Fixed by replacing the poll with a counted
+wait_bits() wait; see notes/2026-09-17-*.md.

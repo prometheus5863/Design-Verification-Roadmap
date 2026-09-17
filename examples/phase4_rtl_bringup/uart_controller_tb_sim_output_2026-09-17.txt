@@ -1,0 +1,81 @@
+# Icarus Verilog Icarus Verilog version 10.3 (stable) ()
+# iverilog -g2012 -o uart_tb.out rtl/uart_controller.v examples/phase4_rtl_bringup/uart_controller_tb.v
+# vvp uart_tb.out
+# Run date: 2026-09-17
+
+=== uart_controller bring-up regression ===
+T1 reset values (F1)
+  PASS  CTRL after reset: 0x00
+  PASS  BAUD_DIV after reset: 0x00
+  PASS  INT_EN after reset: 0x00
+  PASS  STATUS after reset (tx_empty only): 0x02
+  PASS  irq low after reset: 0
+T2 register access + RO/WO (F1, F1.1)
+  PASS  BAUD_DIV readback: 0x5a
+  PASS  INT_EN readback masked to 3 bits: 0x07
+  PASS  CTRL readback masked to 5 bits: 0x1f
+  PASS  STATUS unaffected by write (RO): 0x02
+  PASS  TX_DATA read is implementation-defined 0x00: 0x00
+  PASS  undefined address reads 0x00 without hang: 0x00
+T3 loopback TX->RX, parity none, 1 stop (F2, F3, F9)
+  PASS  rx_avail set after loopback frame: 1
+  PASS  no frame_err on clean loopback: 0
+  PASS  no parity_err with parity none: 0
+  PASS  loopback byte 0xA5: 0xa5
+T4 parity even and odd over loopback (F4)
+  PASS  rx_avail set (even parity frame): 1
+  PASS  no parity_err (even): 0
+  PASS  even-parity loopback byte 0x3C: 0x3c
+  PASS  rx_avail set (odd parity frame): 1
+  PASS  no parity_err (odd): 0
+  PASS  odd-parity loopback byte 0x7F: 0x7f
+T5 two stop bits (F2, F3)
+  PASS  rx_avail set (2 stop bits): 1
+  PASS  no frame_err with 2 stop bits: 0
+  PASS  two-stop loopback byte 0xC3: 0xc3
+T6 TX FIFO fill, full flag, write-while-full (F5)
+  PASS  tx_full after 8 pushes: 1
+  PASS  tx_empty deasserted: 0
+  PASS  tx_full still set after write-while-full: 1
+  PASS  drained TX FIFO byte in order: 0x10
+  PASS  drained TX FIFO byte in order: 0x11
+  PASS  drained TX FIFO byte in order: 0x12
+  PASS  drained TX FIFO byte in order: 0x13
+  PASS  drained TX FIFO byte in order: 0x14
+  PASS  drained TX FIFO byte in order: 0x15
+  PASS  drained TX FIFO byte in order: 0x16
+  PASS  drained TX FIFO byte in order: 0x17
+  PASS  tx_empty after full drain: 1
+T7 RX FIFO overrun (F6)
+  PASS  rx_full after 8 received bytes: 1
+  PASS  overrun_err set by 9th byte: 1
+  PASS  RX FIFO contents intact after overrun: 0x20
+  PASS  RX FIFO contents intact after overrun: 0x21
+  PASS  RX FIFO contents intact after overrun: 0x22
+  PASS  RX FIFO contents intact after overrun: 0x23
+  PASS  RX FIFO contents intact after overrun: 0x24
+  PASS  RX FIFO contents intact after overrun: 0x25
+  PASS  RX FIFO contents intact after overrun: 0x26
+  PASS  RX FIFO contents intact after overrun: 0x27
+T8 baud divisor to measured TX bit period (F7)
+  PASS  measured TX bit period (ns): 480
+T9 interrupt masking (F8)
+  PASS  tx_empty is true: 1
+  PASS  irq deasserted while all sources masked: 0
+  PASS  irq asserted once tx_empty unmasked: 1
+  PASS  irq deasserted again when re-masked: 0
+T10 corrupted-parity RX frame, negative test (F4)
+  PASS  parity_err set on corrupted parity: 1
+  PASS  byte still queued despite parity error: 1
+  PASS  received byte despite bad parity: 0x5a
+  PASS  no parity_err on correct parity: 0
+  PASS  clean parity byte: 0x5a
+T11 framing error on bad stop bit (F3)
+  PASS  frame_err set on bad stop bit: 1
+  PASS  frame_err not set on clean frame: 0
+T12 sticky error bits clear on STATUS read (RTL deviation)
+  PASS  frame_err set by bad frame: 1
+  PASS  frame_err cleared by previous read: 0
+
+=== SUMMARY: 60 passed, 0 failed ===
+REGRESSION PASSED
