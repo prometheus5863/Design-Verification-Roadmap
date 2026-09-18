@@ -1283,3 +1283,158 @@ record.
 **Commits this run:** 4 (UART RTL; bring-up regression + sim output log +
 mutation report; the read-to-clear/mutation-testing notes file;
 progress.md update). This AUTOMATION_LOG.md entry commit makes 5.
+
+---
+
+## 2026-09-18 — Phase 4 milestone complete, and a green regression that was hiding UVM_ERRORs
+
+**Status:** Full session. **The Phase 4 UVM milestone is complete.** Only
+RAL basics remains in Phase 4.
+
+**Work done:**
+
+1. **The milestone environment**
+   (`examples/phase4_uvm_milestone/uart_uvm_tb.py`, ~1030 lines, plus a
+   Makefile, the sim log and a mutation report): a full UVM environment
+   on uvm-python/cocotb/Icarus 10.3 against the **unmodified**
+   `rtl/uart_controller.v` brought up on 2026-09-17. Closes three of the
+   four things `progress.md` still listed as unexercised:
+   - **Active vs passive agents.** One `UartSerialAgent` class,
+     instantiated ACTIVE on the `rx` input (sequencer + driver + monitor)
+     and PASSIVE on the `tx` output (monitor only, neither child built).
+     Chosen because it is the case where the distinction is *forced*:
+     `tx` is a DUT output, so an agent there physically cannot be active.
+     `connect_phase` asserts at runtime that the passive instance built
+     no driver and no sequencer — a flag that is merely set is not an
+     exercise of the concept.
+   - **Virtual sequencer and concurrent sequences.**
+     `UartVirtualSequencer` holds both real sequencers;
+     `UartFullDuplexVSeq` reaches it through `get_sequencer()` (uvm-python
+     names the field `m_sequencer`; there is no `self.sequencer`
+     property — one debug cycle) and starts register-side TX and
+     serial-side RX stimulus *simultaneously* via `cocotb.start_soon`.
+     The DUT therefore transmits and receives at the same time, which
+     back-to-back sequences can never produce.
+   - **Reference-model scoreboard** on three analysis imps
+     (`_reg`/`_rx`/`_tx`): predicts tx frames from TX_DATA writes,
+     predicts RX_DATA reads from frames observed on rx, and models the
+     STATUS error bits as sticky/read-to-clear. Fed only from monitors,
+     never from drivers.
+
+   Baseline: **69 scoreboard checks, 0 errors, 12 rx + 15 tx frames
+   decoded, 100.0% functional bin coverage** over 5 coverpoints and one
+   cross, under three frame formats (none/1 stop, even/1, odd/2).
+   Coverage below target raises a UVM_ERROR rather than printing a number
+   nobody reads.
+
+2. **Mutation testing — and the two real testbench defects it exposed.**
+   Five defects injected into *copies* of the RTL. Final result **5/5
+   killed, 0 survivors**, but the first pass reported two survivors and
+   both were testbench bugs, not lucky RTL:
+
+   **Defect A — the regression reported PASS while the scoreboard
+   reported errors.** Mutants M1 (TX parity inverted) and M2 (RX shifted
+   MSB-first) were correctly *detected*: the scoreboard printed
+   `UVM_ERROR ... got 1, expected 0`. cocotb still recorded
+   `TESTS=1 PASS=1 FAIL=0`. cocotb's verdict comes from whether the test
+   coroutine raised; it has no knowledge of the UVM report server's
+   severity counts, and uvm-python does not bridge the two. The log
+   contained the evidence and the summary line contradicted it.
+
+   This is the **same class as the 2026-09-17 finding** (a testbench that
+   passed 55/55 against deliberately broken RTL) arrived at from the
+   opposite direction — there the checks never ran, here they ran,
+   failed, printed, and were ignored. Arguably worse, because it teaches
+   a reader to trust a summary line that is wrong. Fixed:
+   `UartMilestoneTest.report_phase` reads the report server's
+   UVM_ERROR/UVM_FATAL counts and asserts zero (report_phase is
+   bottom-up, so all children are already counted).
+
+   **Defect B — checking that a sticky bit SETS is not checking a
+   read-to-clear register.** With A fixed, M3 (read-to-clear deleted)
+   still survived: one STATUS read per run cannot distinguish a bit that
+   never clears from one correctly re-set by the next run's injected
+   error. Fixed by reading STATUS **twice** — the first read checks the
+   bits were set, the second checks the first read cleared them. M3 then
+   dies on the second read.
+
+   Smaller but concrete: M2 is **not** distinguished by the byte `0x5A`,
+   which is bit-symmetric; it was killed by `0x01` → `0x80`. A stimulus
+   set of only palindromic bytes would have let a bit-reversal bug
+   through — an argument for the value-diversity coverpoint that is worth
+   more than the abstract version.
+
+3. **Toolchain fixes** (`tools/setup_iverilog.sh`). Every `make` first
+   failed with `Makefile.icarus:53: *** Unable to locate command
+   >iverilog<` in a shell where `iverilog -V` worked. Two root causes,
+   both now fixed:
+   - Shell functions are invisible to a child process doing its own
+     command lookup. The script now also installs real wrapper **scripts**
+     (carrying `-B`/`-M`) in `$IVERILOG_INSTALL_DIR/bin` and prepends it
+     to PATH. This **supersedes the 2026-09-17 workaround** of calling the
+     real binary by absolute path to use `timeout`: `timeout 150 vvp sim`
+     now works, because `vvp` is a file.
+   - `export -f iverilog vvp` actively **poisoned** cocotb's detection.
+     cocotb's `Makefile.inc` sets `SHELL := bash`; `Makefile.icarus` does
+     `CMD := $(shell :; command -v iverilog)` then `dirname $(CMD)`. In a
+     bash that imported an exported *function* of that name, `command -v`
+     prints the bare word `iverilog`, `dirname` yields `.`, and cocotb
+     looks for `./iverilog`. The functions are no longer exported.
+   Verified: both `phase4_uvm_milestone` and the older
+   `phase4_uvm_python` now run with `make` after nothing but
+   `source tools/setup_iverilog.sh` (sourced, not piped — the 2026-09-17
+   gotcha still applies and is now in the script's header).
+
+**The lesson worth carrying into Phases 5-6.** Two sessions running, the
+bug has been in the *verdict*, not the checks. Generalised: **whenever
+the subsystem that decides pass/fail is not the subsystem doing the
+checking, the two must be wired together explicitly, and the wire must
+itself be tested.** That covers a formal tool's exit code, a regression
+runner parsing a log, and a coverage merge that silently drops a
+database — not just this one cocotb/uvm-python combination. Mutation
+testing is what surfaces it, because it is the only check that tests the
+verdict rather than the design.
+
+**Not yet covered (candidates for future runs):**
+- **RAL basics** — now the ONLY remaining Phase 4 topic, and no longer
+  abstract: the UART gives it a real six-register map, and the bus agent
+  built today is exactly what a RAL model sits on top of. The obvious
+  next session
+- **Constrained-random and coverage-driven UART stimulus.** Today's
+  stimulus is directed with hand-chosen values. The plan's Sections 2-3
+  assign most features to CRV, and the M2/`0x5A` near-miss above is a
+  concrete argument for randomised values feeding the existing
+  coverpoints
+- **vplan v2 revision** — now motivated from TWO independent directions:
+  the RTL bring-up (2026-09-17) and the UVM environment's read-to-clear
+  check (today). The "live status" wording cannot hold for the three
+  STATUS error bits
+- **Mutants not yet attempted**: the baud generator, the overrun path,
+  the interrupt logic, the FIFO full/empty flags, the loopback mux. None
+  of these has a check in the environment yet either, so they are
+  simultaneously the next mutants and the next coverpoints. 5/5 is a
+  claim about five defects, not about the DUT
+- Code coverage measurement (plan Section 5 targets 95%) — still not
+  attempted; Icarus has no native coverage support, so it needs its own
+  toolchain investigation
+- Phase 5 (SVA and formal) has not been started. Note that Icarus 10.3
+  supports only a small SVA subset, so Phase 5 will likely need the same
+  kind of toolchain decision Phase 4 needed on 2026-09-06
+
+**Web search availability:** Not needed this session — the work was
+building against an in-repo specification plus hands-on debugging, not a
+literature review. No fetches attempted, so no access failures to record.
+
+**Automation health:** **Push now works.** Unlike 2026-09-17, this
+session's commits were pushed to GitHub and verified against the API, so
+the credential problem recorded in the 2026-09-17 entry is resolved.
+Unchanged: `git` still cannot run inside the connected folder (lock files
+cannot be unlinked there), so work is done in the session's own scratch
+clone. `scipy` remains absent from the device VM, and the
+uvm-python/cocotb stack (`python-constraint --use-pep517`, `cocotb<2.0`,
+`uvm-python`) has to be reinstalled each run, since the VM is rebuilt per
+session. Both are per-run costs, not failures.
+
+**Commits this run:** 4 (the UVM milestone environment + sim log +
+mutation report; the setup_iverilog.sh toolchain fixes; the notes file;
+progress.md). This AUTOMATION_LOG.md entry makes 5.
