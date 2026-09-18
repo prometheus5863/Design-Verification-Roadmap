@@ -1,0 +1,16 @@
+# Simulation build artifacts and transient outputs.
+#
+# cocotb/Icarus regenerate all of these on every `make`: sim_build/ holds
+# the compiled sim.vvp and the command file, results.xml is cocotb's
+# per-run JUnit output, and tr_db.log is uvm-python's transaction
+# recorder. None of them are reproducible across machines or reviewable
+# in a diff, and sim.vvp is a binary.
+#
+# The sim output logs that ARE committed (examples/*/*_sim_output_*.txt)
+# are deliberate, dated evidence that a suite ran and what it printed --
+# they are not build artifacts and are not matched here.
+sim_build/
+results.xml
+tr_db.log
+__pycache__/
+*.pyc

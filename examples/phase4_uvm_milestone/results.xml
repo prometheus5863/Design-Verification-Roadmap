@@ -1,8 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1789735923" />
-    <testcase name="test_uart_uvm_milestone" classname="uart_uvm_tb" file="/sessions/rcw-01urtww1qicl39ru74t5baor/work/Design-Verification-Roadmap/examples/phase4_uvm_milestone/uart_uvm_tb.py" lineno="1058" time="0.672584056854248" sim_time_ns="60830.001" ratio_time="90442.22856620899">
-      <failure message="Test failed with RANDOM_SEED=1789735923" />
-    </testcase>
-  </testsuite>
-</testsuites>
