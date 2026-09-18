@@ -1,0 +1,172 @@
+rm -f results.xml
+"make" -f Makefile results.xml
+make[1]: Entering directory '<session>/work/Design-Verification-Roadmap/examples/phase4_uvm_milestone'
+mkdir -p /tmp/mut/sb_clean
+/tmp/ivbin/iverilog -o /tmp/mut/sb_clean/sim.vvp -D COCOTB_SIM=1 -s uart_controller -g2012 -f /tmp/mut/sb_clean/cmds.f  <session>/work/Design-Verification-Roadmap/examples/phase4_uvm_milestone/../../rtl/uart_controller.v
+rm -f results.xml
+MODULE=uart_uvm_tb TESTCASE= TOPLEVEL=uart_controller TOPLEVEL_LANG=verilog \
+         /tmp/ivbin/vvp -M <session>/.local/lib/python3.10/site-packages/cocotb/libs -m libcocotbvpi_icarus   /tmp/mut/sb_clean/sim.vvp  
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from <session>/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1789735915
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_tb.test_uart_uvm_milestone
+     0.00ns INFO     cocotb.regression                  running test_uart_uvm_milestone (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartMilestoneTest...
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+UVM_INFO @ 80.0NS: uvm_test_top [TEST] --- run 1/3: parity=none stop=1 ---
+UVM_INFO @ 1730.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x00, got 0x00
+UVM_INFO @ 1730.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 parity bit correct (got None, expected None)
+UVM_INFO @ 1730.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 stop bit high
+UVM_INFO @ 3340.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x3c, got 0x3c
+UVM_INFO @ 3340.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c parity bit correct (got None, expected None)
+UVM_INFO @ 3340.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c stop bit high
+UVM_INFO @ 4950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xa5, got 0xa5
+UVM_INFO @ 4950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 parity bit correct (got None, expected None)
+UVM_INFO @ 4950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 stop bit high
+UVM_INFO @ 6560.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xd2, got 0xd2
+UVM_INFO @ 6560.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 parity bit correct (got None, expected None)
+UVM_INFO @ 6560.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 stop bit high
+UVM_INFO @ 7220.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x5a, got 0x5a
+UVM_INFO @ 7250.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 7280.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x7e, got 0x7e
+UVM_INFO @ 7310.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0xc3, got 0xc3
+UVM_INFO @ 7340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 7340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 7370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 7370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 8170.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xff, got 0xff
+UVM_INFO @ 8170.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff parity bit correct (got None, expected None)
+UVM_INFO @ 8170.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff stop bit high
+UVM_INFO @ 18570.0NS: uvm_test_top [TEST] --- run 2/3: parity=even stop=1 ---
+UVM_INFO @ 20380.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x00, got 0x00
+UVM_INFO @ 20380.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 parity bit correct (got 0, expected 0)
+UVM_INFO @ 20380.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 stop bit high
+UVM_INFO @ 22150.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x3c, got 0x3c
+UVM_INFO @ 22150.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c parity bit correct (got 0, expected 0)
+UVM_INFO @ 22150.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c stop bit high
+UVM_INFO @ 23920.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xa5, got 0xa5
+UVM_INFO @ 23920.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 parity bit correct (got 0, expected 0)
+UVM_INFO @ 23920.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 stop bit high
+UVM_INFO @ 25690.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xd2, got 0xd2
+UVM_INFO @ 25690.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 parity bit correct (got 0, expected 0)
+UVM_INFO @ 25690.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 stop bit high
+UVM_INFO @ 26350.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x5a, got 0x5a
+UVM_INFO @ 26380.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 26410.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x7e, got 0x7e
+UVM_INFO @ 26440.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0xc3, got 0xc3
+UVM_INFO @ 26470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 1, got 1
+UVM_INFO @ 26470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 26500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 26500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 27460.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xff, got 0xff
+UVM_INFO @ 27460.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff parity bit correct (got 0, expected 0)
+UVM_INFO @ 27460.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff stop bit high
+UVM_INFO @ 38820.0NS: uvm_test_top [TEST] --- run 3/3: parity=odd stop=2 ---
+UVM_INFO @ 40790.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x00, got 0x00
+UVM_INFO @ 40790.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 parity bit correct (got 1, expected 1)
+UVM_INFO @ 40790.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 stop bit high
+UVM_INFO @ 42720.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x3c, got 0x3c
+UVM_INFO @ 42720.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c parity bit correct (got 1, expected 1)
+UVM_INFO @ 42720.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c stop bit high
+UVM_INFO @ 44650.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xa5, got 0xa5
+UVM_INFO @ 44650.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 parity bit correct (got 1, expected 1)
+UVM_INFO @ 44650.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 stop bit high
+UVM_INFO @ 46580.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xd2, got 0xd2
+UVM_INFO @ 46580.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 parity bit correct (got 1, expected 1)
+UVM_INFO @ 46580.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 stop bit high
+UVM_INFO @ 47240.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x5a, got 0x5a
+UVM_INFO @ 47270.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 47300.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x7e, got 0x7e
+UVM_INFO @ 47330.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0xc3, got 0xc3
+UVM_INFO @ 47360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 1, got 1
+UVM_INFO @ 47360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 47390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 47390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 48510.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xff, got 0xff
+UVM_INFO @ 48510.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff parity bit correct (got 1, expected 1)
+UVM_INFO @ 48510.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff stop bit high
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 60830.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 60830.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 60830.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+UVM_INFO @ 60830.0NS: uvm_test_top.env.scoreboard [SB_SUMMARY] scoreboard: checks=69 errors=0
+UVM_INFO @ 60830.0NS: uvm_test_top.env.coverage [COVERAGE] functional coverage
+  cp_parity_mode   3/3 bins hit  none=1 even=1 odd=1
+  cp_stop_bits     2/2 bins hit  one=2 two=1
+  cp_tx_data       5/5 bins hit  zero=3 low=3 mid=3 high=3 ones=3
+  cp_rx_error      3/3 bins hit  clean=7 parity=2 frame=3
+  cp_reg_access    6/6 bins hit  wr_ctrl=3 wr_baud=3 wr_int=3 wr_txdata=15 rd_status=6 rd_rxdata=12
+  cross(parity_mode x rx_error): even/clean=2 even/frame=1 even/parity=1 none/clean=3 none/frame=1 odd/clean=2 odd/frame=1 odd/parity=1
+  TOTAL bin coverage: 100.0% (target 100%)
+UVM_INFO @ 60830.0NS: uvm_test_top [TEST_SUMMARY] 
+  rx frames decoded : 12
+  tx frames decoded : 15
+  scoreboard checks : 69
+  scoreboard errors : 0
+  functional cover  : 100.0%
+  active agents     : reg_agent, rx_agent
+  passive agents    : tx_agent (no driver, no sequencer)
+UVM_INFO @ 60830.0NS: uvm_test_top [VERDICT] UVM_ERROR=0 UVM_FATAL=0
+UVM_INFO <session>/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 60830.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 93
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[TEST] 3
+[SB_PASS] 69
+[PH/TRC/EXE/ALLDROP] 1
+[SB_SUMMARY] 1
+[COVERAGE] 1
+[TEST_SUMMARY] 1
+[VERDICT] 1
+
+UVM_INFO @ 60830.0NS: reporter [FINISH] $finish was reached in run_test()
+ 60830.00ns INFO     cocotb.regression                  test_uart_uvm_milestone passed
+ 60830.00ns INFO     cocotb.regression                  *********************************************************************************************
+                                                        ** TEST                                 STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *********************************************************************************************
+                                                        ** uart_uvm_tb.test_uart_uvm_milestone   PASS       60830.00           0.67      90488.48  **
+                                                        *********************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     60830.00           0.71      85568.27  **
+                                                        *********************************************************************************************
+                                                        
+make[1]: Leaving directory '<session>/work/Design-Verification-Roadmap/examples/phase4_uvm_milestone'

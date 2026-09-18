@@ -1,0 +1,95 @@
+Mutation test report -- Phase 4 UVM milestone environment
+examples/phase4_uvm_milestone/uart_uvm_tb.py vs. rtl/uart_controller.v
+Date: 2026-09-18
+
+METHOD
+------
+Each mutant is a COPY of rtl/uart_controller.v with one defect injected
+(the real RTL is never modified). The full UVM regression is then run
+against the mutant with an independent SIM_BUILD directory. A mutant is
+KILLED if the regression fails, SURVIVED if it still reports a pass. A
+survivor is a hole in the testbench, not a curiosity.
+
+Baseline, unmutated RTL: 69 scoreboard checks, 0 errors,
+100.0% functional bin coverage, UVM_ERROR=0, TESTS=1 PASS=1.
+
+RESULT: 5 mutants, 5 killed, 0 survivors -- but only after TWO real
+testbench defects that the first pass exposed (see below).
+
+  M1  TX parity polarity inverted (even <-> odd on transmit)
+      KILLED -- 5 failing checks
+      first: tx frame 0x00 parity bit correct (got 1, expected 0)
+
+  M2  RX shift register filled MSB-first instead of LSB-first
+      KILLED -- 3 failing checks
+      first: RX_DATA read: expected 0x01, got 0x80
+      (note 0x5A is bit-symmetric and does NOT distinguish this mutant;
+       it was killed by 0x01 -> 0x80. A stimulus set of only palindromic
+       bytes would have let it survive.)
+
+  M3  STATUS read-to-clear deleted (error bits set but never cleared)
+      KILLED -- 5 failing checks
+      first: STATUS.frame_err: expected 0, got 1
+      SURVIVED the first attempt. See defect B below.
+
+  M4  Framing-error detection deleted (stop bit never checked)
+      KILLED -- 3 failing checks
+      first: STATUS.frame_err: expected 1, got 0
+
+  M5  TX FIFO read pointer never advances (same byte sent forever)
+      KILLED -- 11 failing checks
+      first: tx frame: expected 0x3c, got 0x00
+
+TWO TESTBENCH DEFECTS THIS RUN FOUND
+------------------------------------
+Both were found by mutants surviving, and both are the reason this
+report exists rather than a line saying "5/5 killed".
+
+A. THE REGRESSION REPORTED PASS WHILE THE SCOREBOARD REPORTED ERRORS.
+   M1 and M2 initially "SURVIVED". They had not: the scoreboard printed
+   the correct UVM_ERROR lines ("got 1, expected 0") and cocotb still
+   recorded TESTS=1 PASS=1 FAIL=0. cocotb's verdict comes from whether
+   the test coroutine raised; it has no knowledge of the UVM report
+   server's severity counts, and uvm-python does not bridge the two.
+
+   This is the same class of defect as the 2026-09-17 finding (a
+   testbench that passed 55/55 against deliberately broken RTL) reached
+   by the opposite route: there the checks never ran; here they ran,
+   failed, and the verdict ignored them. Arguably worse, because the log
+   contains the evidence and the summary line contradicts it.
+
+   Fix: UartMilestoneTest.report_phase now reads the report server's
+   UVM_ERROR/UVM_FATAL counts and asserts they are zero. report_phase is
+   bottom-up, so every child's errors are already counted. Any UVM_ERROR
+   from anywhere -- scoreboard, coverage target, drain check -- now fails
+   the regression.
+
+   Generalisation worth carrying into Phase 5/6: a pass/fail verdict
+   computed by a different subsystem from the one doing the checking has
+   to be explicitly wired, every time.
+
+B. THE STICKY ERROR BITS WERE CHECKED FOR SETTING, NEVER FOR CLEARING.
+   With defect A fixed, M3 still survived. The drain sequence read STATUS
+   once per run, and every run injects fresh errors before that read --
+   so an error bit that never clears is indistinguishable from one that
+   is correctly re-set by the next run's injected error. The regression
+   was checking half of a read-to-clear register.
+
+   Fix: UartDrainSeq now reads STATUS twice. The first read checks the
+   bits were SET, the second checks the first read CLEARED them. M3 then
+   dies on the second read (expected 0, got 1).
+
+   This is the register-modelling point behind the pending vplan v2
+   revision, stated as a check rather than as prose: a sticky/read-to-
+   clear bit needs two checks, and a verification plan that calls the bit
+   "live" produces a testbench that writes only one of them.
+
+WHAT IS NOT COVERED BY THIS REPORT
+----------------------------------
+No mutant was injected into the baud generator, the overrun path, the
+interrupt logic, the TX/RX FIFO full/empty flags, or the loopback mux.
+The environment does exercise the baud rate implicitly (every frame would
+mis-decode at the wrong rate) but overrun, irq and loopback have no
+checks at all yet -- they are the obvious next mutants and the obvious
+next coverpoints. Claiming 5/5 is claiming it for these five defects,
+not for the DUT.
