@@ -125,20 +125,35 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
       Phase 2 `alu_dut` on the pinned Icarus build via uvm-python; see
       `examples/phase4_uvm_python/alu_uvm_tb.py` and its sim output log
       (`driven=40 sampled=40 checked=40 errors=0`, `TESTS=1 PASS=1`)
-- [~] TLM ports/exports/analysis ports, sequences/sequencers -- a real
+- [x] TLM ports/exports/analysis ports, sequences/sequencers -- a real
       `UVMSequence`/`UVMSequencer`/`UVMDriver` pull-mode handshake and a
       real `UVMAnalysisPort`/`uvm_analysis_imp_decl` broadcast from
       monitor to scoreboard are both demonstrated (the actual TLM
       channel type `notes/2026-08-31-*.md` Section 3 could only describe
-      conceptually); virtual sequencers and multiple concurrent
-      sequences are not yet exercised
-- [~] Drivers, monitors, active/passive agents -- real `UVMDriver`/
-      `UVMMonitor` classes demonstrated (see above); the agent built so
-      far is active-only, so the active/passive distinction itself is
-      not yet exercised
-- [ ] UVM environment, virtual sequencers, scoreboards via analysis ports
-      -- environment + scoreboard-via-analysis-port done above; virtual
-      sequencers not yet
+      conceptually). **Virtual sequencer and concurrent sequences added
+      2026-09-18**: `UartVirtualSequencer` holds handles to the register
+      and serial sequencers, and `UartFullDuplexVSeq` (reached via
+      `get_sequencer()`, not a pointer handed in by the test) starts
+      register-side TX and serial-side RX stimulus *simultaneously* with
+      `cocotb.start_soon`, so the DUT transmits and receives at the same
+      time -- full duplex, which back-to-back sequences cannot produce.
+      Three analysis imps (`_reg`/`_rx`/`_tx`) feed one scoreboard. See
+      `examples/phase4_uvm_milestone/uart_uvm_tb.py`
+- [x] Drivers, monitors, active/passive agents -- real `UVMDriver`/
+      `UVMMonitor` classes demonstrated (see above). **Active/passive
+      exercised 2026-09-18**: one `UartSerialAgent` class instantiated
+      ACTIVE on the `rx` input (sequencer + driver + monitor) and PASSIVE
+      on the `tx` output (monitor only -- neither child built). Not a
+      cosmetic flag: `tx` is a DUT output, so an agent there physically
+      cannot be active, and a driver on it would be a contention bug.
+      `connect_phase` carries a runtime assertion that the passive
+      instance built no driver and no sequencer
+- [x] UVM environment, virtual sequencers, scoreboards via analysis ports
+      -- all three done as of 2026-09-18 (`UartEnv`, `UartVirtualSequencer`,
+      `UartScoreboard` on three analysis imps with a real reference model:
+      it predicts tx frames from TX_DATA writes, predicts RX_DATA reads
+      from frames observed on rx, and models the STATUS error bits as
+      sticky/read-to-clear)
 - [x] Configuration (`uvm_config_db`, factory overrides) -- plain
       `UVMConfigDb.set`/`get` demonstrated (passing the cocotb DUT handle
       into the environment, 2026-09-06); factory overrides demonstrated
@@ -154,7 +169,10 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
       than direct constructor calls, otherwise overrides register but
       are silently never consulted) -- see
       notes/2026-09-07-factory-overrides-and-config-db.md, Section 2
-- [ ] RAL basics (overview level)
+- [ ] RAL basics (overview level) -- **the only Phase 4 topic left**.
+      The UART register map is currently driven through an explicit bus
+      agent, which is exactly what a RAL model sits on top of, so the
+      prerequisite now exists
 - [x] **DUT for the Phase 4 milestone exists (2026-09-17)** -- the
       milestone had been gated since 2026-09-05 on a DUT that did not
       exist: the UART verification plan was written spec-first and its
@@ -174,11 +192,27 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
       a new UVM environment makes every failure ambiguous between the
       two; the UVM environment is now built against a known-good DUT.
       See notes/2026-09-17-uart-rtl-bringup-and-status-polling-hazard.md
-- [ ] Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target
-      -- **no longer blocked on a missing DUT** as of 2026-09-17 (see
-      above); what remains is the UVM environment itself (register-bus
-      and serial agents, reference-model scoreboard, functional-coverage
-      collector) against the now-verified `uart_controller` RTL
+- [x] **Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage
+      target -- COMPLETE 2026-09-18.**
+      `examples/phase4_uvm_milestone/uart_uvm_tb.py` (~1030 lines) against
+      the unmodified `rtl/uart_controller.v`: register (APB-lite) agent,
+      active serial RX agent with a standalone bit-driver, passive serial
+      TX agent, reference-model scoreboard, functional-coverage collector,
+      virtual sequencer, five sequences (`UartConfigSeq`, `UartTxSeq`,
+      `UartRxFrameSeq`, `UartDrainSeq`, `UartFullDuplexVSeq`) run under
+      three frame formats. Result: **69 scoreboard checks, 0 errors,
+      100.0% functional bin coverage** over 5 coverpoints and 1 cross;
+      coverage below target is itself a UVM_ERROR. Mutation tested:
+      **5 injected RTL defects, 5 killed, 0 survivors** -- but only after
+      the first pass exposed two real testbench defects (a regression that
+      reported PASS while the scoreboard printed UVM_ERRORs, and a sticky
+      error bit whose *clearing* was never checked). See
+      `notes/2026-09-18-uvm-environment-and-the-green-regression-that-wasnt.md`
+      and `examples/phase4_uvm_milestone/mutation_test_report_2026-09-18.txt`
+
+**Phase 4 is now one topic from complete** -- only RAL basics remain, and
+its prerequisite (a real register map driven through a bus agent) now
+exists.
 
 ## Phase 5 — Assertions & Formal Verification
 - [ ] SVA in depth (sequences, properties, local variables, assume/assert/cover)
