@@ -19,9 +19,13 @@
 # to a non-standard location.
 #
 # Usage:
-#   source tools/setup_iverilog.sh
+#   source tools/setup_iverilog.sh      # source it -- do NOT pipe it
 #   iverilog -g2012 -o sim my_design.v
 #   vvp sim
+#
+# (Piping, e.g. `source tools/setup_iverilog.sh | tail`, runs the script
+# in a subshell, so the functions and the PATH change it makes vanish
+# and you get a confusing "command not found" -- logged 2026-09-17.)
 #
 # To use a custom install location, `export IVERILOG_INSTALL_DIR=/some/dir`
 # BEFORE sourcing (default: /tmp/iverilog_install).
@@ -76,8 +80,61 @@ vvp() {
     "${IVERILOG_INSTALL_DIR}/usr/bin/vvp" -M "${IVL_LIB_DIR}" "$@"
 }
 
-export -f iverilog vvp 2>/dev/null || true
+# NOTE: these functions are deliberately NOT exported with `export -f`.
+#
+# An exported bash function POISONS cocotb's simulator auto-detection.
+# cocotb's Makefile.inc sets `SHELL := bash`, and Makefile.icarus does
+#     CMD := $(shell :; command -v iverilog)
+#     ICARUS_BIN_DIR := $(shell dirname $(CMD))
+# In a bash that has imported an exported `iverilog` FUNCTION,
+# `command -v iverilog` prints the bare word "iverilog" rather than a
+# path, so dirname yields "." and cocotb then looks for "./iverilog",
+# fails, and reports the misleading
+#     *** Unable to locate command >iverilog<
+# in a shell where `iverilog -V` plainly works. Diagnosed 2026-09-18.
+#
+# Leaving the functions unexported keeps them for interactive use in this
+# shell while letting every child process resolve the wrapper SCRIPTS
+# installed on PATH below -- which give a real path and a correct
+# ICARUS_BIN_DIR.
 
-echo "iverilog/vvp are now available as shell functions in this session."
+# ---------------------------------------------------------------------
+# Also install REAL wrapper SCRIPTS on PATH, not just shell functions.
+#
+# Shell functions are invisible to any child process that does its own
+# command lookup. cocotb's Makefile.icarus does exactly that -- it
+# resolves iverilog with a `$(shell which ...)`-style check -- so a
+# `make` run in a shell that has sourced this script still fails with:
+#
+#     Makefile.icarus:53: *** Unable to locate command >iverilog<.  Stop.
+#
+# even though `iverilog -V` works in that same shell. Found 2026-09-18
+# while bringing up examples/phase4_uvm_milestone. `export -f` does not
+# help: it exports to bash children, and make does not invoke bash for
+# its command lookup. Two-line scripts on PATH do help, and they also
+# make the -B/-M flags available to anything that shells out.
+#
+# This supersedes the 2026-09-17 workaround of calling the real binary
+# by absolute path to wrap it in `timeout` -- with these wrappers,
+# `timeout 150 vvp sim` works directly, because vvp is now a file.
+# ---------------------------------------------------------------------
+IVERILOG_BIN_DIR="${IVERILOG_INSTALL_DIR}/bin"
+mkdir -p "${IVERILOG_BIN_DIR}"
+cat > "${IVERILOG_BIN_DIR}/iverilog" <<EOF
+#!/bin/sh
+exec "${IVERILOG_INSTALL_DIR}/usr/bin/iverilog" -B "${IVL_LIB_DIR}" "\$@"
+EOF
+cat > "${IVERILOG_BIN_DIR}/vvp" <<EOF
+#!/bin/sh
+exec "${IVERILOG_INSTALL_DIR}/usr/bin/vvp" -M "${IVL_LIB_DIR}" "\$@"
+EOF
+chmod +x "${IVERILOG_BIN_DIR}/iverilog" "${IVERILOG_BIN_DIR}/vvp"
+case ":${PATH}:" in
+    *":${IVERILOG_BIN_DIR}:"*) ;;
+    *) PATH="${IVERILOG_BIN_DIR}:${PATH}"; export PATH ;;
+esac
+
+echo "iverilog/vvp are now available as shell functions AND as scripts in"
+echo "${IVERILOG_BIN_DIR} (added to PATH -- needed for cocotb's make flow)."
 IVERILOG_VERSION_OUTPUT="$("${IVERILOG_INSTALL_DIR}/usr/bin/iverilog" -V 2>&1)"
 echo "${IVERILOG_VERSION_OUTPUT%%$'\n'*}"

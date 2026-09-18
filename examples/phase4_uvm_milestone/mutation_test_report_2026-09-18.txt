@@ -93,3 +93,19 @@ mis-decode at the wrong rate) but overrun, irq and loopback have no
 checks at all yet -- they are the obvious next mutants and the obvious
 next coverpoints. Claiming 5/5 is claiming it for these five defects,
 not for the DUT.
+
+TOOLCHAIN FOOTNOTE (diagnosed during this run)
+----------------------------------------------
+Every `make` in this directory initially failed with
+
+    Makefile.icarus:53: *** Unable to locate command >iverilog<
+
+in a shell where `iverilog -V` worked. Root cause: tools/setup_iverilog.sh
+used `export -f iverilog vvp`. cocotb's Makefile.inc sets `SHELL := bash`,
+and Makefile.icarus resolves the simulator with
+`CMD := $(shell :; command -v iverilog)` followed by `dirname $(CMD)`.
+A bash that has imported an exported FUNCTION named iverilog answers
+`command -v iverilog` with the bare word "iverilog", so dirname gives "."
+and cocotb goes looking for ./iverilog. Fixed in tools/setup_iverilog.sh:
+the functions are no longer exported, and real wrapper SCRIPTS carrying
+the -B/-M flags are installed on PATH instead.
