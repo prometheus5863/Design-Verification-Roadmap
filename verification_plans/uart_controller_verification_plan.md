@@ -1,13 +1,23 @@
 # Verification Plan: UART Controller with Register Interface
 
-**Status:** Phase 3 milestone deliverable (2026-09-05). Written as the spec
-this repo's Phase 4 UVM testbench will be built against, and as an early
+**Status:** **v2, revised 2026-09-19.** Originally a Phase 3 milestone
+deliverable (2026-09-05, v1), written spec-first before any RTL existed.
+Phase 4 has since produced the RTL, a UVM environment and a register
+model, and this revision folds back what they found. Written as the spec
+this repo's Phase 4 UVM testbench is built against, and as an early
 draft of the Phase 6 capstone's verification plan sub-item (the README
 already names "a UART or SPI controller wrapped with a register interface"
 as the concrete capstone DUT). No RTL exists for this DUT yet in this repo
 -- this plan is deliberately written spec-first, per the planning
 methodology in `notes/2026-09-05-verification-planning-and-stimulus-
 strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
+
+## Revision history
+
+| Version | Date | Change |
+|---|---|---|
+| v1 | 2026-09-05 | Initial spec-first plan, Phase 3 milestone |
+| **v2** | **2026-09-19** | **STATUS re-specified.** v1's blanket "Live status" wording is **wrong for the three error bits** and could not have been implemented as written. Three independent Phase 4 findings forced it: (a) the RTL bring-up (2026-09-17) could not make a live-status error bit observable through a register read at all, since the condition is gone by the time software reads it; (b) the UVM environment's read-to-clear check (2026-09-18) showed that checking such a bit *sets* is not checking it, because one read per run cannot distinguish "never clears" from "correctly re-set"; (c) the register model (2026-09-19) cannot express the two halves of STATUS in one `uvm_reg` access policy — the live bits are RO+volatile, the error bits are RC. Also adds the RX_DATA read-side-effect note and its consequence for generic register sequences. **v1's text is annotated in place below, not deleted.** |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -40,11 +50,61 @@ generous for v1's 6 registers):
 | Addr | Name | R/W | Bits | Description |
 |---|---|---|---|---|
 | 0x0 | CTRL | R/W | `[0]` en, `[2:1]` parity_mode (00=none,01=even,10=odd), `[3]` stop_bits (0=1,1=2), `[4]` loopback_en | Enable/config |
-| 0x1 | STATUS | RO | `[0]` tx_full, `[1]` tx_empty, `[2]` rx_full, `[3]` rx_avail, `[4]` frame_err, `[5]` parity_err, `[6]` overrun_err | Live status (Section 2.3) |
+| 0x1 | STATUS | RO | **live (RO, volatile):** `[0]` tx_full, `[1]` tx_empty, `[2]` rx_full, `[3]` rx_avail &nbsp;&nbsp; **sticky (read-to-clear):** `[4]` frame_err, `[5]` parity_err, `[6]` overrun_err | **v2:** two halves, not one. ~~Live status (Section 2.3)~~ — see Section 1.1 |
 | 0x2 | BAUD_DIV | R/W | `[7:0]` divisor | Baud-rate divisor (clk/(16*(div+1)), standard 16x-oversample UART convention) |
 | 0x3 | TX_DATA | WO | `[7:0]` | Write pushes one byte into the TX FIFO (no-op + `overrun_err`-style drop if full -- Section 2.5) |
-| 0x4 | RX_DATA | RO | `[7:0]` | Read pops one byte from the RX FIFO (returns stale/undefined data if empty, per `rx_avail` in STATUS -- feature 2.6) |
+| 0x4 | RX_DATA | RO | `[7:0]` | Read pops one byte from the RX FIFO (returns stale/undefined data if empty, per `rx_avail` in STATUS -- feature 2.6). **v2:** this read has a side effect on state outside the register, which no `uvm_reg` access policy can express — see Section 1.2 |
 | 0x5 | INT_EN | R/W | `[0]` tx_empty_en, `[1]` rx_avail_en, `[2]` err_en | Interrupt mask |
+
+### 1.1 STATUS is two registers wearing one address (v2, 2026-09-19)
+
+v1 described all seven STATUS bits as "live status". For bits `[3:0]`
+that is right: tx_full, tx_empty, rx_full and rx_avail are combinational
+functions of FIFO occupancy, and reading them twice in a row legitimately
+gives different answers.
+
+**For bits `[6:4]` it is not implementable.** frame_err, parity_err and
+overrun_err report *events*, not conditions. A framing error exists for
+the duration of one stop bit. If the bit were live, it would be clear
+again long before any software or testbench could read it, and the plan's
+own checks — "`STATUS.parity_err` is set exactly when a received frame's
+parity bit disagrees…" (Section 2.4), "`STATUS.overrun_err` is set when a
+new fully-received byte arrives while the RX FIFO is already full"
+(Section 2.6) — would be unobservable through a register read. They are
+therefore **sticky: set by the event, cleared by a STATUS read** (the
+classic 16550 LSR behaviour), which is what `rtl/uart_controller.v`
+implements.
+
+Consequences that are now requirements, not notes:
+
+- **Any check on an error bit must account for the read that clears it.**
+  Reading STATUS is destructive. A check that reads STATUS to see whether
+  frame_err is set has, by doing so, cleared it for every later check in
+  the same run.
+- **Checking that an error bit SETS is not checking it.** A single read
+  per run cannot distinguish a bit that never clears from one correctly
+  re-set by the next event. The check must read STATUS **twice**: the
+  first read verifies the bit is set, the second verifies the first read
+  cleared it. (Mutation testing found this: a mutant deleting the
+  read-to-clear logic survived a suite that only checked the set.)
+- **The two halves need different modelling.** In a UVM register model
+  the live bits are `RO` + volatile and the error bits are `RC`. UVM does
+  not *compare* volatile fields, so a generic `uvm_reg_hw_reset_seq`
+  sweep over STATUS silently checks nothing — STATUS's reset value
+  (0x02: tx_empty set, all else clear) must be checked explicitly.
+
+### 1.2 RX_DATA's read has a side effect the register layer cannot express (v2)
+
+Reading RX_DATA pops the RX FIFO. No `uvm_reg` access policy describes
+"this read mutates a queue elsewhere in the design". A register model can
+describe the byte-wide read port and nothing more.
+
+Requirement: **RX_DATA must be excluded from generic register sequences**
+(`NO_REG_TESTS`), because a hw-reset sweep or a bit-bash over it is
+silently consuming received bytes that another check is waiting for. The
+FIFO behaviour belongs to F6's checks, not to the register layer. TX_DATA
+is excluded for the milder reason that it is write-only, so a generic
+read-compare is meaningless.
 
 **FIFOs:** TX and RX FIFOs are each 8 entries deep, 8 bits wide
 (synchronous, same clock domain as the register bus and the UART core --
@@ -153,6 +213,13 @@ set exactly when a received frame's parity bit disagrees with the
 even/odd parity of the received data bits, and is *not* set when
 `parity_mode=00` regardless of the incoming bit stream.
 
+> **v2 amendment (2026-09-19).** `STATUS.parity_err` is **sticky,
+> read-to-clear** (Section 1.1), so "is set" must be read as "is set, and
+> is cleared by the read that observed it". The check below must read
+> STATUS **twice** per provoked error: once to see the bit set, once to
+> see it cleared. A check that only reads once passes against RTL whose
+> read-to-clear logic has been deleted.
+
 - **Checks:** an independent parity-reference function (even/odd parity
   of the transmitted/received data byte) compared against both the
   transmitted parity bit (TX) and `STATUS.parity_err` (RX).
@@ -195,7 +262,9 @@ existing entries, which is the actual safety property being checked).
 
 Same FIFO-level coverage as F5, plus: `STATUS.overrun_err` is set when a
 new fully-received byte arrives while the RX FIFO is already full (the
-incoming byte is dropped, not silently overwriting the oldest entry);
+incoming byte is dropped, not silently overwriting the oldest entry)
+— **v2: sticky and read-to-clear, so the same two-read rule as F4
+applies (Section 1.1)**;
 `RX_DATA` reads while `rx_avail=0` do not crash/hang the register
 interface (returns an implementation-defined value, per Section 1's
 register map note).
@@ -372,6 +441,20 @@ forced into a contrived coverage-hitting test.
 ---
 
 ## 7. Resource and status notes
+
+> **v2 status (2026-09-19).** Most of what follows is now history. The
+> RTL exists (`rtl/uart_controller.v`, 2026-09-17), the toolchain question
+> was resolved (uvm-python/cocotb on Icarus 10.3, 2026-09-06), the Phase 4
+> UVM milestone environment is built and mutation-tested
+> (`examples/phase4_uvm_milestone/`, 2026-09-18), and a register model with
+> the built-in hw-reset and bit-bash sequences exists
+> (`examples/phase4_ral/`, 2026-09-19). Still not built from this plan:
+> constrained-random and coverage-driven stimulus (Section 3 assigns most
+> features to CRV; today's tests are directed), code coverage (Section 5
+> targets 95%; Icarus has no native support), and F7's baud-tolerance
+> number. The paragraph below is kept as written because its last sentence
+> — that the plan would need revising once bring-up surfaced details the
+> spec-first pass could not anticipate — is exactly what happened, twice.
 
 This plan is a Phase 3 deliverable, written before any UART RTL or
 testbench code exists in this repo. Phase 4 (UVM, not yet started) is
