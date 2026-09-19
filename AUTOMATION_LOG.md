@@ -1438,3 +1438,172 @@ session. Both are per-run costs, not failures.
 **Commits this run:** 4 (the UVM milestone environment + sim log +
 mutation report; the setup_iverilog.sh toolchain fixes; the notes file;
 progress.md). This AUTOMATION_LOG.md entry makes 5.
+
+---
+
+## 2026-09-19 — RAL closes Phase 4, and the mutation harness had the bug it exists to catch
+
+**Status:** Full session. **Phase 4 is COMPLETE.** RAL basics was the last
+remaining topic; the vplan v2 revision, open since 2026-09-17, is also
+closed.
+
+**Work done:**
+
+1. **The register model** (`examples/phase4_ral/`, committed with its
+   Makefile, mutation script, sim log and mutation report). A six-register
+   `uvm_reg_block` for `rtl/uart_controller.v`, an 18-line
+   `uvm_reg_adapter`, and a `uvm_reg_predictor` fed from the bus
+   **monitor**, sitting on the 2026-09-18 APB-lite agent — which is
+   *imported and reused unchanged*. That reuse is the argument for the
+   layered architecture, so it was done rather than asserted.
+
+   `auto_predict` is deliberately left OFF. Explicit prediction means the
+   mirror moves only when the monitor **saw** the access, which is the
+   same "never let the worker grade its own work" rule the last two
+   sessions' findings came from, and here it is free. CHECK 1 proves it:
+   a raw bus item that never touches the register object still moves the
+   mirror, and moves it to **0x1B** for a write of 0xFB, because CTRL's
+   reserved bits are modelled RO.
+
+   **8/8 checks pass**, including both built-in generic sequences
+   (`UVMRegHWResetSeq`, `UVMRegBitBashSeq`) — neither written for this
+   UART, and between them they kill three of five mutants. That is the
+   concrete answer to "what does a RAL buy".
+
+   One debug cycle worth keeping: `uvm_reg.write()/read()/mirror()` take a
+   `parent` that must be a **sequence**, because the map internally calls
+   `rw.parent.start_item()`. Passing the test component gives
+   `AttributeError: 'UartRalChecksTest' object has no attribute
+   'start_item'`. The register layer sits on the sequence layer; it does
+   not bypass it.
+
+2. **Two registers the RAL cannot honestly model, excluded with reasons.**
+   - **RX_DATA**: reading it pops the RX FIFO. No `uvm_reg` access policy
+     expresses a side effect on state outside the register.
+     `NO_REG_TESTS`, because a generic sequence reading it is silently
+     consuming bytes another check is waiting for.
+   - **STATUS**: four volatile live bits + three sticky read-to-clear
+     error bits. `RC` models the error bits. The live bits are volatile —
+     and **UVM does not COMPARE volatile fields**
+     (`uvm_reg_field::configure` sets the compare mode to
+     `UVM_NO_CHECK`), so a `hw_reset` sweep over STATUS reads it,
+     compares nothing and reports success. A check that looks like a
+     check and is not one, this time built into the *methodology*.
+     STATUS's reset value (0x02) is therefore checked by hand, and
+     **mutant M4 confirms that hand-written check is the only thing that
+     catches a tx_full/tx_empty swap.**
+
+3. **THE FINDING: the mutation harness had the bug it exists to catch.**
+   The first run of `run_mutation_tests.sh` reported **0 killed, 5
+   survived**. All five logs contained the correct `FAIL`. The script was
+   trusting `make`'s exit status, and with cocotb 1.9.2 + Icarus 10.3
+   `make` exits **0** even when cocotb prints `TESTS=1 PASS=0 FAIL=1`.
+   Verified directly:
+
+       $ make RTL_SRC=.../uart_controller_M3.v >/dev/null 2>&1; echo $?
+       0
+
+   This is the **third appearance of one defect class in this repo**:
+
+   | Date | Verdict came from | Checking done by | Symptom |
+   |---|---|---|---|
+   | 2026-09-17 | the suite's own pass counter | checks that never executed | 55/55 against deliberately broken RTL |
+   | 2026-09-18 | cocotb's PASS line | the UVM report server | `PASS=1` with UVM_ERRORs in the log |
+   | 2026-09-19 | `make`'s exit code | cocotb's results line | every mutant reported as surviving |
+
+   Each time the subsystem reporting the verdict was not the subsystem
+   doing the checking, and nothing connected them. Today it was the
+   harness whose entire purpose is to catch that — which is the strongest
+   available argument that the rule generalises rather than being about
+   one tool. The script now parses cocotb's own results line and
+   distinguishes a third outcome, **NORESULT**, for a crash or compile
+   error: a crash is not evidence that a check works, and counting it as
+   a kill would be the same bug once more.
+
+   **Action item for a future session:** `examples/phase4_uvm_milestone/`
+   has a mutation *report* but no script. Whoever automates it must not
+   use `make`'s exit code either.
+
+4. **Mutation results: 5 killed, 0 survived, 0 no-verdict**, one mutant
+   per targeted check (CTRL reserved bit readback; BAUD_DIV reset value;
+   STATUS read-to-clear deleted; STATUS tx_full/tx_empty swapped;
+   BAUD_DIV writes dropped). Two qualifications recorded in the report
+   rather than glossed: **M2 is not a clean single-target mutant** —
+   changing BAUD_DIV's reset value halves the baud rate, so it also trips
+   CHECK 5 for an unrelated reason, which is collateral rather than extra
+   confidence — and **5/5 is a claim about five defects in the register
+   interface**, not about the DUT. Untouched: the baud generator, the
+   TX/RX engines, FIFO full/empty, the interrupt OR, the loopback mux,
+   and RX_DATA's pop-on-read, which is exactly the behaviour no access
+   policy can express.
+
+5. **vplan v2** (`verification_plans/uart_controller_verification_plan.md`).
+   Open since 2026-09-17 and now forced from three directions. v1's
+   blanket "live status" wording is not imprecise, it is
+   **unimplementable** for the three error bits: a framing error lasts one
+   stop bit, so a live frame_err would be clear before anything could read
+   it, and the plan's own F4/F6 checks would be unobservable through a
+   register read. New Section 1.1 re-specifies STATUS as two halves and
+   states three consequences as requirements: reading STATUS is
+   destructive; every error-bit check must read STATUS **twice**; and the
+   volatile live bits mean a generic reset sweep checks nothing. New
+   Section 1.2 covers RX_DATA's read side effect. **v1's text is
+   annotated in place — nothing deleted** — and Section 7's now-historical
+   paragraph is kept, because its closing prediction that bring-up would
+   force a revision is what happened.
+
+6. **Study notes**
+   (`notes/2026-09-19-ral-register-model-and-the-harness-that-had-the-bug.md`),
+   and **progress.md** updated: Phase 4 marked complete, with an explicit
+   statement of what Phase 4 did *not* cover so it carries forward rather
+   than disappearing behind a completed phase.
+
+**Not yet covered (candidates for future runs):**
+- **Phase 5 (SVA and formal) has not been started** — now the obvious
+  next session, since Phase 4 is closed. Icarus 10.3 supports only a
+  small SVA subset, so Phase 5 will need the same kind of toolchain
+  decision Phase 4 needed on 2026-09-06 (SymbiYosys/Yosys is the
+  candidate already named in the roadmap). Carry the verdict/checking
+  rule in: a formal tool's exit code is the same shape as `make`'s
+- **Constrained-random and coverage-driven UART stimulus.** All stimulus
+  in all three benches is directed with hand-chosen values, while the
+  vplan's Section 3 assigns most features to CRV. Still open, and now a
+  capstone item rather than a Phase 4 gap
+- **A mutation script for `examples/phase4_uvm_milestone/`** — it has a
+  report but no runnable script, and whoever writes it must not use
+  `make`'s exit code. New item created today
+- **Code coverage measurement** (plan Section 5 targets 95%) — Icarus has
+  no native support, so it needs its own toolchain investigation. Open
+  since 2026-09-18
+- **Mutants not yet attempted**: the baud generator, the overrun path,
+  the interrupt logic, the FIFO full/empty flags, the loopback mux, and
+  RX_DATA's pop-on-read. None has a check in any bench either, so they
+  are simultaneously the next mutants and the next coverpoints
+- **F7's baud-tolerance number** — never measured in any bench
+- Phase 6: the capstone is now largely assembled out of Phase 4's parts;
+  what is missing is the surrounding flow (lint, regression infra,
+  coverage merge), CDC basics and the interview-prep pass
+
+**Web search availability:** Not needed and not attempted — the work was
+built against this repo's own RTL and vplan plus the uvm-python source,
+which was read directly under
+`~/.local/lib/python3.10/site-packages/uvm/reg/`. No fetches, so no access
+failures to record.
+
+**Automation health:** Device reachable, folder connected, push verified
+against the GitHub API. Unchanged per-run costs: `git` still cannot run
+inside the connected folder, so work is done in the session's own scratch
+clone; the uvm-python/cocotb stack (`python-constraint --use-pep517`,
+`cocotb<2.0`, `uvm-python`) is reinstalled each run because the VM is
+rebuilt per session. One addition to the toolchain notes:
+**`cocotb-config` installs to `~/.local/bin`, which is not on PATH in this
+VM** — `export PATH="$HOME/.local/bin:$PATH"` is required before `make`,
+or cocotb's Makefile include fails. `tools/setup_iverilog.sh` works as
+fixed on 2026-09-18 (source it, do not pipe it).
+
+**Commits this run:** 4 (the RAL example with its mutation script and
+report; vplan v2; the notes file; progress.md). This AUTOMATION_LOG.md
+entry makes 5. The RAL example went in as a single commit rather than
+split into testbench / mutation harness, because the harness's first run
+changed the testbench's own verdict logic and the two are not separable
+after the fact.
