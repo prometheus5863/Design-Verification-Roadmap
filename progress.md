@@ -169,10 +169,26 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
       than direct constructor calls, otherwise overrides register but
       are silently never consulted) -- see
       notes/2026-09-07-factory-overrides-and-config-db.md, Section 2
-- [ ] RAL basics (overview level) -- **the only Phase 4 topic left**.
-      The UART register map is currently driven through an explicit bus
-      agent, which is exactly what a RAL model sits on top of, so the
-      prerequisite now exists
+- [x] **RAL basics -- DONE 2026-09-19, and Phase 4 is now COMPLETE.**
+      `examples/phase4_ral/uart_ral_tb.py`: a six-register `uvm_reg_block`
+      for `rtl/uart_controller.v`, an 18-line `uvm_reg_adapter`, and a
+      `uvm_reg_predictor` fed from the bus **monitor** with
+      `auto_predict` deliberately OFF (explicit prediction), sitting on
+      the 2026-09-18 APB-lite agent, which is imported and reused
+      unchanged. **8/8 checks pass**, including the two built-in generic
+      sequences `UVMRegHWResetSeq` and `UVMRegBitBashSeq` -- neither
+      written for this UART, and between them they kill three of five
+      mutants. Mutation tested: **5 injected defects, 5 killed, 0
+      survivors**, one mutant per targeted check.
+      Two registers are excluded for stated reasons rather than papered
+      over: **RX_DATA**'s read pops the RX FIFO, a side effect no
+      `uvm_reg` access policy can express; **STATUS** mixes four volatile
+      live bits with three read-to-clear error bits, and since UVM does
+      not *compare* volatile fields, a `hw_reset` sweep over it silently
+      checks nothing -- so its reset value is checked by hand, which
+      mutant M4 confirms is the only thing that catches a tx_full /
+      tx_empty swap. See
+      `notes/2026-09-19-ral-register-model-and-the-harness-that-had-the-bug.md`
 - [x] **DUT for the Phase 4 milestone exists (2026-09-17)** -- the
       milestone had been gated since 2026-09-05 on a DUT that did not
       exist: the UART verification plan was written spec-first and its
@@ -210,9 +226,34 @@ requires `cocotb<2.0`, not the latest cocotb 2.x).
       `notes/2026-09-18-uvm-environment-and-the-green-regression-that-wasnt.md`
       and `examples/phase4_uvm_milestone/mutation_test_report_2026-09-18.txt`
 
-**Phase 4 is now one topic from complete** -- only RAL basics remain, and
-its prerequisite (a real register map driven through a bus agent) now
-exists.
+**PHASE 4 IS COMPLETE (2026-09-19).** Every topic and the milestone are
+done: class hierarchy and phases, factory and `uvm_config_db`, TLM and
+analysis ports, sequences/sequencers/drivers/monitors, active vs passive
+agents, virtual sequencers and concurrent sequences, environment and
+scoreboard, functional coverage, and now RAL. The DUT
+(`rtl/uart_controller.v`) and the vplan it is built against
+(`verification_plans/uart_controller_verification_plan.md`, now at v2)
+both exist and are exercised by three independent benches: the directed
+bring-up regression, the UVM milestone environment, and the register
+model.
+
+**What Phase 4 did NOT cover, carried forward honestly:** stimulus is
+still directed everywhere, while the vplan's Section 3 assigns most
+features to constrained-random; code coverage (Section 5 targets 95%) has
+never been measured, because Icarus has no native support; and F7's
+baud-tolerance number is unmeasured. These are Phase 6 / capstone items
+now, not Phase 4 gaps to reopen.
+
+**The single most valuable thing Phase 4 produced is not a testbench.**
+Three sessions in a row found the same defect class -- *the subsystem
+reporting the verdict was not the subsystem doing the checking*:
+2026-09-17, checks that never ran; 2026-09-18, cocotb's PASS line
+ignoring UVM_ERRORs; 2026-09-19, `make`'s exit code ignoring cocotb's
+FAIL, in the mutation harness whose whole purpose is to catch exactly
+that. Mutation testing found all three and nothing else did. Carry both
+into Phase 5: a formal tool's exit code, a regression runner parsing a
+log, and a coverage merge that silently drops a database are the same
+shape.
 
 ## Phase 5 — Assertions & Formal Verification
 - [ ] SVA in depth (sequences, properties, local variables, assume/assert/cover)
@@ -229,12 +270,17 @@ exists.
 - [ ] Capstone: UVM verification environment for register-mapped
       peripheral (UART/SPI controller with interrupt + FIFO datapath)
       - [~] Verification plan written -- early draft completed in Phase 3
-            (needs a v2 revision as of 2026-09-17: the RTL bring-up found
-            that the plan's "live status" wording cannot hold for the
-            three STATUS error bits, which must be sticky/read-to-clear
-            to be observable through a register read at all; the plan's
-            own Section 7 anticipated exactly this kind of RTL-informed
-            correction)
+            (**v2 revision DONE 2026-09-19**: the plan's "live status"
+            wording could not hold for the three STATUS error bits, which
+            must be sticky/read-to-clear to be observable through a
+            register read at all. Three independent findings forced it --
+            the RTL bring-up 2026-09-17, the UVM environment's
+            read-to-clear check 2026-09-18, and the register model
+            2026-09-19, which cannot express the two halves of STATUS in
+            one access policy. v2 also adds Section 1.2 on RX_DATA's
+            read-side-effect. v1's text is annotated in place, not
+            deleted; the plan's own Section 7 anticipated exactly this
+            kind of RTL-informed correction)
             (`verification_plans/uart_controller_verification_plan.md`,
             2026-09-05); to be revisited/revised once Phase 4 RTL and
             testbench bring-up experience is available (see that plan's
