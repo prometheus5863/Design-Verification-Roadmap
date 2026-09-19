@@ -1,0 +1,83 @@
+================================================================
+Phase 4 RAL mutation test -- 2026-09-19 07:57:02 UTC
+DUT: /sessions/rcw-01q2u87t7s1nn8xhjj9g9a4a/work/Design-Verification-Roadmap/examples/phase4_ral/../../rtl/uart_controller.v (never modified; every mutant is a copy)
+================================================================
+BASELINE: PASS on unmodified RTL  (required)
+
+M1  KILLED
+    defect : CTRL reserved bit 5 reads back as 1 instead of 0
+    target : UVMRegBitBashSeq / UVMRegHWResetSeq (RO field must not read 1)
+    killed by:   FAIL: UVMRegHWResetSeq completed with no new UVM_ERROR (1 raised)
+    killed by:   FAIL: UVMRegBitBashSeq completed with no new UVM_ERROR (1 raised)
+    killed by:                                                         AssertionError: 5 UVM_ERROR(s) -- see the log above
+
+M2  KILLED
+    defect : BAUD_DIV comes out of reset as 0x01 instead of 0x00
+    target : UVMRegHWResetSeq (reset value of a non-volatile RW register)
+    killed by:   FAIL: frame_err is set after a corrupted stop bit (STATUS=0x02)
+    killed by:   FAIL: UVMRegHWResetSeq completed with no new UVM_ERROR (1 raised)
+    killed by:                                                         AssertionError: 3 UVM_ERROR(s) -- see the log above
+
+M3  KILLED
+    defect : STATUS read-to-clear removed: the sticky error bits never clear
+    target : CHECK 6, the RC access policy (second STATUS read)
+    killed by:   FAIL: frame_err was CLEARED by the first STATUS read (second read 0x1a) -- the RC policy, and the reason the vplan's 'live status' wording is wrong
+    killed by:                                                         AssertionError: 1 UVM_ERROR(s) -- see the log above
+
+M4  KILLED
+    defect : STATUS tx_full and tx_empty swapped
+    target : CHECK 4, the explicit STATUS-at-reset value the hw_reset seq skips
+    killed by:   FAIL: STATUS reads 0x01 with the UART idle after reset (expected 0x02: tx_empty set, all error bits clear) -- a check the hw_reset sequence silently skips, because volatile fields are not compared
+    killed by:                                                         AssertionError: 1 UVM_ERROR(s) -- see the log above
+
+M5  KILLED
+    defect : BAUD_DIV writes are dropped
+    target : CHECK 3 (RAL write reaches the DUT) and UVMRegBitBashSeq
+    killed by:   FAIL: RAL BAUD_DIV.write(0x5A) reached the DUT: a raw read returns 0x00
+    killed by:   FAIL: UVMRegBitBashSeq completed with no new UVM_ERROR (16 raised)
+    killed by:                                                         AssertionError: 18 UVM_ERROR(s) -- see the log above
+
+================================================================
+RESULT: 5 killed, 0 survived, 0 no-verdict,
+        out of 5
+================================================================
+
+NOTES ON THIS RUN (written by hand, not generated)
+
+1. THE HARNESS HAD THE BUG IT EXISTS TO CATCH. The first run of this
+   script reported 0 killed / 5 survived. Every one of the five logs
+   contained the correct FAIL. The script was trusting `make`'s exit
+   status, and with cocotb 1.9.2 + Icarus 10.3 `make` exits 0 even when
+   cocotb prints TESTS=1 PASS=0 FAIL=1. Verified directly:
+
+       $ make RTL_SRC=.../uart_controller_M3.v >/dev/null 2>&1; echo $?
+       0
+
+   This is the third appearance of one defect class in this repo
+   (2026-09-17: checks never ran; 2026-09-18: cocotb PASS line ignored
+   UVM_ERRORs; today: make's exit code ignored cocotb's FAIL). Each time
+   the verdict came from a different subsystem than the checking. The
+   script now parses cocotb's own results line and distinguishes
+   NORESULT (crash/compile error) from a kill, because a crash is not
+   evidence that a check works.
+
+   ACTION FOR A FUTURE SESSION: examples/phase4_uvm_milestone has no
+   mutation script, only a report; whoever automates it must not use
+   make's exit code either.
+
+2. M2 IS NOT A CLEAN SINGLE-TARGET MUTANT. Changing BAUD_DIV's reset
+   value from 0 to 1 halves the baud rate, so the hand-driven bad frame
+   in CHECK 5 is also sent at the wrong rate and frame_err never gets
+   set. M2 is killed by UVMRegHWResetSeq as intended, but it is ALSO
+   killed by CHECK 5 for an unrelated reason. That is collateral, not
+   extra confidence: a mutant that trips two unrelated checks tells you
+   less about either than one that trips exactly the check it targets.
+   Recorded rather than presented as 'two checks caught it'.
+
+3. WHAT 5/5 DOES NOT MEAN. It is a claim about five defects in the
+   register interface, not about the DUT or about the RAL. Untouched by
+   any mutant here: the baud generator, the TX/RX shift engines, the
+   FIFO full/empty logic, the interrupt OR, the loopback mux, and
+   RX_DATA's FIFO-pop-on-read -- which is precisely the behaviour no
+   uvm_reg access policy can express, and so the one thing the register
+   model structurally cannot check.
