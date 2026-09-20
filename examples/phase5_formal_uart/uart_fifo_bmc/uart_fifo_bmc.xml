@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+<testsuite timestamp="2026-09-20T07:05:20" hostname="claude" package="uart_fifo_bmc" id="0" name="default" tests="11" errors="0" failures="0" time="12" skipped="2">
+<properties>
+<property name="os" value="Linux"/>
+<property name="expect" value="PASS"/>
+<property name="status" value="PASS"/>
+</properties>
+<testcase classname="default" name="build execution" time="0">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:432.13-432.35" time="0" type="ASSERT" location="uart_controller.v:432.13-432.35" id="_witness_.check_assert_uart_controller_v_432_167">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:433.13-433.35" time="0" type="ASSERT" location="uart_controller.v:433.13-433.35" id="_witness_.check_assert_uart_controller_v_433_169">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:442.13-442.55" time="0" type="ASSERT" location="uart_controller.v:442.13-442.55" id="_witness_.check_assert_uart_controller_v_442_173">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:443.13-443.55" time="0" type="ASSERT" location="uart_controller.v:443.13-443.55" id="_witness_.check_assert_uart_controller_v_443_176">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:451.13-451.43" time="0" type="ASSERT" location="uart_controller.v:451.13-451.43" id="_witness_.check_assert_uart_controller_v_451_181">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:452.13-452.69" time="0" type="ASSERT" location="uart_controller.v:452.13-452.69" id="_witness_.check_assert_uart_controller_v_452_184">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:461.13-463.54" time="0" type="ASSERT" location="uart_controller.v:461.13-463.54" id="_witness_.check_assert_uart_controller_v_461_205">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:464.13-464.82" time="0" type="ASSERT" location="uart_controller.v:464.13-464.82" id="_witness_.check_assert_uart_controller_v_464_213">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:465.13-465.84" time="0" type="ASSERT" location="uart_controller.v:465.13-465.84" id="_witness_.check_assert_uart_controller_v_465_219">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:474.13-474.34" time="0" type="COVER" location="uart_controller.v:474.13-474.34" id="_witness_.check_cover_uart_controller_v_474_227">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:475.13-475.53" time="0" type="COVER" location="uart_controller.v:475.13-475.53" id="_witness_.check_cover_uart_controller_v_475_229">
+<skipped />
+</testcase>
+<system-out>SBY  7:05:08 [uart_fifo_bmc] Removing directory '/sessions/rcw-01ubdokzb1nfyvbznsybcynq/work/Design-Verification-Roadmap/examples/phase5_formal_uart/uart_fifo_bmc'.
+SBY  7:05:08 [uart_fifo_bmc] Copy '/sessions/rcw-01ubdokzb1nfyvbznsybcynq/work/Design-Verification-Roadmap/examples/phase5_formal_uart/../../rtl/uart_controller.v' to '/sessions/rcw-01ubdokzb1nfyvbznsybcynq/work/Design-Verification-Roadmap/examples/phase5_formal_uart/uart_fifo_bmc/src/uart_controller.v'.
+SBY  7:05:08 [uart_fifo_bmc] engine_0: smtbmc z3
+SBY  7:05:08 [uart_fifo_bmc] base: starting process &quot;cd uart_fifo_bmc/src; yosys -ql ../model/design.log ../model/design.ys&quot;
+SBY  7:05:08 [uart_fifo_bmc] base: finished (returncode=0)
+SBY  7:05:08 [uart_fifo_bmc] prep: starting process &quot;cd uart_fifo_bmc/model; yosys -ql design_prep.log design_prep.ys&quot;
+SBY  7:05:08 [uart_fifo_bmc] prep: finished (returncode=0)
+SBY  7:05:08 [uart_fifo_bmc] smt2: starting process &quot;cd uart_fifo_bmc/model; yosys -ql design_smt2.log design_smt2.ys&quot;
+SBY  7:05:08 [uart_fifo_bmc] smt2: finished (returncode=0)
+SBY  7:05:08 [uart_fifo_bmc] engine_0: starting process &quot;cd uart_fifo_bmc; yosys-smtbmc -s z3 --presat --noprogress -t 24  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2&quot;
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Solver: z3
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 0..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 1..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 1..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 2..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 2..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 3..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 3..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 4..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 4..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 5..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 5..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 6..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 6..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 7..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 7..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 8..
+SBY  7:05:08 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 8..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 9..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 9..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 10..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 10..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 11..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 11..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 12..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assertions in step 12..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:00  Checking assumptions in step 13..
+SBY  7:05:09 [uart_fifo_bmc] engine_0: ##   0:00:01  Checking assertions in step 13..
+SBY  7:05:10 [uart_fifo_bmc] engine_0: ##   0:00:01  Checking assumptions in step 14..
+SBY  7:05:10 [uart_fifo_bmc] engine_0: ##   0:00:01  Checking assertions in step 14..
+SBY  7:05:10 [uart_fifo_bmc] engine_0: ##   0:00:01  Checking assumptions in step 15..
+SBY  7:05:10 [uart_fifo_bmc] engine_0: ##   0:00:01  Checking assertions in step 15..
+SBY  7:05:10 [uart_fifo_bmc] engine_0: ##   0:00:01  Checking assumptions in step 16..
+SBY  7:05:11 [uart_fifo_bmc] engine_0: ##   0:00:02  Checking assertions in step 16..
+SBY  7:05:11 [uart_fifo_bmc] engine_0: ##   0:00:02  Checking assumptions in step 17..
+SBY  7:05:11 [uart_fifo_bmc] engine_0: ##   0:00:02  Checking assertions in step 17..
+SBY  7:05:11 [uart_fifo_bmc] engine_0: ##   0:00:02  Checking assumptions in step 18..
+SBY  7:05:12 [uart_fifo_bmc] engine_0: ##   0:00:03  Checking assertions in step 18..
+SBY  7:05:12 [uart_fifo_bmc] engine_0: ##   0:00:03  Checking assumptions in step 19..
+SBY  7:05:14 [uart_fifo_bmc] engine_0: ##   0:00:05  Checking assertions in step 19..
+SBY  7:05:14 [uart_fifo_bmc] engine_0: ##   0:00:05  Checking assumptions in step 20..
+SBY  7:05:14 [uart_fifo_bmc] engine_0: ##   0:00:05  Checking assertions in step 20..
+SBY  7:05:14 [uart_fifo_bmc] engine_0: ##   0:00:06  Checking assumptions in step 21..
+SBY  7:05:17 [uart_fifo_bmc] engine_0: ##   0:00:08  Checking assertions in step 21..
+SBY  7:05:17 [uart_fifo_bmc] engine_0: ##   0:00:08  Checking assumptions in step 22..
+SBY  7:05:19 [uart_fifo_bmc] engine_0: ##   0:00:10  Checking assertions in step 22..
+SBY  7:05:19 [uart_fifo_bmc] engine_0: ##   0:00:10  Checking assumptions in step 23..
+SBY  7:05:20 [uart_fifo_bmc] engine_0: ##   0:00:11  Checking assertions in step 23..
+SBY  7:05:20 [uart_fifo_bmc] engine_0: ##   0:00:11  Status: passed
+SBY  7:05:20 [uart_fifo_bmc] engine_0: finished (returncode=0)
+SBY  7:05:20 [uart_fifo_bmc] engine_0: Status returned by engine: pass
+SBY  7:05:20 [uart_fifo_bmc] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:12 (12)
+SBY  7:05:20 [uart_fifo_bmc] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:12 (12)
+SBY  7:05:20 [uart_fifo_bmc] summary: engine_0 (smtbmc z3) returned pass
+SBY  7:05:20 [uart_fifo_bmc] summary: engine_0 did not produce any traces
+SBY  7:05:20 [uart_fifo_bmc] DONE (PASS, rc=0)
+</system-out>
+<system-err>
+</system-err>
+</testsuite>
+</testsuites>

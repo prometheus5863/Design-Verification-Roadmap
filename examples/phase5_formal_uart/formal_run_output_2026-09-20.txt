@@ -1,0 +1,41 @@
+
+=== Stage 1: Phase 4 regression guard (the FORMAL block must be invisible) ===
+  regression reports: === SUMMARY: 60 passed, 0 failed ===
+  PASS  Phase 4 regression still 60/60
+
+=== Stage 2: proof on the real RTL ===
+  PASS  uart_fifo_bmc (verdict PASS)
+        sby exit code was 0 (recorded, NOT used as the verdict)
+  PASS  uart_fifo_prove (verdict PASS)
+        sby exit code was 0 (recorded, NOT used as the verdict)
+  PASS  uart_fifo_cover (verdict PASS)
+        sby exit code was 0 (recorded, NOT used as the verdict)
+
+=== Stage 3: mutation -- each defect must be DETECTED, and by the right mode ===
+  A mutant is DETECTED when bmc returns FAIL, i.e. the solver exhibits a
+  reachable trace violating a property. The prove verdict is recorded
+  alongside but is NOT the detection criterion -- see M1.
+  PASS  M1 -- TX push no longer guarded by ~tx_full (overflow) (verdict FAIL)
+        prove mode said: UNKNOWN
+        ^ NOT a detection. prove mode passed its basecase and
+          FAILED INDUCTION, which means only that the property is
+          not k-inductive for this design -- the induction
+          counterexample starts in a possibly-unreachable state.
+          A harness that scored prove-mode UNKNOWN as a kill would
+          be claiming a bug the tool never found.
+  PASS  M2 -- RX pop no longer guarded by rx_avail (underflow) (verdict FAIL)
+        prove mode said: FAIL
+  PASS  M3 -- TX count increments by 2 per push (verdict FAIL)
+        prove mode said: FAIL
+  PASS  M4 -- TX write pointer advances by 2 (breaks P2 only, P1 untouched) (verdict FAIL)
+        prove mode said: FAIL
+  PASS  M5 -- simultaneous push+pop wrongly decrements the count (verdict FAIL)
+        prove mode said: FAIL
+
+=== Stage 4: is P2 inductive without P1? ===
+  P2 alone, k-induction verdict: PASS
+  -> P2 is inductive on its own; P1 is not needed as a strengthening
+     invariant. Recorded as measured.
+
+=== SUMMARY ===
+  10 passed, 0 failed

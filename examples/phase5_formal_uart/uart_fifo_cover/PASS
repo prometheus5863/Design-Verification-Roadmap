@@ -1,0 +1,9 @@
+Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+engine_0 (smtbmc z3) returned pass
+cover trace: engine_0/trace0.vcd
+cover trace: engine_0/trace0.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_475_229 at uart_controller.v:475.13-475.53 step 6
+cover trace: engine_0/trace1.vcd
+cover trace: engine_0/trace1.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_474_227 at uart_controller.v:474.13-474.34 step 10

@@ -1,0 +1,8 @@
+# running in uart_fifo_prove/src/
+read_verilog -formal -DFORMAL uart_controller.v
+prep -top uart_controller
+
+hierarchy -smtcheck
+rename -witness
+write_jny -no-connections ../model/design.json
+write_rtlil ../model/design.il

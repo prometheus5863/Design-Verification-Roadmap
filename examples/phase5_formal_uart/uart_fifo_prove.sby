@@ -1,0 +1,13 @@
+[options]
+mode prove
+depth 8
+
+[engines]
+smtbmc z3
+
+[script]
+read_verilog -formal -DFORMAL uart_controller.v
+prep -top uart_controller
+
+[files]
+../../rtl/uart_controller.v

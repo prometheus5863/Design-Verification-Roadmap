@@ -1,0 +1,80 @@
+
+ /----------------------------------------------------------------------------\
+ |  yosys -- Yosys Open SYnthesis Suite                                       |
+ |  Copyright (C) 2012 - 2026  Claire Xenia Wolf <claire@yosyshq.com>         |
+ |  Distributed under an ISC-like license, type "license" to see terms        |
+ \----------------------------------------------------------------------------/
+ Yosys 0.69 (git sha1 9f75ca1f9, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)
+
+-- Executing script file `design_smt2.ys' --
+
+1. Executing RTLIL frontend.
+Input filename: design_prep.il
+
+2. Executing HIERARCHY pass (managing design hierarchy).
+Attribute `top' found on module `uart_controller'. Setting top module to uart_controller.
+
+2.1. Analyzing design hierarchy..
+Top module:  \uart_controller
+
+2.2. Analyzing design hierarchy..
+Top module:  \uart_controller
+Removed 0 unused modules.
+Module uart_controller directly or indirectly contains formal properties -> setting "keep" attribute.
+
+3. Executing FORMALFF pass.
+
+4. Executing DFFUNMAP pass (unmap clock enable and synchronous reset from FFs).
+
+5. Printing statistics.
+
+=== uart_controller ===
+
+        +----------Local Count, excluding submodules.
+        | 
+      358 wires
+      963 wire bits
+       79 public wires
+      223 public wire bits
+       12 ports
+       29 port bits
+      354 cells
+       11   $add
+       15   $and
+       39   $anyinit
+        8   $anyseq
+        9   $assert
+        2   $assume
+       33   $eq
+       12   $ff
+        1   $gt
+        2   $le
+       15   $logic_and
+       14   $logic_not
+        2   $logic_or
+        1   $lt
+        2   $mem_v2
+      145   $mux
+        1   $ne
+        1   $neg
+        5   $not
+        5   $or
+       12   $pmux
+        3   $reduce_bool
+        2   $reduce_or
+        2   $reduce_xnor
+        2   $reduce_xor
+        2   $shift
+        2   $shiftx
+        6   $sub
+
+6. Executing SMT2 backend.
+
+6.1. Executing BMUXMAP pass.
+
+6.2. Executing DEMUXMAP pass.
+Creating SMT-LIBv2 representation of module uart_controller.
+
+End of script. Logfile hash: 0c81b5a15e, time: 0.01s, user: 0.01s, system: 0.00s
+Yosys 0.69 (git sha1 9f75ca1f9, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)
+Time spent: 48% 2x write_smt2 (0 sec), 39% 2x read_rtlil (0 sec), ...

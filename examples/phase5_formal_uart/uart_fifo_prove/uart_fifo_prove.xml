@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+<testsuite timestamp="2026-09-20T07:05:26" hostname="claude" package="uart_fifo_prove" id="0" name="default" tests="11" errors="0" failures="0" time="0" skipped="2">
+<properties>
+<property name="os" value="Linux"/>
+<property name="expect" value="PASS"/>
+<property name="status" value="PASS"/>
+</properties>
+<testcase classname="default" name="build execution" time="0">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:432.13-432.35" time="0" type="ASSERT" location="uart_controller.v:432.13-432.35" id="_witness_.check_assert_uart_controller_v_432_167">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:433.13-433.35" time="0" type="ASSERT" location="uart_controller.v:433.13-433.35" id="_witness_.check_assert_uart_controller_v_433_169">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:442.13-442.55" time="0" type="ASSERT" location="uart_controller.v:442.13-442.55" id="_witness_.check_assert_uart_controller_v_442_173">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:443.13-443.55" time="0" type="ASSERT" location="uart_controller.v:443.13-443.55" id="_witness_.check_assert_uart_controller_v_443_176">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:451.13-451.43" time="0" type="ASSERT" location="uart_controller.v:451.13-451.43" id="_witness_.check_assert_uart_controller_v_451_181">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:452.13-452.69" time="0" type="ASSERT" location="uart_controller.v:452.13-452.69" id="_witness_.check_assert_uart_controller_v_452_184">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:461.13-463.54" time="0" type="ASSERT" location="uart_controller.v:461.13-463.54" id="_witness_.check_assert_uart_controller_v_461_205">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:464.13-464.82" time="0" type="ASSERT" location="uart_controller.v:464.13-464.82" id="_witness_.check_assert_uart_controller_v_464_213">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:465.13-465.84" time="0" type="ASSERT" location="uart_controller.v:465.13-465.84" id="_witness_.check_assert_uart_controller_v_465_219">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:474.13-474.34" time="0" type="COVER" location="uart_controller.v:474.13-474.34" id="_witness_.check_cover_uart_controller_v_474_227">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:475.13-475.53" time="0" type="COVER" location="uart_controller.v:475.13-475.53" id="_witness_.check_cover_uart_controller_v_475_229">
+<skipped />
+</testcase>
+<system-out>SBY  7:05:25 [uart_fifo_prove] Removing directory '/sessions/rcw-01ubdokzb1nfyvbznsybcynq/work/Design-Verification-Roadmap/examples/phase5_formal_uart/uart_fifo_prove'.
+SBY  7:05:25 [uart_fifo_prove] Copy '/sessions/rcw-01ubdokzb1nfyvbznsybcynq/work/Design-Verification-Roadmap/examples/phase5_formal_uart/../../rtl/uart_controller.v' to '/sessions/rcw-01ubdokzb1nfyvbznsybcynq/work/Design-Verification-Roadmap/examples/phase5_formal_uart/uart_fifo_prove/src/uart_controller.v'.
+SBY  7:05:25 [uart_fifo_prove] engine_0: smtbmc z3
+SBY  7:05:25 [uart_fifo_prove] base: starting process &quot;cd uart_fifo_prove/src; yosys -ql ../model/design.log ../model/design.ys&quot;
+SBY  7:05:26 [uart_fifo_prove] base: finished (returncode=0)
+SBY  7:05:26 [uart_fifo_prove] prep: starting process &quot;cd uart_fifo_prove/model; yosys -ql design_prep.log design_prep.ys&quot;
+SBY  7:05:26 [uart_fifo_prove] prep: finished (returncode=0)
+SBY  7:05:26 [uart_fifo_prove] smt2: starting process &quot;cd uart_fifo_prove/model; yosys -ql design_smt2.log design_smt2.ys&quot;
+SBY  7:05:26 [uart_fifo_prove] smt2: finished (returncode=0)
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: starting process &quot;cd uart_fifo_prove; yosys-smtbmc -s z3 --presat --noprogress -t 8  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2&quot;
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: starting process &quot;cd uart_fifo_prove; yosys-smtbmc -s z3 --presat -i --noprogress -t 8  --append 0 --dump-vcd engine_0/trace_induct.vcd --dump-yw engine_0/trace_induct.yw --dump-vlogtb engine_0/trace_induct_tb.v --dump-smtc engine_0/trace_induct.smtc model/design_smt2.smt2&quot;
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Solver: z3
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Solver: z3
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 0..
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Trying induction in step 8..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 0..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 1..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 1..
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Trying induction in step 7..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 2..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 2..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 3..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 3..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 4..
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Trying induction in step 6..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 4..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 5..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 5..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 6..
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Trying induction in step 5..
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Trying induction in step 4..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 6..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assumptions in step 7..
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Checking assertions in step 7..
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Temporal induction successful.
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: ##   0:00:00  Status: passed
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: finished (returncode=0)
+SBY  7:05:26 [uart_fifo_prove] engine_0.induction: Status returned by engine for induction: pass
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: ##   0:00:00  Status: passed
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: finished (returncode=0)
+SBY  7:05:26 [uart_fifo_prove] engine_0.basecase: Status returned by engine for basecase: pass
+SBY  7:05:26 [uart_fifo_prove] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY  7:05:26 [uart_fifo_prove] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY  7:05:26 [uart_fifo_prove] summary: engine_0 (smtbmc z3) returned pass for basecase
+SBY  7:05:26 [uart_fifo_prove] summary: engine_0 (smtbmc z3) returned pass for induction
+SBY  7:05:26 [uart_fifo_prove] summary: engine_0 did not produce any traces
+SBY  7:05:26 [uart_fifo_prove] summary: successful proof by k-induction.
+SBY  7:05:26 [uart_fifo_prove] DONE (PASS, rc=0)
+</system-out>
+<system-err>
+</system-err>
+</testsuite>
+</testsuites>
