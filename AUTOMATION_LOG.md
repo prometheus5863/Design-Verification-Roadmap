@@ -1607,3 +1607,148 @@ entry makes 5. The RAL example went in as a single commit rather than
 split into testbench / mutation harness, because the harness's first run
 changed the testbench's own verdict logic and the two are not separable
 after the fact.
+
+---
+
+## 2026-09-20 — Phase 5 started: an unbounded proof, and the verdict bug caught before it bit
+
+Phase 4 closed on 2026-09-19, so this session started Phase 5 (Assertions &
+Formal Verification). Three of its five checklist items are now done, two
+partial with the reason stated.
+
+1. **Toolchain decision, which 2026-09-19 flagged as Phase 5's first
+   problem** (`tools/setup_formal.sh`). No root, VM rebuilt every session,
+   so the oss-cad-suite tarball is not an option. `pip install --user
+   yowasp-yosys z3-solver` gives the **real Yosys 0.69** plus SymbiYosys,
+   `yosys-smtbmc` and `yosys-witness` as WebAssembly builds, and a native
+   `z3` binary. One non-obvious step: sby calls its helpers as plain
+   `yosys`/`yosys-smtbmc` while YoWASP installs them as `yowasp-*`, so the
+   script drops shims into `$FORMAL_BIN`. The 2026-09-18 subshell gotcha
+   carries over verbatim — **source it, do not pipe it**.
+
+2. **Properties** (`rtl/uart_controller.v`, under `` `ifdef FORMAL ``). The
+   TX/RX FIFO control path, chosen deliberately over the more
+   interesting-looking serial datapath because its correctness is an
+   *unbounded* claim — "the count never exceeds 8, on any trace of any
+   length" — which is the one thing Phase 4's 60-check regression
+   structurally cannot establish. P1 count range; P2 `(wptr − rptr) ==
+   cnt[2:0]`, which is **not** implied by P1; P3 flag consistency; P4 the
+   count changes by at most one per cycle and only as the strobes call for;
+   C1 two cover statements.
+
+3. **RESULT — an unbounded proof.** `bmc` depth 24 **PASS**; `prove`
+   **PASS by temporal induction**, i.e. the invariants hold on every trace
+   of every length, not merely to depth 24; `cover` **PASS** with both
+   statements reached (full TX FIFO at step 10, wrapped read pointer at step
+   6), so the suite is demonstrably **non-vacuous** — P1 and P2 would pass
+   identically on a FIFO whose push guard was permanently false, and the
+   covers are what rule that out.
+
+4. **RESULT — five mutants, all five detected.** Defects injected into
+   COPIES of the RTL: unguarded TX push (overflow), unguarded RX pop
+   (underflow), count incrementing by 2, write pointer advancing by 2
+   (which breaks **P2 only**, leaving P1 intact — the mutant that shows P2
+   earns its place), and a wrong simultaneous-push-and-pop decrement.
+
+5. **RESULT — the verdict-vs-checking defect class, FOURTH occurrence, and
+   the first caught in advance.** `prove` mode has **three** outcomes, not
+   two. Mutant M1 returns:
+
+       engine_0.basecase:  Status: passed
+       engine_0.induction: Status: failed
+       DONE (UNKNOWN, rc=4)
+
+   `UNKNOWN`, not `FAIL`. Induction starts from an *arbitrary*
+   property-satisfying state, which may be unreachable, so a failed
+   induction step is **not a counterexample** — it says only that the
+   property is not k-inductive. The same mutant under `bmc` gives
+   `DONE (FAIL, rc=2)` with a genuine reachable trace at P1 and P4. A
+   harness scoring "prove did not return PASS" as a kill would claim a bug
+   the tool never found, *and* would call a correct-but-not-k-inductive
+   design broken. `run_formal.sh` scores **bmc FAIL** and prints the prove
+   verdict as commentary. The three earlier occurrences (09-17 checks that
+   never ran, 09-18 a PASS line ignoring UVM_ERRORs, 09-19 `make`'s exit
+   code ignoring cocotb's FAIL) were all found *after the fact*; this one
+   was recognised **before it produced a wrong number**, which is the first
+   evidence the rule has actually been learned rather than merely logged.
+
+6. **Measured, not assumed: sby's exit code is trustworthy.** Contrary to
+   the pattern of the last three sessions, sby's exit code is informative
+   (0 pass / 2 fail / 4 unknown) and agreed with its own status line in all
+   13 runs. The script still parses the status line — and now *measures* and
+   prints the agreement instead of assuming it either way. A second
+   sub-finding worth keeping: `sby_verdict` is always called inside `$( )`,
+   so any shell variable it sets dies with the subshell. The exit code and
+   log are written to **files**. That is the same defect shape again, one
+   layer down in bash.
+
+7. **Two guards.** Stage 1 re-runs the Phase 4 60-check regression and
+   requires **60/60** before any formal work, so "the `` `ifdef FORMAL ``
+   block is invisible to Icarus" is checked rather than claimed — it
+   reported 60 passed, 0 failed. Stage 4 deletes P1 and re-proves P2 to
+   measure whether P1 is needed as a strengthening invariant: **it is not**,
+   P2 is inductive alone. The negative result is recorded as measured rather
+   than dropped, and it means the invariant-strengthening technique is
+   studied but **unexercised** — an owed item, not a completed one.
+
+8. **Study notes**
+   (`notes/2026-09-20-sva-and-formal-bounded-vs-unbounded.md`) and
+   **progress.md** updated. The notes state plainly which parts of SVA
+   either available tool can run: **neither runs the concurrent-assertion
+   sequence layer** (`##`, `[*]`, `|->`, local variables), so those are
+   studied and not exercised, and the properties are written in the
+   SymbiYosys immediate-assertion-on-a-clock-edge style. Writing SVA that
+   was never executed would have looked better and meant less.
+
+**Not yet covered (candidates for future runs):**
+- **CSR properties on the six-register map** — the named next target.
+  Short, shallow, exactly what BMC is good at; the 2026-09-19 RAL model
+  already describes the map, and it overlaps vplan features F1/F1.1 that
+  are currently covered only by directed simulation
+- **A property that actually needs a strengthening invariant.** Stage 4
+  found P2 inductive alone, so the technique remains unexercised. The
+  serial datapath's "a started frame always completes" is the candidate
+- **The SVA sequence layer** — not runnable on Icarus 10.3 or Yosys 0.69.
+  Worth one session establishing whether any accessible tool (Verilator's
+  partial SVA?) closes the gap, since interview questions assume fluency
+- **`abc pdr` as a second engine** — computes invariants itself, and would
+  give a check on the smtbmc result independent of the solver
+- **The serial datapath under formal** — deliberately out of scope today:
+  its properties span many bit periods (16·(BAUD_DIV+1) clocks each) and the
+  WASM solver budget does not reach them at useful depth. A scope statement,
+  not a claim that the datapath is correct
+- **Constrained-random and coverage-driven UART stimulus** — all stimulus in
+  all benches is still directed, while the vplan's Section 3 assigns most
+  features to CRV. Open, a capstone item
+- **A mutation script for `examples/phase4_uvm_milestone/`** — it has a
+  report but no runnable script. Open since 2026-09-19
+- **Code coverage measurement** (plan Section 5 targets 95%) — Icarus has no
+  native support; needs its own toolchain investigation. Open since
+  2026-09-18
+- **Mutants not yet attempted**: the baud generator, the overrun path, the
+  interrupt logic, the FIFO full/empty flags, the loopback mux, RX_DATA's
+  pop-on-read. Today's five are all FIFO-control mutants
+- **F7's baud-tolerance number** — never measured in any bench
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview-prep
+
+**Web search availability:** Not attempted. The toolchain question was
+settled by trying the install directly, which is a stronger answer than
+anything a search would have returned, and the rest was built against this
+repo's own RTL.
+
+**Automation health:** Device reachable, folder connected. Unchanged per-run
+costs: git still cannot run inside the connected folder, so work is done in
+the session's own scratch clone. New per-run cost: the formal toolchain
+(`yowasp-yosys`, `z3-solver`) installs fresh each session like the
+uvm-python stack, because the VM is rebuilt; `tools/setup_formal.sh` makes
+that one command. The WASM builds print "Preparing to run … This might take
+a while" on every invocation, but the full four-stage run — Icarus
+regression, three proofs, ten mutant runs, one invariant experiment —
+completes in well under two minutes.
+
+**Commits this run:** 4 (the toolchain script; the formal property block
+with its runner, configs, README and recorded output; the study notes;
+progress.md). This AUTOMATION_LOG.md entry makes 5. The property block and
+the runner went in as one commit rather than split, because the runner's
+first M1 run changed how the harness defines detection and the two are not
+separable after the fact — the same reason given on 2026-09-19.
