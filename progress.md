@@ -256,11 +256,60 @@ log, and a coverage merge that silently drops a database are the same
 shape.
 
 ## Phase 5 — Assertions & Formal Verification
-- [ ] SVA in depth (sequences, properties, local variables, assume/assert/cover)
-- [ ] Formal verification concepts (model checking, bounded vs. unbounded)
-- [ ] Practical formal use cases (connectivity, X-prop, CSR, deadlock)
-- [ ] Hands-on SymbiYosys/Yosys exercise
-- [ ] Milestone: SVA property suite + one formal property check w/ documented result
+- [~] SVA in depth (sequences, properties, local variables, assume/assert/cover)
+      -- **studied 2026-09-20**
+      (`notes/2026-09-20-sva-and-formal-bounded-vs-unbounded.md` Section 2),
+      but the concurrent-assertion **sequence layer is not runnable on
+      either tool here**: Icarus 10.3 has essentially no concurrent-assertion
+      support and Yosys 0.69's `-formal` accepts assert/assume/cover/$past
+      without `##`, `[*]`, `|->` or local variables. Properties are
+      therefore written in the SymbiYosys immediate-assertion-on-a-clock-edge
+      style. Not closed: `##`/`[*]`/`|->`/local variables are studied and
+      unexercised
+- [x] Formal verification concepts (model checking, bounded vs. unbounded)
+      -- **done 2026-09-20**, and not only on paper: the UART FIFO
+      invariants are proved by **temporal induction**, an unbounded result,
+      and the difference from the bounded BMC result was forced into the
+      open by mutant M1 (below)
+- [~] Practical formal use cases (connectivity, X-prop, CSR, deadlock)
+      -- surveyed 2026-09-20 with a verdict on each for this DUT (notes
+      Section 5). **CSR properties on the six-register map are the named
+      next target**; X-prop and liveness are out of scope for this
+      toolchain, connectivity is not applicable to a single peripheral
+- [x] Hands-on SymbiYosys/Yosys exercise -- **done 2026-09-20**.
+      `tools/setup_formal.sh` installs Yosys 0.69 + SymbiYosys + z3 without
+      root via the YoWASP WASM builds; `examples/phase5_formal_uart/`
+      runs bmc / prove / cover plus a ten-run mutation stage
+- [x] Milestone: SVA property suite + one formal property check w/
+      documented result -- **done 2026-09-20**, with the SVA caveat above.
+      Five properties (count range, pointer/count consistency, flag
+      consistency, no silent over/underflow, two covers) in
+      `rtl/uart_controller.v` under `` `ifdef FORMAL ``. Real RTL: bmc
+      depth 24 PASS, **prove PASS by k-induction**, cover PASS with both
+      statements reached (steps 10 and 6, so non-vacuous). Five mutants
+      injected into COPIES, all five detected. Output recorded in
+      `examples/phase5_formal_uart/formal_run_output_2026-09-20.txt`
+      (10 passed, 0 failed)
+
+**The verdict-vs-checking defect class, fourth occurrence -- and the first
+caught in advance.** `prove` mode has THREE outcomes. Mutant M1 returns
+`DONE (UNKNOWN, rc=4)`: basecase passes, induction fails. That is not a
+counterexample -- the induction step starts from an arbitrary
+property-satisfying state, which may be unreachable -- so a harness scoring
+"prove did not return PASS" as a kill would claim a bug the tool never
+found, and would call a correct-but-not-k-inductive design broken. The same
+mutant under `bmc` gives `DONE (FAIL, rc=2)` with a real trace.
+`run_formal.sh` scores bmc FAIL and prints the prove verdict as commentary.
+The three earlier occurrences (2026-09-17, 09-18, 09-19) were all found
+after the fact; this one was recognised before it produced a wrong number,
+which is the first sign that the rule has actually been learned.
+
+**Two guards worth keeping.** Stage 1 re-runs the Phase 4 60-check
+regression and requires 60/60 before any formal work, so "the `` `ifdef
+FORMAL `` block is invisible to Icarus" is checked rather than claimed.
+Stage 4 deletes P1 and re-proves P2 to measure whether P1 is needed as a
+strengthening invariant: it is not, and the negative result is recorded as
+measured rather than quietly dropped.
 
 ## Phase 6 — Industry Flow & Capstone
 - [ ] Surrounding flow overview (lint, regression infra, coverage merge,
