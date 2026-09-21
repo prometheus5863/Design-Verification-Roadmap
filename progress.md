@@ -271,15 +271,35 @@ shape.
       invariants are proved by **temporal induction**, an unbounded result,
       and the difference from the bounded BMC result was forced into the
       open by mutant M1 (below)
-- [~] Practical formal use cases (connectivity, X-prop, CSR, deadlock)
+- [x] Practical formal use cases (connectivity, X-prop, CSR, deadlock)
       -- surveyed 2026-09-20 with a verdict on each for this DUT (notes
-      Section 5). **CSR properties on the six-register map are the named
-      next target**; X-prop and liveness are out of scope for this
-      toolchain, connectivity is not applicable to a single peripheral
+      Section 5), and **CSR closed 2026-09-21**: nine properties on the
+      six-register APB map in `rtl/uart_controller.v` under
+      `` `ifdef FORMAL_CSR ``, with `examples/phase5_csr_formal/` running
+      bmc (depth 20) / prove / cover plus seven mutants and two guard
+      stages -- **15 passed, 0 failed**. The seven reusable CSR
+      obligations (reset value, read-back, reserved bits, RO/WO
+      protection, decode isolation, access side effects, clear semantics)
+      are written up in `notes/2026-09-21-csr-formal-properties-and-bounded-vacuity.md`
+      Section 2, including the O(n) contrapositive form of decode
+      isolation. **Two caveats recorded rather than glossed:** the
+      read-to-clear and error-rise properties are **vacuously true at
+      depth 20** -- the antecedent needs a complete UART frame, ~145
+      clocks -- and that vacuity is *asserted* by a mutant (N5) required
+      to survive, not merely suspected; and **reset-value properties are
+      still unchecked**, because the `f_past_valid` idiom disables
+      everything during reset. X-prop and liveness remain out of scope for
+      this toolchain, connectivity is not applicable to a single peripheral
 - [x] Hands-on SymbiYosys/Yosys exercise -- **done 2026-09-20**.
       `tools/setup_formal.sh` installs Yosys 0.69 + SymbiYosys + z3 without
       root via the YoWASP WASM builds; `examples/phase5_formal_uart/`
-      runs bmc / prove / cover plus a ten-run mutation stage
+      runs bmc / prove / cover plus a ten-run mutation stage, and
+      **extended 2026-09-21** with a second suite, `examples/phase5_csr_formal/`,
+      on the register map. Its Stage 4 re-runs the 2026-09-20 FIFO jobs
+      with `-DFORMAL` only and requires PASS, so the claim "the new block
+      did not disturb the old suite" is checked rather than asserted; its
+      Stage 1 does the same one level down for the Phase 4 Icarus
+      regression (60/60)
 - [x] Milestone: SVA property suite + one formal property check w/
       documented result -- **done 2026-09-20**, with the SVA caveat above.
       Five properties (count range, pointer/count consistency, flag
@@ -345,3 +365,22 @@ This checklist is updated by each automated study session as work is
 completed. See `AUTOMATION_LOG.md` for the dated narrative log of what
 was actually done in each session (more detail than this checklist
 alone conveys).
+
+**A cover can be reached for the wrong reason (2026-09-21).** The vacuity
+cover written for the STATUS read-to-clear property passed on its first
+run, at the earliest possible step. The witness trace showed why: this DUT
+has a **synchronous** reset, so at step 0 -- before the first clock edge --
+the solver may choose any register value, and `$past()` one cycle later
+**reaches back across the reset boundary** and returns the pre-reset value
+the design had already discarded. The cover fired on garbage. Assertions
+were unaffected: every one using `$past` was already guarded by
+`$past(rst_n)`. Only the covers lacked the guard, because *a cover feels
+like a query and an assertion feels like an obligation* -- and it is the
+same guard for the same reason. All covers are now guarded, and the runner
+**fails the run if any cover is reached before step 2**.
+
+Fifth occurrence of the verdict-vs-checking class (09-17, 09-18, 09-19,
+09-20), second caught before it produced a wrong number. New sub-lesson:
+**a PASS whose step number is implausible is a finding.** The tool was
+truthful -- the cover really was reachable -- and the conclusion drawn from
+it was wrong anyway.
