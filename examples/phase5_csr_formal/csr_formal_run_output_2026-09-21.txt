@@ -1,0 +1,70 @@
+
+=== Stage 1: Phase 4 regression guard (the FORMAL_CSR block must be invisible) ===
+  regression reports: === SUMMARY: 60 passed, 0 failed ===
+  PASS  Phase 4 regression still 60/60
+
+=== Stage 2: CSR proof on the real RTL ===
+  PASS  uart_csr_bmc (verdict PASS)
+        sby exit code was 0 (recorded, NOT the verdict)
+  PASS  uart_csr_prove (verdict PASS)
+        sby exit code was 0 (recorded, NOT the verdict)
+  PASS  uart_csr_cover (verdict PASS)
+        sby exit code was 0 (recorded, NOT the verdict)
+        covers, and the step each was reached at:
+          line 474 -> step 10
+          line 475 -> step 6
+          line 654 -> step 3
+          line 657 -> step 3
+          line 659 -> step 3
+          line 661 -> step 3
+          line 664 -> step 3
+  PASS  no cover reached before step 2 (earliest was 3)
+
+=== Stage 3: mutation -- seven CSR defects, each must be DETECTED by bmc ===
+  Detection = bmc returns FAIL, i.e. the solver exhibits a reachable
+  counterexample trace. A surviving mutant means the suite does not
+  constrain that behaviour, whatever the proof said.
+  PASS  N1 -- write decode aliases CTRL onto the STATUS address (C2) (verdict FAIL)
+          first failing property at line 532
+  PASS  N2 -- CTRL reserved bits read as 1 (C3) (verdict FAIL)
+          first failing property at line 541
+  PASS  N3 -- unmapped and write-only addresses read 0xFF (C4) (verdict FAIL)
+          first failing property at line 553
+  PASS  N4 -- STATUS tx_full/tx_empty bits swapped (C5) (verdict FAIL)
+          first failing property at line 565
+          first failing property at line 566
+  PASS  N6 -- RX_DATA read pops an empty FIFO (C8) (verdict FAIL)
+          first failing property at line 433
+          first failing property at line 608
+  PASS  N7 -- TX-empty interrupt ignores its mask bit (C9) (verdict FAIL)
+          first failing property at line 619
+          first failing property at line 620
+
+=== Stage 3b: a mutant that this suite provably CANNOT catch at this depth ===
+  N5 disables the STATUS read-to-clear path entirely, the defect C6
+  exists to catch. It is expected to SURVIVE, and that expectation is
+  asserted rather than hoped for.
+
+  Why: after reset the three sticky error bits are 0, and the ONLY way
+  to set one is for the RX engine to complete a serial frame -- a start
+  bit plus eight data bits plus a stop bit at sixteen oversample ticks
+  each, ~145 clocks at the fastest legal baud. bmc runs to depth 20.
+  C6's antecedent is therefore never satisfiable in the bounded window,
+  so C6 is VACUOUSLY TRUE here and no mutation of the clear path can
+  break it. The same holds for C7.
+
+  This is the honest form of the statement 'C6 is proved': it is proved
+  only over traces the solver can reach, and it is measured here that
+  those traces do not include the interesting one. uart_csr_deep_cover.sby
+  is the attempt to reach it; see README.md for what that cost.
+  PASS  N5 survived, as predicted -- the depth limit is real and measured
+
+=== Stage 4: the 2026-09-20 FIFO jobs must be undisturbed ===
+  Run with -DFORMAL only, i.e. without FORMAL_CSR, so they see exactly
+  the source they saw on 2026-09-20.
+  PASS  uart_fifo_bmc (2026-09-20 suite) (verdict PASS)
+  PASS  uart_fifo_prove (2026-09-20 suite) (verdict PASS)
+  PASS  uart_fifo_cover (2026-09-20 suite) (verdict PASS)
+
+=== SUMMARY ===
+  15 passed, 0 failed

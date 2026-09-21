@@ -474,6 +474,220 @@ module uart_controller (
             cover(tx_cnt == 4'd8);
             cover(tx_rptr != 3'd0 && tx_cnt == 4'd0);
         end
+
+    // ===============================================================
+    // CSR property block (Phase 5, 2026-09-21).
+    //
+    // Nested under a SECOND define on purpose. The 2026-09-20 FIFO jobs
+    // compile with -DFORMAL only, so they see exactly the source they saw
+    // then and that session's bmc/prove/cover/mutation numbers stay
+    // bit-reproducible. The CSR jobs pass -DFORMAL -DFORMAL_CSR.
+    //
+    // Scope: the six-register APB map -- write/read-back, decode
+    // isolation, reserved bits, the read mux, the live STATUS bits, the
+    // sticky-error read-to-clear path, RX_DATA pop-on-read, and interrupt
+    // masking. These are SHALLOW properties: every one of them is decided
+    // within a couple of cycles, which is what BMC is good at and is why
+    // 2026-09-20 named this the next target rather than the serial
+    // datapath.
+    //
+    // HONEST CLASSIFICATION, because not all of these are worth the same.
+    //   STRUCTURAL RESTATEMENT (weakest): C3, C4. These restate the read
+    //     mux. A mutation of that mux is detected trivially, because the
+    //     property and the logic are the same sentence written twice.
+    //     They are kept because they are the register map's spec and they
+    //     fire on an address-decode change that breaks many things at once.
+    //   CROSS-CHECK (what the suite is actually for): C1, C2, C5, C6, C7,
+    //     C8, C9. Each relates one part of the design to a DIFFERENT part
+    //     -- a write port to a read port, a flag to the FIFO that drives
+    //     it, a clear path to the FSM that sets it -- so no single line of
+    //     RTL can make one true by construction.
+    // ===============================================================
+`ifdef FORMAL_CSR
+    wire f_csr_wr   = wr_en;
+    wire f_csr_rd   = rd_en;
+    wire f_rx_stopping = (rx_state == RX_STOP1) || (rx_state == RX_STOP2);
+
+    // ---- C1: write / read-back on the three RW registers -------------
+    // CROSS-CHECK: relates the write decoder to the register state one
+    // cycle later. Note baud_div takes all 8 bits while ctrl takes 5 and
+    // int_en takes 3 -- a width mutation is exactly what this catches.
+    always @(posedge clk)
+        if (f_past_valid && rst_n && $past(rst_n) && $past(f_csr_wr)) begin
+            if ($past(paddr) == ADDR_CTRL)     assert(ctrl     == $past(pwdata[4:0]));
+            if ($past(paddr) == ADDR_BAUD_DIV) assert(baud_div == $past(pwdata));
+            if ($past(paddr) == ADDR_INT_EN)   assert(int_en   == $past(pwdata[2:0]));
+        end
+
+    // ---- C2: decode isolation -- no write aliasing --------------------
+    // CROSS-CHECK, and the strongest property here. Stated in the
+    // contrapositive: a register that CHANGED must have been addressed.
+    // This covers, in one line each, every "a write to STATUS / RX_DATA /
+    // an unmapped address must not disturb anything" requirement, without
+    // enumerating the sixteen addresses.
+    always @(posedge clk)
+        if (f_past_valid && rst_n && $past(rst_n)) begin
+            if (ctrl     != $past(ctrl))
+                assert($past(f_csr_wr) && $past(paddr) == ADDR_CTRL);
+            if (baud_div != $past(baud_div))
+                assert($past(f_csr_wr) && $past(paddr) == ADDR_BAUD_DIV);
+            if (int_en   != $past(int_en))
+                assert($past(f_csr_wr) && $past(paddr) == ADDR_INT_EN);
+        end
+
+    // ---- C3: read mux and reserved bits (STRUCTURAL RESTATEMENT) ------
+    always @(*)
+        if (f_past_valid && rst_n) begin
+            if (paddr == ADDR_CTRL)     assert(prdata == {3'b000, ctrl});
+            if (paddr == ADDR_BAUD_DIV) assert(prdata == baud_div);
+            if (paddr == ADDR_INT_EN)   assert(prdata == {5'b00000, int_en});
+            if (paddr == ADDR_STATUS)   assert(prdata[7] == 1'b0);
+        end
+
+    // ---- C4: write-only and unmapped reads (STRUCTURAL RESTATEMENT) ---
+    // TX_DATA is write-only; 4'h6..4'hF are unmapped. The plan requires
+    // such a read to return a defined value and not hang.
+    always @(*)
+        if (f_past_valid && rst_n)
+            if (paddr == ADDR_TX_DATA || paddr > ADDR_INT_EN)
+                assert(prdata == 8'h00);
+
+    // ---- C5: the four LIVE status bits track the FIFOs exactly --------
+    // CROSS-CHECK, and the one that settles a verification-plan wording
+    // question raised on 2026-09-17. The plan calls STATUS "live". For
+    // bits [3:0] that is exactly true and is proved here; for the three
+    // error bits it is false by construction, and C6 states what holds
+    // instead. The plan's single word covered two different contracts.
+    always @(*)
+        if (f_past_valid && rst_n && paddr == ADDR_STATUS) begin
+            assert(prdata[0] == tx_full);
+            assert(prdata[1] == tx_empty);
+            assert(prdata[2] == rx_full);
+            assert(prdata[3] == rx_avail);
+        end
+
+    // ---- C6: the sticky error bits are read-to-clear ------------------
+    // CROSS-CHECK. A STATUS read must clear all three error bits -- UNLESS
+    // the RX engine is in a stop state that same cycle, where the set path
+    // legitimately wins over the clear (last assignment in the block).
+    //
+    // The exception is stated in terms of rx_state ONLY, deliberately: if
+    // it duplicated the set CONDITIONS (rx_mid && !rx_sync, the parity
+    // compare, rx_full) the property would be the set logic written twice
+    // and a mutation of that logic would make property and design wrong
+    // together. Naming only the state keeps the two independent.
+    always @(posedge clk)
+        if (f_past_valid && $past(f_past_valid) && rst_n && $past(rst_n)
+            && $past(f_csr_rd) && $past(paddr) == ADDR_STATUS
+            && !$past(f_rx_stopping)) begin
+            assert(!frame_err);
+            assert(!parity_err);
+            assert(!overrun_err);
+        end
+
+    // ---- C7: the error bits can only RISE in a stop state -------------
+    // CROSS-CHECK on the same path from the other side. Together with C6
+    // this pins the sticky bits down completely: they rise only in a stop
+    // state and fall only on a STATUS read.
+    always @(posedge clk)
+        if (f_past_valid && $past(f_past_valid) && rst_n && $past(rst_n)) begin
+            if (frame_err   && !$past(frame_err))   assert($past(f_rx_stopping));
+            if (parity_err  && !$past(parity_err))  assert($past(f_rx_stopping));
+            if (overrun_err && !$past(overrun_err)) assert($past(f_rx_stopping));
+        end
+
+    // ---- C8: RX_DATA pop-on-read, and no pop when empty ---------------
+    // CROSS-CHECK: relates an APB read to FIFO occupancy. The second half
+    // is the one that matters -- a read of an empty RX FIFO must not move
+    // the pointer, which is the classic read-side underflow bug.
+    always @(posedge clk)
+        if (f_past_valid && $past(f_past_valid) && rst_n && $past(rst_n)) begin
+            if ($past(f_csr_rd) && $past(paddr) == ADDR_RX_DATA && $past(rx_avail))
+                assert(rx_cnt == $past(rx_cnt) - 4'd1 || $past(rx_push));
+            if ($past(f_csr_rd) && $past(paddr) == ADDR_RX_DATA && !$past(rx_avail)) begin
+                assert(rx_rptr == $past(rx_rptr));
+                assert(rx_cnt  == $past(rx_cnt) + ($past(rx_push) ? 4'd1 : 4'd0));
+            end
+        end
+
+    // ---- C9: interrupt masking ----------------------------------------
+    // CROSS-CHECK, stated so that it is NOT the irq assign written twice:
+    // a fully masked interrupt controller must be silent, whatever the
+    // FIFOs and error bits are doing.
+    always @(*)
+        if (f_past_valid && rst_n) begin
+            if (int_en == 3'd0) assert(!irq);
+            if (irq)            assert(int_en != 3'd0);
+        end
+
+    // ---- C10: covers -- the CSR suite must not be vacuous -------------
+    //
+    // EVERY cover here is guarded by $past(rst_n) as well as rst_n. That
+    // is not boilerplate; it is a fix for a defect this suite shipped with
+    // for exactly one run.
+    //
+    // THE BUG (2026-09-21, found by reading the trace of a PASS):
+    //   cover(f_csr_rd && paddr == ADDR_STATUS && $past(overrun_err));
+    // guarded only by (f_past_valid && rst_n) was reported REACHED at the
+    // first opportunity. The witness trace showed why: at step 0 the
+    // solver is free to choose overrun_err = 1, because the design has a
+    // SYNCHRONOUS reset and step 0 is before the first clock edge. One
+    // cycle later rst_n is high and the design is reset -- but $past()
+    // still reaches BACK ACROSS THE RESET BOUNDARY and returns the
+    // pre-reset garbage. The cover fired on a value the design had already
+    // thrown away.
+    //
+    // This matters more than a mis-scored cover. The cover's whole job was
+    // to show that C6 (read-to-clear) is not vacuous. It "passed" without
+    // the design ever setting an error bit, so it demonstrated nothing --
+    // a green light that certified its own uselessness.
+    //
+    // Note the assertions C1-C9 were NOT affected: every one that uses
+    // $past is guarded by $past(rst_n), so none of them can read across
+    // the boundary. The covers were the only place the guard was missing,
+    // which is the easy place to forget it.
+    //
+    // See examples/phase5_csr_formal/README.md for the trace.
+    always @(posedge clk)
+        if (f_past_valid && $past(f_past_valid) && rst_n && $past(rst_n)) begin
+            // c1: the interrupt can actually assert
+            cover(irq);
+            // c2: a read of an EMPTY RX FIFO -- the state C8's second
+            //     branch is about, so C8 is not vacuous
+            cover(f_csr_rd && paddr == ADDR_RX_DATA && !rx_avail);
+            // c3: an access to an unmapped address -- C2's and C4's state
+            cover(f_csr_wr && paddr > ADDR_INT_EN);
+            // c4: a STATUS read at all -- C6's antecedent
+            cover(f_csr_rd && paddr == ADDR_STATUS);
+            // c5: a write and a read of CTRL in consecutive cycles --
+            //     C1's antecedent followed by C3's
+            cover(f_csr_rd && paddr == ADDR_CTRL
+                  && $past(f_csr_wr) && $past(paddr) == ADDR_CTRL);
+        end
+
+    // ---- C11: DEEP cover, separate job ---------------------------------
+    // C6's non-vacuity needs an error bit that the DESIGN set, which needs
+    // a complete serial frame: a start bit plus eight data bits plus a
+    // stop bit at sixteen oversample ticks each. With baud_div free that is
+    // unbounded; even at baud_div = 0 it is ~160 clocks, far past the depth
+    // the shallow job runs at. This block assumes the fastest legal baud
+    // and is run as its own job at high depth, so that the cost lands in
+    // one place and the shallow job stays fast.
+    //
+    // Whatever this job returns is reported as measured. An unreached
+    // cover here is a statement about the solver budget, NOT a claim that
+    // the design cannot set an error bit -- the Phase 4 simulation
+    // regression sets all three of them every run.
+`ifdef FORMAL_CSR_DEEP
+    always @(*) assume(baud_div == 8'd0);
+    always @(posedge clk)
+        if (f_past_valid && $past(f_past_valid) && rst_n && $past(rst_n)) begin
+            cover(rx_state == RX_STOP1);
+            cover(frame_err);
+            cover(f_csr_rd && paddr == ADDR_STATUS && $past(frame_err));
+        end
+`endif
+`endif
 `endif
 
 endmodule
