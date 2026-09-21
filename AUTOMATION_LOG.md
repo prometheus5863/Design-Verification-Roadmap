@@ -1752,3 +1752,179 @@ progress.md). This AUTOMATION_LOG.md entry makes 5. The property block and
 the runner went in as one commit rather than split, because the runner's
 first M1 run changed how the harness defines detection and the two are not
 separable after the fact — the same reason given on 2026-09-19.
+
+## 2026-09-21 — Phase 5: the register map under formal, and a vacuity cover that certified its own uselessness
+
+2026-09-20 named CSR properties on the six-register map as the next target.
+Done, and the two things worth keeping from the session are both about
+**vacuity** rather than about the register map.
+
+1. **Nine CSR properties** (`rtl/uart_controller.v`, under a nested
+   `` `ifdef FORMAL_CSR ``): C1 write/read-back on the three RW registers at
+   their real widths (5, 8, 3 bits); C2 decode isolation; C3 read mux and
+   reserved bits; C4 write-only and unmapped reads; C5 the four live STATUS
+   bits; C6 sticky-error read-to-clear; C7 errors rise only in a stop state;
+   C8 RX_DATA pop-on-read and no-pop-when-empty; C9 interrupt masking.
+
+   **Nested under a second define on purpose.** The 2026-09-20 FIFO jobs pass
+   `-DFORMAL` only, so they see exactly the source they saw then — and
+   **Stage 4 re-runs all three of them and requires PASS** rather than
+   asserting it. Stage 1 does the same one level down for the Phase 4 Icarus
+   regression: **60/60**.
+
+   The property worth memorising is **C2, stated in the contrapositive**: *a
+   register that changed must have been addressed*. That is one line per
+   register and it covers every "a write to STATUS / RX_DATA / any of the ten
+   unmapped addresses must not disturb anything" requirement at once, instead
+   of enumerating sixteen addresses. It also keeps covering them if a seventh
+   register is added.
+
+   C3 and C4 are labelled in the source as **structural restatements** —
+   they say what the read mux says, so mutating the mux detects them
+   trivially. Labelling the weak properties as weak is cheaper than
+   discovering later that the suite's apparent breadth was mostly them.
+
+2. **RESULT — the suite runs 15/15**
+   (`examples/phase5_csr_formal/csr_formal_run_output_2026-09-21.txt`):
+   regression guard 60/60; bmc depth 20 PASS; **prove PASS**; cover PASS with
+   all seven covers reached; six of seven mutants detected; the seventh
+   required to survive (below); and the three 2026-09-20 FIFO jobs still PASS.
+
+3. **RESULT — a cover that passed by reading pre-reset state through
+   `$past()`. Fifth occurrence of the verdict-vs-checking class, second
+   caught before it produced a wrong number.**
+
+   The vacuity cover for C6 was reported **reached at the earliest possible
+   step**. Setting `overrun_err` needs a complete serial frame, so that was
+   not credible and the witness trace was dumped instead of believed:
+
+       step 0   f_past_valid=0  rst_n=0  overrun_err=1   <- solver's free choice
+       step 1   f_past_valid=1  rst_n=1  overrun_err=0   <- reset has taken effect
+                                paddr=0x1 psel=1 pwrite=0  (a STATUS read)
+
+   This DUT has a **synchronous** reset. Step 0 precedes the first clock edge,
+   so every register is the solver's to choose; `assume(!rst_n)` correctly
+   forces reset at that edge but cannot un-choose step 0. `$past()` then
+   **reaches back across the reset boundary** and returns the value the design
+   had already thrown away.
+
+   **Why it is worse than a mis-scored cover.** That cover's entire job was to
+   show C6 was not vacuous. It passed without the design ever setting an error
+   bit — a check whose only purpose is to detect false confidence, providing
+   false confidence.
+
+   **Scope, checked not assumed.** C1–C9 were unaffected: every assertion
+   using `$past` is already guarded by `$past(rst_n)`. Only the covers lacked
+   it — *a cover feels like a query and an assertion feels like an obligation*,
+   and it is the same guard for the same reason. Fixed, plus a standing guard:
+   the runner parses sby's per-cover "Reached cover statement in step N" lines
+   and **fails the run if any cover is reached before step 2**. Earliest is
+   now step 3.
+
+   **New sub-lesson for the class:** a PASS whose *step number* is implausible
+   is a finding. sby was truthful — the cover genuinely was reachable — and
+   the conclusion drawn from it was wrong anyway. Four of the five occurrences
+   so far were about a tool's output being misread, not about a tool lying.
+
+4. **RESULT — two of the nine properties are vacuously true, and the vacuity
+   is asserted rather than suspected.** `bmc` runs to depth 20; the only path
+   that sets a sticky error bit runs through the RX engine completing a frame,
+   **≈145 clocks even at `baud_div = 0`**. So C6's and C7's antecedents are
+   never satisfiable in the bounded window.
+
+   Stage 3b makes this a measurement: mutant **N5 disables the STATUS
+   read-to-clear path entirely — exactly the defect C6 exists to catch — and
+   the runner requires it to SURVIVE.** It does. A suite that cannot be broken
+   by deleting the logic it is about is not testing that logic, and the
+   difference between "C6 is proved" and "C6 is proved over traces reachable
+   in 20 cycles, which never set an error bit" is the whole value of saying it.
+
+5. **The attempt to close it, and what it cost.**
+   `examples/phase5_csr_formal/uart_csr_deep_cover.sby` assumes the fastest
+   legal baud and covers `rx_state == RX_STOP1`, `frame_err`, and a STATUS
+   read following a set `frame_err`, at depth 170. **Measured: the WASM z3
+   build reached step 61 of 170 in 2 min 39 s** and did not finish in budget;
+   a second configuration was slower still. Committed for reproducibility, not
+   part of the default run. This is a statement about the solver budget, not
+   the design — the Phase 4 simulation regression sets all three error bits
+   every run.
+
+   **The resulting scope line matches 2026-09-20's from the other side.** Day
+   1 put the serial datapath out of formal scope because its properties span
+   many bit periods. Day 2 arrives at the same boundary from the register
+   side: **any property whose antecedent needs a complete UART frame is out of
+   reach for bounded model checking on this toolchain and belongs to
+   simulation.** Knowing where that line falls, and which of one's own
+   properties sit on the wrong side of it, is the output a PASS/FAIL summary
+   cannot give.
+
+6. **Mutation, seven defects.** N1 write-decode aliasing onto STATUS (C2);
+   N2 CTRL reserved bits reading 1 (C3); N3 unmapped reads returning 0xFF
+   (C4); N4 STATUS `tx_full`/`tx_empty` swapped (C5); N5 read-to-clear
+   disabled (survives, §4); N6 RX_DATA popping an empty FIFO (C8); N7 the
+   TX-empty interrupt ignoring its mask (C9). **N6 fails at both line 433 —
+   the 2026-09-20 FIFO property P4 — and line 608, C8.** Two independent
+   suites catching one defect from different directions is the cheapest
+   evidence available that neither is self-fulfilling.
+
+7. **Study notes**
+   (`notes/2026-09-21-csr-formal-properties-and-bounded-vacuity.md`): the
+   seven reusable CSR obligations written out as properties (§2), both
+   findings (§3, §4), and a generalisation worth carrying to any block (§5) —
+   **three distinct ways a passing property can mean nothing**: antecedent
+   never satisfied, cover reached from an unreachable state, and property =
+   the logic written twice. A fourth, over-constrained `assume()`, is the
+   shape of the deep-cover job's own baud assumption, which is why that
+   assumption lives in its own `ifdef` and its own job.
+
+8. **progress.md** — the "practical formal use cases" item is closed, with
+   both caveats stated in the checklist itself rather than only in the notes.
+
+**An owed item created today:** **reset-value properties are unchecked.** The
+seven CSR obligations include reset value, and the `f_past_valid` idiom that
+makes every other property well-formed disables everything *during* reset, so
+the reset values themselves are never asserted. A separate job with the
+opposite guard closes it.
+
+**Not yet covered (candidates for future runs):**
+- **Reset-value properties** — created today, and the natural next item: it is
+  the one CSR obligation of the seven this suite does not check, it is cheap,
+  and it needs a guard that is the mirror image of the one everything else uses
+- **A property that actually needs a strengthening invariant.** 2026-09-20's
+  stage 4 found P2 inductive alone and today's properties are all shallow, so
+  the technique is still studied and unexercised. The serial datapath's "a
+  started frame always completes" remains the candidate
+- **`abc pdr` as a second engine** — a solver-independent check, and now also
+  the obvious candidate for the deep-cover job smtbmc cannot finish
+- **The SVA sequence layer** (`##`, `[*]`, `|->`, local variables) — runnable
+  on neither tool here; worth one session establishing whether anything
+  accessible closes the gap, since interviews assume fluency
+- **Constrained-random and coverage-driven UART stimulus** — all stimulus in
+  all benches is still directed while the vplan assigns most features to CRV.
+  The capstone item
+- **A mutation script for `examples/phase4_uvm_milestone/`** — it has a report
+  but no runnable script. Open since 2026-09-19
+- **Code coverage measurement** (plan Section 5 targets 95%) — Icarus has no
+  native support. Open since 2026-09-18
+- **Mutants not yet attempted**: the baud generator, the overrun path, the
+  interrupt *enable* combinations, the loopback mux. Today added the register
+  file and the interrupt mask to the covered set
+- **F7's baud-tolerance number** — never measured in any bench
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview-prep
+
+**Web search availability:** Not attempted. Everything this session needed was
+either in the repo's own RTL or answerable by running the tool, which is a
+stronger answer than a search result.
+
+**Automation health:** Device reachable, folder connected. Unchanged per-run
+costs: git cannot run inside the connected folder, so work happens in the
+session's scratch clone; the formal toolchain reinstalls each session via
+`tools/setup_formal.sh`. New measurement: the full four-stage CSR run —
+Icarus regression, three proofs, seven mutant jobs, one expected-survival job,
+three FIFO re-runs — is 15 sby invocations and completes in about a minute.
+
+**Commits this run:** 3 (the property block with its runner, configs, README
+and recorded output; the study notes; progress.md). This AUTOMATION_LOG.md
+entry makes 4. The property block and the runner went in together, as on
+2026-09-19 and 2026-09-20, because the runner's first cover run is what
+changed the property block — the two are not separable after the fact.
