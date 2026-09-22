@@ -1928,3 +1928,180 @@ and recorded output; the study notes; progress.md). This AUTOMATION_LOG.md
 entry makes 4. The property block and the runner went in together, as on
 2026-09-19 and 2026-09-20, because the runner's first cover run is what
 changed the property block — the two are not separable after the fact.
+
+## 2026-09-22 — Reset values proved, and a property measured to be doing nothing
+
+**Open item closed:** "**Reset-value properties**" — created 2026-09-21 and
+named there as *the natural next item*: one of the seven CSR obligations, and
+the only one the day-2 suite did not check.
+
+**Result:** `examples/phase5_csr_formal/run_reset_formal.sh`, five stages,
+**15 passed, 0 failed** (`reset_formal_run_output_2026-09-22.txt`).
+
+1. **Why the gap was structural.** Every formal property in this repo — the
+   2026-09-20 FIFO invariants and the 2026-09-21 CSR properties alike —
+   opens `if (f_past_valid && rst_n)`. That is the standard SymbiYosys idiom
+   and it is correct: a steady-state property has nothing to say while the
+   design is being forced to a known state. It also means **the entire reset
+   window is excluded from every property in the suite**, and the
+   reset-value obligation is the one whose whole content lives inside it.
+   The gap was not a missing test — it was **a correct convention, uniformly
+   applied, with a blind spot**, which is harder to see precisely because
+   the convention is right everywhere it was used.
+
+   The fix is the mirror image, `(f_past_valid && !$past(rst_n))`, in its own
+   `` `ifdef FORMAL_CSR_RESET `` so the day-1 (`-DFORMAL`) and day-2
+   (`-DFORMAL -DFORMAL_CSR`) jobs keep seeing bit-identical source.
+
+2. **`$past` is safe here and was not on 2026-09-21 — the distinction is
+   worth stating.** Day 2's bug was a cover reading *state* across the
+   synchronous-reset boundary, state the reset had already discarded. R1–R4
+   read `$past(rst_n)` — the **reset signal**, not state. Reading the reset
+   signal across that boundary is the *point*; reading state across it was
+   the bug. The two look identical in the source and are opposite in
+   meaning. Also: the reset is synchronous, so the obligation is "one edge
+   *after* `rst_n` was sampled low", not "whenever `rst_n` is low" — the
+   obvious wording describes an asynchronous reset and would **fail on
+   correct RTL**.
+
+3. **The four properties.** R1: 28 architectural registers at their reset
+   values, transcribed from the RTL's reset clauses so a register added later
+   without a property shows up as a diff. R2: the *read port*, which is the
+   obligation a CSR spec actually states — `prdata` is a combinational mux,
+   so a decode fault can leave every register correctly reset and still
+   return the wrong value, which R1 cannot catch. R3: `irq` low out of reset
+   (a core asserting `irq` before software enables anything takes a spurious
+   interrupt on every boot). R4: reset dominates a concurrent bus write.
+
+   **`STATUS` resets to `8'h02`, not `8'h00`** — bit 1 is `tx_empty`, a live
+   decode of `tx_cnt == 0`, which reset makes true. "Registers reset to zero"
+   is the default assumption and it is wrong here; the constant was derived
+   from the RTL's own concatenation *in the comment, where a reviewer can
+   check it*, rather than assumed. That is day 2's third self-fulfilment
+   shape, avoided deliberately.
+
+4. **One register deliberately out of scope, and the omission proved rather
+   than described.** `ADDR_RX_DATA` reads `rx_fifo[rx_rptr]` and the FIFO
+   array has **no reset clause** — a real design decision (eight bytes
+   unreadable through the protocol while `rx_cnt == 0`), so asserting a value
+   would assert something false. **Mutant M7 corrupts exactly that storage at
+   reset and is REQUIRED TO SURVIVE.** Same discipline as day 2's N5.
+
+5. **Mutation: six detected.** M1 CTRL not cleared; M2 TX line idles low;
+   M3 a concurrent write beats reset; M4 `tx_cnt` resets to 1 so
+   `STATUS.tx_empty` is wrong; M5 `frame_err` resets *set*; M6 `irq` ignores
+   its enable mask (R3-only — R1 and R2 are untouched by it). Every mutant is
+   `cmp`'d against the original first, so **a `sed` that matched nothing is a
+   FAIL, not a silent pass** — the 2026-09-18 green-regression-that-wasn't
+   guard, now standing.
+
+6. **THE FINDING — R4 is measurably redundant, and that is a FOURTH way a
+   passing property can mean nothing.** Day 2 generalised to three shapes:
+   antecedent never satisfiable; cover reached from an unreachable state;
+   property = the logic written twice. **R4 fails none of the three.** Its
+   antecedent is satisfiable (cover `C_R2`, reached at step 4), it is a true
+   statement about real behaviour, and it restates no RTL line.
+
+   Stage 5 measures it anyway, **by deletion**: rebuild the RTL with R4
+   removed, and again with *only* R4 kept, and run M3 — the defect R4 was
+   written for — against both.
+
+   ```
+   noR4:   clean=PASS   with-M3=FAIL
+   onlyR4: clean=PASS   with-M3=FAIL
+   ```
+
+   **Both detect it.** R1 asserts the reset values *unconditionally*, so the
+   concurrent-write case was already inside R1. R4 changes no verdict
+   anywhere in the suite, and no mutant can distinguish them unless R1 is
+   narrowed.
+
+   Vacuity asks whether a property is ever *evaluated*; **subsumption asks
+   whether, having been evaluated, it ever changes a verdict.** All three
+   vacuity tests pass on R4 and all three are blind to this. Only a deletion
+   experiment finds it, and a deletion experiment is in no standard flow.
+
+   R4 is **kept and annotated in place**, not deleted: it states an intent
+   (reset has priority over the bus) that R1 only implies, and it would earn
+   its detection power the moment R1 were narrowed to a quiet bus — which is
+   how a larger design has to write R1, because enumerating every register
+   unconditionally does not scale.
+
+   **Transferable rule, and the first technique in this repo that can say a
+   suite is LARGER than it needs to be** — every previous one could only say
+   it was smaller than it looked: *a property earns its place by changing a
+   verdict somewhere; if no mutant distinguishes it, say so in the file.*
+   Mutation coverage attributed to **individual** properties, by deletion, is
+   the property-level analogue of code coverage and costs one variant per
+   property. Interview framing for "how do you know your assertions are
+   pulling their weight?": bad answer, count them; standard answer, mutation
+   coverage of the suite; better answer, per-property mutation coverage.
+
+7. **Scope, stated rather than implied.** BMC to depth 12 — reset properties
+   are shallow by construction, so depth is not the binding constraint it was
+   on day 2, and no k-induction is claimed. Power-on reset **and** a reset
+   that returns after the design has run are both covered (`C_R1`, step 3).
+   **A reset asserted mid-frame is NOT covered**: reaching a frame is ~145
+   clocks — the same solver-budget boundary day 1 hit from the datapath side
+   and day 2 from the register side, now met from a third direction.
+
+8. **Guards that held.** Stage 1 re-ran the Phase 4 bench: **60/60**, so "the
+   new `` `ifdef `` is invisible to Icarus" is checked, not asserted. Both
+   new covers reached at steps 3 and 4, clearing the step-≥2 guard added
+   2026-09-21. Stage 4 re-ran the 2026-09-20 FIFO job and all three
+   2026-09-21 CSR jobs: **all four still pass**.
+
+**Not yet covered (candidates for future runs):**
+- **Per-property mutation coverage for the whole suite** — created today and
+  the **top** item. Stage 5 applied the deletion experiment to exactly one
+  property because that is the one it suspected. The 2026-09-20 FIFO
+  invariants (P1–P4) and the 2026-09-21 CSR properties (C1–C9) have **never**
+  been asked whether any of them is subsumed, and today's result says the
+  question has a non-trivial answer. It is cheap and mechanical
+- **A property that actually needs a strengthening invariant.** 2026-09-20's
+  stage 4 found P2 inductive alone, today's are shallow by construction, so
+  the technique remains studied and unexercised. The serial datapath's "a
+  started frame always completes" is still the candidate
+- **`abc pdr` as a second engine** — a solver-independent check, and still
+  the obvious candidate for the deep-cover job smtbmc cannot finish
+- **A reset asserted mid-frame** — created today. It needs the same ~145-clock
+  reach as day 2's deep cover, so it is blocked on the same budget and is a
+  reason to try `abc pdr` rather than a separate item
+- **The SVA sequence layer** (`##`, `[*]`, `|->`, local variables) — runnable
+  on neither tool here; worth one session establishing whether anything
+  accessible closes the gap, since interviews assume fluency
+- **Constrained-random and coverage-driven UART stimulus** — all stimulus in
+  all benches is still directed while the vplan assigns most features to CRV.
+  The capstone item, and now the longest-standing one
+- **A vplan v2 revision** — the 2026-09-17 bring-up found the plan's "live
+  status" wording cannot hold for the three STATUS error bits. Still open,
+  and today adds a second correction it should carry: the vplan says nothing
+  about reset values, which are now formally proved
+- **A mutation script for `examples/phase4_uvm_milestone/`** — it has a
+  report but no runnable script. Open since 2026-09-19
+- **Code coverage measurement** (plan Section 5 targets 95%) — Icarus has no
+  native support. Open since 2026-09-18
+- **Mutants not yet attempted**: the baud generator, the overrun path, the
+  interrupt *enable* combinations, the loopback mux
+- **F7's baud-tolerance number** — never measured in any bench
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview-prep
+
+**Web search availability:** Not attempted. Everything this session needed was
+in the repo's own RTL or answerable by running the tool — which, as on
+2026-09-21, is a stronger answer than a search result.
+
+**Automation health:** Device reachable, folder connected, 10:30 UTC firing;
+neither repo had a 2026-09-22 entry, so a full session was run. Unchanged
+per-run costs: git cannot run inside the connected folder, so work happens in
+the session's scratch clone; the formal toolchain reinstalls each session via
+`tools/setup_formal.sh` (source it, do not pipe it). New measurement: the
+five-stage reset run — Icarus regression, two sby proofs, seven mutant jobs,
+four cross-check jobs and four redundancy variants — is 17 sby invocations
+and completes in about 90 seconds.
+
+**Commits this run:** 3 (the property block with its runner, configs, README
+and recorded output; the study notes; progress.md). This AUTOMATION_LOG.md
+entry makes 4. The property block and the runner went in together, as on
+2026-09-19, -20 and -21, because stage 5's deletion experiment is what
+changed the property block — R4's annotation did not exist until the runner
+measured it, and the two are not separable after the fact.
