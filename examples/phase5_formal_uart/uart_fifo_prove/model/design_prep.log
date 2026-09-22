@@ -70,6 +70,6 @@ Removed 0 unused cells and 19 unused wires.
 13. Executing RTLIL backend.
 Output filename: ../model/design_prep.il
 
-End of script. Logfile hash: 09aa010ac6, time: 0.03s, user: 0.03s, system: 0.00s
+End of script. Logfile hash: 09aa010ac6, time: 0.02s, user: 0.02s, system: 0.00s
 Yosys 0.69 (git sha1 9f75ca1f9, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)
-Time spent: 29% 4x opt_clean (0 sec), 21% 2x write_rtlil (0 sec), ...
+Time spent: 30% 4x opt_clean (0 sec), 20% 2x read_rtlil (0 sec), ...

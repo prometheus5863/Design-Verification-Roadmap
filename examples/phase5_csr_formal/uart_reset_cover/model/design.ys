@@ -1,0 +1,8 @@
+# running in uart_reset_cover/src/
+read_verilog -formal -DFORMAL -DFORMAL_CSR_RESET uart_controller.v
+prep -top uart_controller
+
+hierarchy -smtcheck
+rename -witness
+write_jny -no-connections ../model/design.json
+write_rtlil ../model/design.il

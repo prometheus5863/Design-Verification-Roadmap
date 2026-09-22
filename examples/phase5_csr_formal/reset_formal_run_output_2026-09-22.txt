@@ -1,0 +1,67 @@
+
+==============================================================
+Stage 1: Phase 4 regression guard (FORMAL_CSR_RESET must be invisible)
+==============================================================
+  regression reports: === SUMMARY: 60 passed, 0 failed ===
+  PASS  Phase 4 regression still 60/60
+
+==============================================================
+Stage 2: reset-value proof on the real RTL
+==============================================================
+  uart_reset_bmc   : sby DONE=PASS  (exit 0)
+  PASS  R1-R4 hold to depth 12
+  uart_reset_cover : sby DONE=PASS  (exit 0)
+  PASS  every cover reachable
+  cover steps (guard: every cover must be reached at step >= 2):
+    step 3   uart_controller.v:865.13-865.24
+    step 4   uart_controller.v:856.13-856.54
+    step 6   uart_controller.v:475.13-475.53
+    step 10   uart_controller.v:474.13-474.34
+  PASS  no cover reached before step 2
+
+==============================================================
+Stage 3: mutation -- six reset defects, each must be DETECTED
+==============================================================
+  M1  DETECTED   (CTRL not cleared by reset)
+  M2  DETECTED   (TX line idles LOW out of reset)
+  M3  DETECTED   (a concurrent bus write beats reset)
+  M4  DETECTED   (TX FIFO count resets to 1, so STATUS.tx_empty is wrong)
+  M5  DETECTED   (frame_err sticky bit resets SET)
+  M6  DETECTED   (irq ignores its enable mask (R3 only; R1/R2 untouched))
+
+==============================================================
+Stage 3b: one mutant that MUST SURVIVE
+==============================================================
+  R2 deliberately does not assert a reset value for ADDR_RX_DATA: it
+  reads rx_fifo[rx_rptr], and the FIFO array has no reset clause. That
+  is a real design decision (8 bytes of storage are unreadable through
+  the protocol while rx_cnt == 0), so asserting a value would assert
+  something false. M7 corrupts exactly that storage at reset. If M7 is
+  DETECTED, the omission is not what this comment claims it is.
+  M7  SURVIVED as required  (RX_DATA reset value is out of scope, by design)
+
+==============================================================
+Stage 4: cross-check -- the earlier suites must be undisturbed
+==============================================================
+  PASS  uart_fifo_prove still passes
+  PASS  uart_csr_bmc still passes
+  PASS  uart_csr_prove still passes
+  PASS  uart_csr_cover still passes
+
+==============================================================
+Stage 5: is every property doing work? (property-redundancy check)
+==============================================================
+    noR4: clean=PASS  with-M3=FAIL
+    onlyR4: clean=PASS  with-M3=FAIL
+  MEASURED: R4 is REDUNDANT. R1 alone detects M3, because R1 asserts
+  the reset values unconditionally and so already covers the case
+  where a write is concurrent. R4 is kept and ANNOTATED rather than
+  deleted: it states an intent (reset priority) that R1 only implies,
+  and it would earn its place the moment R1 were narrowed to a quiet
+  bus. This is reported as a finding, not counted as a pass.
+
+==============================================================
+SUMMARY
+==============================================================
+  checks passed : 15
+  checks failed : 0

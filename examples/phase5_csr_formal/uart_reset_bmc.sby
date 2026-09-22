@@ -1,0 +1,13 @@
+[options]
+mode bmc
+depth 12
+
+[engines]
+smtbmc z3
+
+[script]
+read_verilog -formal -DFORMAL -DFORMAL_CSR_RESET uart_controller.v
+prep -top uart_controller
+
+[files]
+../../rtl/uart_controller.v

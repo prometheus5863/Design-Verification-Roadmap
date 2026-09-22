@@ -1,0 +1,54 @@
+##   0:00:00  Solver: z3
+##   0:00:00  Checking cover reachability in step 0..
+##   0:00:00  Checking cover reachability in step 1..
+##   0:00:00  Checking cover reachability in step 2..
+##   0:00:00  Checking cover reachability in step 3..
+##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:659.13-659.51 (_witness_.check_cover_uart_controller_v_659_459)
+##   0:00:00  Writing trace to VCD file: engine_0/trace0.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace0_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace0.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace0.yw
+##   0:00:00  Checking cover reachability in step 3..
+##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:661.13-661.52 (_witness_.check_cover_uart_controller_v_661_462)
+##   0:00:00  Writing trace to VCD file: engine_0/trace1.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace1_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace1.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace1.yw
+##   0:00:00  Checking cover reachability in step 3..
+##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:657.13-657.66 (_witness_.check_cover_uart_controller_v_657_454)
+##   0:00:00  Writing trace to VCD file: engine_0/trace2.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace2_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace2.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace2.yw
+##   0:00:00  Checking cover reachability in step 3..
+##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:664.13-665.67 (_witness_.check_cover_uart_controller_v_664_465)
+##   0:00:00  Writing trace to VCD file: engine_0/trace3.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace3_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace3.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace3.yw
+##   0:00:00  Checking cover reachability in step 3..
+##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:654.13-654.23 (_witness_.check_cover_uart_controller_v_654_453)
+##   0:00:00  Writing trace to VCD file: engine_0/trace4.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace4_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace4.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace4.yw
+##   0:00:00  Checking cover reachability in step 3..
+##   0:00:00  Checking cover reachability in step 4..
+##   0:00:00  Checking cover reachability in step 5..
+##   0:00:00  Checking cover reachability in step 6..
+##   0:00:00  Reached cover statement in step 6 at uart_controller: uart_controller.v:475.13-475.53 (_witness_.check_cover_uart_controller_v_475_277)
+##   0:00:00  Writing trace to VCD file: engine_0/trace5.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace5_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace5.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace5.yw
+##   0:00:00  Checking cover reachability in step 6..
+##   0:00:00  Checking cover reachability in step 7..
+##   0:00:00  Checking cover reachability in step 8..
+##   0:00:00  Checking cover reachability in step 9..
+##   0:00:00  Checking cover reachability in step 10..
+##   0:00:00  Reached cover statement in step 10 at uart_controller: uart_controller.v:474.13-474.34 (_witness_.check_cover_uart_controller_v_474_275)
+##   0:00:00  Writing trace to VCD file: engine_0/trace6.vcd
+##   0:00:00  Writing trace to Verilog testbench: engine_0/trace6_tb.v
+##   0:00:00  Writing trace to constraints file: engine_0/trace6.smtc
+##   0:00:00  Writing trace to Yosys witness file: engine_0/trace6.yw
+##   0:00:00  Status: passed

@@ -543,6 +543,6 @@ Module uart_controller directly or indirectly contains formal properties -> sett
 5. Executing RTLIL backend.
 Output filename: ../model/design.il
 
-End of script. Logfile hash: 4ef2c8321c, time: 0.05s, user: 0.06s, system: 0.00s
+End of script. Logfile hash: 4ef2c8321c, time: 0.05s, user: 0.05s, system: 0.00s
 Yosys 0.69 (git sha1 9f75ca1f9, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)
-Time spent: 20% 2x read_verilog (0 sec), 15% 6x opt_clean (0 sec), ...
+Time spent: 23% 2x read_verilog (0 sec), 14% 6x opt_clean (0 sec), ...

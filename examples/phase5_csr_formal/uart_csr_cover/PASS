@@ -1,0 +1,24 @@
+Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+engine_0 (smtbmc z3) returned pass
+cover trace: engine_0/trace0.vcd
+cover trace: engine_0/trace0.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_659_459 at uart_controller.v:659.13-659.51 step 3
+cover trace: engine_0/trace1.vcd
+cover trace: engine_0/trace1.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_661_462 at uart_controller.v:661.13-661.52 step 3
+cover trace: engine_0/trace2.vcd
+cover trace: engine_0/trace2.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_657_454 at uart_controller.v:657.13-657.66 step 3
+cover trace: engine_0/trace3.vcd
+cover trace: engine_0/trace3.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_664_465 at uart_controller.v:664.13-665.67 step 3
+cover trace: engine_0/trace4.vcd
+cover trace: engine_0/trace4.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_654_453 at uart_controller.v:654.13-654.23 step 3
+cover trace: engine_0/trace5.vcd
+cover trace: engine_0/trace5.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_475_277 at uart_controller.v:475.13-475.53 step 6
+cover trace: engine_0/trace6.vcd
+cover trace: engine_0/trace6.yw
+  reached cover statement uart_controller._witness_.check_cover_uart_controller_v_474_275 at uart_controller.v:474.13-474.34 step 10

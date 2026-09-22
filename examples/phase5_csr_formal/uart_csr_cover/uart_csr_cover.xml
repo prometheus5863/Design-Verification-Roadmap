@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+<testsuite timestamp="2026-09-22T11:00:36" hostname="claude" package="uart_csr_cover" id="0" name="default" tests="42" errors="0" failures="0" time="0" skipped="35">
+<properties>
+<property name="os" value="Linux"/>
+<property name="expect" value="PASS"/>
+<property name="status" value="PASS"/>
+</properties>
+<testcase classname="default" name="build execution" time="0">
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:432.13-432.35" time="0" type="ASSERT" location="uart_controller.v:432.13-432.35" id="_witness_.check_assert_uart_controller_v_432_215">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:433.13-433.35" time="0" type="ASSERT" location="uart_controller.v:433.13-433.35" id="_witness_.check_assert_uart_controller_v_433_217">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:442.13-442.55" time="0" type="ASSERT" location="uart_controller.v:442.13-442.55" id="_witness_.check_assert_uart_controller_v_442_221">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:443.13-443.55" time="0" type="ASSERT" location="uart_controller.v:443.13-443.55" id="_witness_.check_assert_uart_controller_v_443_224">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:451.13-451.43" time="0" type="ASSERT" location="uart_controller.v:451.13-451.43" id="_witness_.check_assert_uart_controller_v_451_229">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:452.13-452.69" time="0" type="ASSERT" location="uart_controller.v:452.13-452.69" id="_witness_.check_assert_uart_controller_v_452_232">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:461.13-463.54" time="0" type="ASSERT" location="uart_controller.v:461.13-463.54" id="_witness_.check_assert_uart_controller_v_461_253">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:464.13-464.82" time="0" type="ASSERT" location="uart_controller.v:464.13-464.82" id="_witness_.check_assert_uart_controller_v_464_261">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:465.13-465.84" time="0" type="ASSERT" location="uart_controller.v:465.13-465.84" id="_witness_.check_assert_uart_controller_v_465_267">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:517.48-517.86" time="0" type="ASSERT" location="uart_controller.v:517.48-517.86" id="_witness_.check_assert_uart_controller_v_517_297">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:518.48-518.81" time="0" type="ASSERT" location="uart_controller.v:518.48-518.81" id="_witness_.check_assert_uart_controller_v_518_300">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:519.48-519.86" time="0" type="ASSERT" location="uart_controller.v:519.48-519.86" id="_witness_.check_assert_uart_controller_v_519_303">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:531.17-531.69" time="0" type="ASSERT" location="uart_controller.v:531.17-531.69" id="_witness_.check_assert_uart_controller_v_531_319">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:533.17-533.73" time="0" type="ASSERT" location="uart_controller.v:533.17-533.73" id="_witness_.check_assert_uart_controller_v_533_323">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:535.17-535.71" time="0" type="ASSERT" location="uart_controller.v:535.17-535.71" id="_witness_.check_assert_uart_controller_v_535_327">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:541.41-541.73" time="0" type="ASSERT" location="uart_controller.v:541.41-541.73" id="_witness_.check_assert_uart_controller_v_541_333">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:542.41-542.67" time="0" type="ASSERT" location="uart_controller.v:542.41-542.67" id="_witness_.check_assert_uart_controller_v_542_336">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:543.41-543.77" time="0" type="ASSERT" location="uart_controller.v:543.41-543.77" id="_witness_.check_assert_uart_controller_v_543_339">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:544.41-544.66" time="0" type="ASSERT" location="uart_controller.v:544.41-544.66" id="_witness_.check_assert_uart_controller_v_544_342">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:553.17-553.40" time="0" type="ASSERT" location="uart_controller.v:553.17-553.40" id="_witness_.check_assert_uart_controller_v_553_349">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:563.13-563.41" time="0" type="ASSERT" location="uart_controller.v:563.13-563.41" id="_witness_.check_assert_uart_controller_v_563_355">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:564.13-564.42" time="0" type="ASSERT" location="uart_controller.v:564.13-564.42" id="_witness_.check_assert_uart_controller_v_564_357">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:565.13-565.41" time="0" type="ASSERT" location="uart_controller.v:565.13-565.41" id="_witness_.check_assert_uart_controller_v_565_359">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:566.13-566.42" time="0" type="ASSERT" location="uart_controller.v:566.13-566.42" id="_witness_.check_assert_uart_controller_v_566_361">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:583.13-583.31" time="0" type="ASSERT" location="uart_controller.v:583.13-583.31" id="_witness_.check_assert_uart_controller_v_583_377">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:584.13-584.32" time="0" type="ASSERT" location="uart_controller.v:584.13-584.32" id="_witness_.check_assert_uart_controller_v_584_379">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:585.13-585.33" time="0" type="ASSERT" location="uart_controller.v:585.13-585.33" id="_witness_.check_assert_uart_controller_v_585_381">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:594.53-594.81" time="0" type="ASSERT" location="uart_controller.v:594.53-594.81" id="_witness_.check_assert_uart_controller_v_594_397">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:595.53-595.81" time="0" type="ASSERT" location="uart_controller.v:595.53-595.81" id="_witness_.check_assert_uart_controller_v_595_400">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:596.53-596.81" time="0" type="ASSERT" location="uart_controller.v:596.53-596.81" id="_witness_.check_assert_uart_controller_v_596_403">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:606.17-606.73" time="0" type="ASSERT" location="uart_controller.v:606.17-606.73" id="_witness_.check_assert_uart_controller_v_606_424">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:608.17-608.50" time="0" type="ASSERT" location="uart_controller.v:608.17-608.50" id="_witness_.check_assert_uart_controller_v_608_432">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:609.17-609.82" time="0" type="ASSERT" location="uart_controller.v:609.17-609.82" id="_witness_.check_assert_uart_controller_v_609_434">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:619.33-619.45" time="0" type="ASSERT" location="uart_controller.v:619.33-619.45" id="_witness_.check_assert_uart_controller_v_619_441">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:620.33-620.55" time="0" type="ASSERT" location="uart_controller.v:620.33-620.55" id="_witness_.check_assert_uart_controller_v_620_443">
+<skipped />
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:474.13-474.34" time="0" type="COVER" location="uart_controller.v:474.13-474.34" id="_witness_.check_cover_uart_controller_v_474_275" tracefile="engine_0/trace6.vcd">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:475.13-475.53" time="0" type="COVER" location="uart_controller.v:475.13-475.53" id="_witness_.check_cover_uart_controller_v_475_277" tracefile="engine_0/trace5.vcd">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:654.13-654.23" time="0" type="COVER" location="uart_controller.v:654.13-654.23" id="_witness_.check_cover_uart_controller_v_654_453" tracefile="engine_0/trace4.vcd">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:657.13-657.66" time="0" type="COVER" location="uart_controller.v:657.13-657.66" id="_witness_.check_cover_uart_controller_v_657_454" tracefile="engine_0/trace2.vcd">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:659.13-659.51" time="0" type="COVER" location="uart_controller.v:659.13-659.51" id="_witness_.check_cover_uart_controller_v_659_459" tracefile="engine_0/trace0.vcd">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:661.13-661.52" time="0" type="COVER" location="uart_controller.v:661.13-661.52" id="_witness_.check_cover_uart_controller_v_661_462" tracefile="engine_0/trace1.vcd">
+</testcase>
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:664.13-665.67" time="0" type="COVER" location="uart_controller.v:664.13-665.67" id="_witness_.check_cover_uart_controller_v_664_465" tracefile="engine_0/trace3.vcd">
+</testcase>
+<system-out>SBY 11:00:35 [uart_csr_cover] Removing directory '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_cover'.
+SBY 11:00:35 [uart_csr_cover] Copy '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/../../rtl/uart_controller.v' to '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_cover/src/uart_controller.v'.
+SBY 11:00:35 [uart_csr_cover] engine_0: smtbmc z3
+SBY 11:00:35 [uart_csr_cover] base: starting process &quot;cd uart_csr_cover/src; yosys -ql ../model/design.log ../model/design.ys&quot;
+SBY 11:00:36 [uart_csr_cover] base: finished (returncode=0)
+SBY 11:00:36 [uart_csr_cover] prep: starting process &quot;cd uart_csr_cover/model; yosys -ql design_prep.log design_prep.ys&quot;
+SBY 11:00:36 [uart_csr_cover] prep: finished (returncode=0)
+SBY 11:00:36 [uart_csr_cover] smt2: starting process &quot;cd uart_csr_cover/model; yosys -ql design_smt2.log design_smt2.ys&quot;
+SBY 11:00:36 [uart_csr_cover] smt2: finished (returncode=0)
+SBY 11:00:36 [uart_csr_cover] engine_0: starting process &quot;cd uart_csr_cover; yosys-smtbmc -s z3 --presat -c --noprogress -t 32  --append 0 --dump-vcd engine_0/trace%.vcd --dump-yw engine_0/trace%.yw --dump-vlogtb engine_0/trace%_tb.v --dump-smtc engine_0/trace%.smtc model/design_smt2.smt2&quot;
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Solver: z3
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 0..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 1..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 2..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:659.13-659.51 (_witness_.check_cover_uart_controller_v_659_459)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace0.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace0_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace0.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace0.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:661.13-661.52 (_witness_.check_cover_uart_controller_v_661_462)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace1.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace1_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace1.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace1.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:657.13-657.66 (_witness_.check_cover_uart_controller_v_657_454)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace2.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace2_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace2.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace2.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:664.13-665.67 (_witness_.check_cover_uart_controller_v_664_465)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace3.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace3_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace3.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace3.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:654.13-654.23 (_witness_.check_cover_uart_controller_v_654_453)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace4.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace4_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace4.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace4.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 4..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 5..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 6..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 6 at uart_controller: uart_controller.v:475.13-475.53 (_witness_.check_cover_uart_controller_v_475_277)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace5.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace5_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace5.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace5.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 6..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 7..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 8..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 9..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 10..
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 10 at uart_controller: uart_controller.v:474.13-474.34 (_witness_.check_cover_uart_controller_v_474_275)
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace6.vcd
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace6_tb.v
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace6.smtc
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace6.yw
+SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Status: passed
+SBY 11:00:36 [uart_csr_cover] engine_0: finished (returncode=0)
+SBY 11:00:36 [uart_csr_cover] engine_0: Status returned by engine: pass
+SBY 11:00:36 [uart_csr_cover] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 11:00:36 [uart_csr_cover] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 11:00:36 [uart_csr_cover] summary: engine_0 (smtbmc z3) returned pass
+SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace0.vcd
+SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_659_459 at uart_controller.v:659.13-659.51 step 3
+SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace1.vcd
+SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_661_462 at uart_controller.v:661.13-661.52 step 3
+SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace2.vcd
+SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_657_454 at uart_controller.v:657.13-657.66 step 3
+SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace3.vcd
+SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_664_465 at uart_controller.v:664.13-665.67 step 3
+SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace4.vcd
+SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_654_453 at uart_controller.v:654.13-654.23 step 3
+SBY 11:00:36 [uart_csr_cover] summary: and 2 further traces
+SBY 11:00:36 [uart_csr_cover] summary: see uart_csr_cover/PASS for a complete summary
+SBY 11:00:36 [uart_csr_cover] DONE (PASS, rc=0)
+</system-out>
+<system-err>
+</system-err>
+</testsuite>
+</testsuites>
