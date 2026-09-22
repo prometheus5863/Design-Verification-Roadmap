@@ -13,8 +13,8 @@ Stage 2: reset-value proof on the real RTL
   uart_reset_cover : sby DONE=PASS  (exit 0)
   PASS  every cover reachable
   cover steps (guard: every cover must be reached at step >= 2):
-    step 3   uart_controller.v:865.13-865.24
-    step 4   uart_controller.v:856.13-856.54
+    step 3   uart_controller.v:885.13-885.24
+    step 4   uart_controller.v:876.13-876.54
     step 6   uart_controller.v:475.13-475.53
     step 10   uart_controller.v:474.13-474.34
   PASS  no cover reached before step 2

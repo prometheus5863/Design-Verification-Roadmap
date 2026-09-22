@@ -162,3 +162,107 @@ N6 is worth a second look: it fails at line 433 (the 2026-09-20 FIFO property
 P4) *and* line 608 (C8). Two independent suites catching the same defect from
 different directions is the cheapest available evidence that neither is
 self-fulfilling.
+
+---
+
+## Day 3 (2026-09-22): reset-value properties, and a property that does nothing
+
+`run_reset_formal.sh`, `uart_reset_bmc.sby`, `uart_reset_cover.sby`, and the
+`` `ifdef FORMAL_CSR_RESET `` block at the end of `rtl/uart_controller.v`.
+Recorded output: `reset_formal_run_output_2026-09-22.txt` (15/15).
+
+### The guard is the whole point
+
+Day 2 (2026-09-21) proved nine CSR properties and then recorded an owed item:
+of the seven reusable CSR obligations, "reads its reset value after reset"
+was the one the suite did not check. The reason was structural rather than an
+oversight. Every property in this repo is guarded by
+
+```verilog
+if (f_past_valid && rst_n)          // disabled DURING reset
+```
+
+which is correct for a steady-state property and is exactly what makes the
+reset window unreachable. This obligation is the one whose entire content
+lives inside the window every other property excludes, so it needs the
+**mirror image**:
+
+```verilog
+if (f_past_valid && !$past(rst_n))  // sample the edge AFTER reset
+```
+
+`$past()` is safe here for the reason it was *not* safe on day 2. Day 2's bug
+was reading **state** across a reset boundary — state the reset had since
+discarded. Reading the **reset signal** across that boundary is the point of
+the property. `f_past_valid` guarantees an edge has elapsed, so `$past()`
+returns a value the design actually held.
+
+The reset is **synchronous**, so the obligation is "one edge after `rst_n`
+was sampled low, the register reads its reset value" — not "whenever `rst_n`
+is low". The second form describes an asynchronous reset this design does not
+have and would fail on correct RTL.
+
+### The properties
+
+| | what it says | scope |
+|---|---|---|
+| R1 | 28 architectural registers are at their reset values | internal |
+| R2 | the read port returns the reset values (CTRL, STATUS, BAUD_DIV, INT_EN, TX_DATA) | observable |
+| R3 | `irq` is low out of reset | external |
+| R4 | reset dominates a concurrent bus write | intent |
+
+**`STATUS` resets to `8'h02`, not `8'h00`.** Its bit 1 is `tx_empty`, a live
+decode of `tx_cnt == 0`, which reset makes true. A reader who assumed
+"registers reset to zero" would write `8'h00` and the property would be wrong
+while the design was right. The constant was derived from the RTL's own
+concatenation, not assumed — the third self-fulfilment shape from day 2.
+
+**`ADDR_RX_DATA` is deliberately absent from R2.** It reads
+`rx_fifo[rx_rptr]`, and the FIFO array has no reset clause: resetting eight
+bytes of storage costs area for no benefit when `rx_cnt == 0` makes them
+unreadable through the protocol. Asserting a value there would assert
+something false. **Mutant M7 corrupts exactly that storage at reset and is
+REQUIRED TO SURVIVE**, so the omission is demonstrated to be deliberate
+rather than described as deliberate.
+
+### Mutation: six detected, one required to survive
+
+M1 CTRL not cleared · M2 TX line idles low · M3 a concurrent write beats
+reset · M4 `tx_cnt` resets to 1 (so `STATUS.tx_empty` is wrong) · M5
+`frame_err` resets set · M6 `irq` ignores its enable mask. All six detected.
+Every mutant is checked with `cmp` against the original first, so a `sed`
+that matches nothing is a FAIL rather than a silent pass — the shape of the
+2026-09-18 green-regression-that-wasn't.
+
+### The finding: R4 is redundant, and that is a fourth failure mode
+
+Day 2's notes list **three** ways a passing property can mean nothing:
+antecedent never satisfied, cover reached from an unreachable state, and
+property = the logic written twice. R4 fails none of those three. Its
+antecedent is satisfiable (cover `C_R2`, reached at step 4), it is a true
+statement about real behaviour, and it is not a restatement of the RTL.
+
+Stage 5 measures it anyway, by deletion: build one variant with R4 removed
+and one with *only* R4 kept, and run M3 — the defect R4 was written for —
+against both.
+
+```
+noR4:   clean=PASS  with-M3=FAIL
+onlyR4: clean=PASS  with-M3=FAIL
+```
+
+**Both detect it.** R1 asserts the reset values unconditionally, so the
+concurrent-write case was already inside it, and R4 contributes no detection
+power to this suite.
+
+This is **subsumption**, a fourth failure mode, and the three vacuity tests
+are all blind to it. Only a deletion experiment finds it. R4 is kept and
+annotated in place rather than deleted: it states an intent — that reset has
+priority over the bus — that R1 only implies, and it would earn its power the
+moment R1 were narrowed to a quiet bus, which is how a larger design would
+have to write R1.
+
+The transferable rule: **a property earns its place by changing a verdict
+somewhere. If no mutant distinguishes it, say so in the file.** Coverage of
+properties by mutants is the property-level analogue of code coverage, and it
+is cheap: one extra variant per property.

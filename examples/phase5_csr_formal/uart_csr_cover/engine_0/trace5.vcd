@@ -70,10 +70,10 @@ $var wire 3 n59 tx_bit $end
 $var wire 1 n60 tx_bit_done $end
 $var wire 4 n61 tx_cnt $end
 $var wire 1 n62 tx_empty $end
-$var wire 8 n80 tx_fifo<0> $end
-$var wire 8 n76 tx_fifo<1> $end
-$var wire 8 n78 tx_fifo<2> $end
-$var wire 8 n79 tx_fifo<4> $end
+$var wire 8 n79 tx_fifo<0> $end
+$var wire 8 n80 tx_fifo<1> $end
+$var wire 8 n76 tx_fifo<2> $end
+$var wire 8 n78 tx_fifo<4> $end
 $var wire 8 n77 tx_fifo<5> $end
 $var wire 1 n63 tx_full $end
 $var wire 1 n64 tx_line $end
@@ -98,7 +98,7 @@ b0 n2
 b0000 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b00000000 n8
 b010 n9
@@ -167,11 +167,11 @@ b001 n72
 b0 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01010100 n80
+b00000000 n78
+b01010100 n79
+b10011000 n80
 #5
 b0 n19
 #10
@@ -184,7 +184,7 @@ b0 n2
 b0110 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b00111000 n8
 b000 n9
@@ -253,11 +253,11 @@ b000 n72
 b1 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01010100 n80
+b00000000 n78
+b01010100 n79
+b10011000 n80
 #15
 b0 n19
 #20
@@ -270,7 +270,7 @@ b1 n2
 b0011 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b00000101 n8
 b010 n9
@@ -339,11 +339,11 @@ b001 n72
 b1 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01000100 n80
+b00000000 n78
+b01000100 n79
+b10011000 n80
 #25
 b0 n19
 #30
@@ -356,7 +356,7 @@ b1 n2
 b0000 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b01000000 n8
 b101 n9
@@ -425,11 +425,11 @@ b001 n72
 b1 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01000100 n80
+b00000000 n78
+b01000100 n79
+b10011000 n80
 #35
 b0 n19
 #40
@@ -442,7 +442,7 @@ b1 n2
 b0000 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b00000000 n8
 b100 n9
@@ -511,11 +511,11 @@ b001 n72
 b0 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01000100 n80
+b00000000 n78
+b01000100 n79
+b10011000 n80
 #45
 b0 n19
 #50
@@ -528,7 +528,7 @@ b0 n2
 b0000 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b00000000 n8
 b010 n9
@@ -597,11 +597,11 @@ b001 n72
 b0 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01000100 n80
+b00000000 n78
+b01000100 n79
+b10011000 n80
 #55
 b0 n19
 #60
@@ -614,7 +614,7 @@ b0 n2
 b0100 n3
 b00000000 n4
 b010 n5
-b00001000 n6
+b00000100 n6
 b000 n7
 b00000000 n8
 b010 n9
@@ -683,11 +683,11 @@ b001 n72
 b1 n73
 b00000000 n74
 bxxxxxxxx n75
-b10011000 n76
+bxxxxxxxx n76
 bxxxxxxxx n77
-bxxxxxxxx n78
-b00000000 n79
-b01000100 n80
+b00000000 n78
+b01000100 n79
+b10011000 n80
 #65
 b0 n19
 #70

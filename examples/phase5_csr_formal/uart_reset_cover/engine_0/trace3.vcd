@@ -52,11 +52,11 @@ $var wire 1 n43 rx_avail $end
 $var wire 3 n44 rx_bit $end
 $var wire 4 n45 rx_cnt $end
 $var wire 1 n46 rx_edge $end
-$var wire 8 n78 rx_fifo<0> $end
+$var wire 8 n80 rx_fifo<0> $end
 $var wire 8 n79 rx_fifo<1> $end
-$var wire 8 n80 rx_fifo<3> $end
+$var wire 8 n77 rx_fifo<3> $end
 $var wire 8 n81 rx_fifo<4> $end
-$var wire 8 n77 rx_fifo<5> $end
+$var wire 8 n78 rx_fifo<5> $end
 $var wire 1 n47 rx_full $end
 $var wire 1 n48 rx_in $end
 $var wire 1 n49 rx_mid $end
@@ -76,14 +76,14 @@ $var wire 3 n62 tx_bit $end
 $var wire 1 n63 tx_bit_done $end
 $var wire 4 n64 tx_cnt $end
 $var wire 1 n65 tx_empty $end
-$var wire 8 n83 tx_fifo<0> $end
+$var wire 8 n86 tx_fifo<0> $end
 $var wire 8 n84 tx_fifo<1> $end
-$var wire 8 n89 tx_fifo<2> $end
-$var wire 8 n86 tx_fifo<3> $end
-$var wire 8 n88 tx_fifo<4> $end
-$var wire 8 n82 tx_fifo<5> $end
-$var wire 8 n85 tx_fifo<6> $end
-$var wire 8 n87 tx_fifo<7> $end
+$var wire 8 n85 tx_fifo<2> $end
+$var wire 8 n82 tx_fifo<3> $end
+$var wire 8 n89 tx_fifo<4> $end
+$var wire 8 n83 tx_fifo<5> $end
+$var wire 8 n87 tx_fifo<6> $end
+$var wire 8 n88 tx_fifo<7> $end
 $var wire 1 n66 tx_full $end
 $var wire 1 n67 tx_line $end
 $var wire 4 n68 tx_os $end
@@ -178,15 +178,15 @@ b000 n74
 b000 n75
 b0 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
 bxxxxxxxx n82
-b00000000 n83
+bxxxxxxxx n83
 b10110000 n84
 bxxxxxxxx n85
-bxxxxxxxx n86
+b00000000 n86
 bxxxxxxxx n87
 bxxxxxxxx n88
 bxxxxxxxx n89
@@ -273,15 +273,15 @@ b000 n74
 b000 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
 bxxxxxxxx n82
-b00000000 n83
+bxxxxxxxx n83
 b10110000 n84
 bxxxxxxxx n85
-bxxxxxxxx n86
+b00000000 n86
 bxxxxxxxx n87
 bxxxxxxxx n88
 bxxxxxxxx n89
@@ -368,15 +368,15 @@ b000 n74
 b001 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
 bxxxxxxxx n82
-b00010110 n83
+bxxxxxxxx n83
 b10110000 n84
 bxxxxxxxx n85
-bxxxxxxxx n86
+b00010110 n86
 bxxxxxxxx n87
 bxxxxxxxx n88
 bxxxxxxxx n89
@@ -463,15 +463,15 @@ b000 n74
 b010 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
 bxxxxxxxx n82
-b00010110 n83
+bxxxxxxxx n83
 b10110010 n84
 bxxxxxxxx n85
-bxxxxxxxx n86
+b00010110 n86
 bxxxxxxxx n87
 bxxxxxxxx n88
 bxxxxxxxx n89
@@ -558,18 +558,18 @@ b000 n74
 b011 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
 bxxxxxxxx n82
-b00010110 n83
+bxxxxxxxx n83
 b10110010 n84
-bxxxxxxxx n85
-bxxxxxxxx n86
+b10110010 n85
+b00010110 n86
 bxxxxxxxx n87
 bxxxxxxxx n88
-b10110010 n89
+bxxxxxxxx n89
 #45
 b0 n24
 #50
@@ -653,18 +653,18 @@ b000 n74
 b100 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
-bxxxxxxxx n82
-b00010110 n83
+b00000000 n82
+bxxxxxxxx n83
 b10110010 n84
-bxxxxxxxx n85
-b00000000 n86
+b10110010 n85
+b00010110 n86
 bxxxxxxxx n87
 bxxxxxxxx n88
-b10110010 n89
+bxxxxxxxx n89
 #55
 b0 n24
 #60
@@ -748,18 +748,18 @@ b000 n74
 b101 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
-bxxxxxxxx n82
-b00010110 n83
+b00000000 n82
+bxxxxxxxx n83
 b10110010 n84
-bxxxxxxxx n85
-b00000000 n86
+b10110010 n85
+b00010110 n86
 bxxxxxxxx n87
-b00000010 n88
-b10110010 n89
+bxxxxxxxx n88
+b00000010 n89
 #65
 b0 n24
 #70
@@ -843,18 +843,18 @@ b000 n74
 b110 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
-b11000100 n82
-b00010110 n83
+b00000000 n82
+b11000100 n83
 b10110010 n84
-bxxxxxxxx n85
-b00000000 n86
+b10110010 n85
+b00010110 n86
 bxxxxxxxx n87
-b00000010 n88
-b10110010 n89
+bxxxxxxxx n88
+b00000010 n89
 #75
 b0 n24
 #80
@@ -938,18 +938,18 @@ b000 n74
 b111 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
-b11000100 n82
-b00010110 n83
+b00000000 n82
+b11000100 n83
 b10110010 n84
-b00000000 n85
-b00000000 n86
-bxxxxxxxx n87
-b00000010 n88
-b10110010 n89
+b10110010 n85
+b00010110 n86
+b00000000 n87
+bxxxxxxxx n88
+b00000010 n89
 #85
 b0 n24
 #90
@@ -1033,18 +1033,18 @@ b000 n74
 b000 n75
 b0 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
-b11000100 n82
-b00010110 n83
+b00000000 n82
+b11000100 n83
 b10110010 n84
-b00000000 n85
-b00000000 n86
-b00000010 n87
+b10110010 n85
+b00010110 n86
+b00000000 n87
 b00000010 n88
-b10110010 n89
+b00000010 n89
 #95
 b0 n24
 #100
@@ -1128,18 +1128,18 @@ b000 n74
 b000 n75
 b1 n76
 bxxxxxxxx n77
-b00001100 n78
+bxxxxxxxx n78
 bxxxxxxxx n79
-bxxxxxxxx n80
+b00001100 n80
 bxxxxxxxx n81
-b11000100 n82
-b00010110 n83
+b00000000 n82
+b11000100 n83
 b10110010 n84
-b00000000 n85
-b00000000 n86
-b00000010 n87
+b10110010 n85
+b00010110 n86
+b00000000 n87
 b00000010 n88
-b10110010 n89
+b00000010 n89
 #105
 b0 n24
 #110

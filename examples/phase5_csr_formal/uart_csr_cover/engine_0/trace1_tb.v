@@ -8,23 +8,23 @@ module testbench(input clock, output reg genclock);
 `endif
   reg genclock = 1;
   reg [31:0] cycle = 0;
-  reg [0:0] PI_psel;
-  reg [3:0] PI_paddr;
   reg [0:0] PI_rst_n;
-  reg [0:0] PI_penable;
-  reg [7:0] PI_pwdata;
+  reg [3:0] PI_paddr;
   reg [0:0] PI_pwrite;
   reg [0:0] PI_rx;
+  reg [7:0] PI_pwdata;
+  reg [0:0] PI_penable;
   wire [0:0] PI_clk = clock;
+  reg [0:0] PI_psel;
   uart_controller UUT (
-    .psel(PI_psel),
-    .paddr(PI_paddr),
     .rst_n(PI_rst_n),
-    .penable(PI_penable),
-    .pwdata(PI_pwdata),
+    .paddr(PI_paddr),
     .pwrite(PI_pwrite),
     .rx(PI_rx),
-    .clk(PI_clk)
+    .pwdata(PI_pwdata),
+    .penable(PI_penable),
+    .clk(PI_clk),
+    .psel(PI_psel)
   );
 `ifndef VERILATOR
   initial begin
@@ -90,46 +90,46 @@ module testbench(input clock, output reg genclock);
     UUT.tx_fifo[3'b000] = 8'b00000000;
 
     // state 0
-    PI_psel = 1'b1;
-    PI_paddr = 4'b0110;
     PI_rst_n = 1'b0;
-    PI_penable = 1'b0;
-    PI_pwdata = 8'b00111000;
+    PI_paddr = 4'b0110;
     PI_pwrite = 1'b1;
     PI_rx = 1'b0;
+    PI_pwdata = 8'b00111000;
+    PI_penable = 1'b0;
+    PI_psel = 1'b1;
   end
   always @(posedge clock) begin
     // state 1
     if (cycle == 0) begin
-      PI_psel <= 1'b1;
-      PI_paddr <= 4'b0011;
       PI_rst_n <= 1'b1;
-      PI_penable <= 1'b1;
-      PI_pwdata <= 8'b00111000;
+      PI_paddr <= 4'b0011;
       PI_pwrite <= 1'b1;
       PI_rx <= 1'b0;
+      PI_pwdata <= 8'b00111000;
+      PI_penable <= 1'b1;
+      PI_psel <= 1'b1;
     end
 
     // state 2
     if (cycle == 1) begin
-      PI_psel <= 1'b1;
-      PI_paddr <= 4'b0001;
       PI_rst_n <= 1'b1;
-      PI_penable <= 1'b1;
-      PI_pwdata <= 8'b00000001;
+      PI_paddr <= 4'b0001;
       PI_pwrite <= 1'b0;
       PI_rx <= 1'b0;
+      PI_pwdata <= 8'b00000001;
+      PI_penable <= 1'b1;
+      PI_psel <= 1'b1;
     end
 
     // state 3
     if (cycle == 2) begin
-      PI_psel <= 1'b1;
-      PI_paddr <= 4'b0110;
       PI_rst_n <= 1'b1;
-      PI_penable <= 1'b1;
-      PI_pwdata <= 8'b00111000;
+      PI_paddr <= 4'b0110;
       PI_pwrite <= 1'b1;
       PI_rx <= 1'b0;
+      PI_pwdata <= 8'b00111000;
+      PI_penable <= 1'b1;
+      PI_psel <= 1'b1;
     end
 
     genclock <= cycle < 3;

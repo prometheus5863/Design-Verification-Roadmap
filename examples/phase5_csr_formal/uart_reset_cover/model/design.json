@@ -484,7 +484,7 @@
                 {
                   "name": "$procmux$366",
                   "attributes": {
-                    "src": "uart_controller.v:861.13-861.81|uart_controller.v:861.9-865.25"
+                    "src": "uart_controller.v:881.13-881.81|uart_controller.v:881.9-885.25"
                   },
                   "parameters": {
                     "WIDTH": "00000000000000000000000000000001"
@@ -493,7 +493,7 @@
                 {
                   "name": "$procmux$368",
                   "attributes": {
-                    "src": "uart_controller.v:852.13-852.65|uart_controller.v:852.9-857.12"
+                    "src": "uart_controller.v:872.13-872.65|uart_controller.v:872.9-877.12"
                   },
                   "parameters": {
                     "WIDTH": "00000000000000000000000000000001"
@@ -502,7 +502,7 @@
                 {
                   "name": "$procmux$376",
                   "attributes": {
-                    "src": "uart_controller.v:831.13-831.58|uart_controller.v:831.9-836.12"
+                    "src": "uart_controller.v:851.13-851.58|uart_controller.v:851.9-856.12"
                   },
                   "parameters": {
                     "WIDTH": "00000000000000000000000000000001"
@@ -1936,7 +1936,7 @@
                 {
                   "name": "$procdff$1031",
                   "attributes": {
-                    "src": "uart_controller.v:860.5-866.8"
+                    "src": "uart_controller.v:880.5-886.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -1946,7 +1946,7 @@
                 {
                   "name": "$procdff$1032",
                   "attributes": {
-                    "src": "uart_controller.v:860.5-866.8"
+                    "src": "uart_controller.v:880.5-886.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -1956,7 +1956,7 @@
                 {
                   "name": "$procdff$1033",
                   "attributes": {
-                    "src": "uart_controller.v:860.5-866.8"
+                    "src": "uart_controller.v:880.5-886.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -1966,7 +1966,7 @@
                 {
                   "name": "$procdff$1034",
                   "attributes": {
-                    "src": "uart_controller.v:851.5-858.8"
+                    "src": "uart_controller.v:871.5-878.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -1976,7 +1976,7 @@
                 {
                   "name": "$procdff$1035",
                   "attributes": {
-                    "src": "uart_controller.v:851.5-858.8"
+                    "src": "uart_controller.v:871.5-878.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -1986,7 +1986,7 @@
                 {
                   "name": "$procdff$1036",
                   "attributes": {
-                    "src": "uart_controller.v:851.5-858.8"
+                    "src": "uart_controller.v:871.5-878.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -1996,7 +1996,7 @@
                 {
                   "name": "$procdff$1037",
                   "attributes": {
-                    "src": "uart_controller.v:851.5-858.8"
+                    "src": "uart_controller.v:871.5-878.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -2006,7 +2006,7 @@
                 {
                   "name": "$procdff$1038",
                   "attributes": {
-                    "src": "uart_controller.v:851.5-858.8"
+                    "src": "uart_controller.v:871.5-878.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -2016,7 +2016,7 @@
                 {
                   "name": "$procdff$1039",
                   "attributes": {
-                    "src": "uart_controller.v:851.5-858.8"
+                    "src": "uart_controller.v:871.5-878.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -2026,7 +2026,7 @@
                 {
                   "name": "$procdff$1040",
                   "attributes": {
-                    "src": "uart_controller.v:830.5-837.8"
+                    "src": "uart_controller.v:850.5-857.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -2036,7 +2036,7 @@
                 {
                   "name": "$procdff$1041",
                   "attributes": {
-                    "src": "uart_controller.v:830.5-837.8"
+                    "src": "uart_controller.v:850.5-857.8"
                   },
                   "parameters": {
                     "CLK_POLARITY": "1",
@@ -3354,11 +3354,11 @@
                   }
                 },
                 {
-                  "name": "_witness_.check_assert_uart_controller_v_832_336",
+                  "name": "_witness_.check_assert_uart_controller_v_852_336",
                   "attributes": {
-                    "hdlname": "_witness_ check_assert_uart_controller_v_832_336",
+                    "hdlname": "_witness_ check_assert_uart_controller_v_852_336",
                     "keep": "00000000000000000000000000000001",
-                    "src": "uart_controller.v:832.13-832.37"
+                    "src": "uart_controller.v:852.13-852.37"
                   },
                   "parameters": {
                     "ARGS_WIDTH": "00000000000000000000000000000000",
@@ -3371,11 +3371,11 @@
                   }
                 },
                 {
-                  "name": "_witness_.check_assert_uart_controller_v_833_338",
+                  "name": "_witness_.check_assert_uart_controller_v_853_338",
                   "attributes": {
-                    "hdlname": "_witness_ check_assert_uart_controller_v_833_338",
+                    "hdlname": "_witness_ check_assert_uart_controller_v_853_338",
                     "keep": "00000000000000000000000000000001",
-                    "src": "uart_controller.v:833.13-833.37"
+                    "src": "uart_controller.v:853.13-853.37"
                   },
                   "parameters": {
                     "ARGS_WIDTH": "00000000000000000000000000000000",
@@ -3388,11 +3388,11 @@
                   }
                 },
                 {
-                  "name": "_witness_.check_assert_uart_controller_v_834_340",
+                  "name": "_witness_.check_assert_uart_controller_v_854_340",
                   "attributes": {
-                    "hdlname": "_witness_ check_assert_uart_controller_v_834_340",
+                    "hdlname": "_witness_ check_assert_uart_controller_v_854_340",
                     "keep": "00000000000000000000000000000001",
-                    "src": "uart_controller.v:834.13-834.37"
+                    "src": "uart_controller.v:854.13-854.37"
                   },
                   "parameters": {
                     "ARGS_WIDTH": "00000000000000000000000000000000",
@@ -3405,11 +3405,11 @@
                   }
                 },
                 {
-                  "name": "_witness_.check_assert_uart_controller_v_835_342",
+                  "name": "_witness_.check_assert_uart_controller_v_855_342",
                   "attributes": {
-                    "hdlname": "_witness_ check_assert_uart_controller_v_835_342",
+                    "hdlname": "_witness_ check_assert_uart_controller_v_855_342",
                     "keep": "00000000000000000000000000000001",
-                    "src": "uart_controller.v:835.13-835.37"
+                    "src": "uart_controller.v:855.13-855.37"
                   },
                   "parameters": {
                     "ARGS_WIDTH": "00000000000000000000000000000000",
@@ -3473,11 +3473,11 @@
                   }
                 },
                 {
-                  "name": "_witness_.check_cover_uart_controller_v_856_354",
+                  "name": "_witness_.check_cover_uart_controller_v_876_354",
                   "attributes": {
-                    "hdlname": "_witness_ check_cover_uart_controller_v_856_354",
+                    "hdlname": "_witness_ check_cover_uart_controller_v_876_354",
                     "keep": "00000000000000000000000000000001",
-                    "src": "uart_controller.v:856.13-856.54"
+                    "src": "uart_controller.v:876.13-876.54"
                   },
                   "parameters": {
                     "ARGS_WIDTH": "00000000000000000000000000000000",
@@ -3490,11 +3490,11 @@
                   }
                 },
                 {
-                  "name": "_witness_.check_cover_uart_controller_v_865_364",
+                  "name": "_witness_.check_cover_uart_controller_v_885_364",
                   "attributes": {
-                    "hdlname": "_witness_ check_cover_uart_controller_v_865_364",
+                    "hdlname": "_witness_ check_cover_uart_controller_v_885_364",
                     "keep": "00000000000000000000000000000001",
-                    "src": "uart_controller.v:865.13-865.24"
+                    "src": "uart_controller.v:885.13-885.24"
                   },
                   "parameters": {
                     "ARGS_WIDTH": "00000000000000000000000000000000",
@@ -4327,9 +4327,9 @@
                   }
                 },
                 {
-                  "name": "$eq$uart_controller.v:832$337",
+                  "name": "$eq$uart_controller.v:852$337",
                   "attributes": {
-                    "src": "uart_controller.v:832.20-832.36"
+                    "src": "uart_controller.v:852.20-852.36"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -4338,9 +4338,9 @@
                   }
                 },
                 {
-                  "name": "$eq$uart_controller.v:833$339",
+                  "name": "$eq$uart_controller.v:853$339",
                   "attributes": {
-                    "src": "uart_controller.v:833.20-833.36"
+                    "src": "uart_controller.v:853.20-853.36"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -4349,9 +4349,9 @@
                   }
                 },
                 {
-                  "name": "$eq$uart_controller.v:834$341",
+                  "name": "$eq$uart_controller.v:854$341",
                   "attributes": {
-                    "src": "uart_controller.v:834.20-834.36"
+                    "src": "uart_controller.v:854.20-854.36"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -4360,9 +4360,9 @@
                   }
                 },
                 {
-                  "name": "$eq$uart_controller.v:835$343",
+                  "name": "$eq$uart_controller.v:855$343",
                   "attributes": {
-                    "src": "uart_controller.v:835.20-835.36"
+                    "src": "uart_controller.v:855.20-855.36"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -4492,9 +4492,9 @@
                   }
                 },
                 {
-                  "name": "$logic_not$uart_controller.v:831$333",
+                  "name": "$logic_not$uart_controller.v:851$333",
                   "attributes": {
-                    "src": "uart_controller.v:831.29-831.42"
+                    "src": "uart_controller.v:851.29-851.42"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -4503,9 +4503,9 @@
                   }
                 },
                 {
-                  "name": "$logic_not$uart_controller.v:852$352",
+                  "name": "$logic_not$uart_controller.v:872$352",
                   "attributes": {
-                    "src": "uart_controller.v:852.52-852.65"
+                    "src": "uart_controller.v:872.52-872.65"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -4514,9 +4514,9 @@
                   }
                 },
                 {
-                  "name": "$logic_not$uart_controller.v:861$361",
+                  "name": "$logic_not$uart_controller.v:881$361",
                   "attributes": {
-                    "src": "uart_controller.v:861.52-861.65"
+                    "src": "uart_controller.v:881.52-881.65"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5687,9 +5687,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:831$334",
+                  "name": "$logic_and$uart_controller.v:851$334",
                   "attributes": {
-                    "src": "uart_controller.v:831.13-831.42"
+                    "src": "uart_controller.v:851.13-851.42"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5700,9 +5700,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:831$335",
+                  "name": "$logic_and$uart_controller.v:851$335",
                   "attributes": {
-                    "src": "uart_controller.v:831.13-831.58"
+                    "src": "uart_controller.v:851.13-851.58"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5713,9 +5713,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:852$351",
+                  "name": "$logic_and$uart_controller.v:872$351",
                   "attributes": {
-                    "src": "uart_controller.v:852.13-852.48"
+                    "src": "uart_controller.v:872.13-872.48"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5726,9 +5726,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:852$353",
+                  "name": "$logic_and$uart_controller.v:872$353",
                   "attributes": {
-                    "src": "uart_controller.v:852.13-852.65"
+                    "src": "uart_controller.v:872.13-872.65"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5739,9 +5739,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:856$355",
+                  "name": "$logic_and$uart_controller.v:876$355",
                   "attributes": {
-                    "src": "uart_controller.v:856.19-856.53"
+                    "src": "uart_controller.v:876.19-876.53"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5752,9 +5752,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:861$360",
+                  "name": "$logic_and$uart_controller.v:881$360",
                   "attributes": {
-                    "src": "uart_controller.v:861.13-861.48"
+                    "src": "uart_controller.v:881.13-881.48"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5765,9 +5765,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:861$362",
+                  "name": "$logic_and$uart_controller.v:881$362",
                   "attributes": {
-                    "src": "uart_controller.v:861.13-861.65"
+                    "src": "uart_controller.v:881.13-881.65"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5778,9 +5778,9 @@
                   }
                 },
                 {
-                  "name": "$logic_and$uart_controller.v:861$363",
+                  "name": "$logic_and$uart_controller.v:881$363",
                   "attributes": {
-                    "src": "uart_controller.v:861.13-861.81"
+                    "src": "uart_controller.v:881.13-881.81"
                   },
                   "parameters": {
                     "A_SIGNED": "00000000000000000000000000000000",
@@ -5796,7 +5796,7 @@
         "attributes": {
             "keep": "00000000000000000000000000000001",
             "top": "00000000000000000000000000000001",
-            "src": "uart_controller.v:40.1-869.10"
+            "src": "uart_controller.v:40.1-889.10"
         }
       }
   ]

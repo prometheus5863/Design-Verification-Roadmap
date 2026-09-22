@@ -1,82 +1,82 @@
-SBY 11:00:35 [uart_csr_cover] Removing directory '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_cover'.
-SBY 11:00:35 [uart_csr_cover] Copy '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/../../rtl/uart_controller.v' to '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_cover/src/uart_controller.v'.
-SBY 11:00:35 [uart_csr_cover] engine_0: smtbmc z3
-SBY 11:00:35 [uart_csr_cover] base: starting process "cd uart_csr_cover/src; yosys -ql ../model/design.log ../model/design.ys"
-SBY 11:00:36 [uart_csr_cover] base: finished (returncode=0)
-SBY 11:00:36 [uart_csr_cover] prep: starting process "cd uart_csr_cover/model; yosys -ql design_prep.log design_prep.ys"
-SBY 11:00:36 [uart_csr_cover] prep: finished (returncode=0)
-SBY 11:00:36 [uart_csr_cover] smt2: starting process "cd uart_csr_cover/model; yosys -ql design_smt2.log design_smt2.ys"
-SBY 11:00:36 [uart_csr_cover] smt2: finished (returncode=0)
-SBY 11:00:36 [uart_csr_cover] engine_0: starting process "cd uart_csr_cover; yosys-smtbmc -s z3 --presat -c --noprogress -t 32  --append 0 --dump-vcd engine_0/trace%.vcd --dump-yw engine_0/trace%.yw --dump-vlogtb engine_0/trace%_tb.v --dump-smtc engine_0/trace%.smtc model/design_smt2.smt2"
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Solver: z3
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 0..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 1..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 2..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:659.13-659.51 (_witness_.check_cover_uart_controller_v_659_459)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace0.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace0_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace0.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace0.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:661.13-661.52 (_witness_.check_cover_uart_controller_v_661_462)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace1.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace1_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace1.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace1.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:657.13-657.66 (_witness_.check_cover_uart_controller_v_657_454)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace2.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace2_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace2.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace2.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:664.13-665.67 (_witness_.check_cover_uart_controller_v_664_465)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace3.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace3_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace3.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace3.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:654.13-654.23 (_witness_.check_cover_uart_controller_v_654_453)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace4.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace4_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace4.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace4.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 4..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 5..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 6..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 6 at uart_controller: uart_controller.v:475.13-475.53 (_witness_.check_cover_uart_controller_v_475_277)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace5.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace5_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace5.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace5.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 6..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 7..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 8..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 9..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 10..
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 10 at uart_controller: uart_controller.v:474.13-474.34 (_witness_.check_cover_uart_controller_v_474_275)
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace6.vcd
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace6_tb.v
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace6.smtc
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace6.yw
-SBY 11:00:36 [uart_csr_cover] engine_0: ##   0:00:00  Status: passed
-SBY 11:00:36 [uart_csr_cover] engine_0: finished (returncode=0)
-SBY 11:00:36 [uart_csr_cover] engine_0: Status returned by engine: pass
-SBY 11:00:36 [uart_csr_cover] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
-SBY 11:00:36 [uart_csr_cover] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
-SBY 11:00:36 [uart_csr_cover] summary: engine_0 (smtbmc z3) returned pass
-SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace0.vcd
-SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_659_459 at uart_controller.v:659.13-659.51 step 3
-SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace1.vcd
-SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_661_462 at uart_controller.v:661.13-661.52 step 3
-SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace2.vcd
-SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_657_454 at uart_controller.v:657.13-657.66 step 3
-SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace3.vcd
-SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_664_465 at uart_controller.v:664.13-665.67 step 3
-SBY 11:00:36 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace4.vcd
-SBY 11:00:36 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_654_453 at uart_controller.v:654.13-654.23 step 3
-SBY 11:00:36 [uart_csr_cover] summary: and 2 further traces
-SBY 11:00:36 [uart_csr_cover] summary: see uart_csr_cover/PASS for a complete summary
-SBY 11:00:36 [uart_csr_cover] DONE (PASS, rc=0)
+SBY 11:01:28 [uart_csr_cover] Removing directory '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_cover'.
+SBY 11:01:28 [uart_csr_cover] Copy '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/../../rtl/uart_controller.v' to '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_cover/src/uart_controller.v'.
+SBY 11:01:28 [uart_csr_cover] engine_0: smtbmc z3
+SBY 11:01:28 [uart_csr_cover] base: starting process "cd uart_csr_cover/src; yosys -ql ../model/design.log ../model/design.ys"
+SBY 11:01:29 [uart_csr_cover] base: finished (returncode=0)
+SBY 11:01:29 [uart_csr_cover] prep: starting process "cd uart_csr_cover/model; yosys -ql design_prep.log design_prep.ys"
+SBY 11:01:29 [uart_csr_cover] prep: finished (returncode=0)
+SBY 11:01:29 [uart_csr_cover] smt2: starting process "cd uart_csr_cover/model; yosys -ql design_smt2.log design_smt2.ys"
+SBY 11:01:29 [uart_csr_cover] smt2: finished (returncode=0)
+SBY 11:01:29 [uart_csr_cover] engine_0: starting process "cd uart_csr_cover; yosys-smtbmc -s z3 --presat -c --noprogress -t 32  --append 0 --dump-vcd engine_0/trace%.vcd --dump-yw engine_0/trace%.yw --dump-vlogtb engine_0/trace%_tb.v --dump-smtc engine_0/trace%.smtc model/design_smt2.smt2"
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Solver: z3
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 0..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 1..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 2..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:659.13-659.51 (_witness_.check_cover_uart_controller_v_659_459)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace0.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace0_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace0.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace0.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:661.13-661.52 (_witness_.check_cover_uart_controller_v_661_462)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace1.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace1_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace1.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace1.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:657.13-657.66 (_witness_.check_cover_uart_controller_v_657_454)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace2.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace2_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace2.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace2.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:664.13-665.67 (_witness_.check_cover_uart_controller_v_664_465)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace3.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace3_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace3.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace3.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 3 at uart_controller: uart_controller.v:654.13-654.23 (_witness_.check_cover_uart_controller_v_654_453)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace4.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace4_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace4.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace4.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 3..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 4..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 5..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 6..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 6 at uart_controller: uart_controller.v:475.13-475.53 (_witness_.check_cover_uart_controller_v_475_277)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace5.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace5_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace5.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace5.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 6..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 7..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 8..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 9..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Checking cover reachability in step 10..
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Reached cover statement in step 10 at uart_controller: uart_controller.v:474.13-474.34 (_witness_.check_cover_uart_controller_v_474_275)
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to VCD file: engine_0/trace6.vcd
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace6_tb.v
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to constraints file: engine_0/trace6.smtc
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace6.yw
+SBY 11:01:29 [uart_csr_cover] engine_0: ##   0:00:00  Status: passed
+SBY 11:01:29 [uart_csr_cover] engine_0: finished (returncode=0)
+SBY 11:01:29 [uart_csr_cover] engine_0: Status returned by engine: pass
+SBY 11:01:29 [uart_csr_cover] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 11:01:29 [uart_csr_cover] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)
+SBY 11:01:29 [uart_csr_cover] summary: engine_0 (smtbmc z3) returned pass
+SBY 11:01:29 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace0.vcd
+SBY 11:01:29 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_659_459 at uart_controller.v:659.13-659.51 step 3
+SBY 11:01:29 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace1.vcd
+SBY 11:01:29 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_661_462 at uart_controller.v:661.13-661.52 step 3
+SBY 11:01:29 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace2.vcd
+SBY 11:01:29 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_657_454 at uart_controller.v:657.13-657.66 step 3
+SBY 11:01:29 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace3.vcd
+SBY 11:01:29 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_664_465 at uart_controller.v:664.13-665.67 step 3
+SBY 11:01:29 [uart_csr_cover] summary: cover trace: uart_csr_cover/engine_0/trace4.vcd
+SBY 11:01:29 [uart_csr_cover] summary:   reached cover statement uart_controller._witness_.check_cover_uart_controller_v_654_453 at uart_controller.v:654.13-654.23 step 3
+SBY 11:01:29 [uart_csr_cover] summary: and 2 further traces
+SBY 11:01:29 [uart_csr_cover] summary: see uart_csr_cover/PASS for a complete summary
+SBY 11:01:29 [uart_csr_cover] DONE (PASS, rc=0)

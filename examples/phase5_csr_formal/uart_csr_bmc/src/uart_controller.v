@@ -827,6 +827,26 @@ module uart_controller (
     // Stated as: it does not matter what the bus was doing in the reset
     // cycle. R1 already covers the values; what R4 adds is that it holds
     // under an ACTIVE write, which the solver must now actually exhibit.
+    //
+    // MEASURED REDUNDANCY (2026-09-22, stage 5 of run_reset_formal.sh).
+    // R4 detects nothing R1 does not. The suite was run with R4 removed and
+    // with ONLY R4 kept, against M3 (the very defect R4 was written for):
+    // BOTH variants detect it. R1 asserts the reset values unconditionally,
+    // so the concurrent-write case was already inside it.
+    //
+    // R4 is kept and annotated rather than deleted, for two reasons. It
+    // states an INTENT -- that reset has priority over the bus -- which R1
+    // only implies, and a reader of the property list should be able to see
+    // that the priority was considered. And it would earn its detection
+    // power the moment R1 were narrowed to a quiet bus, which is how a
+    // larger design would have to write R1.
+    //
+    // This is a FOURTH way a property can be worth less than it looks, to
+    // add to the three listed in notes/2026-09-21-*.md. It is not vacuity:
+    // R4's antecedent is satisfiable (cover C_R2, reached at step 4) and it
+    // is a true statement about real behaviour. It is SUBSUMPTION, and the
+    // three vacuity tests all pass on it. Only a deletion experiment finds
+    // it.
     always @(posedge clk) begin
         if (f_past_valid && !$past(rst_n) && $past(wr_en)) begin
             assert(ctrl     == 5'd0);

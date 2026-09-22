@@ -69,10 +69,10 @@ $var wire 3 n59 tx_bit $end
 $var wire 1 n60 tx_bit_done $end
 $var wire 4 n61 tx_cnt $end
 $var wire 1 n62 tx_empty $end
-$var wire 8 n78 tx_fifo<0> $end
+$var wire 8 n75 tx_fifo<0> $end
 $var wire 8 n77 tx_fifo<1> $end
 $var wire 8 n76 tx_fifo<2> $end
-$var wire 8 n75 tx_fifo<4> $end
+$var wire 8 n78 tx_fifo<4> $end
 $var wire 1 n63 tx_full $end
 $var wire 1 n64 tx_line $end
 $var wire 4 n65 tx_os $end
@@ -332,10 +332,10 @@ b000 n71
 b001 n72
 b1 n73
 b00000000 n74
-b00000000 n75
+b00111000 n75
 bxxxxxxxx n76
 bxxxxxxxx n77
-b00111000 n78
+b00000000 n78
 #25
 b0 n19
 #30
@@ -416,10 +416,10 @@ b000 n71
 b001 n72
 b1 n73
 b00000000 n74
-b00000000 n75
+b00111000 n75
 bxxxxxxxx n76
 bxxxxxxxx n77
-b00111000 n78
+b00000000 n78
 #35
 b0 n19
 #40
