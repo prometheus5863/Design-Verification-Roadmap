@@ -288,8 +288,36 @@ shape.
       clocks -- and that vacuity is *asserted* by a mutant (N5) required
       to survive, not merely suspected; and **reset-value properties are
       still unchecked**, because the `f_past_valid` idiom disables
-      everything during reset. X-prop and liveness remain out of scope for
+      everything during reset -- **this second caveat is CLOSED 2026-09-22**
+      (see the next item). X-prop and liveness remain out of scope for
       this toolchain, connectivity is not applicable to a single peripheral
+- [x] **Reset-value properties -- done 2026-09-22.** The seventh CSR
+      obligation, and the one 2026-09-21 left owed. R1 (28 architectural
+      registers), R2 (the read port, including `STATUS = 8'h02` rather than
+      `8'h00`, because `tx_empty` is a live decode of `tx_cnt == 0`), R3
+      (`irq` low out of reset) and R4 (reset dominates a concurrent bus
+      write), under `` `ifdef FORMAL_CSR_RESET `` with the **mirror-image
+      guard** `(f_past_valid && !$past(rst_n))` -- the exact inverse of the
+      guard every other property in the repo uses, which is *why* the gap
+      existed: a correct convention, uniformly applied, with a blind spot.
+      `examples/phase5_csr_formal/run_reset_formal.sh`, five stages,
+      **15 passed, 0 failed**: the Phase 4 bench still 60/60, bmc depth 12,
+      both covers reached at steps 3 and 4 (step >= 2 guard held), six
+      mutants detected, one (M7, corrupting the un-reset RX FIFO storage)
+      **required to survive** so that R2's deliberate omission of
+      `ADDR_RX_DATA` is proved rather than described, and the 2026-09-20
+      and 2026-09-21 suites re-run unchanged.
+      **Caveats recorded, not glossed:** (a) a reset asserted mid-frame is
+      NOT covered -- reaching a frame is ~145 clocks, the same solver-budget
+      boundary days 1 and 2 hit from the other two directions; (b) **R4 is
+      measurably REDUNDANT.** Stage 5 rebuilds the RTL with R4 removed and
+      with only R4 kept and runs the defect R4 was written for against both;
+      both detect it, so R1 subsumes R4 and R4 changes no verdict anywhere.
+      That is a **fourth** way a passing property can be worth less than it
+      looks, distinct from the three vacuity shapes listed on 2026-09-21 --
+      R4's antecedent is satisfiable, its cover is reached, and all three
+      vacuity tests are blind to it. R4 is annotated in place, not deleted.
+      Write-up: `notes/2026-09-22-reset-value-properties-and-property-subsumption.md`
 - [x] Hands-on SymbiYosys/Yosys exercise -- **done 2026-09-20**.
       `tools/setup_formal.sh` installs Yosys 0.69 + SymbiYosys + z3 without
       root via the YoWASP WASM builds; `examples/phase5_formal_uart/`
