@@ -2264,6 +2264,28 @@ so a `nohup ... &` sweep is silently killed the moment the call returns.
 never re-runs a completed variant, and stops at a deadline, so the 252-job
 sweep completes over three or four calls instead of one long one.
 
+**Two further operational findings, both from the VM restart:**
+
+1. **The push recipe's `shred -u /tmp/.tok` can FAIL after a restart.** Files
+   written to the VM's `/tmp` before the restart come back owned by
+   `nobody:nogroup`, so the post-push cleanup returns
+   `rm: Operation not permitted` and a 0600 token copy is left behind. It is
+   unreadable by the session uid and the VM is ephemeral, so nothing leaks,
+   but the cleanup step cannot be assumed to have worked. **Use `mktemp` for
+   the token and the askpass helper rather than fixed names** — a fixed name
+   also collides with the pre-restart file and makes the *write* fail with
+   `Permission denied`, which is how this was found: the second push of the
+   session could not create `/tmp/.tok` at all.
+
+2. **A committed file can revert in the WORKING TREE across the restart.**
+   After the restart, `git status` in the graphene repo showed
+   `AUTOMATION_LOG.md` modified with the day's 179-line entry *removed* —
+   the commit and the pushed remote were both intact, only the checked-out
+   file was stale. `git checkout -- <file>` restores it. The lesson for a
+   future run: **after any restart, check `git status` in every clone before
+   trusting the working tree**, and verify against the remote rather than
+   against the local file.
+
 **Commits this run:** 5 (the harness with its four scripts and recorded
 output; the RTL annotations; the in-session correction across note, README
 and RTL; the study notes; progress.md). This AUTOMATION_LOG.md entry makes
