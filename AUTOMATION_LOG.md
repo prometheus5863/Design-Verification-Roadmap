@@ -2105,3 +2105,168 @@ entry makes 4. The property block and the runner went in together, as on
 2026-09-19, -20 and -21, because stage 5's deletion experiment is what
 changed the property block — R4's annotation did not exist until the runner
 measured it, and the two are not separable after the fact.
+
+---
+
+## 2026-09-23
+
+**Status:** Automated session, Phase 5 day 4. The top item of 2026-09-22's
+"Not yet covered" list, taken verbatim: per-property mutation coverage for
+the whole suite.
+
+**Work done:**
+
+1. **The harness** (`examples/phase5_property_coverage/`). 2026-09-22
+   deleted one property and asked whether any verdict changed. This does it
+   for all **17** properties of all three suites — **252 `sby` invocations,
+   about twelve minutes** — in three phases, each answering what the
+   previous one could not:
+
+   | phase | experiment | distinguishes |
+   |---|---|---|
+   | 1 | delete one property, re-run every mutant | does it ever change a verdict? |
+   | 2 | keep one property as the **only** live one | SHADOWED vs UNEXERCISED |
+   | 3 | inject the defects the unexercised ones were written for | hole closed, shadowed after all, or escape |
+
+   **Phase 2 is the point, and the reason phase 1 alone would have been
+   wrong.** "Deleting it changes nothing" is two opposite situations wearing
+   one result: the property *can* detect something and is merely shadowed,
+   or it detects *nothing* — which is a fact about the **mutant set**, not
+   about the property. Collapsing them would recommend deleting a property
+   whose real problem is that nobody ever tested it.
+
+2. **RESULT — 9 load-bearing, 4 shadowed, 4 unexercised.**
+   Load-bearing: P1, P2, C2, C3, C4, C5, C9, R1, R3. Shadowed: P4, C8, R2,
+   R4. Unexercised: P3, C1, C6, C7.
+
+3. **CONTROL, and the reason any of this is believable.** The harness must
+   independently reproduce the one answer already known. Phase 1 reproduces
+   2026-09-22's hand-built R4-is-subsumed; phase 2 reproduces its finer
+   form — R4 detects K1, K3 and K4 alone and none of them uniquely. Both
+   pass. A harness that disagreed with the known answer would not be worth
+   listening to about the sixteen new ones.
+
+4. **RESULT — cross-suite subsumption, which the single-property experiment
+   structurally could not see.** The CSR job compiles `-DFORMAL
+   -DFORMAL_CSR` and the reset job `-DFORMAL -DFORMAL_CSR_RESET`, so **both
+   silently carry the 2026-09-20 FIFO invariants**. C8 comes back shadowed,
+   and what shadows it is P1/P2 from a *different day's suite* catching the
+   same underflow first. General form worth carrying: **a property's
+   redundancy is a property of the COMPILE, not of the suite it was written
+   in.**
+
+5. **RESULT — two holes closed, and C1 had been advertising its own.** C1's
+   comment says verbatim *"a width mutation is exactly what this catches"*,
+   and no width mutation had ever been injected. N8 (the INT_EN write drops
+   its top bit) is detected and **missed** with C1 deleted. Same shape for
+   P3 with M6 (`tx_full` computed from the empty constant, so full and empty
+   coincide). Two of the four unexercised properties were one mutant away
+   from being the only thing standing between the design and a defect.
+
+6. **A CORRECTION made inside the session, and the more useful finding.**
+   N9 (a STATUS read that no longer clears `frame_err`) escapes the whole
+   suite, and the first write-up called that a **fifth** way a passing
+   property can mean nothing. **It is not.** 2026-09-21 established exactly
+   this, by exactly this method: stage 3b of `run_csr_formal.sh` injects N5,
+   disables the read-to-clear path entirely and *requires the mutant to
+   survive*, with the ~145-clocks-against-depth-20 argument written out
+   beside it. N9 is N5 in a different disguise; the escape is plain bounded
+   vacuity, class 1 since 09-21. The overclaim is annotated in place in the
+   note, the README and the RTL rather than deleted, because **the lesson is
+   that a mechanical sweep over seventeen properties re-derives what the
+   repo already knows and presents it with exactly the same confidence as
+   what it does not.**
+
+   What survives as new is the **N10 control**. N5 shows C6 cannot be broken
+   at this depth; it does not show C6 is any good, because a syntactically
+   empty property would survive N5 identically. N10 makes a STATUS read
+   *set* `frame_err` — three steps, no RX activity — and C6 and C7 both fail
+   it at step 3. The pair separates *"antecedent unreachable"* from
+   *"antecedent unreachable **or** property empty"*, which one survivor
+   mutant cannot, and it costs one mutant.
+
+7. **The bug the guards caught.** The FIFO suite's cover block is **also
+   called `C1`**, inside `` `ifdef FORMAL ``. A bare banner search for
+   `// ---- C1` found that one instead of the CSR property and deleted
+   across two `` `endif ``s; the job returned `ERROR: Found \`endif outside
+   of macro conditional branch`, and guard G3 (drop-one must still PASS on
+   clean RTL) scored the row INCONCLUSIVE rather than letting it read as
+   "redundant". `span()` is now region-aware. **A name collision between two
+   suites is invisible until something addresses properties by name**, and
+   nothing in a normal flow ever does — it existed for three days and cost
+   nothing until a script tried to talk about "C1".
+
+8. **Nothing was deleted.** P4, C8, R2 and R4 are annotated in place with
+   the reason each is kept (P4 is the only property constraining the *rate*
+   of change; C8 would earn its place in a job built without `-DFORMAL`; R2
+   is the only protocol-level statement of the reset values; R4 states an
+   intent R1 only implies). C6 and C7 — which look, in the raw phase-1
+   matrix, like the two most obviously deletable properties in the repo —
+   are guarding a real defect the bound cannot reach, and N10 shows they
+   will catch it the day it becomes reachable.
+
+9. **Guards that held.** All five `sby` jobs re-run after the RTL comment
+   edits: `uart_fifo_bmc`, `uart_fifo_prove`, `uart_csr_bmc`,
+   `uart_csr_prove`, `uart_reset_bmc` — all PASS. Phase 4 Icarus bench still
+   **60/60**. G1 (baseline clean PASS) and G2 (every baseline mutant
+   detected) held for all three suites: 5/5, 6/6, 6/6.
+
+**Not yet covered (candidates for future runs):**
+- **Constrained-random and coverage-driven UART stimulus** — all stimulus in
+  all benches is still directed while the vplan assigns most features to
+  CRV. Now the **top** item and the longest-standing one: today closed the
+  last of the mechanical property-quality questions, and what is left is the
+  capstone
+- **`abc pdr` as a second engine** — promoted by today's work rather than
+  merely still open. Three of the four things this repo cannot currently say
+  (a reset asserted mid-frame, the deep cover, and now the N9/N5 escape) are
+  the same ~145-clock reach against a bounded engine. A solver that does not
+  need the bound would collapse three open items into one experiment
+- **A vplan v2 revision** — the 2026-09-17 bring-up found the "live status"
+  wording cannot hold for the three STATUS error bits; 2026-09-22 added that
+  the plan says nothing about reset values; today adds a third correction it
+  should carry, that the plan assigns C6/C7's behaviour to formal while
+  formal provably cannot reach it at any depth this toolchain can run
+- **Per-property coverage of the PHASE 4 UVM environment** — created today.
+  The technique is now scripted and the UVM milestone has a mutation report
+  but no per-component attribution, so the same question ("which component
+  of the environment would notice if it were removed?") is one adaptation
+  away
+- **Mutants not yet attempted**: the baud generator, the overrun path, the
+  interrupt *enable* combinations, the loopback mux. Today added three
+  (N8, N9/N10, M6) and each one changed a verdict, which is an argument for
+  writing more of them rather than more properties
+- **A property that actually needs a strengthening invariant** — still
+  studied and unexercised; the serial datapath's "a started frame always
+  completes" remains the candidate, and it is blocked on the same bound
+- **The SVA sequence layer** (`##`, `[*]`, `|->`, local variables) — runnable
+  on neither tool here; worth one session establishing whether anything
+  accessible closes the gap, since interviews assume fluency
+- **A mutation script for `examples/phase4_uvm_milestone/`** — it has a
+  report but no runnable script. Open since 2026-09-19
+- **Code coverage measurement** (plan Section 5 targets 95%) — Icarus has no
+  native support. Open since 2026-09-18
+- **F7's baud-tolerance number** — never measured in any bench
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview-prep
+
+**Web search availability:** Not attempted. Everything this session needed
+was in the repo's own RTL and scripts — and finding 6 is a reminder that
+reading the repo's own earlier scripts is the search that mattered.
+
+**Automation health:** Device reachable, folder connected; neither repo had a
+2026-09-23 entry, so a full session was run. The session VM restarted once
+mid-run (between the two repos) and `$HOME/work` survived it, but installed
+pip packages did not — the formal toolchain reinstalls per session anyway
+via `tools/setup_formal.sh` (source it, do not pipe it). **New constraint
+measured today:** background jobs do NOT survive between automation shells,
+so a `nohup ... &` sweep is silently killed the moment the call returns.
+`run_chunk.sh` is written around that: it records each verdict as it lands,
+never re-runs a completed variant, and stops at a deadline, so the 252-job
+sweep completes over three or four calls instead of one long one.
+
+**Commits this run:** 5 (the harness with its four scripts and recorded
+output; the RTL annotations; the in-session correction across note, README
+and RTL; the study notes; progress.md). This AUTOMATION_LOG.md entry makes
+6. The correction is its own commit rather than folded into the note,
+because a claim that was wrong for four commits and then fixed should be
+visible as that in the history.
