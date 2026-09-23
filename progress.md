@@ -318,6 +318,39 @@ shape.
       R4's antecedent is satisfiable, its cover is reached, and all three
       vacuity tests are blind to it. R4 is annotated in place, not deleted.
       Write-up: `notes/2026-09-22-reset-value-properties-and-property-subsumption.md`
+- [x] **Per-property mutation coverage -- done 2026-09-23.** 2026-09-22
+      measured one property (R4) and the log made generalising it the top
+      open item. `examples/phase5_property_coverage/` now does it for all
+      **17** properties of all three suites: **252 sby invocations, ~12
+      minutes**, three phases. Phase 1 deletes each property and re-runs
+      every mutant; phase 2 keeps each candidate as the **only** live
+      property, which is what separates SHADOWED (it can detect something,
+      never alone) from UNEXERCISED (no mutant in the set is visible to it);
+      phase 3 injects the defects the unexercised ones were written for.
+      **9 load-bearing, 4 shadowed, 4 unexercised**, and two of the four
+      holes closed on the spot (N8 for C1, M6 for P3 -- both now
+      load-bearing). **Control:** the harness independently reproduces
+      2026-09-22's hand-built R4 answer in phase 1 and its finer form in
+      phase 2, without which its sixteen new answers would not be believable.
+      **Findings recorded, not glossed:** (a) **cross-suite subsumption** --
+      the CSR and reset jobs compile `-DFORMAL`, so both silently carry the
+      2026-09-20 FIFO invariants, and C8 is shadowed by P1/P2 from a
+      different day's suite, which no within-suite experiment can see;
+      (b) C1's own comment said *"a width mutation is exactly what this
+      catches"* and no width mutation had ever been injected -- a property
+      advertised its coverage hole for two days; (c) a **name collision**
+      (the FIFO cover block is also called `C1`) made the first run delete
+      across two `` `endif ``s, caught by the G3 guard as INCONCLUSIVE rather
+      than scored as a wrong answer -- invisible until something addresses
+      properties by name; (d) **a correction made in-session**: the N9
+      escape was first written up as a fifth failure class and is not one --
+      2026-09-21's survivor mutant N5 had already established it. What
+      survives is the **N10 control**, which separates "antecedent
+      unreachable" from "antecedent unreachable OR property empty", a
+      distinction one survivor mutant cannot make. **No property was
+      deleted**; all seven reclassified ones are annotated in place with the
+      reason they are kept.
+      Write-up: `notes/2026-09-23-per-property-mutation-coverage.md`
 - [x] Hands-on SymbiYosys/Yosys exercise -- **done 2026-09-20**.
       `tools/setup_formal.sh` installs Yosys 0.69 + SymbiYosys + z3 without
       root via the YoWASP WASM builds; `examples/phase5_formal_uart/`
