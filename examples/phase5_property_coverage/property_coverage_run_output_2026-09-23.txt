@@ -1,0 +1,104 @@
+Per-property mutation coverage -- recorded run, 2026-09-23
+toolchain: yowasp-yosys + z3 via tools/setup_formal.sh; 252 sby invocations
+
+
+==============================================================================
+SUITE fifo   properties P1 P2 P3 P4   mutants M1 M2 M3 M4 M5
+==============================================================================
+  baseline clean : PASS
+  baseline mutants detected: 5/5
+  prop    clean    M1     M2     M3     M4     M5       verdict
+  P1      PASS     still  ONLY   still  still  still    LOAD-BEARING for M2
+  P2      PASS     still  still  still  ONLY   ONLY     LOAD-BEARING for M4,M5
+  P3      PASS     still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+  P4      PASS     still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+
+==============================================================================
+SUITE csr   properties C1 C2 C3 C4 C5 C6 C7 C8 C9   mutants N1 N2 N3 N4 N6 N7
+==============================================================================
+  baseline clean : PASS
+  baseline mutants detected: 6/6
+  prop    clean    N1     N2     N3     N4     N6     N7       verdict
+  C1      PASS     still  still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+  C2      PASS     ONLY   still  still  still  still  still    LOAD-BEARING for N1
+  C3      PASS     still  ONLY   still  still  still  still    LOAD-BEARING for N2
+  C4      PASS     still  still  ONLY   still  still  still    LOAD-BEARING for N3
+  C5      PASS     still  still  still  ONLY   still  still    LOAD-BEARING for N4
+  C6      PASS     still  still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+  C7      PASS     still  still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+  C8      PASS     still  still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+  C9      PASS     still  still  still  still  still  ONLY     LOAD-BEARING for N7
+
+==============================================================================
+SUITE reset   properties R1 R2 R3 R4   mutants K1 K2 K3 K4 K5 K6
+==============================================================================
+  baseline clean : PASS
+  baseline mutants detected: 6/6
+  prop    clean    K1     K2     K3     K4     K5     K6       verdict
+  R1      PASS     still  ONLY   still  still  still  still    LOAD-BEARING for K2
+  R2      PASS     still  still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+  R3      PASS     still  still  still  still  still  ONLY     LOAD-BEARING for K6
+  R4      PASS     still  still  still  still  still  still    SUBSUMED by the rest (this mutant set)
+
+==============================================================================
+SUMMARY
+==============================================================================
+  load-bearing :  9  fifo/P1, fifo/P2, csr/C2, csr/C3, csr/C4, csr/C5, csr/C9, reset/R1, reset/R3
+  subsumed     :  8  fifo/P3, fifo/P4, csr/C1, csr/C6, csr/C7, csr/C8, reset/R2, reset/R4
+  inconclusive :  0  
+
+  CONTROL: reset/R4 was measured redundant by an independent, hand-built
+  experiment on 2026-09-22.  This harness must reproduce that, or its new
+  answers are not believable.
+  CONTROL PASSES: reset/R4 independently re-measured as SUBSUMED.
+
+  SCOPE: 'subsumed' is relative to the mutant set listed above and to the BMC
+  depth of each job.  It is evidence that a property earns nothing HERE, not a
+  proof that it is redundant.  No property is deleted on the strength of it.
+
+==============================================================================
+PHASE 2: solo detection power -- shadowed vs unexercised
+==============================================================================
+  fifo/P3  only-clean=PASS  drop-clean=PASS  solo-detects=(none)         UNEXERCISED -- no mutant in this set is visible to it
+  fifo/P4  only-clean=PASS  drop-clean=PASS  solo-detects=M1,M3          SHADOWED -- detects M1,M3 alone, never uniquely
+  csr/C1  only-clean=PASS  drop-clean=PASS  solo-detects=(none)         UNEXERCISED -- no mutant in this set is visible to it
+  csr/C6  only-clean=PASS  drop-clean=PASS  solo-detects=(none)         UNEXERCISED -- no mutant in this set is visible to it
+  csr/C7  only-clean=PASS  drop-clean=PASS  solo-detects=(none)         UNEXERCISED -- no mutant in this set is visible to it
+  csr/C8  only-clean=PASS  drop-clean=PASS  solo-detects=N6             SHADOWED -- detects N6 alone, never uniquely
+  reset/R2  only-clean=PASS  drop-clean=PASS  solo-detects=K1,K3,K4,K5    SHADOWED -- detects K1,K3,K4,K5 alone, never uniquely
+  reset/R4  only-clean=PASS  drop-clean=PASS  solo-detects=K1,K3,K4       SHADOWED -- detects K1,K3,K4 alone, never uniquely
+
+  Counts: LOAD-BEARING=0, SHADOWED=4, UNEXERCISED=4, INCONCLUSIVE=0
+
+  CONTROL, again: reset/R4 was hand-measured on 2026-09-22 as
+  detecting K3 alone while never changing a verdict -- i.e. SHADOWED,
+  not unexercised. Phase 2 must reproduce that distinction, not just
+  the coarse 'redundant' verdict phase 1 reproduced.
+  CONTROL PASSES
+
+==============================================================================
+PHASE 3: gap-closing mutants for the properties phase 2 found UNEXERCISED
+==============================================================================
+  N8   targets csr/C1  base=FAIL  dropC1=PASS  onlyC1=FAIL   HOLE CLOSED -- C1 is now LOAD-BEARING for N8
+       (INT_EN write drops its top bit (width defect -- C1))
+  N9   targets csr/C6  base=PASS  dropC6=PASS  onlyC6=PASS   ESCAPE -- the FULL suite does not detect N9
+       (a STATUS read no longer clears frame_err (C6))
+  M6   targets fifo/P3  base=FAIL  dropP3=PASS  onlyP3=FAIL   HOLE CLOSED -- P3 is now LOAD-BEARING for M6
+       (tx_full uses the empty constant, so full and empty coincide (P3))
+
+  CONTROL N10, for the N9 escape. N9 removes the clear of frame_err on
+  a STATUS read and the suite does not notice. Two explanations: C6 is
+  broken, or frame_err simply cannot be SET within the job's depth of
+  20 (a real frame error needs ~145 clocks -- the same solver-budget
+  boundary days 1, 2 and 3 all hit). N10 makes a STATUS read SET
+  frame_err instead, which needs no RX activity at all.
+  N10 verdict: FAIL
+  => C6 and C7 are LIVE and evaluable; they fail N10 at step 3.
+     The N9 escape is therefore a BOUND problem, not a property
+     problem: a property can be non-vacuous, non-subsumed, live
+     and still blind to a real defect whose precondition lies
+     beyond the BMC depth. That is a FIFTH way a passing property
+     can mean nothing, and no vacuity check in this repo detects
+     it -- the cover that would have (`cover(... $past(frame_err))`)
+     is the one sitting in the FORMAL_CSR_DEEP job that smtbmc
+     cannot finish.
