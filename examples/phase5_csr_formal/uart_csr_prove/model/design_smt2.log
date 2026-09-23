@@ -75,6 +75,6 @@ Module uart_controller directly or indirectly contains formal properties -> sett
 6.2. Executing DEMUXMAP pass.
 Creating SMT-LIBv2 representation of module uart_controller.
 
-End of script. Logfile hash: 19aef1c5a4, time: 0.01s, user: 0.02s, system: 0.00s
+End of script. Logfile hash: 19aef1c5a4, time: 0.01s, user: 0.01s, system: 0.00s
 Yosys 0.69 (git sha1 9f75ca1f9, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)
-Time spent: 47% 2x write_smt2 (0 sec), 44% 2x read_rtlil (0 sec), ...
+Time spent: 58% 2x write_smt2 (0 sec), 31% 2x read_rtlil (0 sec), ...

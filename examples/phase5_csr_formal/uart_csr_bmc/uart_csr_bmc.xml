@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-<testsuite timestamp="2026-09-22T11:01:21" hostname="claude" package="uart_csr_bmc" id="0" name="default" tests="42" errors="0" failures="0" time="6" skipped="7">
+<testsuite timestamp="2026-09-23T03:43:19" hostname="claude" package="uart_csr_bmc" id="0" name="default" tests="42" errors="0" failures="0" time="8" skipped="7">
 <properties>
 <property name="os" value="Linux"/>
 <property name="expect" value="PASS"/>
@@ -16,148 +16,148 @@
 </testcase>
 <testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:443.13-443.55" time="0" type="ASSERT" location="uart_controller.v:443.13-443.55" id="_witness_.check_assert_uart_controller_v_443_224">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:451.13-451.43" time="0" type="ASSERT" location="uart_controller.v:451.13-451.43" id="_witness_.check_assert_uart_controller_v_451_229">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:454.13-454.43" time="0" type="ASSERT" location="uart_controller.v:454.13-454.43" id="_witness_.check_assert_uart_controller_v_454_229">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:452.13-452.69" time="0" type="ASSERT" location="uart_controller.v:452.13-452.69" id="_witness_.check_assert_uart_controller_v_452_232">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:455.13-455.69" time="0" type="ASSERT" location="uart_controller.v:455.13-455.69" id="_witness_.check_assert_uart_controller_v_455_232">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:461.13-463.54" time="0" type="ASSERT" location="uart_controller.v:461.13-463.54" id="_witness_.check_assert_uart_controller_v_461_253">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:467.13-469.54" time="0" type="ASSERT" location="uart_controller.v:467.13-469.54" id="_witness_.check_assert_uart_controller_v_467_253">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:464.13-464.82" time="0" type="ASSERT" location="uart_controller.v:464.13-464.82" id="_witness_.check_assert_uart_controller_v_464_261">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:470.13-470.82" time="0" type="ASSERT" location="uart_controller.v:470.13-470.82" id="_witness_.check_assert_uart_controller_v_470_261">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:465.13-465.84" time="0" type="ASSERT" location="uart_controller.v:465.13-465.84" id="_witness_.check_assert_uart_controller_v_465_267">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:471.13-471.84" time="0" type="ASSERT" location="uart_controller.v:471.13-471.84" id="_witness_.check_assert_uart_controller_v_471_267">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:517.48-517.86" time="0" type="ASSERT" location="uart_controller.v:517.48-517.86" id="_witness_.check_assert_uart_controller_v_517_297">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:527.48-527.86" time="0" type="ASSERT" location="uart_controller.v:527.48-527.86" id="_witness_.check_assert_uart_controller_v_527_297">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:518.48-518.81" time="0" type="ASSERT" location="uart_controller.v:518.48-518.81" id="_witness_.check_assert_uart_controller_v_518_300">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:528.48-528.81" time="0" type="ASSERT" location="uart_controller.v:528.48-528.81" id="_witness_.check_assert_uart_controller_v_528_300">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:519.48-519.86" time="0" type="ASSERT" location="uart_controller.v:519.48-519.86" id="_witness_.check_assert_uart_controller_v_519_303">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:529.48-529.86" time="0" type="ASSERT" location="uart_controller.v:529.48-529.86" id="_witness_.check_assert_uart_controller_v_529_303">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:531.17-531.69" time="0" type="ASSERT" location="uart_controller.v:531.17-531.69" id="_witness_.check_assert_uart_controller_v_531_319">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:541.17-541.69" time="0" type="ASSERT" location="uart_controller.v:541.17-541.69" id="_witness_.check_assert_uart_controller_v_541_319">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:533.17-533.73" time="0" type="ASSERT" location="uart_controller.v:533.17-533.73" id="_witness_.check_assert_uart_controller_v_533_323">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:543.17-543.73" time="0" type="ASSERT" location="uart_controller.v:543.17-543.73" id="_witness_.check_assert_uart_controller_v_543_323">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:535.17-535.71" time="0" type="ASSERT" location="uart_controller.v:535.17-535.71" id="_witness_.check_assert_uart_controller_v_535_327">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:545.17-545.71" time="0" type="ASSERT" location="uart_controller.v:545.17-545.71" id="_witness_.check_assert_uart_controller_v_545_327">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:541.41-541.73" time="0" type="ASSERT" location="uart_controller.v:541.41-541.73" id="_witness_.check_assert_uart_controller_v_541_333">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:551.41-551.73" time="0" type="ASSERT" location="uart_controller.v:551.41-551.73" id="_witness_.check_assert_uart_controller_v_551_333">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:542.41-542.67" time="0" type="ASSERT" location="uart_controller.v:542.41-542.67" id="_witness_.check_assert_uart_controller_v_542_336">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:552.41-552.67" time="0" type="ASSERT" location="uart_controller.v:552.41-552.67" id="_witness_.check_assert_uart_controller_v_552_336">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:543.41-543.77" time="0" type="ASSERT" location="uart_controller.v:543.41-543.77" id="_witness_.check_assert_uart_controller_v_543_339">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:553.41-553.77" time="0" type="ASSERT" location="uart_controller.v:553.41-553.77" id="_witness_.check_assert_uart_controller_v_553_339">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:544.41-544.66" time="0" type="ASSERT" location="uart_controller.v:544.41-544.66" id="_witness_.check_assert_uart_controller_v_544_342">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:554.41-554.66" time="0" type="ASSERT" location="uart_controller.v:554.41-554.66" id="_witness_.check_assert_uart_controller_v_554_342">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:553.17-553.40" time="0" type="ASSERT" location="uart_controller.v:553.17-553.40" id="_witness_.check_assert_uart_controller_v_553_349">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:563.17-563.40" time="0" type="ASSERT" location="uart_controller.v:563.17-563.40" id="_witness_.check_assert_uart_controller_v_563_349">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:563.13-563.41" time="0" type="ASSERT" location="uart_controller.v:563.13-563.41" id="_witness_.check_assert_uart_controller_v_563_355">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:573.13-573.41" time="0" type="ASSERT" location="uart_controller.v:573.13-573.41" id="_witness_.check_assert_uart_controller_v_573_355">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:564.13-564.42" time="0" type="ASSERT" location="uart_controller.v:564.13-564.42" id="_witness_.check_assert_uart_controller_v_564_357">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:574.13-574.42" time="0" type="ASSERT" location="uart_controller.v:574.13-574.42" id="_witness_.check_assert_uart_controller_v_574_357">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:565.13-565.41" time="0" type="ASSERT" location="uart_controller.v:565.13-565.41" id="_witness_.check_assert_uart_controller_v_565_359">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:575.13-575.41" time="0" type="ASSERT" location="uart_controller.v:575.13-575.41" id="_witness_.check_assert_uart_controller_v_575_359">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:566.13-566.42" time="0" type="ASSERT" location="uart_controller.v:566.13-566.42" id="_witness_.check_assert_uart_controller_v_566_361">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:576.13-576.42" time="0" type="ASSERT" location="uart_controller.v:576.13-576.42" id="_witness_.check_assert_uart_controller_v_576_361">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:583.13-583.31" time="0" type="ASSERT" location="uart_controller.v:583.13-583.31" id="_witness_.check_assert_uart_controller_v_583_377">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:599.13-599.31" time="0" type="ASSERT" location="uart_controller.v:599.13-599.31" id="_witness_.check_assert_uart_controller_v_599_377">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:584.13-584.32" time="0" type="ASSERT" location="uart_controller.v:584.13-584.32" id="_witness_.check_assert_uart_controller_v_584_379">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:600.13-600.32" time="0" type="ASSERT" location="uart_controller.v:600.13-600.32" id="_witness_.check_assert_uart_controller_v_600_379">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:585.13-585.33" time="0" type="ASSERT" location="uart_controller.v:585.13-585.33" id="_witness_.check_assert_uart_controller_v_585_381">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:601.13-601.33" time="0" type="ASSERT" location="uart_controller.v:601.13-601.33" id="_witness_.check_assert_uart_controller_v_601_381">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:594.53-594.81" time="0" type="ASSERT" location="uart_controller.v:594.53-594.81" id="_witness_.check_assert_uart_controller_v_594_397">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:613.53-613.81" time="0" type="ASSERT" location="uart_controller.v:613.53-613.81" id="_witness_.check_assert_uart_controller_v_613_397">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:595.53-595.81" time="0" type="ASSERT" location="uart_controller.v:595.53-595.81" id="_witness_.check_assert_uart_controller_v_595_400">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:614.53-614.81" time="0" type="ASSERT" location="uart_controller.v:614.53-614.81" id="_witness_.check_assert_uart_controller_v_614_400">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:596.53-596.81" time="0" type="ASSERT" location="uart_controller.v:596.53-596.81" id="_witness_.check_assert_uart_controller_v_596_403">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:615.53-615.81" time="0" type="ASSERT" location="uart_controller.v:615.53-615.81" id="_witness_.check_assert_uart_controller_v_615_403">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:606.17-606.73" time="0" type="ASSERT" location="uart_controller.v:606.17-606.73" id="_witness_.check_assert_uart_controller_v_606_424">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:630.17-630.73" time="0" type="ASSERT" location="uart_controller.v:630.17-630.73" id="_witness_.check_assert_uart_controller_v_630_424">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:608.17-608.50" time="0" type="ASSERT" location="uart_controller.v:608.17-608.50" id="_witness_.check_assert_uart_controller_v_608_432">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:632.17-632.50" time="0" type="ASSERT" location="uart_controller.v:632.17-632.50" id="_witness_.check_assert_uart_controller_v_632_432">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:609.17-609.82" time="0" type="ASSERT" location="uart_controller.v:609.17-609.82" id="_witness_.check_assert_uart_controller_v_609_434">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:633.17-633.82" time="0" type="ASSERT" location="uart_controller.v:633.17-633.82" id="_witness_.check_assert_uart_controller_v_633_434">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:619.33-619.45" time="0" type="ASSERT" location="uart_controller.v:619.33-619.45" id="_witness_.check_assert_uart_controller_v_619_441">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:643.33-643.45" time="0" type="ASSERT" location="uart_controller.v:643.33-643.45" id="_witness_.check_assert_uart_controller_v_643_441">
 </testcase>
-<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:620.33-620.55" time="0" type="ASSERT" location="uart_controller.v:620.33-620.55" id="_witness_.check_assert_uart_controller_v_620_443">
+<testcase classname="default" name="Property ASSERT in uart_controller at uart_controller.v:644.33-644.55" time="0" type="ASSERT" location="uart_controller.v:644.33-644.55" id="_witness_.check_assert_uart_controller_v_644_443">
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:474.13-474.34" time="0" type="COVER" location="uart_controller.v:474.13-474.34" id="_witness_.check_cover_uart_controller_v_474_275">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:480.13-480.34" time="0" type="COVER" location="uart_controller.v:480.13-480.34" id="_witness_.check_cover_uart_controller_v_480_275">
 <skipped />
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:475.13-475.53" time="0" type="COVER" location="uart_controller.v:475.13-475.53" id="_witness_.check_cover_uart_controller_v_475_277">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:481.13-481.53" time="0" type="COVER" location="uart_controller.v:481.13-481.53" id="_witness_.check_cover_uart_controller_v_481_277">
 <skipped />
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:654.13-654.23" time="0" type="COVER" location="uart_controller.v:654.13-654.23" id="_witness_.check_cover_uart_controller_v_654_453">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:678.13-678.23" time="0" type="COVER" location="uart_controller.v:678.13-678.23" id="_witness_.check_cover_uart_controller_v_678_453">
 <skipped />
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:657.13-657.66" time="0" type="COVER" location="uart_controller.v:657.13-657.66" id="_witness_.check_cover_uart_controller_v_657_454">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:681.13-681.66" time="0" type="COVER" location="uart_controller.v:681.13-681.66" id="_witness_.check_cover_uart_controller_v_681_454">
 <skipped />
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:659.13-659.51" time="0" type="COVER" location="uart_controller.v:659.13-659.51" id="_witness_.check_cover_uart_controller_v_659_459">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:683.13-683.51" time="0" type="COVER" location="uart_controller.v:683.13-683.51" id="_witness_.check_cover_uart_controller_v_683_459">
 <skipped />
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:661.13-661.52" time="0" type="COVER" location="uart_controller.v:661.13-661.52" id="_witness_.check_cover_uart_controller_v_661_462">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:685.13-685.52" time="0" type="COVER" location="uart_controller.v:685.13-685.52" id="_witness_.check_cover_uart_controller_v_685_462">
 <skipped />
 </testcase>
-<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:664.13-665.67" time="0" type="COVER" location="uart_controller.v:664.13-665.67" id="_witness_.check_cover_uart_controller_v_664_465">
+<testcase classname="default" name="Property COVER in uart_controller at uart_controller.v:688.13-689.67" time="0" type="COVER" location="uart_controller.v:688.13-689.67" id="_witness_.check_cover_uart_controller_v_688_465">
 <skipped />
 </testcase>
-<system-out>SBY 11:01:14 [uart_csr_bmc] Removing directory '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_bmc'.
-SBY 11:01:14 [uart_csr_bmc] Copy '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/../../rtl/uart_controller.v' to '/sessions/rcw-01hdjaciekdti6usuk2fsnrb/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_bmc/src/uart_controller.v'.
-SBY 11:01:14 [uart_csr_bmc] engine_0: smtbmc z3
-SBY 11:01:14 [uart_csr_bmc] base: starting process &quot;cd uart_csr_bmc/src; yosys -ql ../model/design.log ../model/design.ys&quot;
-SBY 11:01:14 [uart_csr_bmc] base: finished (returncode=0)
-SBY 11:01:14 [uart_csr_bmc] prep: starting process &quot;cd uart_csr_bmc/model; yosys -ql design_prep.log design_prep.ys&quot;
-SBY 11:01:14 [uart_csr_bmc] prep: finished (returncode=0)
-SBY 11:01:14 [uart_csr_bmc] smt2: starting process &quot;cd uart_csr_bmc/model; yosys -ql design_smt2.log design_smt2.ys&quot;
-SBY 11:01:14 [uart_csr_bmc] smt2: finished (returncode=0)
-SBY 11:01:14 [uart_csr_bmc] engine_0: starting process &quot;cd uart_csr_bmc; yosys-smtbmc -s z3 --presat --noprogress -t 20  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2&quot;
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Solver: z3
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 0..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 0..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 1..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 1..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 2..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 2..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 3..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 3..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 4..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 4..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 5..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 5..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 6..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 6..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 7..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 7..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 8..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 8..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 9..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 9..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 10..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 10..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 11..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 11..
-SBY 11:01:15 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 12..
-SBY 11:01:16 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assertions in step 12..
-SBY 11:01:16 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assumptions in step 13..
-SBY 11:01:16 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assertions in step 13..
-SBY 11:01:16 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assumptions in step 14..
-SBY 11:01:17 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assertions in step 14..
-SBY 11:01:17 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assumptions in step 15..
-SBY 11:01:17 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assertions in step 15..
-SBY 11:01:17 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assumptions in step 16..
-SBY 11:01:17 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assertions in step 16..
-SBY 11:01:17 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assumptions in step 17..
-SBY 11:01:18 [uart_csr_bmc] engine_0: ##   0:00:03  Checking assertions in step 17..
-SBY 11:01:18 [uart_csr_bmc] engine_0: ##   0:00:03  Checking assumptions in step 18..
-SBY 11:01:19 [uart_csr_bmc] engine_0: ##   0:00:04  Checking assertions in step 18..
-SBY 11:01:19 [uart_csr_bmc] engine_0: ##   0:00:04  Checking assumptions in step 19..
-SBY 11:01:21 [uart_csr_bmc] engine_0: ##   0:00:06  Checking assertions in step 19..
-SBY 11:01:21 [uart_csr_bmc] engine_0: ##   0:00:06  Status: passed
-SBY 11:01:21 [uart_csr_bmc] engine_0: finished (returncode=0)
-SBY 11:01:21 [uart_csr_bmc] engine_0: Status returned by engine: pass
-SBY 11:01:21 [uart_csr_bmc] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:06 (6)
-SBY 11:01:21 [uart_csr_bmc] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:06 (6)
-SBY 11:01:21 [uart_csr_bmc] summary: engine_0 (smtbmc z3) returned pass
-SBY 11:01:21 [uart_csr_bmc] summary: engine_0 did not produce any traces
-SBY 11:01:21 [uart_csr_bmc] DONE (PASS, rc=0)
+<system-out>SBY  3:43:10 [uart_csr_bmc] Removing directory '/sessions/rcw-018hfl2rly4jd7c1uwqktxn4/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_bmc'.
+SBY  3:43:10 [uart_csr_bmc] Copy '/sessions/rcw-018hfl2rly4jd7c1uwqktxn4/work/Design-Verification-Roadmap/examples/phase5_csr_formal/../../rtl/uart_controller.v' to '/sessions/rcw-018hfl2rly4jd7c1uwqktxn4/work/Design-Verification-Roadmap/examples/phase5_csr_formal/uart_csr_bmc/src/uart_controller.v'.
+SBY  3:43:10 [uart_csr_bmc] engine_0: smtbmc z3
+SBY  3:43:10 [uart_csr_bmc] base: starting process &quot;cd uart_csr_bmc/src; yosys -ql ../model/design.log ../model/design.ys&quot;
+SBY  3:43:10 [uart_csr_bmc] base: finished (returncode=0)
+SBY  3:43:10 [uart_csr_bmc] prep: starting process &quot;cd uart_csr_bmc/model; yosys -ql design_prep.log design_prep.ys&quot;
+SBY  3:43:10 [uart_csr_bmc] prep: finished (returncode=0)
+SBY  3:43:10 [uart_csr_bmc] smt2: starting process &quot;cd uart_csr_bmc/model; yosys -ql design_smt2.log design_smt2.ys&quot;
+SBY  3:43:10 [uart_csr_bmc] smt2: finished (returncode=0)
+SBY  3:43:10 [uart_csr_bmc] engine_0: starting process &quot;cd uart_csr_bmc; yosys-smtbmc -s z3 --presat --noprogress -t 20  --append 0 --dump-vcd engine_0/trace.vcd --dump-yw engine_0/trace.yw --dump-vlogtb engine_0/trace_tb.v --dump-smtc engine_0/trace.smtc model/design_smt2.smt2&quot;
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Solver: z3
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 0..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 0..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 1..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 1..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 2..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 2..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 3..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 3..
+SBY  3:43:10 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 4..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 4..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 5..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 5..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 6..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 6..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 7..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 7..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 8..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 8..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 9..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 9..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 10..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assertions in step 10..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:00  Checking assumptions in step 11..
+SBY  3:43:11 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assertions in step 11..
+SBY  3:43:12 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assumptions in step 12..
+SBY  3:43:12 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assertions in step 12..
+SBY  3:43:12 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assumptions in step 13..
+SBY  3:43:12 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assertions in step 13..
+SBY  3:43:12 [uart_csr_bmc] engine_0: ##   0:00:01  Checking assumptions in step 14..
+SBY  3:43:13 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assertions in step 14..
+SBY  3:43:13 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assumptions in step 15..
+SBY  3:43:13 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assertions in step 15..
+SBY  3:43:13 [uart_csr_bmc] engine_0: ##   0:00:02  Checking assumptions in step 16..
+SBY  3:43:14 [uart_csr_bmc] engine_0: ##   0:00:03  Checking assertions in step 16..
+SBY  3:43:14 [uart_csr_bmc] engine_0: ##   0:00:03  Checking assumptions in step 17..
+SBY  3:43:15 [uart_csr_bmc] engine_0: ##   0:00:04  Checking assertions in step 17..
+SBY  3:43:15 [uart_csr_bmc] engine_0: ##   0:00:04  Checking assumptions in step 18..
+SBY  3:43:16 [uart_csr_bmc] engine_0: ##   0:00:05  Checking assertions in step 18..
+SBY  3:43:16 [uart_csr_bmc] engine_0: ##   0:00:05  Checking assumptions in step 19..
+SBY  3:43:18 [uart_csr_bmc] engine_0: ##   0:00:07  Checking assertions in step 19..
+SBY  3:43:19 [uart_csr_bmc] engine_0: ##   0:00:08  Status: passed
+SBY  3:43:19 [uart_csr_bmc] engine_0: finished (returncode=0)
+SBY  3:43:19 [uart_csr_bmc] engine_0: Status returned by engine: pass
+SBY  3:43:19 [uart_csr_bmc] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:08 (8)
+SBY  3:43:19 [uart_csr_bmc] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:08 (8)
+SBY  3:43:19 [uart_csr_bmc] summary: engine_0 (smtbmc z3) returned pass
+SBY  3:43:19 [uart_csr_bmc] summary: engine_0 did not produce any traces
+SBY  3:43:19 [uart_csr_bmc] DONE (PASS, rc=0)
 </system-out>
 <system-err>
 </system-err>

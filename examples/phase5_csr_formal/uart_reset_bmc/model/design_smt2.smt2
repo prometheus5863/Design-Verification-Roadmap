@@ -217,79 +217,79 @@
 (declare-fun |uart_controller#51| (|uart_controller_s|) (_ BitVec 3)) ; \_witness_.anyseq_auto_setundef_cc_550_execute_1674
 ; yosys-smt2-wire _witness_.anyseq_auto_setundef_cc_550_execute_1674 3
 (define-fun |uart_controller_n _witness_.anyseq_auto_setundef_cc_550_execute_1674| ((state |uart_controller_s|)) (_ BitVec 3) (|uart_controller#51| state))
-; yosys-smt2-anyinit uart_controller#52 1 uart_controller.v:850.5-857.8
+; yosys-smt2-anyinit uart_controller#52 1 uart_controller.v:878.5-885.8
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1040"], "smtname": 52, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#52| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1040
 ; yosys-smt2-register _witness_.anyinit_procdff_1040 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1040 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1040| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#52| state)) #b1))
-; yosys-smt2-anyinit uart_controller#53 1 uart_controller.v:850.5-857.8
+; yosys-smt2-anyinit uart_controller#53 1 uart_controller.v:878.5-885.8
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1041"], "smtname": 53, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#53| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1041
 ; yosys-smt2-register _witness_.anyinit_procdff_1041 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1041 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1041| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#53| state)) #b1))
-; yosys-smt2-anyinit uart_controller#54 1 uart_controller.v:814.5-816.33
+; yosys-smt2-anyinit uart_controller#54 1 uart_controller.v:842.5-844.33
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1042"], "smtname": 54, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#54| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1042
 ; yosys-smt2-register _witness_.anyinit_procdff_1042 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1042 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1042| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#54| state)) #b1))
-; yosys-smt2-anyinit uart_controller#55 1 uart_controller.v:789.5-806.8
+; yosys-smt2-anyinit uart_controller#55 1 uart_controller.v:817.5-834.8
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1043"], "smtname": 55, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#55| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1043
 ; yosys-smt2-register _witness_.anyinit_procdff_1043 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1043 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1043| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#55| state)) #b1))
-; yosys-smt2-anyinit uart_controller#56 1 uart_controller.v:735.5-771.8
+; yosys-smt2-anyinit uart_controller#56 1 uart_controller.v:759.5-795.8
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1044"], "smtname": 56, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#56| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1044
 ; yosys-smt2-register _witness_.anyinit_procdff_1044 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1044 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1044| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#56| state)) #b1))
-; yosys-smt2-anyinit uart_controller#57 1 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#57 1 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1045"], "smtname": 57, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#57| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1045
 ; yosys-smt2-register _witness_.anyinit_procdff_1045 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1045 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1045| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#57| state)) #b1))
-; yosys-smt2-anyinit uart_controller#58 1 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#58 1 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1046"], "smtname": 58, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#58| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1046
 ; yosys-smt2-register _witness_.anyinit_procdff_1046 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1046 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1046| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#58| state)) #b1))
-; yosys-smt2-anyinit uart_controller#59 4 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#59 4 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1047"], "smtname": 59, "smtoffset": 0, "type": "init", "width": 4}
 (declare-fun |uart_controller#59| (|uart_controller_s|) (_ BitVec 4)) ; \_witness_.anyinit_procdff_1047
 ; yosys-smt2-register _witness_.anyinit_procdff_1047 4
 ; yosys-smt2-wire _witness_.anyinit_procdff_1047 4
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1047| ((state |uart_controller_s|)) (_ BitVec 4) (|uart_controller#59| state))
-; yosys-smt2-anyinit uart_controller#60 4 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#60 4 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1048"], "smtname": 60, "smtoffset": 0, "type": "init", "width": 4}
 (declare-fun |uart_controller#60| (|uart_controller_s|) (_ BitVec 4)) ; \_witness_.anyinit_procdff_1048
 ; yosys-smt2-register _witness_.anyinit_procdff_1048 4
 ; yosys-smt2-wire _witness_.anyinit_procdff_1048 4
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1048| ((state |uart_controller_s|)) (_ BitVec 4) (|uart_controller#60| state))
-; yosys-smt2-anyinit uart_controller#61 4 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#61 4 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1049"], "smtname": 61, "smtoffset": 0, "type": "init", "width": 4}
 (declare-fun |uart_controller#61| (|uart_controller_s|) (_ BitVec 4)) ; \_witness_.anyinit_procdff_1049
 ; yosys-smt2-register _witness_.anyinit_procdff_1049 4
 ; yosys-smt2-wire _witness_.anyinit_procdff_1049 4
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1049| ((state |uart_controller_s|)) (_ BitVec 4) (|uart_controller#61| state))
-; yosys-smt2-anyinit uart_controller#62 1 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#62 1 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1050"], "smtname": 62, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#62| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1050
 ; yosys-smt2-register _witness_.anyinit_procdff_1050 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1050 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1050| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#62| state)) #b1))
-; yosys-smt2-anyinit uart_controller#63 1 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#63 1 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1051"], "smtname": 63, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#63| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1051
 ; yosys-smt2-register _witness_.anyinit_procdff_1051 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1051 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1051| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#63| state)) #b1))
-; yosys-smt2-anyinit uart_controller#64 4 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#64 4 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1052"], "smtname": 64, "smtoffset": 0, "type": "init", "width": 4}
 (declare-fun |uart_controller#64| (|uart_controller_s|) (_ BitVec 4)) ; \_witness_.anyinit_procdff_1052
 ; yosys-smt2-register _witness_.anyinit_procdff_1052 4
@@ -303,13 +303,13 @@
 (declare-fun |uart_controller#66| (|uart_controller_s|) (_ BitVec 1)) ; $auto$async2sync.cc:116:execute$1290
 ; yosys-smt2-register $auto$async2sync.cc:116:execute$1290 1
 (define-fun |uart_controller_n $auto$async2sync.cc:116:execute$1290| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#66| state)) #b1))
-; yosys-smt2-anyinit uart_controller#67 1 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#67 1 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1053"], "smtname": 67, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#67| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1053
 ; yosys-smt2-register _witness_.anyinit_procdff_1053 1
 ; yosys-smt2-wire _witness_.anyinit_procdff_1053 1
 (define-fun |uart_controller_n _witness_.anyinit_procdff_1053| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#67| state)) #b1))
-; yosys-smt2-anyinit uart_controller#68 1 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#68 1 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1054"], "smtname": 68, "smtoffset": 0, "type": "init", "width": 1}
 (declare-fun |uart_controller#68| (|uart_controller_s|) (_ BitVec 1)) ; \_witness_.anyinit_procdff_1054
 ; yosys-smt2-register _witness_.anyinit_procdff_1054 1
@@ -319,7 +319,7 @@
 (declare-fun |uart_controller#69| (|uart_controller_s|) (_ BitVec 1)) ; $auto$async2sync.cc:116:execute$1296
 ; yosys-smt2-register $auto$async2sync.cc:116:execute$1296 1
 (define-fun |uart_controller_n $auto$async2sync.cc:116:execute$1296| ((state |uart_controller_s|)) Bool (= ((_ extract 0 0) (|uart_controller#69| state)) #b1))
-; yosys-smt2-anyinit uart_controller#70 4 uart_controller.v:459.5-466.12
+; yosys-smt2-anyinit uart_controller#70 4 uart_controller.v:465.5-472.12
 ; yosys-smt2-witness {"offset": 0, "path": ["\\_witness_", "\\anyinit_procdff_1055"], "smtname": 70, "smtoffset": 0, "type": "init", "width": 4}
 (declare-fun |uart_controller#70| (|uart_controller_s|) (_ BitVec 4)) ; \_witness_.anyinit_procdff_1055
 ; yosys-smt2-register _witness_.anyinit_procdff_1055 4
@@ -448,11 +448,11 @@
 (define-fun |uart_controller_m:R0D rx_fifo| ((state |uart_controller_s|)) (_ BitVec 8) (|uart_controller#102| state))
 (define-fun |uart_controller#103| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) #b1000)) ; \tx_full
 (define-fun |uart_controller#104| ((state |uart_controller_s|)) Bool (= (|uart_controller#87| state) #b1000)) ; \rx_full
-(define-fun |uart_controller#105| ((state |uart_controller_s|)) Bool (= (|uart_controller#99| state) #b0101)) ; $eq$uart_controller.v:794$318_Y
+(define-fun |uart_controller#105| ((state |uart_controller_s|)) Bool (= (|uart_controller#99| state) #b0101)) ; $eq$uart_controller.v:822$318_Y
 (define-fun |uart_controller#106| ((state |uart_controller_s|)) Bool (= (|uart_controller#99| state) #b0100)) ; $eq$uart_controller.v:116$39_Y
-(define-fun |uart_controller#107| ((state |uart_controller_s|)) Bool (= (|uart_controller#99| state) #b0010)) ; $eq$uart_controller.v:793$315_Y
+(define-fun |uart_controller#107| ((state |uart_controller_s|)) Bool (= (|uart_controller#99| state) #b0010)) ; $eq$uart_controller.v:821$315_Y
 (define-fun |uart_controller#108| ((state |uart_controller_s|)) Bool (= (|uart_controller#99| state) #b0001)) ; $eq$uart_controller.v:248$88_Y
-(define-fun |uart_controller#109| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#99| state)) #b1) (= ((_ extract 1 1) (|uart_controller#99| state)) #b1) (= ((_ extract 2 2) (|uart_controller#99| state)) #b1) (= ((_ extract 3 3) (|uart_controller#99| state)) #b1)))) ; $eq$uart_controller.v:791$309_Y
+(define-fun |uart_controller#109| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#99| state)) #b1) (= ((_ extract 1 1) (|uart_controller#99| state)) #b1) (= ((_ extract 2 2) (|uart_controller#99| state)) #b1) (= ((_ extract 3 3) (|uart_controller#99| state)) #b1)))) ; $eq$uart_controller.v:819$309_Y
 (define-fun |uart_controller#110| ((state |uart_controller_s|)) (_ BitVec 8) (ite (|uart_controller#109| state) (concat #b000 (|uart_controller#79| state)) (ite (|uart_controller#108| state) (concat #b0 (concat (|uart_controller#93| state) (concat (|uart_controller#91| state) (concat (|uart_controller#82| state) (concat (ite (|uart_controller#88| state) #b1 #b0) (concat (ite (|uart_controller#104| state) #b1 #b0) (concat (ite (|uart_controller#85| state) #b1 #b0) (ite (|uart_controller#103| state) #b1 #b0)))))))) (ite (|uart_controller#107| state) (|uart_controller#78| state) (ite (|uart_controller#106| state) (|uart_controller#102| state) (ite (|uart_controller#105| state) (concat #b00000 (|uart_controller#83| state)) #b00000000)))))) ; \prdata
 ; yosys-smt2-output prdata 8
 ; yosys-smt2-wire prdata 8
@@ -657,92 +657,92 @@
 (define-fun |uart_controller_a 2| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#28| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#21| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_442_185
 ; yosys-smt2-assert 3 _witness_.check_assert_uart_controller_v_443_188 uart_controller.v:443.13-443.55
 (define-fun |uart_controller_a 3| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#25| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#21| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_443_188
-; yosys-smt2-assert 4 _witness_.check_assert_uart_controller_v_451_193 uart_controller.v:451.13-451.43
-(define-fun |uart_controller_a 4| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#22| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#21| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_451_193
-; yosys-smt2-assert 5 _witness_.check_assert_uart_controller_v_452_196 uart_controller.v:452.13-452.69
-(define-fun |uart_controller_a 5| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#19| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#21| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_452_196
-; yosys-smt2-assert 6 _witness_.check_assert_uart_controller_v_461_217 uart_controller.v:461.13-463.54
-(define-fun |uart_controller_a 6| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#16| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#12| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_461_217
-; yosys-smt2-assert 7 _witness_.check_assert_uart_controller_v_464_225 uart_controller.v:464.13-464.82
-(define-fun |uart_controller_a 7| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#13| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#12| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_464_225
-; yosys-smt2-assert 8 _witness_.check_assert_uart_controller_v_465_231 uart_controller.v:465.13-465.84
-(define-fun |uart_controller_a 8| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#10| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#12| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_465_231
-; yosys-smt2-assert 9 _witness_.check_assert_uart_controller_v_738_249 uart_controller.v:738.13-738.40
-(define-fun |uart_controller_a 9| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#7| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_738_249
-; yosys-smt2-assert 10 _witness_.check_assert_uart_controller_v_740_251 uart_controller.v:740.13-740.43
-(define-fun |uart_controller_a 10| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#4| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_740_251
-; yosys-smt2-assert 11 _witness_.check_assert_uart_controller_v_741_253 uart_controller.v:741.13-741.40
-(define-fun |uart_controller_a 11| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#1| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_741_253
-; yosys-smt2-assert 12 _witness_.check_assert_uart_controller_v_742_255 uart_controller.v:742.13-742.40
-(define-fun |uart_controller_a 12| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#37| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_742_255
-; yosys-smt2-assert 13 _witness_.check_assert_uart_controller_v_743_257 uart_controller.v:743.13-743.40
-(define-fun |uart_controller_a 13| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#18| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_743_257
-; yosys-smt2-assert 14 _witness_.check_assert_uart_controller_v_744_259 uart_controller.v:744.13-744.40
-(define-fun |uart_controller_a 14| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#3| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_744_259
-; yosys-smt2-assert 15 _witness_.check_assert_uart_controller_v_745_261 uart_controller.v:745.13-745.40
-(define-fun |uart_controller_a 15| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#0| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_745_261
-; yosys-smt2-assert 16 _witness_.check_assert_uart_controller_v_746_263 uart_controller.v:746.13-746.40
-(define-fun |uart_controller_a 16| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#26| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_746_263
-; yosys-smt2-assert 17 _witness_.check_assert_uart_controller_v_748_265 uart_controller.v:748.13-748.40
-(define-fun |uart_controller_a 17| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#2| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_748_265
-; yosys-smt2-assert 18 _witness_.check_assert_uart_controller_v_749_267 uart_controller.v:749.13-749.43
-(define-fun |uart_controller_a 18| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#9| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_749_267
-; yosys-smt2-assert 19 _witness_.check_assert_uart_controller_v_750_269 uart_controller.v:750.13-750.40
-(define-fun |uart_controller_a 19| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#17| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_750_269
-; yosys-smt2-assert 20 _witness_.check_assert_uart_controller_v_751_271 uart_controller.v:751.13-751.40
-(define-fun |uart_controller_a 20| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#24| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_751_271
-; yosys-smt2-assert 21 _witness_.check_assert_uart_controller_v_752_273 uart_controller.v:752.13-752.40
-(define-fun |uart_controller_a 21| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#30| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_752_273
-; yosys-smt2-assert 22 _witness_.check_assert_uart_controller_v_753_275 uart_controller.v:753.13-753.40
-(define-fun |uart_controller_a 22| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#35| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_753_275
-; yosys-smt2-assert 23 _witness_.check_assert_uart_controller_v_754_277 uart_controller.v:754.13-754.40
-(define-fun |uart_controller_a 23| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#39| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_754_277
-; yosys-smt2-assert 24 _witness_.check_assert_uart_controller_v_755_279 uart_controller.v:755.13-755.40
-(define-fun |uart_controller_a 24| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#65| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_755_279
-; yosys-smt2-assert 25 _witness_.check_assert_uart_controller_v_756_281 uart_controller.v:756.13-756.40
-(define-fun |uart_controller_a 25| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#33| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_756_281
-; yosys-smt2-assert 26 _witness_.check_assert_uart_controller_v_757_283 uart_controller.v:757.13-757.40
-(define-fun |uart_controller_a 26| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#5| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_757_283
-; yosys-smt2-assert 27 _witness_.check_assert_uart_controller_v_758_285 uart_controller.v:758.13-758.40
-(define-fun |uart_controller_a 27| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#38| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_758_285
-; yosys-smt2-assert 28 _witness_.check_assert_uart_controller_v_760_287 uart_controller.v:760.13-760.40
-(define-fun |uart_controller_a 28| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#41| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_760_287
-; yosys-smt2-assert 29 _witness_.check_assert_uart_controller_v_761_289 uart_controller.v:761.13-761.40
-(define-fun |uart_controller_a 29| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#44| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_761_289
-; yosys-smt2-assert 30 _witness_.check_assert_uart_controller_v_762_291 uart_controller.v:762.13-762.40
-(define-fun |uart_controller_a 30| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#47| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_762_291
-; yosys-smt2-assert 31 _witness_.check_assert_uart_controller_v_763_293 uart_controller.v:763.13-763.40
-(define-fun |uart_controller_a 31| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#66| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_763_293
-; yosys-smt2-assert 32 _witness_.check_assert_uart_controller_v_764_295 uart_controller.v:764.13-764.40
-(define-fun |uart_controller_a 32| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#69| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_764_295
-; yosys-smt2-assert 33 _witness_.check_assert_uart_controller_v_765_297 uart_controller.v:765.13-765.40
-(define-fun |uart_controller_a 33| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#72| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_765_297
-; yosys-smt2-assert 34 _witness_.check_assert_uart_controller_v_767_299 uart_controller.v:767.13-767.40
-(define-fun |uart_controller_a 34| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#29| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_767_299
-; yosys-smt2-assert 35 _witness_.check_assert_uart_controller_v_768_301 uart_controller.v:768.13-768.40
-(define-fun |uart_controller_a 35| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#20| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_768_301
-; yosys-smt2-assert 36 _witness_.check_assert_uart_controller_v_769_303 uart_controller.v:769.13-769.40
-(define-fun |uart_controller_a 36| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#11| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_769_303
-; yosys-smt2-assert 37 _witness_.check_assert_uart_controller_v_791_310 uart_controller.v:791.41-791.64
-(define-fun |uart_controller_a 37| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#8| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_791_310
-; yosys-smt2-assert 38 _witness_.check_assert_uart_controller_v_792_313 uart_controller.v:792.41-792.64
-(define-fun |uart_controller_a 38| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#14| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#40| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_792_313
-; yosys-smt2-assert 39 _witness_.check_assert_uart_controller_v_793_316 uart_controller.v:793.41-793.64
-(define-fun |uart_controller_a 39| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#32| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_793_316
-; yosys-smt2-assert 40 _witness_.check_assert_uart_controller_v_794_319 uart_controller.v:794.41-794.64
-(define-fun |uart_controller_a 40| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#6| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_794_319
-; yosys-smt2-assert 41 _witness_.check_assert_uart_controller_v_795_322 uart_controller.v:795.41-795.64
-(define-fun |uart_controller_a 41| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#27| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_795_322
-; yosys-smt2-assert 42 _witness_.check_assert_uart_controller_v_816_328 uart_controller.v:816.13-816.32
-(define-fun |uart_controller_a 42| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#15| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#73| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_816_328
-; yosys-smt2-assert 43 _witness_.check_assert_uart_controller_v_852_336 uart_controller.v:852.13-852.37
-(define-fun |uart_controller_a 43| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#29| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_852_336
-; yosys-smt2-assert 44 _witness_.check_assert_uart_controller_v_853_338 uart_controller.v:853.13-853.37
-(define-fun |uart_controller_a 44| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#20| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_853_338
-; yosys-smt2-assert 45 _witness_.check_assert_uart_controller_v_854_340 uart_controller.v:854.13-854.37
-(define-fun |uart_controller_a 45| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#11| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_854_340
-; yosys-smt2-assert 46 _witness_.check_assert_uart_controller_v_855_342 uart_controller.v:855.13-855.37
-(define-fun |uart_controller_a 46| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#47| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_855_342
+; yosys-smt2-assert 4 _witness_.check_assert_uart_controller_v_454_193 uart_controller.v:454.13-454.43
+(define-fun |uart_controller_a 4| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#22| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#21| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_454_193
+; yosys-smt2-assert 5 _witness_.check_assert_uart_controller_v_455_196 uart_controller.v:455.13-455.69
+(define-fun |uart_controller_a 5| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#19| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#21| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_455_196
+; yosys-smt2-assert 6 _witness_.check_assert_uart_controller_v_467_217 uart_controller.v:467.13-469.54
+(define-fun |uart_controller_a 6| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#16| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#12| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_467_217
+; yosys-smt2-assert 7 _witness_.check_assert_uart_controller_v_470_225 uart_controller.v:470.13-470.82
+(define-fun |uart_controller_a 7| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#13| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#12| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_470_225
+; yosys-smt2-assert 8 _witness_.check_assert_uart_controller_v_471_231 uart_controller.v:471.13-471.84
+(define-fun |uart_controller_a 8| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#10| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#12| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_471_231
+; yosys-smt2-assert 9 _witness_.check_assert_uart_controller_v_762_249 uart_controller.v:762.13-762.40
+(define-fun |uart_controller_a 9| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#7| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_762_249
+; yosys-smt2-assert 10 _witness_.check_assert_uart_controller_v_764_251 uart_controller.v:764.13-764.43
+(define-fun |uart_controller_a 10| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#4| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_764_251
+; yosys-smt2-assert 11 _witness_.check_assert_uart_controller_v_765_253 uart_controller.v:765.13-765.40
+(define-fun |uart_controller_a 11| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#1| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_765_253
+; yosys-smt2-assert 12 _witness_.check_assert_uart_controller_v_766_255 uart_controller.v:766.13-766.40
+(define-fun |uart_controller_a 12| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#37| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_766_255
+; yosys-smt2-assert 13 _witness_.check_assert_uart_controller_v_767_257 uart_controller.v:767.13-767.40
+(define-fun |uart_controller_a 13| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#18| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_767_257
+; yosys-smt2-assert 14 _witness_.check_assert_uart_controller_v_768_259 uart_controller.v:768.13-768.40
+(define-fun |uart_controller_a 14| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#3| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_768_259
+; yosys-smt2-assert 15 _witness_.check_assert_uart_controller_v_769_261 uart_controller.v:769.13-769.40
+(define-fun |uart_controller_a 15| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#0| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_769_261
+; yosys-smt2-assert 16 _witness_.check_assert_uart_controller_v_770_263 uart_controller.v:770.13-770.40
+(define-fun |uart_controller_a 16| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#26| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_770_263
+; yosys-smt2-assert 17 _witness_.check_assert_uart_controller_v_772_265 uart_controller.v:772.13-772.40
+(define-fun |uart_controller_a 17| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#2| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_772_265
+; yosys-smt2-assert 18 _witness_.check_assert_uart_controller_v_773_267 uart_controller.v:773.13-773.43
+(define-fun |uart_controller_a 18| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#9| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_773_267
+; yosys-smt2-assert 19 _witness_.check_assert_uart_controller_v_774_269 uart_controller.v:774.13-774.40
+(define-fun |uart_controller_a 19| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#17| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_774_269
+; yosys-smt2-assert 20 _witness_.check_assert_uart_controller_v_775_271 uart_controller.v:775.13-775.40
+(define-fun |uart_controller_a 20| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#24| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_775_271
+; yosys-smt2-assert 21 _witness_.check_assert_uart_controller_v_776_273 uart_controller.v:776.13-776.40
+(define-fun |uart_controller_a 21| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#30| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_776_273
+; yosys-smt2-assert 22 _witness_.check_assert_uart_controller_v_777_275 uart_controller.v:777.13-777.40
+(define-fun |uart_controller_a 22| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#35| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_777_275
+; yosys-smt2-assert 23 _witness_.check_assert_uart_controller_v_778_277 uart_controller.v:778.13-778.40
+(define-fun |uart_controller_a 23| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#39| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_778_277
+; yosys-smt2-assert 24 _witness_.check_assert_uart_controller_v_779_279 uart_controller.v:779.13-779.40
+(define-fun |uart_controller_a 24| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#65| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_779_279
+; yosys-smt2-assert 25 _witness_.check_assert_uart_controller_v_780_281 uart_controller.v:780.13-780.40
+(define-fun |uart_controller_a 25| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#33| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_780_281
+; yosys-smt2-assert 26 _witness_.check_assert_uart_controller_v_781_283 uart_controller.v:781.13-781.40
+(define-fun |uart_controller_a 26| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#5| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_781_283
+; yosys-smt2-assert 27 _witness_.check_assert_uart_controller_v_782_285 uart_controller.v:782.13-782.40
+(define-fun |uart_controller_a 27| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#38| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_782_285
+; yosys-smt2-assert 28 _witness_.check_assert_uart_controller_v_784_287 uart_controller.v:784.13-784.40
+(define-fun |uart_controller_a 28| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#41| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_784_287
+; yosys-smt2-assert 29 _witness_.check_assert_uart_controller_v_785_289 uart_controller.v:785.13-785.40
+(define-fun |uart_controller_a 29| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#44| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_785_289
+; yosys-smt2-assert 30 _witness_.check_assert_uart_controller_v_786_291 uart_controller.v:786.13-786.40
+(define-fun |uart_controller_a 30| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#47| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_786_291
+; yosys-smt2-assert 31 _witness_.check_assert_uart_controller_v_787_293 uart_controller.v:787.13-787.40
+(define-fun |uart_controller_a 31| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#66| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_787_293
+; yosys-smt2-assert 32 _witness_.check_assert_uart_controller_v_788_295 uart_controller.v:788.13-788.40
+(define-fun |uart_controller_a 32| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#69| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_788_295
+; yosys-smt2-assert 33 _witness_.check_assert_uart_controller_v_789_297 uart_controller.v:789.13-789.40
+(define-fun |uart_controller_a 33| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#72| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_789_297
+; yosys-smt2-assert 34 _witness_.check_assert_uart_controller_v_791_299 uart_controller.v:791.13-791.40
+(define-fun |uart_controller_a 34| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#29| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_791_299
+; yosys-smt2-assert 35 _witness_.check_assert_uart_controller_v_792_301 uart_controller.v:792.13-792.40
+(define-fun |uart_controller_a 35| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#20| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_792_301
+; yosys-smt2-assert 36 _witness_.check_assert_uart_controller_v_793_303 uart_controller.v:793.13-793.40
+(define-fun |uart_controller_a 36| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#11| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#36| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_793_303
+; yosys-smt2-assert 37 _witness_.check_assert_uart_controller_v_819_310 uart_controller.v:819.41-819.64
+(define-fun |uart_controller_a 37| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#8| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_819_310
+; yosys-smt2-assert 38 _witness_.check_assert_uart_controller_v_820_313 uart_controller.v:820.41-820.64
+(define-fun |uart_controller_a 38| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#14| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#40| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_820_313
+; yosys-smt2-assert 39 _witness_.check_assert_uart_controller_v_821_316 uart_controller.v:821.41-821.64
+(define-fun |uart_controller_a 39| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#32| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_821_316
+; yosys-smt2-assert 40 _witness_.check_assert_uart_controller_v_822_319 uart_controller.v:822.41-822.64
+(define-fun |uart_controller_a 40| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#6| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_822_319
+; yosys-smt2-assert 41 _witness_.check_assert_uart_controller_v_823_322 uart_controller.v:823.41-823.64
+(define-fun |uart_controller_a 41| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#23| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#27| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_823_322
+; yosys-smt2-assert 42 _witness_.check_assert_uart_controller_v_844_328 uart_controller.v:844.13-844.32
+(define-fun |uart_controller_a 42| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#15| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#73| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_844_328
+; yosys-smt2-assert 43 _witness_.check_assert_uart_controller_v_880_336 uart_controller.v:880.13-880.37
+(define-fun |uart_controller_a 43| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#29| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_880_336
+; yosys-smt2-assert 44 _witness_.check_assert_uart_controller_v_881_338 uart_controller.v:881.13-881.37
+(define-fun |uart_controller_a 44| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#20| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_881_338
+; yosys-smt2-assert 45 _witness_.check_assert_uart_controller_v_882_340 uart_controller.v:882.13-882.37
+(define-fun |uart_controller_a 45| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#11| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_882_340
+; yosys-smt2-assert 46 _witness_.check_assert_uart_controller_v_883_342 uart_controller.v:883.13-883.37
+(define-fun |uart_controller_a 46| ((state |uart_controller_s|)) Bool (or (= ((_ extract 0 0) (|uart_controller#47| state)) #b1) (not (= ((_ extract 0 0) (|uart_controller#46| state)) #b1)))) ; _witness_.check_assert_uart_controller_v_883_342
 (define-fun |uart_controller#150| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#115| state) false))) ; $logic_not$uart_controller.v:425$176_Y
 (define-fun |uart_controller#151| ((state |uart_controller_s|)) (_ BitVec 1) (ite (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) #b0 #b1)) ; $assume$uart_controller.v:425$175_EN
 ; yosys-smt2-assume 1 _witness_.check_assume_uart_controller_v_425_175 uart_controller.v:425.28-425.42
@@ -766,7 +766,7 @@
 (define-fun |uart_controller#168| ((state |uart_controller_s|)) Bool (= (|uart_controller#147| state) #b011)) ; $procmux$1000_CMP
 (define-fun |uart_controller#169| ((state |uart_controller_s|)) Bool (= (|uart_controller#147| state) #b010)) ; $procmux$1009_CMP
 (define-fun |uart_controller#170| ((state |uart_controller_s|)) Bool (= (|uart_controller#147| state) #b001)) ; $procmux$1012_CMP
-(define-fun |uart_controller#171| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#147| state)) #b1) (= ((_ extract 1 1) (|uart_controller#147| state)) #b1) (= ((_ extract 2 2) (|uart_controller#147| state)) #b1)))) ; $eq$uart_controller.v:740$252_Y
+(define-fun |uart_controller#171| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#147| state)) #b1) (= ((_ extract 1 1) (|uart_controller#147| state)) #b1) (= ((_ extract 2 2) (|uart_controller#147| state)) #b1)))) ; $eq$uart_controller.v:764$252_Y
 (define-fun |uart_controller#172| ((state |uart_controller_s|)) (_ BitVec 3) (ite (|uart_controller#171| state) (|uart_controller#165| state) (ite (|uart_controller#170| state) (|uart_controller#164| state) (ite (|uart_controller#169| state) (|uart_controller#163| state) (ite (|uart_controller#168| state) (|uart_controller#158| state) (ite (|uart_controller#167| state) (|uart_controller#157| state) (ite (|uart_controller#166| state) (|uart_controller#155| state) #b000))))))) ; $procmux$993_Y
 (define-fun |uart_controller#173| ((state |uart_controller_s|)) (_ BitVec 3) (ite (= ((_ extract 0 0) (|uart_controller#79| state)) #b1) (|uart_controller#172| state) #b000)) ; $procmux$1017_Y
 (define-fun |uart_controller#174| ((state |uart_controller_s|)) (_ BitVec 3) (ite (|uart_controller#115| state) (|uart_controller#173| state) #b000)) ; $0\tx_state[2:0]
@@ -831,7 +831,7 @@
 (define-fun |uart_controller#228| ((state |uart_controller_s|)) Bool (= (|uart_controller#131| state) #b011)) ; $procmux$700_CMP
 (define-fun |uart_controller#229| ((state |uart_controller_s|)) Bool (= (|uart_controller#131| state) #b010)) ; $procmux$607_CMP
 (define-fun |uart_controller#230| ((state |uart_controller_s|)) Bool (= (|uart_controller#131| state) #b001)) ; $procmux$723_CMP
-(define-fun |uart_controller#231| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#131| state)) #b1) (= ((_ extract 1 1) (|uart_controller#131| state)) #b1) (= ((_ extract 2 2) (|uart_controller#131| state)) #b1)))) ; $eq$uart_controller.v:749$268_Y
+(define-fun |uart_controller#231| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#131| state)) #b1) (= ((_ extract 1 1) (|uart_controller#131| state)) #b1) (= ((_ extract 2 2) (|uart_controller#131| state)) #b1)))) ; $eq$uart_controller.v:773$268_Y
 (define-fun |uart_controller#232| ((state |uart_controller_s|)) (_ BitVec 3) (ite (|uart_controller#231| state) (|uart_controller#225| state) (ite (|uart_controller#230| state) (|uart_controller#224| state) (ite (|uart_controller#229| state) (|uart_controller#221| state) (ite (|uart_controller#228| state) (|uart_controller#218| state) (ite (|uart_controller#227| state) (|uart_controller#217| state) (ite (|uart_controller#226| state) (|uart_controller#216| state) #b000))))))) ; $procmux$750_Y
 (define-fun |uart_controller#233| ((state |uart_controller_s|)) (_ BitVec 3) (ite (= ((_ extract 0 0) (|uart_controller#79| state)) #b1) (|uart_controller#232| state) #b000)) ; $procmux$777_Y
 (define-fun |uart_controller#234| ((state |uart_controller_s|)) (_ BitVec 3) (ite (|uart_controller#115| state) (|uart_controller#233| state) #b000)) ; $0\rx_state[2:0]
@@ -950,88 +950,88 @@
 (define-fun |uart_controller#347| ((state |uart_controller_s|)) (_ BitVec 8) (ite (|uart_controller#97| state) (|uart_controller#78| state) (|uart_controller#346| state))) ; $procmux$1023_Y
 (define-fun |uart_controller#348| ((state |uart_controller_s|)) (_ BitVec 8) (ite (= ((_ extract 0 0) (|uart_controller#79| state)) #b1) (|uart_controller#347| state) #b00000000)) ; $procmux$1026_Y
 (define-fun |uart_controller#349| ((state |uart_controller_s|)) (_ BitVec 8) (ite (|uart_controller#115| state) (|uart_controller#348| state) #b00000000)) ; $0\baud_cnt[7:0]
-(define-fun |uart_controller#350| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#54| state)) #b1) false))) ; $logic_not$uart_controller.v:815$326_Y
-(define-fun |uart_controller#351| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#350| state) false))) ; $logic_and$uart_controller.v:815$327_Y
-(define-fun |uart_controller#352| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#351| state) #b1 #b0)) ; $assert$uart_controller.v:816$328_EN
-(define-fun |uart_controller#353| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#87| state)) #b1) (= ((_ extract 1 1) (|uart_controller#87| state)) #b1) (= ((_ extract 2 2) (|uart_controller#87| state)) #b1) (= ((_ extract 3 3) (|uart_controller#87| state)) #b1)))) ; $eq$uart_controller.v:765$298_Y
-(define-fun |uart_controller#354| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#101| state)) #b1) (= ((_ extract 1 1) (|uart_controller#101| state)) #b1) (= ((_ extract 2 2) (|uart_controller#101| state)) #b1)))) ; $eq$uart_controller.v:764$296_Y
-(define-fun |uart_controller#355| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#133| state)) #b1) (= ((_ extract 1 1) (|uart_controller#133| state)) #b1) (= ((_ extract 2 2) (|uart_controller#133| state)) #b1)))) ; $eq$uart_controller.v:763$294_Y
-(define-fun |uart_controller#356| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#129| state)) #b1) (= ((_ extract 1 1) (|uart_controller#129| state)) #b1) (= ((_ extract 2 2) (|uart_controller#129| state)) #b1) (= ((_ extract 3 3) (|uart_controller#129| state)) #b1) (= ((_ extract 4 4) (|uart_controller#129| state)) #b1) (= ((_ extract 5 5) (|uart_controller#129| state)) #b1) (= ((_ extract 6 6) (|uart_controller#129| state)) #b1) (= ((_ extract 7 7) (|uart_controller#129| state)) #b1)))) ; $eq$uart_controller.v:755$280_Y
-(define-fun |uart_controller#357| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#52| state)) #b1) false))) ; $logic_not$uart_controller.v:851$333_Y
-(define-fun |uart_controller#358| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#357| state) false))) ; $logic_and$uart_controller.v:851$334_Y
-(define-fun |uart_controller#359| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#358| state) false) (or  (= ((_ extract 0 0) (|uart_controller#53| state)) #b1) false))) ; $logic_and$uart_controller.v:851$335_Y
-(define-fun |uart_controller#360| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#359| state) #b1 #b0)) ; $assert$uart_controller.v:852$336_EN
-(define-fun |uart_controller#361| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#145| state)) #b1) (= ((_ extract 1 1) (|uart_controller#145| state)) #b1) (= ((_ extract 2 2) (|uart_controller#145| state)) #b1)))) ; $eq$uart_controller.v:761$290_Y
-(define-fun |uart_controller#362| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#148| state)) #b1) (= ((_ extract 1 1) (|uart_controller#148| state)) #b1) (= ((_ extract 2 2) (|uart_controller#148| state)) #b1)))) ; $eq$uart_controller.v:760$288_Y
+(define-fun |uart_controller#350| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#54| state)) #b1) false))) ; $logic_not$uart_controller.v:843$326_Y
+(define-fun |uart_controller#351| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#350| state) false))) ; $logic_and$uart_controller.v:843$327_Y
+(define-fun |uart_controller#352| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#351| state) #b1 #b0)) ; $assert$uart_controller.v:844$328_EN
+(define-fun |uart_controller#353| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#87| state)) #b1) (= ((_ extract 1 1) (|uart_controller#87| state)) #b1) (= ((_ extract 2 2) (|uart_controller#87| state)) #b1) (= ((_ extract 3 3) (|uart_controller#87| state)) #b1)))) ; $eq$uart_controller.v:789$298_Y
+(define-fun |uart_controller#354| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#101| state)) #b1) (= ((_ extract 1 1) (|uart_controller#101| state)) #b1) (= ((_ extract 2 2) (|uart_controller#101| state)) #b1)))) ; $eq$uart_controller.v:788$296_Y
+(define-fun |uart_controller#355| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#133| state)) #b1) (= ((_ extract 1 1) (|uart_controller#133| state)) #b1) (= ((_ extract 2 2) (|uart_controller#133| state)) #b1)))) ; $eq$uart_controller.v:787$294_Y
+(define-fun |uart_controller#356| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#129| state)) #b1) (= ((_ extract 1 1) (|uart_controller#129| state)) #b1) (= ((_ extract 2 2) (|uart_controller#129| state)) #b1) (= ((_ extract 3 3) (|uart_controller#129| state)) #b1) (= ((_ extract 4 4) (|uart_controller#129| state)) #b1) (= ((_ extract 5 5) (|uart_controller#129| state)) #b1) (= ((_ extract 6 6) (|uart_controller#129| state)) #b1) (= ((_ extract 7 7) (|uart_controller#129| state)) #b1)))) ; $eq$uart_controller.v:779$280_Y
+(define-fun |uart_controller#357| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#52| state)) #b1) false))) ; $logic_not$uart_controller.v:879$333_Y
+(define-fun |uart_controller#358| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#357| state) false))) ; $logic_and$uart_controller.v:879$334_Y
+(define-fun |uart_controller#359| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#358| state) false) (or  (= ((_ extract 0 0) (|uart_controller#53| state)) #b1) false))) ; $logic_and$uart_controller.v:879$335_Y
+(define-fun |uart_controller#360| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#359| state) #b1 #b0)) ; $assert$uart_controller.v:880$336_EN
+(define-fun |uart_controller#361| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#145| state)) #b1) (= ((_ extract 1 1) (|uart_controller#145| state)) #b1) (= ((_ extract 2 2) (|uart_controller#145| state)) #b1)))) ; $eq$uart_controller.v:785$290_Y
+(define-fun |uart_controller#362| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#148| state)) #b1) (= ((_ extract 1 1) (|uart_controller#148| state)) #b1) (= ((_ extract 2 2) (|uart_controller#148| state)) #b1)))) ; $eq$uart_controller.v:784$288_Y
 (define-fun |uart_controller#363| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#108| state) #b1 #b0)) ; $procmux$392_Y
-(define-fun |uart_controller#364| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#55| state)) #b1) false))) ; $logic_not$uart_controller.v:790$307_Y
-(define-fun |uart_controller#365| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#364| state) false))) ; $logic_and$uart_controller.v:790$308_Y
-(define-fun |uart_controller#366| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#363| state) #b0)) ; $assert$uart_controller.v:792$313_EN
-(define-fun |uart_controller#367| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#128| state))) ; $eq$uart_controller.v:754$278_Y
-(define-fun |uart_controller#368| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#93| state))) ; $eq$uart_controller.v:758$286_Y
-(define-fun |uart_controller#369| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#134| state)) #b1) (= ((_ extract 1 1) (|uart_controller#134| state)) #b1) (= ((_ extract 2 2) (|uart_controller#134| state)) #b1)))) ; $eq$uart_controller.v:742$256_Y
-(define-fun |uart_controller#370| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#56| state)) #b1) false))) ; $logic_not$uart_controller.v:736$247_Y
-(define-fun |uart_controller#371| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#370| state) false))) ; $logic_and$uart_controller.v:736$248_Y
-(define-fun |uart_controller#372| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#371| state) #b1 #b0)) ; $assert$uart_controller.v:738$249_EN
-(define-fun |uart_controller#373| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#125| state))) ; $eq$uart_controller.v:753$276_Y
+(define-fun |uart_controller#364| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#55| state)) #b1) false))) ; $logic_not$uart_controller.v:818$307_Y
+(define-fun |uart_controller#365| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#364| state) false))) ; $logic_and$uart_controller.v:818$308_Y
+(define-fun |uart_controller#366| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#363| state) #b0)) ; $assert$uart_controller.v:820$313_EN
+(define-fun |uart_controller#367| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#128| state))) ; $eq$uart_controller.v:778$278_Y
+(define-fun |uart_controller#368| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#93| state))) ; $eq$uart_controller.v:782$286_Y
+(define-fun |uart_controller#369| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#134| state)) #b1) (= ((_ extract 1 1) (|uart_controller#134| state)) #b1) (= ((_ extract 2 2) (|uart_controller#134| state)) #b1)))) ; $eq$uart_controller.v:766$256_Y
+(define-fun |uart_controller#370| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#56| state)) #b1) false))) ; $logic_not$uart_controller.v:760$247_Y
+(define-fun |uart_controller#371| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#370| state) false))) ; $logic_and$uart_controller.v:760$248_Y
+(define-fun |uart_controller#372| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#371| state) #b1 #b0)) ; $assert$uart_controller.v:762$249_EN
+(define-fun |uart_controller#373| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#125| state))) ; $eq$uart_controller.v:777$276_Y
 (define-fun |uart_controller#374| ((state |uart_controller_s|)) Bool (bvule (|uart_controller#84| state) #b1000)) ; $le$uart_controller.v:432$180_Y
-(define-fun |uart_controller#375| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#82| state))) ; $eq$uart_controller.v:756$282_Y
+(define-fun |uart_controller#375| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#82| state))) ; $eq$uart_controller.v:780$282_Y
 (define-fun |uart_controller#376| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#107| state) #b1 #b0)) ; $procmux$388_Y
-(define-fun |uart_controller#377| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#376| state) #b0)) ; $assert$uart_controller.v:793$316_EN
+(define-fun |uart_controller#377| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#376| state) #b0)) ; $assert$uart_controller.v:821$316_EN
 (define-fun |uart_controller#378| ((state |uart_controller_s|)) Bool (bvule (|uart_controller#87| state) #b1000)) ; $le$uart_controller.v:433$182_Y
-(define-fun |uart_controller#379| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#130| state)) #b1) (= ((_ extract 1 1) (|uart_controller#130| state)) #b1) (= ((_ extract 2 2) (|uart_controller#130| state)) #b1) (= ((_ extract 3 3) (|uart_controller#130| state)) #b1) (= ((_ extract 4 4) (|uart_controller#130| state)) #b1) (= ((_ extract 5 5) (|uart_controller#130| state)) #b1) (= ((_ extract 6 6) (|uart_controller#130| state)) #b1) (= ((_ extract 7 7) (|uart_controller#130| state)) #b1)))) ; $eq$uart_controller.v:752$274_Y
-(define-fun |uart_controller#380| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#79| state)) #b1) (= ((_ extract 1 1) (|uart_controller#79| state)) #b1) (= ((_ extract 2 2) (|uart_controller#79| state)) #b1) (= ((_ extract 3 3) (|uart_controller#79| state)) #b1) (= ((_ extract 4 4) (|uart_controller#79| state)) #b1)))) ; $eq$uart_controller.v:767$300_Y
+(define-fun |uart_controller#379| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#130| state)) #b1) (= ((_ extract 1 1) (|uart_controller#130| state)) #b1) (= ((_ extract 2 2) (|uart_controller#130| state)) #b1) (= ((_ extract 3 3) (|uart_controller#130| state)) #b1) (= ((_ extract 4 4) (|uart_controller#130| state)) #b1) (= ((_ extract 5 5) (|uart_controller#130| state)) #b1) (= ((_ extract 6 6) (|uart_controller#130| state)) #b1) (= ((_ extract 7 7) (|uart_controller#130| state)) #b1)))) ; $eq$uart_controller.v:776$274_Y
+(define-fun |uart_controller#380| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#79| state)) #b1) (= ((_ extract 1 1) (|uart_controller#79| state)) #b1) (= ((_ extract 2 2) (|uart_controller#79| state)) #b1) (= ((_ extract 3 3) (|uart_controller#79| state)) #b1) (= ((_ extract 4 4) (|uart_controller#79| state)) #b1)))) ; $eq$uart_controller.v:791$300_Y
 (define-fun |uart_controller#381| ((state |uart_controller_s|)) (_ BitVec 3) (bvsub (|uart_controller#148| state) (|uart_controller#145| state))) ; $sub$uart_controller.v:442$186_Y
 (define-fun |uart_controller#382| ((state |uart_controller_s|)) Bool (= (|uart_controller#381| state) ((_ extract 2 0) (|uart_controller#84| state)))) ; $eq$uart_controller.v:442$187_Y
 (define-fun |uart_controller#383| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#141| state) #b1 #b0)) ; $procmux$380_Y
-(define-fun |uart_controller#384| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#383| state) #b0)) ; $assert$uart_controller.v:795$322_EN
-(define-fun |uart_controller#385| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#139| state))) ; $eq$uart_controller.v:746$264_Y
+(define-fun |uart_controller#384| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#383| state) #b0)) ; $assert$uart_controller.v:823$322_EN
+(define-fun |uart_controller#385| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#139| state))) ; $eq$uart_controller.v:770$264_Y
 (define-fun |uart_controller#386| ((state |uart_controller_s|)) (_ BitVec 3) (bvsub (|uart_controller#133| state) (|uart_controller#101| state))) ; $sub$uart_controller.v:443$189_Y
 (define-fun |uart_controller#387| ((state |uart_controller_s|)) Bool (= (|uart_controller#386| state) ((_ extract 2 0) (|uart_controller#87| state)))) ; $eq$uart_controller.v:443$190_Y
-(define-fun |uart_controller#388| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#117| state)) #b1) (= ((_ extract 1 1) (|uart_controller#117| state)) #b1) (= ((_ extract 2 2) (|uart_controller#117| state)) #b1)))) ; $eq$uart_controller.v:751$272_Y
-(define-fun |uart_controller#389| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#110| state)) #b1) (= ((_ extract 1 1) (|uart_controller#110| state)) #b1) (= ((_ extract 2 2) (|uart_controller#110| state)) #b1) (= ((_ extract 3 3) (|uart_controller#110| state)) #b1) (= ((_ extract 4 4) (|uart_controller#110| state)) #b1) (= ((_ extract 5 5) (|uart_controller#110| state)) #b1) (= ((_ extract 6 6) (|uart_controller#110| state)) #b1) (= ((_ extract 7 7) (|uart_controller#110| state)) #b1)))) ; $eq$uart_controller.v:791$311_Y
-(define-fun |uart_controller#390| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#103| state) false) (or  (|uart_controller#85| state) false))) ; $logic_and$uart_controller.v:451$194_Y
-(define-fun |uart_controller#391| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#390| state) false))) ; $logic_not$uart_controller.v:451$195_Y
+(define-fun |uart_controller#388| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#117| state)) #b1) (= ((_ extract 1 1) (|uart_controller#117| state)) #b1) (= ((_ extract 2 2) (|uart_controller#117| state)) #b1)))) ; $eq$uart_controller.v:775$272_Y
+(define-fun |uart_controller#389| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#110| state)) #b1) (= ((_ extract 1 1) (|uart_controller#110| state)) #b1) (= ((_ extract 2 2) (|uart_controller#110| state)) #b1) (= ((_ extract 3 3) (|uart_controller#110| state)) #b1) (= ((_ extract 4 4) (|uart_controller#110| state)) #b1) (= ((_ extract 5 5) (|uart_controller#110| state)) #b1) (= ((_ extract 6 6) (|uart_controller#110| state)) #b1) (= ((_ extract 7 7) (|uart_controller#110| state)) #b1)))) ; $eq$uart_controller.v:819$311_Y
+(define-fun |uart_controller#390| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#103| state) false) (or  (|uart_controller#85| state) false))) ; $logic_and$uart_controller.v:454$194_Y
+(define-fun |uart_controller#391| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#390| state) false))) ; $logic_not$uart_controller.v:454$195_Y
 (define-fun |uart_controller#392| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (|uart_controller#115| state) false))) ; $logic_and$uart_controller.v:431$178_Y
 (define-fun |uart_controller#393| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#392| state) #b1 #b0)) ; $assert$uart_controller.v:432$179_EN
-(define-fun |uart_controller#394| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#78| state)) #b1) (= ((_ extract 1 1) (|uart_controller#78| state)) #b1) (= ((_ extract 2 2) (|uart_controller#78| state)) #b1) (= ((_ extract 3 3) (|uart_controller#78| state)) #b1) (= ((_ extract 4 4) (|uart_controller#78| state)) #b1) (= ((_ extract 5 5) (|uart_controller#78| state)) #b1) (= ((_ extract 6 6) (|uart_controller#78| state)) #b1) (= ((_ extract 7 7) (|uart_controller#78| state)) #b1)))) ; $eq$uart_controller.v:768$302_Y
-(define-fun |uart_controller#395| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (ite (|uart_controller#88| state) #b1 #b0))) ; $eq$uart_controller.v:452$197_Y
-(define-fun |uart_controller#396| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#104| state) false) (or  (= ((_ extract 0 0) (|uart_controller#395| state)) #b1) false))) ; $logic_and$uart_controller.v:452$198_Y
-(define-fun |uart_controller#397| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#396| state) false) (or  (|uart_controller#88| state) false))) ; $logic_and$uart_controller.v:452$200_Y
-(define-fun |uart_controller#398| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#397| state) false))) ; $logic_not$uart_controller.v:452$201_Y
-(define-fun |uart_controller#399| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#146| state)) #b1) (= ((_ extract 1 1) (|uart_controller#146| state)) #b1) (= ((_ extract 2 2) (|uart_controller#146| state)) #b1) (= ((_ extract 3 3) (|uart_controller#146| state)) #b1) (= ((_ extract 4 4) (|uart_controller#146| state)) #b1) (= ((_ extract 5 5) (|uart_controller#146| state)) #b1) (= ((_ extract 6 6) (|uart_controller#146| state)) #b1) (= ((_ extract 7 7) (|uart_controller#146| state)) #b1)))) ; $eq$uart_controller.v:743$258_Y
-(define-fun |uart_controller#400| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#118| state)) #b1) (= ((_ extract 1 1) (|uart_controller#118| state)) #b1) (= ((_ extract 2 2) (|uart_controller#118| state)) #b1) (= ((_ extract 3 3) (|uart_controller#118| state)) #b1)))) ; $eq$uart_controller.v:750$270_Y
-(define-fun |uart_controller#401| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) (|uart_controller#59| state))) ; $eq$uart_controller.v:461$218_Y
-(define-fun |uart_controller#402| ((state |uart_controller_s|)) (_ BitVec 4) (bvadd (|uart_controller#60| state) #b0001)) ; $add$uart_controller.v:462$219_Y
-(define-fun |uart_controller#403| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) (|uart_controller#402| state))) ; $eq$uart_controller.v:462$220_Y
-(define-fun |uart_controller#404| ((state |uart_controller_s|)) Bool (or  (|uart_controller#401| state) false  (|uart_controller#403| state) false)) ; $logic_or$uart_controller.v:461$221_Y
-(define-fun |uart_controller#405| ((state |uart_controller_s|)) (_ BitVec 4) (bvsub (|uart_controller#61| state) #b0001)) ; $sub$uart_controller.v:463$222_Y
-(define-fun |uart_controller#406| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) (|uart_controller#405| state))) ; $eq$uart_controller.v:463$223_Y
-(define-fun |uart_controller#407| ((state |uart_controller_s|)) Bool (or  (|uart_controller#404| state) false  (|uart_controller#406| state) false)) ; $logic_or$uart_controller.v:461$224_Y
-(define-fun |uart_controller#408| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#96| state))) ; $eq$uart_controller.v:816$329_Y
-(define-fun |uart_controller#409| ((state |uart_controller_s|)) Bool (= (|uart_controller#110| state) #b00000010)) ; $eq$uart_controller.v:792$314_Y
-(define-fun |uart_controller#410| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#63| state)) #b1) false))) ; $logic_not$uart_controller.v:464$226_Y
-(define-fun |uart_controller#411| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#62| state)) #b1) false) (or  (|uart_controller#410| state) false))) ; $logic_and$uart_controller.v:464$227_Y
-(define-fun |uart_controller#412| ((state |uart_controller_s|)) Bool (bvugt (|uart_controller#84| state) (|uart_controller#64| state))) ; $gt$uart_controller.v:464$228_Y
-(define-fun |uart_controller#413| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#411| state) false) (or  (|uart_controller#412| state) false))) ; $logic_and$uart_controller.v:464$229_Y
-(define-fun |uart_controller#414| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#413| state) false))) ; $logic_not$uart_controller.v:464$230_Y
-(define-fun |uart_controller#415| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (= ((_ extract 0 0) (|uart_controller#57| state)) #b1) false))) ; $logic_and$uart_controller.v:460$214_Y
-(define-fun |uart_controller#416| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#415| state) false) (or  (|uart_controller#115| state) false))) ; $logic_and$uart_controller.v:460$215_Y
-(define-fun |uart_controller#417| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#416| state) false) (or  (= ((_ extract 0 0) (|uart_controller#58| state)) #b1) false))) ; $logic_and$uart_controller.v:460$216_Y
-(define-fun |uart_controller#418| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#417| state) #b1 #b0)) ; $assert$uart_controller.v:461$217_EN
-(define-fun |uart_controller#419| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#83| state)) #b1) (= ((_ extract 1 1) (|uart_controller#83| state)) #b1) (= ((_ extract 2 2) (|uart_controller#83| state)) #b1)))) ; $eq$uart_controller.v:769$304_Y
-(define-fun |uart_controller#420| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#68| state)) #b1) false))) ; $logic_not$uart_controller.v:465$232_Y
-(define-fun |uart_controller#421| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#67| state)) #b1) false) (or  (|uart_controller#420| state) false))) ; $logic_and$uart_controller.v:465$233_Y
-(define-fun |uart_controller#422| ((state |uart_controller_s|)) Bool (bvult (|uart_controller#84| state) (|uart_controller#70| state))) ; $lt$uart_controller.v:465$234_Y
-(define-fun |uart_controller#423| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#421| state) false) (or  (|uart_controller#422| state) false))) ; $logic_and$uart_controller.v:465$235_Y
-(define-fun |uart_controller#424| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#423| state) false))) ; $logic_not$uart_controller.v:465$236_Y
+(define-fun |uart_controller#394| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#78| state)) #b1) (= ((_ extract 1 1) (|uart_controller#78| state)) #b1) (= ((_ extract 2 2) (|uart_controller#78| state)) #b1) (= ((_ extract 3 3) (|uart_controller#78| state)) #b1) (= ((_ extract 4 4) (|uart_controller#78| state)) #b1) (= ((_ extract 5 5) (|uart_controller#78| state)) #b1) (= ((_ extract 6 6) (|uart_controller#78| state)) #b1) (= ((_ extract 7 7) (|uart_controller#78| state)) #b1)))) ; $eq$uart_controller.v:792$302_Y
+(define-fun |uart_controller#395| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (ite (|uart_controller#88| state) #b1 #b0))) ; $eq$uart_controller.v:455$197_Y
+(define-fun |uart_controller#396| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#104| state) false) (or  (= ((_ extract 0 0) (|uart_controller#395| state)) #b1) false))) ; $logic_and$uart_controller.v:455$198_Y
+(define-fun |uart_controller#397| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#396| state) false) (or  (|uart_controller#88| state) false))) ; $logic_and$uart_controller.v:455$200_Y
+(define-fun |uart_controller#398| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#397| state) false))) ; $logic_not$uart_controller.v:455$201_Y
+(define-fun |uart_controller#399| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#146| state)) #b1) (= ((_ extract 1 1) (|uart_controller#146| state)) #b1) (= ((_ extract 2 2) (|uart_controller#146| state)) #b1) (= ((_ extract 3 3) (|uart_controller#146| state)) #b1) (= ((_ extract 4 4) (|uart_controller#146| state)) #b1) (= ((_ extract 5 5) (|uart_controller#146| state)) #b1) (= ((_ extract 6 6) (|uart_controller#146| state)) #b1) (= ((_ extract 7 7) (|uart_controller#146| state)) #b1)))) ; $eq$uart_controller.v:767$258_Y
+(define-fun |uart_controller#400| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#118| state)) #b1) (= ((_ extract 1 1) (|uart_controller#118| state)) #b1) (= ((_ extract 2 2) (|uart_controller#118| state)) #b1) (= ((_ extract 3 3) (|uart_controller#118| state)) #b1)))) ; $eq$uart_controller.v:774$270_Y
+(define-fun |uart_controller#401| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) (|uart_controller#59| state))) ; $eq$uart_controller.v:467$218_Y
+(define-fun |uart_controller#402| ((state |uart_controller_s|)) (_ BitVec 4) (bvadd (|uart_controller#60| state) #b0001)) ; $add$uart_controller.v:468$219_Y
+(define-fun |uart_controller#403| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) (|uart_controller#402| state))) ; $eq$uart_controller.v:468$220_Y
+(define-fun |uart_controller#404| ((state |uart_controller_s|)) Bool (or  (|uart_controller#401| state) false  (|uart_controller#403| state) false)) ; $logic_or$uart_controller.v:467$221_Y
+(define-fun |uart_controller#405| ((state |uart_controller_s|)) (_ BitVec 4) (bvsub (|uart_controller#61| state) #b0001)) ; $sub$uart_controller.v:469$222_Y
+(define-fun |uart_controller#406| ((state |uart_controller_s|)) Bool (= (|uart_controller#84| state) (|uart_controller#405| state))) ; $eq$uart_controller.v:469$223_Y
+(define-fun |uart_controller#407| ((state |uart_controller_s|)) Bool (or  (|uart_controller#404| state) false  (|uart_controller#406| state) false)) ; $logic_or$uart_controller.v:467$224_Y
+(define-fun |uart_controller#408| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#96| state))) ; $eq$uart_controller.v:844$329_Y
+(define-fun |uart_controller#409| ((state |uart_controller_s|)) Bool (= (|uart_controller#110| state) #b00000010)) ; $eq$uart_controller.v:820$314_Y
+(define-fun |uart_controller#410| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#63| state)) #b1) false))) ; $logic_not$uart_controller.v:470$226_Y
+(define-fun |uart_controller#411| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#62| state)) #b1) false) (or  (|uart_controller#410| state) false))) ; $logic_and$uart_controller.v:470$227_Y
+(define-fun |uart_controller#412| ((state |uart_controller_s|)) Bool (bvugt (|uart_controller#84| state) (|uart_controller#64| state))) ; $gt$uart_controller.v:470$228_Y
+(define-fun |uart_controller#413| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#411| state) false) (or  (|uart_controller#412| state) false))) ; $logic_and$uart_controller.v:470$229_Y
+(define-fun |uart_controller#414| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#413| state) false))) ; $logic_not$uart_controller.v:470$230_Y
+(define-fun |uart_controller#415| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#81| state)) #b1) false) (or  (= ((_ extract 0 0) (|uart_controller#57| state)) #b1) false))) ; $logic_and$uart_controller.v:466$214_Y
+(define-fun |uart_controller#416| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#415| state) false) (or  (|uart_controller#115| state) false))) ; $logic_and$uart_controller.v:466$215_Y
+(define-fun |uart_controller#417| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#416| state) false) (or  (= ((_ extract 0 0) (|uart_controller#58| state)) #b1) false))) ; $logic_and$uart_controller.v:466$216_Y
+(define-fun |uart_controller#418| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#417| state) #b1 #b0)) ; $assert$uart_controller.v:467$217_EN
+(define-fun |uart_controller#419| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#83| state)) #b1) (= ((_ extract 1 1) (|uart_controller#83| state)) #b1) (= ((_ extract 2 2) (|uart_controller#83| state)) #b1)))) ; $eq$uart_controller.v:793$304_Y
+(define-fun |uart_controller#420| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#68| state)) #b1) false))) ; $logic_not$uart_controller.v:471$232_Y
+(define-fun |uart_controller#421| ((state |uart_controller_s|)) Bool (and (or  (= ((_ extract 0 0) (|uart_controller#67| state)) #b1) false) (or  (|uart_controller#420| state) false))) ; $logic_and$uart_controller.v:471$233_Y
+(define-fun |uart_controller#422| ((state |uart_controller_s|)) Bool (bvult (|uart_controller#84| state) (|uart_controller#70| state))) ; $lt$uart_controller.v:471$234_Y
+(define-fun |uart_controller#423| ((state |uart_controller_s|)) Bool (and (or  (|uart_controller#421| state) false) (or  (|uart_controller#422| state) false))) ; $logic_and$uart_controller.v:471$235_Y
+(define-fun |uart_controller#424| ((state |uart_controller_s|)) Bool (not (or  (|uart_controller#423| state) false))) ; $logic_not$uart_controller.v:471$236_Y
 (define-fun |uart_controller#425| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#109| state) #b1 #b0)) ; $procmux$396_Y
-(define-fun |uart_controller#426| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#425| state) #b0)) ; $assert$uart_controller.v:791$310_EN
+(define-fun |uart_controller#426| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#425| state) #b0)) ; $assert$uart_controller.v:819$310_EN
 (define-fun |uart_controller#427| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#105| state) #b1 #b0)) ; $procmux$384_Y
-(define-fun |uart_controller#428| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#427| state) #b0)) ; $assert$uart_controller.v:794$319_EN
-(define-fun |uart_controller#429| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#91| state))) ; $eq$uart_controller.v:757$284_Y
-(define-fun |uart_controller#430| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#138| state))) ; $eq$uart_controller.v:744$260_Y
-(define-fun |uart_controller#431| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#135| state)) #b1) (= ((_ extract 1 1) (|uart_controller#135| state)) #b1) (= ((_ extract 2 2) (|uart_controller#135| state)) #b1) (= ((_ extract 3 3) (|uart_controller#135| state)) #b1)))) ; $eq$uart_controller.v:741$254_Y
+(define-fun |uart_controller#428| ((state |uart_controller_s|)) (_ BitVec 1) (ite (|uart_controller#365| state) (|uart_controller#427| state) #b0)) ; $assert$uart_controller.v:822$319_EN
+(define-fun |uart_controller#429| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#91| state))) ; $eq$uart_controller.v:781$284_Y
+(define-fun |uart_controller#430| ((state |uart_controller_s|)) (_ BitVec 1) (bvnot (|uart_controller#138| state))) ; $eq$uart_controller.v:768$260_Y
+(define-fun |uart_controller#431| ((state |uart_controller_s|)) Bool (not (or  (= ((_ extract 0 0) (|uart_controller#135| state)) #b1) (= ((_ extract 1 1) (|uart_controller#135| state)) #b1) (= ((_ extract 2 2) (|uart_controller#135| state)) #b1) (= ((_ extract 3 3) (|uart_controller#135| state)) #b1)))) ; $eq$uart_controller.v:765$254_Y
 (define-fun |uart_controller#432| ((state |uart_controller_s|)) (_ BitVec 3) (ite (= ((_ extract 0 0) (|uart_controller#128| state)) #b1) (|uart_controller#133| state) (|uart_controller#49| state))) ; $2$memwr$\rx_fifo$uart_controller.v:341$26_ADDR[2:0]$154
 (define-fun |uart_controller#433| ((state |uart_controller_s|)) (_ BitVec 3) (ite (|uart_controller#115| state) (|uart_controller#432| state) (|uart_controller#45| state))) ; $0$memwr$\rx_fifo$uart_controller.v:341$26_ADDR[2:0]$147
 (define-fun |uart_controller#434| ((state |uart_controller_s|)) (_ BitVec 8) (ite (= ((_ extract 0 0) (|uart_controller#128| state)) #b1) (|uart_controller#129| state) (|uart_controller#50| state))) ; $2$memwr$\rx_fifo$uart_controller.v:341$26_DATA[7:0]$155

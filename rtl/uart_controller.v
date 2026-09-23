@@ -577,12 +577,15 @@ module uart_controller (
         end
 
     // ---- C6: the sticky error bits are read-to-clear ------------------
-    // COVERAGE (2026-09-23): live but BOUND-LIMITED. N9 (a STATUS read no
-    // longer clears frame_err) ESCAPES the entire suite, because setting
-    // frame_err through the RX path needs ~145 clocks against a depth of
-    // 20. Control N10 (a STATUS read that SETS frame_err) fails this
-    // property at step 3, so it is not broken -- it is out of reach. This
-    // is the fifth way a passing property can mean nothing.
+    // COVERAGE (2026-09-23): live but BOUND-LIMITED, confirming what
+    // 2026-09-21's survivor mutant N5 already asserted -- setting frame_err
+    // through the RX path needs ~145 clocks against a depth of 20, so N9 (a
+    // STATUS read that no longer clears frame_err) escapes the whole suite.
+    // NEW: control N10 (a STATUS read that SETS frame_err) fails this
+    // property at step 3. N5 alone shows C6 cannot be broken here; it does
+    // not show C6 is any good, since nonsense would survive it too. The
+    // pair shows the antecedent is unreachable rather than the property
+    // empty.
     // CROSS-CHECK. A STATUS read must clear all three error bits -- UNLESS
     // the RX engine is in a stop state that same cycle, where the set path
     // legitimately wins over the clear (last assignment in the block).

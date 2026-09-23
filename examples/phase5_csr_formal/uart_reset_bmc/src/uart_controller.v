@@ -444,6 +444,9 @@ module uart_controller (
         end
 
     // ---- P3: the occupancy flags are mutually consistent -------------
+    // COVERAGE (2026-09-23): UNEXERCISED by M1-M5, then LOAD-BEARING once
+    // M6 was written for it (tx_full using the empty constant). Deleting
+    // P3 makes M6 MISSED. The gap was in the mutant set, not in P3.
     // full and empty can never both hold. Follows from P1, and is stated
     // separately because it is the flag a testbench actually reads.
     always @(posedge clk)
@@ -453,6 +456,9 @@ module uart_controller (
         end
 
     // ---- P4: no silent overflow or underflow -------------------------
+    // COVERAGE (2026-09-23): SHADOWED. Detects M1 and M3 on its own, never
+    // uniquely -- P1/P2 reach both first. Kept: it is the only property
+    // here that constrains the RATE of change, which P1/P2 do not state.
     // The count may only change by one per cycle, and only in the
     // direction the strobes call for. This is the property that a
     // mutated push/pop guard breaks.
@@ -509,6 +515,10 @@ module uart_controller (
     wire f_rx_stopping = (rx_state == RX_STOP1) || (rx_state == RX_STOP2);
 
     // ---- C1: write / read-back on the three RW registers -------------
+    // COVERAGE (2026-09-23): UNEXERCISED by N1-N7, then LOAD-BEARING for
+    // N8. The comment below says a width mutation is exactly what this
+    // catches, and until 2026-09-23 no width mutation had ever been
+    // injected. A property can advertise its own coverage hole for two days.
     // CROSS-CHECK: relates the write decoder to the register state one
     // cycle later. Note baud_div takes all 8 bits while ctrl takes 5 and
     // int_en takes 3 -- a width mutation is exactly what this catches.
@@ -567,6 +577,12 @@ module uart_controller (
         end
 
     // ---- C6: the sticky error bits are read-to-clear ------------------
+    // COVERAGE (2026-09-23): live but BOUND-LIMITED. N9 (a STATUS read no
+    // longer clears frame_err) ESCAPES the entire suite, because setting
+    // frame_err through the RX path needs ~145 clocks against a depth of
+    // 20. Control N10 (a STATUS read that SETS frame_err) fails this
+    // property at step 3, so it is not broken -- it is out of reach. This
+    // is the fifth way a passing property can mean nothing.
     // CROSS-CHECK. A STATUS read must clear all three error bits -- UNLESS
     // the RX engine is in a stop state that same cycle, where the set path
     // legitimately wins over the clear (last assignment in the block).
@@ -586,6 +602,9 @@ module uart_controller (
         end
 
     // ---- C7: the error bits can only RISE in a stop state -------------
+    // COVERAGE (2026-09-23): same standing as C6 -- live (fails N10 at
+    // step 3), unexercised by N1-N7, and guarding a path the bound cannot
+    // reach.
     // CROSS-CHECK on the same path from the other side. Together with C6
     // this pins the sticky bits down completely: they rise only in a stop
     // state and fall only on a STATUS read.
@@ -597,6 +616,11 @@ module uart_controller (
         end
 
     // ---- C8: RX_DATA pop-on-read, and no pop when empty ---------------
+    // COVERAGE (2026-09-23): SHADOWED, and across suites. It detects N6 on
+    // its own, but this job compiles -DFORMAL too, so the 2026-09-20 FIFO
+    // invariants P1/P2 are present and catch the same underflow first.
+    // Kept: it states a CSR-level intent that the FIFO invariants only
+    // imply, and it would earn its place in any job built without -DFORMAL.
     // CROSS-CHECK: relates an APB read to FIFO occupancy. The second half
     // is the one that matters -- a read of an empty RX FIFO must not move
     // the pointer, which is the classic read-side underflow bug.
@@ -771,6 +795,10 @@ module uart_controller (
     end
 
     // ---- R2: the OBSERVABLE reset values, through the read port -----
+    // COVERAGE (2026-09-23): SHADOWED. Detects K1, K3, K4 and K5 on its
+    // own and none of them uniquely -- R1 asserts the same state directly.
+    // Kept for the same reason R4 is: R2 is the only property here stated
+    // at the PROTOCOL level, and R1's unconditional form does not scale.
     // R1 is about registers; R2 is about what software sees, which is
     // the obligation a CSR spec actually states. They are not the same
     // property: prdata is a combinational mux over paddr, so a decode

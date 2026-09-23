@@ -99,44 +99,62 @@ Two of the four unexercised properties were one mutant away from being the
 only thing standing between the design and a defect. That is the argument
 for the phase-2 split in one sentence.
 
-### 4.3 An escape, and a fifth way a passing property can mean nothing
+### 4.3 An escape — and a correction to what this session first claimed
 
 N9 removes the clear of `frame_err` on a STATUS read — exactly the behaviour
 C6 exists to state — and **the whole suite passes**.
 
-Two explanations, and they call for opposite responses: C6 is broken, or the
-defect is out of reach. The control settles it. N10 makes a STATUS read
-*set* `frame_err` instead, which needs no RX activity at all; C6 and C7 both
-fail it at step 3. So the properties are live, well-formed and evaluable.
-Setting `frame_err` through the real RX path needs ~145 clocks against a BMC
-depth of 20 — **the same solver-budget boundary day 1 hit from the datapath
-side, day 2 from the register side and day 3 from the reset side, now met
-from a fourth.**
+The first draft of this note called that a **fifth way a passing property can
+mean nothing**, on the reading that C6 is well-formed, non-subsumed and still
+blind. **That was wrong, and it was wrong in the most avoidable way: the
+answer was already in this repo.** 2026-09-21 had established exactly this,
+by exactly this method, and asserted it rather than hoping for it — stage 3b
+of `run_csr_formal.sh` injects N5 (`if (1'b0 && rd_en && paddr ==
+ADDR_STATUS)`), disables the read-to-clear path entirely, and **requires the
+mutant to SURVIVE**, with the ~145-clock argument written out beside it. N9
+is N5 in a different disguise. The escape is class 1 on the list below —
+plain vacuity — not a new class.
 
-The running list:
+The lesson is not about formal verification. It is that **a mechanical sweep
+over seventeen properties re-derives things the repo already knows and
+presents them all with the same confidence as the things it does not**, and
+the reader who can tell the difference is the one who read the earlier
+session's script. Which is an argument for the sweep being cheap, not for it
+being trusted.
+
+What *is* new is the control, and it is worth keeping. N5 establishes that C6
+cannot be broken at this depth. It does not establish that C6 is any good:
+a property that is syntactically nonsense would survive N5 identically.
+**N10** makes a STATUS read *set* `frame_err` — no RX activity needed, so the
+antecedent is reachable in three steps — and C6 and C7 both fail it at step
+3. So the pair separates two things N5 alone cannot:
+
+| observation | consistent with |
+|---|---|
+| N5/N9 survive | C6 unreachable **or** C6 vacuous nonsense |
+| N5/N9 survive **and** N10 dies at step 3 | C6 unreachable **only** |
+
+That is the difference between *"we believe C6 is bounded-vacuous"* and
+*"C6 is a working property pointed at a door the solver cannot reach"*, and
+it costs one extra mutant.
+
+The running list, unchanged in length:
 
 | # | a passing property can mean nothing when… | detected by |
 |---|---|---|
-| 1 | its antecedent is never satisfiable | a cover |
+| 1 | its antecedent is never satisfiable in the bound | a cover, a survivor mutant (N5), **or a targeted mutant from the other side (N9)** |
 | 2 | it is satisfied only by pre-reset state through `$past` | a step-≥2 guard on the cover |
 | 3 | it restates the design logic, so both mutate together | writing it from the spec, not the RTL |
 | 4 | another property subsumes it | a per-property deletion experiment |
-| 5 | **its defect's precondition lies beyond the bound** | **nothing here** |
 
-Class 5 is the uncomfortable one. C6 is non-vacuous by its own cover,
-non-subsumed, live, correctly written — and blind. The cover that would have
-exposed it, `cover(f_csr_rd && paddr == ADDR_STATUS && $past(frame_err))`,
-is sitting in the `FORMAL_CSR_DEEP` job that smtbmc cannot finish, which
-means **the check that detects class 5 is blocked by the same budget that
-creates it.** Mutation testing found it anyway, from the other side: the
-mutant needs no cover to be reached, only a defect to be injected.
-
-Interview framing, since this is the sort of question that gets asked as
-"how do you know your formal testbench is any good?": *vacuity says the
-property is evaluated; subsumption says it changes a verdict; neither says
-the defect it guards is reachable inside the bound. Only mutation testing
-distinguishes a property that is watching from a property that is watching a
-door nobody can reach.*
+The one methodological addition today makes to class 1 is the third detector:
+the cover that would show C6's antecedent reachable sits in the
+`FORMAL_CSR_DEEP` job smtbmc cannot finish, so on the cover side the check is
+blocked by the same budget that creates the problem. A mutant needs no cover
+to be reached — only a defect to be injected — so it gets the answer anyway.
+That is worth saying in an interview: **when the budget blocks the check that
+would expose a bound problem, mutation testing reaches the same conclusion
+from the other direction.**
 
 ## 5. The bug the guards caught
 
@@ -173,9 +191,13 @@ annotated in place with its classification and the reason it is kept:
 And finding 4.3 is the reason that stance is right rather than merely
 cautious. C6 and C7 look, in the raw phase-1 matrix, like the two most
 obviously deletable properties in the repo. They are guarding a real defect
-that the suite cannot currently reach. **A coverage number that would have
-deleted them is a coverage number that would have removed the only thing
-that will catch N9 the day the bound gets deeper.**
+that the suite cannot currently reach, and N10 shows they will catch it the
+moment it becomes reachable. **A coverage number that would have deleted them
+is a coverage number that would have removed the only thing that will catch
+N9 the day the bound gets deeper** — and note that the number would have been
+computed by today's script, which is an argument for not letting a script
+that measures seventeen properties in twelve minutes decide anything on its
+own.
 
 ## 7. Cost, for the next run
 

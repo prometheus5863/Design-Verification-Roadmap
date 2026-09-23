@@ -64,20 +64,27 @@ Three findings worth more than the bookkeeping:
    been injected. N8 (INT_EN write drops its top bit) is detected, and
    **missed** with C1 deleted. Same story for P3 and M6. Both holes closed.
 
-3. **An escape, and a fifth way a passing property can mean nothing.** N9
+3. **An escape that was already known, and a control that adds to it.** N9
    removes the clear of `frame_err` on a STATUS read — precisely what C6
-   describes — and **the whole suite passes**. The control N10 (a STATUS read
-   that *sets* `frame_err`) fails C6 and C7 at step 3, so the properties are
-   live and evaluable. The escape is therefore a **bound** problem: setting
-   `frame_err` through the RX path needs ~145 clocks against a depth of 20.
+   describes — and **the whole suite passes**. This session first wrote that
+   up as a new failure class; it is not. 2026-09-21 had already established
+   it, by the same method: stage 3b of `run_csr_formal.sh` injects N5,
+   disables the read-to-clear path entirely and **requires the mutant to
+   survive**, with the ~145-clocks-against-depth-20 argument beside it. N9 is
+   N5 in a different disguise, and the correction is recorded rather than
+   quietly dropped.
 
-   2026-09-21 listed three ways a passing property can mean nothing and
-   2026-09-22 added subsumption as a fourth. This is a fifth: a property
-   that is **well-formed, non-vacuous by its own cover, non-subsumed, live,
-   and still blind to a real defect whose precondition lies beyond the
-   bound.** No vacuity check in this repo detects it — the cover that would
-   have, `cover(f_csr_rd && paddr == ADDR_STATUS && $past(frame_err))`, is
-   the one sitting in the `FORMAL_CSR_DEEP` job that smtbmc cannot finish.
+   The **control is** new and is worth keeping. N5 shows C6 cannot be broken
+   at this depth; it does not show C6 is any good, since syntactic nonsense
+   would survive N5 identically. **N10** makes a STATUS read *set*
+   `frame_err` — reachable in three steps — and C6 and C7 both fail it at
+   step 3. The pair separates *"unreachable"* from *"unreachable or
+   nonsense"*, which one survivor mutant cannot.
+
+   The transferable part: the cover that would expose this from the cover
+   side sits in the `FORMAL_CSR_DEEP` job smtbmc cannot finish, so **the
+   check is blocked by the same budget that creates the problem**. A mutant
+   needs no cover to be reached, so it gets the answer anyway.
 
 ## Guards
 

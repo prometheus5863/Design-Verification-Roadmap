@@ -57,57 +57,57 @@ Converted 0 switches.
 
 2.2.7. Executing PROC_MUX pass (convert decision trees to multiplexers).
 Creating decoders for process `\uart_controller.$proc$uart_controller.v:417$471'.
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:651$445'.
-     1/5: $cover$uart_controller.v:664$465_EN
-     2/5: $cover$uart_controller.v:661$462_EN
-     3/5: $cover$uart_controller.v:659$459_EN
-     4/5: $cover$uart_controller.v:657$454_EN
-     5/5: $cover$uart_controller.v:654$453_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:617$438'.
-     1/2: $assert$uart_controller.v:620$443_EN
-     2/2: $assert$uart_controller.v:619$441_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:603$404'.
-     1/3: $assert$uart_controller.v:609$434_EN
-     2/3: $assert$uart_controller.v:608$432_EN
-     3/3: $assert$uart_controller.v:606$424_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:592$383'.
-     1/3: $assert$uart_controller.v:596$403_EN
-     2/3: $assert$uart_controller.v:595$400_EN
-     3/3: $assert$uart_controller.v:594$397_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:579$363'.
-     1/3: $assert$uart_controller.v:585$381_EN
-     2/3: $assert$uart_controller.v:584$379_EN
-     3/3: $assert$uart_controller.v:583$377_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:561$351'.
-     1/4: $assert$uart_controller.v:566$361_EN
-     2/4: $assert$uart_controller.v:565$359_EN
-     3/4: $assert$uart_controller.v:564$357_EN
-     4/4: $assert$uart_controller.v:563$355_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:550$344'.
-     1/1: $assert$uart_controller.v:553$349_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:539$330'.
-     1/4: $assert$uart_controller.v:544$342_EN
-     2/4: $assert$uart_controller.v:543$339_EN
-     3/4: $assert$uart_controller.v:542$336_EN
-     4/4: $assert$uart_controller.v:541$333_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:528$305'.
-     1/3: $assert$uart_controller.v:535$327_EN
-     2/3: $assert$uart_controller.v:533$323_EN
-     3/3: $assert$uart_controller.v:531$319_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:515$284'.
-     1/3: $assert$uart_controller.v:519$303_EN
-     2/3: $assert$uart_controller.v:518$300_EN
-     3/3: $assert$uart_controller.v:517$297_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:472$273'.
-     1/2: $cover$uart_controller.v:475$277_EN
-     2/2: $cover$uart_controller.v:474$275_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:459$238'.
-     1/3: $assert$uart_controller.v:465$267_EN
-     2/3: $assert$uart_controller.v:464$261_EN
-     3/3: $assert$uart_controller.v:461$253_EN
-Creating decoders for process `\uart_controller.$proc$uart_controller.v:449$227'.
-     1/2: $assert$uart_controller.v:452$232_EN
-     2/2: $assert$uart_controller.v:451$229_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:675$445'.
+     1/5: $cover$uart_controller.v:688$465_EN
+     2/5: $cover$uart_controller.v:685$462_EN
+     3/5: $cover$uart_controller.v:683$459_EN
+     4/5: $cover$uart_controller.v:681$454_EN
+     5/5: $cover$uart_controller.v:678$453_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:641$438'.
+     1/2: $assert$uart_controller.v:644$443_EN
+     2/2: $assert$uart_controller.v:643$441_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:627$404'.
+     1/3: $assert$uart_controller.v:633$434_EN
+     2/3: $assert$uart_controller.v:632$432_EN
+     3/3: $assert$uart_controller.v:630$424_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:611$383'.
+     1/3: $assert$uart_controller.v:615$403_EN
+     2/3: $assert$uart_controller.v:614$400_EN
+     3/3: $assert$uart_controller.v:613$397_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:595$363'.
+     1/3: $assert$uart_controller.v:601$381_EN
+     2/3: $assert$uart_controller.v:600$379_EN
+     3/3: $assert$uart_controller.v:599$377_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:571$351'.
+     1/4: $assert$uart_controller.v:576$361_EN
+     2/4: $assert$uart_controller.v:575$359_EN
+     3/4: $assert$uart_controller.v:574$357_EN
+     4/4: $assert$uart_controller.v:573$355_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:560$344'.
+     1/1: $assert$uart_controller.v:563$349_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:549$330'.
+     1/4: $assert$uart_controller.v:554$342_EN
+     2/4: $assert$uart_controller.v:553$339_EN
+     3/4: $assert$uart_controller.v:552$336_EN
+     4/4: $assert$uart_controller.v:551$333_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:538$305'.
+     1/3: $assert$uart_controller.v:545$327_EN
+     2/3: $assert$uart_controller.v:543$323_EN
+     3/3: $assert$uart_controller.v:541$319_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:525$284'.
+     1/3: $assert$uart_controller.v:529$303_EN
+     2/3: $assert$uart_controller.v:528$300_EN
+     3/3: $assert$uart_controller.v:527$297_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:478$273'.
+     1/2: $cover$uart_controller.v:481$277_EN
+     2/2: $cover$uart_controller.v:480$275_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:465$238'.
+     1/3: $assert$uart_controller.v:471$267_EN
+     2/3: $assert$uart_controller.v:470$261_EN
+     3/3: $assert$uart_controller.v:467$253_EN
+Creating decoders for process `\uart_controller.$proc$uart_controller.v:452$227'.
+     1/2: $assert$uart_controller.v:455$232_EN
+     2/2: $assert$uart_controller.v:454$229_EN
 Creating decoders for process `\uart_controller.$proc$uart_controller.v:440$219'.
      1/2: $assert$uart_controller.v:443$224_EN
      2/2: $assert$uart_controller.v:442$221_EN
@@ -178,123 +178,123 @@ Creating decoders for process `\uart_controller.$proc$uart_controller.v:126$80'.
 No latch inferred for signal `\uart_controller.\prdata' from process `\uart_controller.$proc$uart_controller.v:373$199'.
 
 2.2.9. Executing PROC_DFF pass (convert process syncs to FFs).
-Creating register for signal `\uart_controller.$past$uart_controller.v:652$57$0' using process `\uart_controller.$proc$uart_controller.v:651$445'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:676$57$0' using process `\uart_controller.$proc$uart_controller.v:675$445'.
   created $dff cell `$procdff$1147' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:652$58$0' using process `\uart_controller.$proc$uart_controller.v:651$445'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:676$58$0' using process `\uart_controller.$proc$uart_controller.v:675$445'.
   created $dff cell `$procdff$1148' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:665$59$0' using process `\uart_controller.$proc$uart_controller.v:651$445'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:689$59$0' using process `\uart_controller.$proc$uart_controller.v:675$445'.
   created $dff cell `$procdff$1149' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:665$60$0' using process `\uart_controller.$proc$uart_controller.v:651$445'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:689$60$0' using process `\uart_controller.$proc$uart_controller.v:675$445'.
   created $dff cell `$procdff$1150' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:604$44$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:628$44$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1151' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:604$45$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:628$45$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1152' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:605$46$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:629$46$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1153' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:605$47$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:629$47$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1154' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:605$48$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:629$48$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1155' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:606$49$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:630$49$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1156' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:606$50$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:630$50$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1157' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:607$51$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:631$51$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1158' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:607$52$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:631$52$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1159' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:607$53$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:631$53$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1160' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:608$54$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:632$54$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1161' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:609$55$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:633$55$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1162' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:609$56$0' using process `\uart_controller.$proc$uart_controller.v:603$404'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:633$56$0' using process `\uart_controller.$proc$uart_controller.v:627$404'.
   created $dff cell `$procdff$1163' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:593$36$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:612$36$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1164' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:593$37$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:612$37$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1165' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:594$38$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:613$38$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1166' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:594$39$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:613$39$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1167' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:595$40$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:614$40$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1168' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:595$41$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:614$41$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1169' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:596$42$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:615$42$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1170' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:596$43$0' using process `\uart_controller.$proc$uart_controller.v:592$383'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:615$43$0' using process `\uart_controller.$proc$uart_controller.v:611$383'.
   created $dff cell `$procdff$1171' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:580$31$0' using process `\uart_controller.$proc$uart_controller.v:579$363'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:596$31$0' using process `\uart_controller.$proc$uart_controller.v:595$363'.
   created $dff cell `$procdff$1172' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:580$32$0' using process `\uart_controller.$proc$uart_controller.v:579$363'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:596$32$0' using process `\uart_controller.$proc$uart_controller.v:595$363'.
   created $dff cell `$procdff$1173' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:581$33$0' using process `\uart_controller.$proc$uart_controller.v:579$363'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:597$33$0' using process `\uart_controller.$proc$uart_controller.v:595$363'.
   created $dff cell `$procdff$1174' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:581$34$0' using process `\uart_controller.$proc$uart_controller.v:579$363'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:597$34$0' using process `\uart_controller.$proc$uart_controller.v:595$363'.
   created $dff cell `$procdff$1175' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:582$35$0' using process `\uart_controller.$proc$uart_controller.v:579$363'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:598$35$0' using process `\uart_controller.$proc$uart_controller.v:595$363'.
   created $dff cell `$procdff$1176' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:529$21$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:539$21$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1177' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:530$22$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:540$22$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1178' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:531$23$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:541$23$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1179' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:531$24$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:541$24$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1180' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:532$25$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:542$25$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1181' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:533$26$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:543$26$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1182' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:533$27$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:543$27$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1183' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:534$28$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:544$28$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1184' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:535$29$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:545$29$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1185' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:535$30$0' using process `\uart_controller.$proc$uart_controller.v:528$305'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:545$30$0' using process `\uart_controller.$proc$uart_controller.v:538$305'.
   created $dff cell `$procdff$1186' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:516$13$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:526$13$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1187' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:516$14$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:526$14$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1188' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:517$15$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:527$15$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1189' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:517$16$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:527$16$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1190' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:518$17$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:528$17$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1191' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:518$18$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:528$18$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1192' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:519$19$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:529$19$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1193' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:519$20$0' using process `\uart_controller.$proc$uart_controller.v:515$284'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:529$20$0' using process `\uart_controller.$proc$uart_controller.v:525$284'.
   created $dff cell `$procdff$1194' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:460$2$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:466$2$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1195' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:460$3$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:466$3$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1196' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:461$4$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:467$4$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1197' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:462$5$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:468$5$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1198' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:463$6$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:469$6$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1199' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:464$7$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:470$7$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1200' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:464$8$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:470$8$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1201' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:464$9$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:470$9$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1202' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:465$10$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:471$10$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1203' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:465$11$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:471$11$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1204' with positive edge clock.
-Creating register for signal `\uart_controller.$past$uart_controller.v:465$12$0' using process `\uart_controller.$proc$uart_controller.v:459$238'.
+Creating register for signal `\uart_controller.$past$uart_controller.v:471$12$0' using process `\uart_controller.$proc$uart_controller.v:465$238'.
   created $dff cell `$procdff$1205' with positive edge clock.
 Creating register for signal `\uart_controller.\f_past_valid' using process `\uart_controller.$proc$uart_controller.v:418$208'.
   created $dff cell `$procdff$1206' with positive edge clock.
@@ -375,32 +375,32 @@ Creating register for signal `\uart_controller.\baud_cnt' using process `\uart_c
 
 2.2.11. Executing PROC_CLEAN pass (remove empty switches from decision trees).
 Removing empty process `uart_controller.$proc$uart_controller.v:417$471'.
-Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:651$445'.
-Removing empty process `uart_controller.$proc$uart_controller.v:651$445'.
-Found and cleaned up 3 empty switches in `\uart_controller.$proc$uart_controller.v:617$438'.
-Removing empty process `uart_controller.$proc$uart_controller.v:617$438'.
-Found and cleaned up 3 empty switches in `\uart_controller.$proc$uart_controller.v:603$404'.
-Removing empty process `uart_controller.$proc$uart_controller.v:603$404'.
-Found and cleaned up 4 empty switches in `\uart_controller.$proc$uart_controller.v:592$383'.
-Removing empty process `uart_controller.$proc$uart_controller.v:592$383'.
-Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:579$363'.
-Removing empty process `uart_controller.$proc$uart_controller.v:579$363'.
-Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:561$351'.
-Removing empty process `uart_controller.$proc$uart_controller.v:561$351'.
-Found and cleaned up 2 empty switches in `\uart_controller.$proc$uart_controller.v:550$344'.
-Removing empty process `uart_controller.$proc$uart_controller.v:550$344'.
-Found and cleaned up 5 empty switches in `\uart_controller.$proc$uart_controller.v:539$330'.
-Removing empty process `uart_controller.$proc$uart_controller.v:539$330'.
-Found and cleaned up 4 empty switches in `\uart_controller.$proc$uart_controller.v:528$305'.
-Removing empty process `uart_controller.$proc$uart_controller.v:528$305'.
-Found and cleaned up 4 empty switches in `\uart_controller.$proc$uart_controller.v:515$284'.
-Removing empty process `uart_controller.$proc$uart_controller.v:515$284'.
-Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:472$273'.
-Removing empty process `uart_controller.$proc$uart_controller.v:472$273'.
-Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:459$238'.
-Removing empty process `uart_controller.$proc$uart_controller.v:459$238'.
-Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:449$227'.
-Removing empty process `uart_controller.$proc$uart_controller.v:449$227'.
+Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:675$445'.
+Removing empty process `uart_controller.$proc$uart_controller.v:675$445'.
+Found and cleaned up 3 empty switches in `\uart_controller.$proc$uart_controller.v:641$438'.
+Removing empty process `uart_controller.$proc$uart_controller.v:641$438'.
+Found and cleaned up 3 empty switches in `\uart_controller.$proc$uart_controller.v:627$404'.
+Removing empty process `uart_controller.$proc$uart_controller.v:627$404'.
+Found and cleaned up 4 empty switches in `\uart_controller.$proc$uart_controller.v:611$383'.
+Removing empty process `uart_controller.$proc$uart_controller.v:611$383'.
+Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:595$363'.
+Removing empty process `uart_controller.$proc$uart_controller.v:595$363'.
+Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:571$351'.
+Removing empty process `uart_controller.$proc$uart_controller.v:571$351'.
+Found and cleaned up 2 empty switches in `\uart_controller.$proc$uart_controller.v:560$344'.
+Removing empty process `uart_controller.$proc$uart_controller.v:560$344'.
+Found and cleaned up 5 empty switches in `\uart_controller.$proc$uart_controller.v:549$330'.
+Removing empty process `uart_controller.$proc$uart_controller.v:549$330'.
+Found and cleaned up 4 empty switches in `\uart_controller.$proc$uart_controller.v:538$305'.
+Removing empty process `uart_controller.$proc$uart_controller.v:538$305'.
+Found and cleaned up 4 empty switches in `\uart_controller.$proc$uart_controller.v:525$284'.
+Removing empty process `uart_controller.$proc$uart_controller.v:525$284'.
+Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:478$273'.
+Removing empty process `uart_controller.$proc$uart_controller.v:478$273'.
+Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:465$238'.
+Removing empty process `uart_controller.$proc$uart_controller.v:465$238'.
+Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:452$227'.
+Removing empty process `uart_controller.$proc$uart_controller.v:452$227'.
 Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:440$219'.
 Removing empty process `uart_controller.$proc$uart_controller.v:440$219'.
 Found and cleaned up 1 empty switch in `\uart_controller.$proc$uart_controller.v:430$213'.
@@ -599,22 +599,22 @@ Removed top 2 bits (of 3) from port B of cell uart_controller.$add$uart_controll
 Removed top 2 bits (of 3) from port B of cell uart_controller.$add$uart_controller.v:342$194 ($add).
 Removed top 3 bits (of 4) from port B of cell uart_controller.$add$uart_controller.v:344$195 ($add).
 Removed top 3 bits (of 4) from port B of cell uart_controller.$sub$uart_controller.v:345$196 ($sub).
-Removed top 3 bits (of 4) from port B of cell uart_controller.$add$uart_controller.v:462$255 ($add).
-Removed top 3 bits (of 4) from port B of cell uart_controller.$sub$uart_controller.v:463$258 ($sub).
-Removed top 2 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:518$299 ($eq).
-Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:519$302 ($eq).
-Removed top 2 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:533$324 ($eq).
-Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:535$328 ($eq).
-Removed top 3 bits (of 8) from port B of cell uart_controller.$eq$uart_controller.v:541$334 ($eq).
-Removed top 5 bits (of 8) from port B of cell uart_controller.$eq$uart_controller.v:543$340 ($eq).
-Removed top 2 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:552$346 ($eq).
-Removed top 3 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:581$373 ($eq).
-Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:605$421 ($eq).
-Removed top 3 bits (of 4) from port B of cell uart_controller.$sub$uart_controller.v:606$425 ($sub).
-Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:607$428 ($eq).
-Removed top 3 bits (of 4) from mux cell uart_controller.$ternary$uart_controller.v:609$435 ($mux).
-Removed top 3 bits (of 4) from port B of cell uart_controller.$add$uart_controller.v:609$436 ($add).
-Removed top 1 bits (of 4) from port B of cell uart_controller.$gt$uart_controller.v:659$460 ($gt).
+Removed top 3 bits (of 4) from port B of cell uart_controller.$add$uart_controller.v:468$255 ($add).
+Removed top 3 bits (of 4) from port B of cell uart_controller.$sub$uart_controller.v:469$258 ($sub).
+Removed top 2 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:528$299 ($eq).
+Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:529$302 ($eq).
+Removed top 2 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:543$324 ($eq).
+Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:545$328 ($eq).
+Removed top 3 bits (of 8) from port B of cell uart_controller.$eq$uart_controller.v:551$334 ($eq).
+Removed top 5 bits (of 8) from port B of cell uart_controller.$eq$uart_controller.v:553$340 ($eq).
+Removed top 2 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:562$346 ($eq).
+Removed top 3 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:597$373 ($eq).
+Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:629$421 ($eq).
+Removed top 3 bits (of 4) from port B of cell uart_controller.$sub$uart_controller.v:630$425 ($sub).
+Removed top 1 bits (of 4) from port B of cell uart_controller.$eq$uart_controller.v:631$428 ($eq).
+Removed top 3 bits (of 4) from mux cell uart_controller.$ternary$uart_controller.v:633$435 ($mux).
+Removed top 3 bits (of 4) from port B of cell uart_controller.$add$uart_controller.v:633$436 ($add).
+Removed top 1 bits (of 4) from port B of cell uart_controller.$gt$uart_controller.v:683$460 ($gt).
 Removed top 1 bits (of 4) from port B of cell uart_controller.$procmux$599_CMP0 ($eq).
 Removed top 3 bits (of 4) from port B of cell uart_controller.$procmux$601_CMP0 ($eq).
 Removed top 1 bits (of 4) from port B of cell uart_controller.$procmux$604_CMP0 ($eq).
@@ -627,7 +627,7 @@ Removed top 2 bits (of 3) from port B of cell uart_controller.$procmux$888_CMP0 
 Removed top 1 bits (of 3) from port B of cell uart_controller.$procmux$1116_CMP0 ($eq).
 Removed top 1 bits (of 3) from port B of cell uart_controller.$procmux$1125_CMP0 ($eq).
 Removed top 2 bits (of 3) from port B of cell uart_controller.$procmux$1128_CMP0 ($eq).
-Removed top 3 bits (of 4) from wire uart_controller.$ternary$uart_controller.v:609$435_Y.
+Removed top 3 bits (of 4) from wire uart_controller.$ternary$uart_controller.v:633$435_Y.
 Removed top 1 bits (of 8) from wire uart_controller.status_val.
 
 2.9. Executing OPT_CLEAN pass (remove unused cells and wires).
@@ -714,6 +714,6 @@ Module uart_controller directly or indirectly contains formal properties -> sett
 5. Executing RTLIL backend.
 Output filename: ../model/design.il
 
-End of script. Logfile hash: ce54b88e67, time: 0.07s, user: 0.07s, system: 0.00s
+End of script. Logfile hash: bf4a55533f, time: 0.07s, user: 0.07s, system: 0.00s
 Yosys 0.69 (git sha1 9f75ca1f9, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)
-Time spent: 22% 2x read_verilog (0 sec), 15% 6x opt_clean (0 sec), ...
+Time spent: 24% 2x read_verilog (0 sec), 16% 6x opt_clean (0 sec), ...
