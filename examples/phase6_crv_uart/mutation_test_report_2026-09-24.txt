@@ -1,0 +1,45 @@
+==============================================================
+MUTATION TEST -- examples/phase6_crv_uart/uart_crv_cov_tb.v
+date: 2026-09-24   seeds: 1 3 5   mode: steer=1
+==============================================================
+
+G1  baseline: the suite must PASS on the unmodified RTL
+    baseline verdict: PASS
+
+  M1 TX parity polarity swapped (even<->odd)
+    predicted DETECT, got DETECT   (as predicted)
+    why: the RX parity check must disagree and set STATUS.parity_err, which every status read asserts is clear
+
+  M2 RX data bit inverted at the mid-bit sample
+    predicted DETECT, got DETECT   (as predicted)
+    why: every received byte must mismatch the reference model
+
+  M3 CTRL.stop_bits ignored by TX (always one stop bit)
+    predicted DETECT, got DETECT   (as predicted)
+    why: a two-stop-bit frame becomes one bit short, so the next frame's start bit lands inside the previous frame's stop window
+
+  M4 TX FIFO count never increments on a lone push
+    predicted DETECT, got DETECT   (as predicted)
+    why: tx_full can then never assert, so coverage bin cp_txq.full is unreachable and CLOSURE fails -- this mutant is caught by the coverage criterion, not by any data check
+
+  M5 BAUD_DIV ignored by the baud generator (always divide-by-1)
+    predicted ESCAPE, got ESCAPE   (as predicted)
+    why: PREDICTED ESCAPE: in loopback the TX and RX engines share one baud generator, so a wrong divisor desynchronises nothing. A loopback bench is structurally blind to baud-rate errors
+
+  M6 STATUS read no longer clears the sticky error bits
+    predicted ESCAPE, got ESCAPE   (as predicted)
+    why: PREDICTED ESCAPE: no error is ever injected in a clean loopback burst, so a bit that fails to CLEAR is never observed set in the first place
+
+==============================================================
+  mutants injected      : 6
+  detected              : 4
+  escaped               : 2
+  verdict as predicted  : 6 / 6
+  surprises             : 0
+
+  A predicted escape is a measured statement about the suite's reach.
+  M5 is the important one: loopback shares one baud generator between
+  TX and RX, so no loopback bench of any sophistication can detect a
+  baud-rate error. That is an argument for the standalone RX bit-driver
+  the Phase 4 milestone still has open, not for more stimulus here.
+==============================================================
