@@ -84,6 +84,10 @@ Last updated: 2026-09-07
       notes/2026-09-05-verification-planning-and-stimulus-strategy-
       tradeoffs.md, Section 1
 - [x] Directed vs. constrained-random vs. coverage-driven trade-offs
+      (**quantified 2026-09-24**: the trade-off was studied in Phase 2 and
+      is now a measurement -- 7.3x on the mean, 10.7x on the worst seed,
+      2.9x on the best, spread 6.1x -> 1.7x. See
+      `examples/phase6_crv_uart/closure_sweep_2026-09-24.txt`)
       -- strengths/weaknesses of each and the recommended CRV-then-
       directed-gap-filling hybrid; connected back to this repo's own
       Phase 2 milestone (`alu_combined_tb.sv`) as an already-built,
@@ -243,6 +247,14 @@ features to constrained-random; code coverage (Section 5 targets 95%) has
 never been measured, because Icarus has no native support; and F7's
 baud-tolerance number is unmeasured. These are Phase 6 / capstone items
 now, not Phase 4 gaps to reopen.
+
+> **Updated 2026-09-24.** The first of those three is closed:
+> `examples/phase6_crv_uart/` drives constrained-random, coverage-driven
+> stimulus with a closure pass criterion, over the register interface and
+> the loopback datapath. The third is **not** closed and now has a reason
+> rather than a backlog entry -- mutation M5 showed that loopback shares
+> one baud generator between TX and RX, so F7 is unmeasurable in this
+> bench shape at any level of effort. The second is unchanged.
 
 **The single most valuable thing Phase 4 produced is not a testbench.**
 Three sessions in a row found the same defect class -- *the subsystem
@@ -417,8 +429,35 @@ measured rather than quietly dropped.
             Section 7)
       - [ ] Full UVM environment built
       - [ ] SVA protocol checkers added
-      - [ ] Functional coverage report + closure target stated
+      - [x] Functional coverage report + closure target stated
+            (**DONE 2026-09-24**, `examples/phase6_crv_uart/`, the top and
+            longest-standing open item). Constrained-random,
+            coverage-driven UART stimulus in plain Verilog-2001 --
+            rejection sampling with a bounded attempt budget standing in
+            for a constraint solver (309 rejections on a random run,
+            worst single draw 11, budget 200) and counter arrays standing
+            in for a covergroup, because Icarus 10.3 has none of `rand`,
+            `constraint` or `covergroup`. 30 bins over 5 coverpoints and
+            2 crosses; **closure is a PASS CRITERION, not a report
+            line**, and that decision earned itself twice over (see the
+            two notes below). Measured over 8 seeds, same constraints,
+            same seeds, steered vs pure random: mean 341 -> 47
+            transactions to closure (**7.3x**), worst seed 643 -> 60
+            (**10.7x**), best seed 105 -> 36 (2.9x), seed-to-seed spread
+            6.1x -> 1.7x. **The spread is the result**: coverage-driven
+            stimulus buys predictability of closure rather than speed,
+            and a regression budget is set by the worst case. Mutation
+            report: 6 injected into COPIES of the RTL, 4 detected,
+            2 escaped, **6/6 verdicts as predicted in advance**
+            (`mutation_test_report_2026-09-24.txt`)
       - [ ] Written summary of methodology/results
+      - [ ] Constrained-random stimulus driven at the RX PIN rather than
+            through loopback -- created 2026-09-24 by mutation M5, and
+            the reason F7's baud tolerance is still unmeasured: in
+            loopback the TX and RX engines SHARE one baud generator, so a
+            wrong divisor desynchronises nothing and **no loopback bench
+            at any level of sophistication can detect a baud-rate
+            error**. Structural, not a stimulus gap
 
 ## Notes
 
