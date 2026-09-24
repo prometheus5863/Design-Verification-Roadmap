@@ -1,0 +1,53 @@
+# vvp sim +seed=1 +steer=0   (pure constrained-random)
+================================================================
+CONSTRAINED-RANDOM / COVERAGE-DRIVEN UART STIMULUS
+  seed=1  steer=0  max_tx=4000  bins=30
+================================================================
+
+  ---------------- FUNCTIONAL COVERAGE REPORT ----------------
+  cp_parity  none=49 even=45 odd=48
+  cp_stop    one=78 two=64
+  cp_baud    d0=31 d1=38 d2=37 d3=36
+  cp_data    00=1 FF=4 onehot=20 AA55=8 evenpop=316 oddpop=299
+  cp_txq     empty=21662 partial=76287 full=10
+  cross parity x stop      : 25 24 27 18 26 22
+  cross parity x popcount  : 114 118 109 107 106 94
+  bins hit: 30/30  (100%)
+  -----------------------------------------------------------
+
+  transactions driven      : 648
+  bytes received & checked : 648
+  pushes skipped (tx_full) : 0
+  constraint rejections    : 309 total, 11 worst single draw, budget 200
+  TRANSACTIONS TO CLOSURE  : 643   (steer=0)
+
+  checks executed: 98749
+  RESULT: PASS  (98749/98749 checks)
+================================================================
+
+# vvp sim +seed=1 +steer=1   (coverage-driven steering after 24 transactions)
+================================================================
+CONSTRAINED-RANDOM / COVERAGE-DRIVEN UART STIMULUS
+  seed=1  steer=1  max_tx=4000  bins=30
+================================================================
+
+  ---------------- FUNCTIONAL COVERAGE REPORT ----------------
+  cp_parity  none=4 even=3 odd=4
+  cp_stop    one=6 two=5
+  cp_baud    d0=3 d1=1 d2=3 d3=4
+  cp_data    00=5 FF=1 onehot=1 AA55=4 evenpop=21 oddpop=22
+  cp_txq     empty=1793 partial=7003 full=1
+  cross parity x stop      : 2 2 2 1 2 2
+  cross parity x popcount  : 18 8 4 7 9 8
+  bins hit: 30/30  (100%)
+  -----------------------------------------------------------
+
+  transactions driven      : 54
+  bytes received & checked : 54
+  pushes skipped (tx_full) : 0
+  constraint rejections    : 10 total, 5 worst single draw, budget 200
+  TRANSACTIONS TO CLOSURE  : 47   (steer=1)
+
+  checks executed: 8862
+  RESULT: PASS  (8862/8862 checks)
+================================================================

@@ -1,0 +1,24 @@
+==============================================================
+CRV / COVERAGE-DRIVEN CLOSURE SWEEP   date: 2026-09-24
+  8 seeds, both modes, identical constraints and identical seeds
+==============================================================
+
+  seed   random         steered        ratio
+  1      643            47             13.7x
+  2      335            48             7.0x
+  3      252            41             6.1x
+  4      511            36             14.2x
+  5      105            50             2.1x
+  6      121            60             2.0x
+  7      354            51             6.9x
+  8      405            42             9.6x
+
+  mean    random 340.8   steered 46.9   ratio 7.3x
+  worst   random 643   steered 60   ratio 10.7x
+  best    random 105   steered 36   ratio 2.9x
+  spread  random 6.1x   steered 1.7x
+
+  READ THE SPREAD, NOT ONLY THE MEAN. Steering improves the worst case
+  far more than the best, which is the honest form of the claim: a
+  coverage-driven flow buys PREDICTABILITY of closure more than speed.
+==============================================================
