@@ -2292,3 +2292,215 @@ and RTL; the study notes; progress.md). This AUTOMATION_LOG.md entry makes
 6. The correction is its own commit rather than folded into the note,
 because a claim that was wrong for four commits and then fixed should be
 visible as that in the history.
+
+---
+
+## 2026-09-24 — Constrained-random and coverage-driven UART stimulus: the top item closed, a measured 7.3x, and two findings about the coverage model itself
+
+**Status:** Automated session. Live web search **not used** — everything this
+session needed was the repo's own RTL, its vplan and Icarus. Took the top item
+of 2026-09-23's list verbatim: *"Constrained-random and coverage-driven UART
+stimulus — all stimulus in all benches is still directed while the vplan
+assigns most features to CRV. Now the top item and the longest-standing one."*
+
+**What was built.** `examples/phase6_crv_uart/` — `uart_crv_cov_tb.v` (a
+constrained-random, coverage-driven, self-checking loopback bench),
+`run_crv_cov.sh` (the closure sweep) and `run_mutation_tests.sh`, with all
+three outputs recorded.
+
+Icarus 10.3 has no `rand`, no `constraint` blocks, no `covergroup` and no
+`solve … before`, so both mechanisms are written out in Verilog-2001. **That
+is the pedagogical value, not a workaround:** a constraint solver written by
+hand is rejection sampling over a bounded budget, a covergroup written by hand
+is counter arrays plus a sampling point plus a closure predicate, and a
+coverage-driven flow written by hand is a mapping from *unhit bin* back to
+*stimulus that hits it*. The third is the one interviews probe, and doing it
+by hand makes the answer concrete: the tool does not invent stimulus, it
+searches the constraint space with the coverage database as its objective.
+Everything else the engineer writes either way.
+
+1. **The rejection budget is a real guard, not decoration.**
+   `pick_config_random` counts rejected candidates and **fails the run** past
+   200 in a single draw — the hand-built equivalent of a solver reporting an
+   unsatisfiable constraint set. Without it an over-constrained draw is an
+   infinite loop, and **an infinite loop is the one failure mode a regression
+   cannot report**. Measured on a random run: 309 rejections total, worst
+   single draw 11. `C2` (`baud_div <= 3`) is drawn from 0..7 deliberately so
+   the rejection count is a real number; a constraint that never rejects is
+   untested machinery.
+
+2. **RESULT — the measured cost of not steering, over 8 seeds, same
+   constraints and same seeds.** Transactions to closure of all 30 bins:
+
+   | | random | steered | ratio |
+   |---|---|---|---|
+   | mean | 340.8 | 46.9 | **7.3x** |
+   | worst seed | 643 | 60 | **10.7x** |
+   | best seed | 105 | 36 | 2.9x |
+   | spread (max/min) | **6.1x** | **1.7x** | — |
+
+   **The spread is the result.** Steering improves the worst case 10.7x and
+   the best 2.9x, collapsing a 6.1x seed-to-seed spread to 1.7x. So the honest
+   claim is not "coverage-driven stimulus is 7x faster" but **"coverage-driven
+   stimulus makes closure predictable"**, and on a real project that is the
+   more valuable of the two because a regression budget is set by the worst
+   case. Seeds 5 and 6 give 2.0–2.1x: a session that had run one seed and
+   drawn seed 5 would have recorded a true number that misrepresents the
+   mechanism by a factor of five. Same lesson as the graphene repo's
+   2026-09-20 unrepresentative-sample finding, reached from the other side.
+
+3. **FINDING — a coverage hole can be a SAMPLING-POINT defect, and in the
+   report it is indistinguishable from a stimulus gap.** The first working
+   bench closed 29/30, missing `cp_txq.full`. The natural reading — the
+   stimulus never fills the TX FIFO — was wrong. The push loop samples STATUS
+   *before* each push, so with `burst_len = 8` its last sample sits at
+   occupancy 7 while the FIFO reaches 8 immediately afterwards. The stimulus
+   created the state and the covergroup never looked. One extra sample after
+   the push loop closed it. `full = 0` in a report cannot distinguish "never
+   happened" from "never sampled", and the two have completely different
+   fixes. It was caught **because closure is a pass criterion** — as a report
+   line, "29/30" beside a PASS reads as "nearly closed" and gets carried for
+   weeks.
+
+4. **FINDING — the closure counter and the closure criterion were reading
+   different databases. Sixth occurrence of the verdict-vs-checking class
+   (09-17, 09-18, 09-19, 09-20, 09-21), and the first found by two outputs of
+   one run disagreeing.** `seed=6, steer=1` printed both
+   `TRANSACTIONS TO CLOSURE : NOT REACHED in 60` and
+   `RESULT: PASS (11460/11460 checks)`. The criterion called `bins_hit()` at
+   the end; the counter updated only at *push* sites; seed 6's last bin was
+   filled by a STATUS sample. **The bench had closed and reported that it had
+   not.** Every coverage update now routes through one `note_closure` task,
+   so there is one definition of closure — and the bench now asserts that its
+   two statements about closure agree. Two lines. **An inconsistency between
+   two outputs of one run is the cheapest bug detector available: no reference
+   model, no golden file, no second tool.** Worth looking for anywhere a bench
+   states the same fact twice.
+
+5. **RESULT — mutation testing: 6 injected, 4 detected, 2 escaped, 6/6
+   verdicts as predicted in advance.** Every mutant goes into a **copy** of
+   the RTL under `/tmp`; the repo's RTL is never touched. G1 requires the
+   baseline to PASS and aborts otherwise, because a baseline that does not
+   pass makes every row meaningless. Following 2026-09-19's rule, the script
+   scores prediction against outcome rather than a detection count.
+
+   Detected: M1 TX parity polarity swapped (RX parity check disagrees and
+   sets `parity_err`, which every status read asserts clear); M2 RX data bit
+   inverted at the mid-bit sample; M3 `CTRL.stop_bits` ignored by TX (a
+   two-stop frame runs one bit short, so the next start bit lands inside the
+   previous frame's stop window); **M4 TX FIFO count never increments**.
+
+6. **M4 is the session's best argument for its own design decision.** Under
+   M4 every byte still arrives correctly and every data check passes; what
+   breaks is that `tx_full` can never assert, so `cp_txq.full` becomes
+   unreachable and **closure fails**. **M4 is caught by the coverage
+   criterion and by no data check whatever.** Closure-as-pass-criterion
+   catches a class of RTL defect that no amount of self-checking stimulus
+   reaches — which is exactly the kind of claim this repo has previously had
+   to take on faith.
+
+7. **M5 is the most useful row in the table, and it is an escape.**
+   `BAUD_DIV` ignored by the baud generator: **escaped, predicted.** In
+   loopback the TX and RX engines **share one baud generator**, so a wrong
+   divisor desynchronises nothing — both sides are wrong together and the data
+   is perfect. **No loopback bench, at any level of sophistication, can detect
+   a baud-rate error.** That is structural rather than a gap in this suite,
+   and it converts the long-open *"F7's baud-tolerance number, never measured
+   in any bench"* item from "write more stimulus" into a specific argument for
+   the **standalone RX bit-driver** the Phase 4 milestone still has open: only
+   a driver with its own timebase can measure F7 at all. M6 (STATUS read no
+   longer clears the sticky bits) also escaped as predicted — a clean loopback
+   burst never injects an error, so a bit that fails to *clear* is never
+   observed *set*.
+
+8. **One guard against the mutation harness itself.** The script fails the
+   run if an injection matched nothing. A `sed` that silently misses leaves
+   the RTL unmodified and the row scores as an escape against **correct**
+   RTL — the same class of false verdict the mutation test exists to prevent,
+   one level up. This is the 2026-09-23 `span()`/`C1` name-collision lesson
+   applied before it cost anything.
+
+9. **One load-bearing implementation detail, recorded because getting it
+   wrong made a bin unreachable.** The TX FIFO is filled with `CTRL.en = 0`.
+   `tx_push` does not depend on `en`, but the TX engine only pops in
+   `TX_IDLE` when enabled, so with `en = 1` the first byte drains within a few
+   cycles of the first push and `tx_cnt` never reaches 8 — making
+   `cp_txq.full` unreachable and the closure criterion permanently
+   unsatisfiable. A coverage model can be written so that the DUT cannot
+   satisfy it, and the bench then fails forever for a reason that looks like
+   a DUT bug.
+
+**Methodological note.** Findings 3 and 4 are both about the *coverage model*
+rather than the stimulus or the DUT, and together they make a point the repo
+has not recorded before: **a covergroup is a measuring instrument, and an
+instrument can be miscalibrated in ways that look exactly like a result.**
+Finding 3 is a mis-placed sampling point reading as a stimulus gap; finding 4
+is two readouts of one instrument disagreeing. Five of the repo's six
+verdict-vs-checking occurrences were about *checkers*; this is the first pair
+about *measurement*, and the detectors are different — a reachability argument
+for the first, a cross-check between two outputs for the second.
+
+**Not yet covered (candidates for future runs):**
+- **Constrained-random stimulus driven at the RX PIN, from an independent
+  timebase** — created today by M5 and now the **top** item. It is the only
+  thing that can measure F7's baud tolerance, and it is also what would make
+  framing errors, parity errors and overrun reachable outside the directed
+  bring-up bench. It subsumes the standalone RX bit-driver item that has been
+  open since the Phase 4 milestone
+- **`abc pdr` as a second engine** — unchanged from 09-23 and still the best
+  single experiment available: three of the things this repo cannot say are
+  the same ~145-clock reach against a bounded engine
+- **A vplan v2 revision** — now carries four corrections it should absorb:
+  the "live status" wording (09-17), silence on reset values (09-22), C6/C7's
+  behaviour assigned to formal where formal provably cannot reach it (09-23),
+  and today's, that Section 3's CRV assignment is satisfiable for the register
+  interface and the loopback datapath but **not** for F7, for a structural
+  reason the plan does not mention
+- **Per-property coverage of the PHASE 4 UVM environment** — open since
+  09-23; the technique is scripted and the UVM milestone still has no
+  per-component attribution
+- **Widen the coverage model** — created today. 30 bins is small: no bins for
+  interrupt-enable combinations, none for the loopback mux itself, none for
+  reset asserted mid-frame. Finding 9 is the warning attached to this item:
+  check a new bin is reachable *before* adding it to a closure criterion
+- **A less greedy steering policy** — created today. Steering here is
+  first-unhit, the simplest policy there is; a real tool biases the
+  constraint distribution rather than overriding it, and the difference shows
+  up when constraints interact, which C1–C4 barely do
+- **Mutants not yet attempted**: the overrun path, interrupt *enable*
+  combinations, the loopback mux, the RX start-bit glitch filter
+- **A property that actually needs a strengthening invariant** — studied and
+  unexercised; blocked on the same bound
+- **The SVA sequence layer** (`##`, `[*]`, `|->`, local variables) — runnable
+  on neither tool here; worth one session establishing whether anything
+  accessible closes the gap, since interviews assume fluency
+- **A mutation script for `examples/phase4_uvm_milestone/`** — it has a report
+  but no runnable script. Open since 2026-09-19
+- **Code coverage measurement** (plan Section 5 targets 95%) — Icarus has no
+  native support. Open since 2026-09-18
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview-prep
+
+**Automation health:** Device reachable, folder connected; neither repo had a
+2026-09-24 entry, so a full session was run. `tools/setup_iverilog.sh` worked
+first time; both 2026-09-17 gotchas still apply and both were avoided (source
+it without a pipe; wrap the real binary in `timeout`, not the shell function).
+**Two new operational findings:**
+
+1. **`git config user.name/user.email` was missing in this clone** and the
+   first commit failed with *"Author identity unknown"*. The identity had been
+   set in a command that also ran a full `git clone` and was killed by the
+   180-second tool timeout before reaching the `git config` lines. **Set the
+   identity in its own call**, not appended to a long one.
+2. **A full `git clone` of the graphene repo would not complete** over the
+   session VM's proxy — four attempts, two with `early EOF` /
+   `invalid index-pack output`, two silently stalled, one measurement at
+   **238 B/s** while this repo cloned in 8.7 s. The working recipe is a
+   partial + shallow + sparse clone that never requests the plot blobs
+   (`git fetch --depth 1 --filter=blob:none`, `core.sparseCheckout` excluding
+   `*.png`); 26 seconds instead of never. Recorded in full in that repo's
+   log. The bridge also dropped twice mid-session; both times the in-flight
+   command had **not** executed, and `git log` was the reliable check.
+
+**Commits this run:** 4 (the bench with its runner and two recorded outputs;
+the mutation harness with its report; the study note; progress.md). This
+AUTOMATION_LOG.md entry makes 5.
