@@ -2504,3 +2504,228 @@ it without a pipe; wrap the real binary in `timeout`, not the shell function).
 **Commits this run:** 4 (the bench with its runner and two recorded outputs;
 the mutation harness with its report; the study note; progress.md). This
 AUTOMATION_LOG.md entry makes 5.
+
+---
+
+## 2026-09-25
+
+**The item closed:** *"Constrained-random stimulus driven at the RX PIN, from an
+independent timebase"* — the top item of the 2026-09-24 list, created by that
+session's mutant M5. It subsumes the standalone RX bit-driver item open since the
+Phase 4 milestone, and it closes the long-open *"F7's baud-tolerance number,
+never measured in any bench"*. The **vplan v3 revision**, open since 2026-09-17
+and carrying five corrections, is closed in the same session, because today's
+work supplied the one it was waiting on.
+
+Code: `examples/phase6_rx_pin_driver/uart_rx_pin_tb.v` (888 lines),
+`run_rx_pin.sh`, `run_mutation_tests.sh`. Output:
+`uart_rx_pin_sim_output_2026-09-25.txt` (3 seeds, 93 checks, 0 errors),
+`mutation_test_report_2026-09-25.txt`. Note:
+`notes/2026-09-25-rx-pin-driver-independent-timebase-and-baud-tolerance.md`.
+Plan: `verification_plans/uart_controller_verification_plan.md` v3.
+
+1. **THE STRUCTURAL ARGUMENT, stated generally because it is the session's most
+   portable finding.** M5 escaped a 60-check self-checking suite on 09-24 not
+   because the suite was weak but because **a shared resource between stimulus
+   and checker cancels exactly the faults that live in it.** In loopback the TX
+   and RX engines share one baud generator, so a wrong `BAUD_DIV` makes the
+   transmitter and the receiver wrong in the *same* way and the data is perfect.
+   More constraints, more bins, more seeds reach none of it. The only fix is a
+   second, independent timebase — which is what this bench is. It reads nothing
+   from the DUT: not its clock, not `baud_cnt`, not `os_tick`.
+
+2. **RESULT — F7 measured, twenty days after the plan first asked for it.**
+
+   | config | fast (eps<0) | slow (eps>0) | binding sample |
+   |---|---|---|---|
+   | 8N1 | −4.50% | +6.25% | data bit 7 / stop 1 |
+   | 8N2 | −4.50% | +6.25% | data bit 7 / stop 2 |
+   | 8E1 | −4.05% | +5.60% | parity bit / stop 1 |
+   | 8O1 | −4.05% | +5.60% | parity bit / stop 1 |
+
+3. **RESULT — three properties of that table matter more than its numbers, and
+   each changes how a sign-off criterion should be written.** (a) **It is
+   asymmetric, by design and not by accident**: drifting *late* off a stop bit is
+   harmless because the line idles HIGH and a late sample of idle still reads 1,
+   so the fast side is bound by the last sample carrying a **value** and the slow
+   side by the last **stop** bit, whose early drift lands in a data bit that may
+   be 0. A "±X%" specification asserts a symmetry this design does not have.
+   (b) **Parity costs tolerance** — it pushes the last checked sample one bit
+   further from the resync — so F7's acceptance number is **per frame format**; a
+   second stop bit costs nothing measurable. (c) **It is a band, not a number**:
+   uncontrolled arrival-edge phase against the free-running 16× counter quantises
+   the sample point in 1/16-bit steps, one of which is **0.69% of eps**, i.e.
+   fourteen steps of the sweep grid. **The sweep's 0.05% resolution is finer than
+   the phenomenon it measures.** The defensible claim is *better than ±4.0% in
+   every configuration measured, asymmetric, tighter with parity*.
+
+4. **RESULT — the RTL comment was the spec the predictions came from, and the
+   comment is wrong.** P1–P5 were pre-registered in the testbench header from the
+   RTL's *"16x oversample, sample at mid-bit (os position 8)"* = 0.5000 bit. A
+   four-line hierarchical probe on `dut.rx_mid` measures the samples landing at
+   **0.5938–0.6250 bit**, late by up to two oversample ticks, because `rx_os`
+   starts counting at the first `os_tick` *after* edge detection and `rx_sync`
+   adds a clk. **P1 and P4 therefore FAIL**, and they are left in the file scored
+   FAIL: the content is not that a prediction was wrong but *what it was derived
+   from*. **A comment is an unverified assertion, and predicting from one is
+   predicting from documentation** — this repo's verdict-vs-checking class, one
+   level up, and its seventh occurrence.
+
+5. **A prediction that failed and then passed, with nothing about the DUT
+   changing.** P3 (*"a second stop bit costs nothing"*, written as a null result
+   so it could fail) FAILED on the first run: at the 0.2% sweep grid used then,
+   8N2 read one grid step tighter than 8N1. At 0.05% the two are identical and P3
+   holds. **A measurement grid coarser than the effect under test manufactures
+   differences** — the same lesson the graphene repo recorded on the same day
+   about a finite-difference step, reached from the opposite direction.
+
+6. **RESULT — two independent routes to the same number, and the cross-check
+   earns its keep.** With the sample point measured, the tolerance is arithmetic:
+   sample *i* sits at *(i + off)* bit periods, driver bit *i* spans
+   *[i, i+1]·(1+eps)*, so `eps ≤ off/i` one way and `eps ≥ −(1−off)/(i+1)` the
+   other. Three corrections, each measured: **`off` is the offset of the LINE
+   VALUE, not the sample** (`rx_sync` delays it one clk = 1/32 bit = 0.35% of eps
+   at *i*=9; without that term the derived limit is 6.60% against a swept 6.25%,
+   with it they agree); the binding *i* **differs by direction** (item 3a); and
+   `off` is **phase-quantised** (item 3c). Two of the seven mutants are caught by
+   this cross-check and **by nothing else in the suite**: a cross-check between
+   two independent routes catches the class of defect that moves one route and
+   not the other.
+
+7. **RESULT — past the slow limit the failure is EXACTLY "data bit 7 is 0".** The
+   stop sample lands in driver bit 8, so at eps = +6.80%: `frame_err` on **8 of
+   8** bytes with `data[7]=0` and **0 of 8** with `data[7]=1`, data intact in
+   both. An exactly known outcome, not a plausible range.
+
+8. **RESULT — the degradation staircase, unpredicted, and found by item 7's first
+   version FAILING.** That version used eps = +7.50%, which is past `off/8` as
+   well as `off/9`, so data bit 7 was mis-sampled too and every byte returned with
+   bit 7 replaced by bit 6 — the test failed while its headline prediction passed.
+   The frame does not "stop working" at a threshold; it **fails one sample at a
+   time, from the last backwards**, at `off/9`, `off/8`, `off/7`, …, each failed
+   sample reading its predecessor's value. Measured against prediction at five eps
+   points and **exact at all five**: 6.80% → 0 corrupt bits, 7.70% → 1, 8.70% →
+   2, 10.50% → 3, 12.50% → 4, with thresholds from T0's measured offset and
+   nothing else. The repo's clearest case so far of a *failure mode* specified as
+   precisely as a pass criterion, and it exists only because a failing test was
+   read rather than adjusted.
+
+9. **Mutation test: 7 injected, 7 detected, 0 escaped, 0 voided.** **M1 —
+   `BAUD_DIV` ignored, the 09-24 loopback escape — is caught with 59 errors**, the
+   first being T0's sample count, and that row is why the directory exists. Also
+   detected: sample position moved one tick, stop-bit check removed, parity
+   polarity swapped, glitch filter removed, overrun overwriting instead of
+   dropping, `rx_sync` bypassed. The harness voids any row whose `sed` matched
+   nothing — 09-24's guard, carried forward.
+
+10. **Two bugs in this bench, recorded rather than fixed quietly, and both are
+    this repo's standing classes appearing on the STIMULUS side for the first
+    time** (the six previous occurrences were about checkers; 09-24's pair were
+    about measurement). (a) **`$random` is signed.** The CRV generator computed
+    `($random % (2m+1)) − m`, so the remainder could be negative and eps reached
+    **−7.2% under a 2.4% constraint**: seven of twenty frames failed and the bench
+    blamed the DUT. A generator that silently exceeds its own constraint is
+    verdict-vs-checking in the stimulus — the constraint was documented, asserted
+    nowhere, and wrong. **A constraint worth a comment is worth a runtime check.**
+    (b) **A stimulus value that cannot exhibit the effect being counted.** Item
+    8's probe byte was `0x2A`, whose bits 7 and 6 are both 0, so the bit7←bit6
+    substitution was invisible and the staircase read one step low everywhere.
+    The exact twin of 09-24's unreachable coverage bin, on the other side of the
+    testbench: there a covergroup could not observe a real behaviour, here a
+    stimulus value could not exhibit one.
+
+11. **A third instance of the same class, in the checking code.** The derived
+    band's lower edge was first written as the literal `0.5625`. Under the mutant
+    that moves the sample point the band **inverted** (lo > hi) and the failure
+    message became nonsense. A hardcoded bound is a claim about this RTL; it is
+    now derived as one oversample tick below the measured value. This is the
+    graphene repo's lesson of the same day — *a numeric default is a claim about
+    scale* — arriving independently in Verilog.
+
+12. **vplan v3, and the diagnosis is about the PLAN rather than the RTL.** v1
+    assigned F7 to directed checking of the **TX** bit period: a check on the baud
+    *generator*, while F7's engineering content is the **receiver's** tolerance.
+    v1 flagged the tolerance number "to be finalized once RTL exists" and it
+    stayed open twenty days because **no bench the plan described could produce
+    it.** The strategy becomes a driven-pin receiver on an independent timebase,
+    the v1 TX-period check is retained as necessary and explicitly insufficient,
+    and the measured table is inserted with the three properties of item 3. The
+    same revision absorbs the four other corrections the item was carrying:
+    unspecified reset values (09-22), C6/C7 assigned to formal where formal
+    provably cannot reach them (09-23), Section 3's CRV assignment being
+    unsatisfiable for F7 (09-24), and — new today — **F3's "sampling-margin
+    corners" and F4's "corrupted parity" having been assigned to loopback
+    stimulus that cannot produce them**, since the DUT's own transmitter never
+    emits a bad stop bit, wrong parity or a runt pulse. No v1 or v2 text deleted.
+
+13. **Newly reachable, all impossible in loopback:** framing errors including the
+    sticky bit's read-to-clear; parity errors in both polarities, with the
+    correct-parity case checked alongside so the test cannot pass by flagging
+    everything; RX overrun deterministically, with the eight queued bytes verified
+    **intact** (the RTL drops the new byte rather than overwriting, and M6 shows
+    the check discriminates); and the start-bit glitch filter, plus a check that
+    the receiver survives it.
+
+**Methodological note.** Today's portable finding is item 1 — a shared resource
+between stimulus and checker cancels exactly the faults that live in it, and no
+amount of stimulus sophistication compensates, because the cancellation is in the
+topology. Its companion is item 6: the remedy for a blind spot is not a better
+checker on the same route but a **second, independent route**, and the two
+mutants caught only by the cross-check are the evidence. Items 10 and 11 extend
+the verdict-vs-checking series from checkers and measurement to **stimulus and
+thresholds**, which means every part of a testbench has now supplied an instance.
+
+**Not yet covered (candidates for future runs):**
+- **A coverpoint on the driven baud ERROR** — created today by the v3 revision and
+  the natural top item. `cp_baud_div`'s corner bins measure the divisor
+  *register*, not the tolerance; F7 needs bins on {0, within ±2%, within ±4%,
+  beyond the limit} and a closure criterion over them. The stimulus now exists;
+  the coverage model does not, and 09-24's finding 9 is the warning attached —
+  check a new bin is reachable *before* putting it in a closure criterion
+- **Fold the independent-timebase driver into the Phase 4 UVM environment as a
+  real `uvm_driver`** — created today. That environment's serial agent drives RX
+  at the DUT's own rate, so it still cannot reach what this bench reaches
+- **Two transmitters at once** — created today. The asymmetry in item 3a means a
+  link's tolerance is the *intersection* of two one-sided budgets, which is how a
+  real clock-accuracy spec is written (±2% at each end, not ±4% total). Nothing
+  here measures a link, only a receiver
+- **`abc pdr` as a second engine** — unchanged since 09-23 and still the best
+  single experiment available; today's item 6 is an argument for it, since it is
+  the same "get a second independent route" move applied to formal
+- **Per-property coverage of the PHASE 4 UVM environment** — open since 09-23
+- **Widen the coverage model** — created 09-24, untouched
+- **A less greedy steering policy** — created 09-24, untouched
+- **A mutation script for `examples/phase4_uvm_milestone/`** — open since 09-19;
+  today's script is a directly adaptable template
+- **Mutants not yet attempted**: interrupt *enable* combinations, the loopback mux
+  itself, reset asserted mid-frame
+- **A property that actually needs a strengthening invariant** — blocked on the
+  same bound
+- **The SVA sequence layer** — runnable on neither tool here; open since 09-20
+- **Code coverage measurement** — Icarus has none; open since 09-18. Now the
+  *only* remaining item of the three Phase 4 carried forward
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health:** Device reachable, folder connected; neither repo had a
+2026-09-25 entry, so a full session was run. `tools/setup_iverilog.sh` worked
+first time and **both 2026-09-17 gotchas still apply and were avoided** (source
+it without a pipe; wrap the real binary in `timeout`, not the shell function).
+`git config user.name/user.email` was again absent in a fresh clone and was set
+**in its own call**, per 09-24's finding. **A new operational finding, and it cost
+two commits:** the device VM **restarted mid-session**, and it came back with the
+working-tree files intact but this repo's recent **git objects zeroed** —
+`git fsck` reported six empty loose objects and two local commits were
+unrecoverable. The recovery that worked was to copy the working-tree files out,
+re-clone from GitHub, copy them back, **re-run the bench in the fresh clone to
+confirm it still passed**, and re-commit. Two lessons: the working tree survives a
+restart and `.git` may not, so **push each logical group as soon as it is
+committed** rather than batching a session's pushes at the end; and `git fsck`,
+not `git log`, is the check after a bridge drop — `git log` failed with a
+confusing "object file is empty" rather than reporting the damage. 2026-09-24's
+graphene clone constraint did **not** reproduce today in either repo.
+
+**Commits this run:** 4 (the bench with its runner, mutation harness and two
+recorded outputs; the vplan v3 revision; the study note; progress.md). This
+AUTOMATION_LOG.md entry makes 5. Commit hashes differ from the first attempt
+because of the VM restart described above; the content is identical and was
+re-verified before re-committing.
