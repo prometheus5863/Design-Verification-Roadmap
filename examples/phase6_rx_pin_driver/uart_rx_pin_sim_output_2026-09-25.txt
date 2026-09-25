@@ -1,0 +1,221 @@
+################ seed 1 ################
+==============================================================
+UART RX-PIN DRIVER, INDEPENDENT TIMEBASE   seed=1
+  DUT bit period : 320.0 ns  (16 x (BAUD_DIV=1 + 1) x 10.0 ns)
+  loopback       : OFF for every test in this file
+==============================================================
+
+--- T0: where does the DUT actually sample? ---
+    8N1        n=10  first sample at 0.6250 bit, last at 9.6250 bit, spacing exactly 1 bit
+    8E1        n=11  first sample at 0.5938 bit, last at 10.5938 bit, spacing exactly 1 bit
+    8N2        n=11  first sample at 0.6250 bit, last at 10.6250 bit, spacing exactly 1 bit
+    The RTL comment says "sample at mid-bit (os position 8)" = 0.5000 bit.
+    Measured: 0.6250 bit -- LATE by 0.1250 bit (2.0 oversample ticks),
+    because rx_os starts counting at the first os_tick AFTER edge detection
+    and rx_sync adds a clk.  Predictions P1/P4 were derived from the comment.
+
+--- T1: F7 baud tolerance, measured (0.05% steps) ---
+  config    fast(eps<0)  slow(eps>0)   last CHECKED sample
+  8N1             4.50%        6.25%   d7 (fast) / stop1 (slow)
+  8N2             4.50%        6.25%   d7 (fast) / stop2 (slow)
+  8E1             4.05%        5.60%   parity (fast) / stop1 (slow)
+  8O1             4.05%        5.60%   parity (fast) / stop1 (slow)
+  tightest over all eight measurements: 4.05%
+  derived from T0's measured sample point, no free parameters (8N1):
+      line-sample offset 0.5312 .. 0.5938 bit (one oversample tick of edge-phase quantisation, minus one clk of rx_sync)
+      slow  eps <= off/9        = 5.90% .. 6.59%    swept: 6.25%
+      fast  eps >= -(1-off)/9   = -4.51% .. -5.20%   swept: -4.50%
+
+--- T1b: the slow-side failure mode, predicted EXACTLY ---
+    at eps = +6.80%: frame_err on 8/8 bytes with data[7]=0, 0/8 with data[7]=1
+
+--- T1c: the degradation staircase, exact and unpredicted ---
+    off = 0.5312 .. 0.5938 bit; byte 0xAA; predicted corrupt-bit count = #{i in 1..8 : eps > off_hi/i}
+           eps        got    corrupt  predicted   
+         6.80%         aa          0          0               
+         7.70%         2a          1          1               
+         8.70%         6a          2          2               
+        10.50%         4a          3          3               
+        12.50%         5a          4          4               
+
+--- T2: constrained-random pin stimulus, 40 frames, |eps| <= 2.4% (60% of tightest) ---
+  frames driven 40, lost 0
+
+--- T3: framing error (loopback cannot produce one) ---
+
+--- T4: parity error, both polarities ---
+
+--- T5: RX overrun ---
+
+--- T6: start-bit glitch filter ---
+
+--- PRE-REGISTERED PREDICTIONS, SCORED ---
+  P1 8N1 tolerance in 3.5%..5.3%                        FAIL
+  P2 parity STRICTLY tightens tolerance vs 8N1           PASS
+  P3 a second stop bit costs NOTHING (null prediction)   PASS
+  P4 measured tolerance below the ideal 5.3%            FAIL
+  P5 fast/slow asymmetry >= 0.2% of eps                 PASS
+  (P6 -- this bench detects the BAUD_DIV mutant -- is scored by run_mutation_tests.sh)
+  Predictions are REPORTED, not asserted: a wrong prediction about
+  the DUT is a result, and failing the run on one would hide it.
+
+==============================================================
+  checks 93   errors 0
+  F7 BAUD TOLERANCE (the number the vplan requires and no
+  loopback bench in this repo could ever produce):
+      8N1  slow +6.25%  /  fast -4.50%
+      8E1  slow +5.60%  /  fast -4.05%
+  QUOTE IT AS A BAND, NOT A NUMBER: one oversample tick of
+  uncontrolled edge phase moves each limit by 0.69% of eps, so the
+  defensible statement is 'better than +/-4.0% in every configuration
+  measured, asymmetric, and tighter with parity than without'.
+RESULT: PASS
+==============================================================
+################ seed 2 ################
+==============================================================
+UART RX-PIN DRIVER, INDEPENDENT TIMEBASE   seed=2
+  DUT bit period : 320.0 ns  (16 x (BAUD_DIV=1 + 1) x 10.0 ns)
+  loopback       : OFF for every test in this file
+==============================================================
+
+--- T0: where does the DUT actually sample? ---
+    8N1        n=10  first sample at 0.6250 bit, last at 9.6250 bit, spacing exactly 1 bit
+    8E1        n=11  first sample at 0.5938 bit, last at 10.5938 bit, spacing exactly 1 bit
+    8N2        n=11  first sample at 0.6250 bit, last at 10.6250 bit, spacing exactly 1 bit
+    The RTL comment says "sample at mid-bit (os position 8)" = 0.5000 bit.
+    Measured: 0.6250 bit -- LATE by 0.1250 bit (2.0 oversample ticks),
+    because rx_os starts counting at the first os_tick AFTER edge detection
+    and rx_sync adds a clk.  Predictions P1/P4 were derived from the comment.
+
+--- T1: F7 baud tolerance, measured (0.05% steps) ---
+  config    fast(eps<0)  slow(eps>0)   last CHECKED sample
+  8N1             4.50%        6.25%   d7 (fast) / stop1 (slow)
+  8N2             4.50%        6.25%   d7 (fast) / stop2 (slow)
+  8E1             4.05%        5.60%   parity (fast) / stop1 (slow)
+  8O1             4.05%        5.60%   parity (fast) / stop1 (slow)
+  tightest over all eight measurements: 4.05%
+  derived from T0's measured sample point, no free parameters (8N1):
+      line-sample offset 0.5312 .. 0.5938 bit (one oversample tick of edge-phase quantisation, minus one clk of rx_sync)
+      slow  eps <= off/9        = 5.90% .. 6.59%    swept: 6.25%
+      fast  eps >= -(1-off)/9   = -4.51% .. -5.20%   swept: -4.50%
+
+--- T1b: the slow-side failure mode, predicted EXACTLY ---
+    at eps = +6.80%: frame_err on 8/8 bytes with data[7]=0, 0/8 with data[7]=1
+
+--- T1c: the degradation staircase, exact and unpredicted ---
+    off = 0.5312 .. 0.5938 bit; byte 0xAA; predicted corrupt-bit count = #{i in 1..8 : eps > off_hi/i}
+           eps        got    corrupt  predicted   
+         6.80%         aa          0          0               
+         7.70%         2a          1          1               
+         8.70%         6a          2          2               
+        10.50%         4a          3          3               
+        12.50%         5a          4          4               
+
+--- T2: constrained-random pin stimulus, 40 frames, |eps| <= 2.4% (60% of tightest) ---
+  frames driven 40, lost 0
+
+--- T3: framing error (loopback cannot produce one) ---
+
+--- T4: parity error, both polarities ---
+
+--- T5: RX overrun ---
+
+--- T6: start-bit glitch filter ---
+
+--- PRE-REGISTERED PREDICTIONS, SCORED ---
+  P1 8N1 tolerance in 3.5%..5.3%                        FAIL
+  P2 parity STRICTLY tightens tolerance vs 8N1           PASS
+  P3 a second stop bit costs NOTHING (null prediction)   PASS
+  P4 measured tolerance below the ideal 5.3%            FAIL
+  P5 fast/slow asymmetry >= 0.2% of eps                 PASS
+  (P6 -- this bench detects the BAUD_DIV mutant -- is scored by run_mutation_tests.sh)
+  Predictions are REPORTED, not asserted: a wrong prediction about
+  the DUT is a result, and failing the run on one would hide it.
+
+==============================================================
+  checks 93   errors 0
+  F7 BAUD TOLERANCE (the number the vplan requires and no
+  loopback bench in this repo could ever produce):
+      8N1  slow +6.25%  /  fast -4.50%
+      8E1  slow +5.60%  /  fast -4.05%
+  QUOTE IT AS A BAND, NOT A NUMBER: one oversample tick of
+  uncontrolled edge phase moves each limit by 0.69% of eps, so the
+  defensible statement is 'better than +/-4.0% in every configuration
+  measured, asymmetric, and tighter with parity than without'.
+RESULT: PASS
+==============================================================
+################ seed 3 ################
+==============================================================
+UART RX-PIN DRIVER, INDEPENDENT TIMEBASE   seed=3
+  DUT bit period : 320.0 ns  (16 x (BAUD_DIV=1 + 1) x 10.0 ns)
+  loopback       : OFF for every test in this file
+==============================================================
+
+--- T0: where does the DUT actually sample? ---
+    8N1        n=10  first sample at 0.6250 bit, last at 9.6250 bit, spacing exactly 1 bit
+    8E1        n=11  first sample at 0.5938 bit, last at 10.5938 bit, spacing exactly 1 bit
+    8N2        n=11  first sample at 0.6250 bit, last at 10.6250 bit, spacing exactly 1 bit
+    The RTL comment says "sample at mid-bit (os position 8)" = 0.5000 bit.
+    Measured: 0.6250 bit -- LATE by 0.1250 bit (2.0 oversample ticks),
+    because rx_os starts counting at the first os_tick AFTER edge detection
+    and rx_sync adds a clk.  Predictions P1/P4 were derived from the comment.
+
+--- T1: F7 baud tolerance, measured (0.05% steps) ---
+  config    fast(eps<0)  slow(eps>0)   last CHECKED sample
+  8N1             4.50%        6.25%   d7 (fast) / stop1 (slow)
+  8N2             4.50%        6.25%   d7 (fast) / stop2 (slow)
+  8E1             4.05%        5.60%   parity (fast) / stop1 (slow)
+  8O1             4.05%        5.60%   parity (fast) / stop1 (slow)
+  tightest over all eight measurements: 4.05%
+  derived from T0's measured sample point, no free parameters (8N1):
+      line-sample offset 0.5312 .. 0.5938 bit (one oversample tick of edge-phase quantisation, minus one clk of rx_sync)
+      slow  eps <= off/9        = 5.90% .. 6.59%    swept: 6.25%
+      fast  eps >= -(1-off)/9   = -4.51% .. -5.20%   swept: -4.50%
+
+--- T1b: the slow-side failure mode, predicted EXACTLY ---
+    at eps = +6.80%: frame_err on 8/8 bytes with data[7]=0, 0/8 with data[7]=1
+
+--- T1c: the degradation staircase, exact and unpredicted ---
+    off = 0.5312 .. 0.5938 bit; byte 0xAA; predicted corrupt-bit count = #{i in 1..8 : eps > off_hi/i}
+           eps        got    corrupt  predicted   
+         6.80%         aa          0          0               
+         7.70%         2a          1          1               
+         8.70%         6a          2          2               
+        10.50%         4a          3          3               
+        12.50%         5a          4          4               
+
+--- T2: constrained-random pin stimulus, 40 frames, |eps| <= 2.4% (60% of tightest) ---
+  frames driven 40, lost 0
+
+--- T3: framing error (loopback cannot produce one) ---
+
+--- T4: parity error, both polarities ---
+
+--- T5: RX overrun ---
+
+--- T6: start-bit glitch filter ---
+
+--- PRE-REGISTERED PREDICTIONS, SCORED ---
+  P1 8N1 tolerance in 3.5%..5.3%                        FAIL
+  P2 parity STRICTLY tightens tolerance vs 8N1           PASS
+  P3 a second stop bit costs NOTHING (null prediction)   PASS
+  P4 measured tolerance below the ideal 5.3%            FAIL
+  P5 fast/slow asymmetry >= 0.2% of eps                 PASS
+  (P6 -- this bench detects the BAUD_DIV mutant -- is scored by run_mutation_tests.sh)
+  Predictions are REPORTED, not asserted: a wrong prediction about
+  the DUT is a result, and failing the run on one would hide it.
+
+==============================================================
+  checks 93   errors 0
+  F7 BAUD TOLERANCE (the number the vplan requires and no
+  loopback bench in this repo could ever produce):
+      8N1  slow +6.25%  /  fast -4.50%
+      8E1  slow +5.60%  /  fast -4.05%
+  QUOTE IT AS A BAND, NOT A NUMBER: one oversample tick of
+  uncontrolled edge phase moves each limit by 0.69% of eps, so the
+  defensible statement is 'better than +/-4.0% in every configuration
+  measured, asymmetric, and tighter with parity than without'.
+RESULT: PASS
+==============================================================
+
+ALL 3 SEEDS PASS

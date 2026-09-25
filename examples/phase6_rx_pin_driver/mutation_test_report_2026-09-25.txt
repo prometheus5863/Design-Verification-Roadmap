@@ -1,0 +1,27 @@
+==============================================================
+RX-PIN BENCH MUTATION TEST   date: 2026-09-25
+  each mutant is injected into a COPY of rtl/uart_controller.v
+  a mutant that the bench does not fail on is an ESCAPE
+==============================================================
+
+  baseline (unmutated RTL): PASS
+
+  detected  M1 BAUD_DIV ignored by the baud generator (the 2026-09-24 loopback ESCAPE)
+            59 errors; first: ** FAIL: 8N1 sample count 12, expected 10
+  detected  M2 RX samples at oversample position 7 instead of 8
+            9 errors; first: ** FAIL: T1b data still correct past the slow limit  got=ca exp=4a  (t=22753125000)
+  detected  M3 stop-bit check removed from RX_STOP1
+            3 errors; first: ** FAIL: swept slow 700 bp outside the derived band 590..659 bp
+  detected  M4 RX parity polarity swapped
+            14 errors; first: ** FAIL: CRV frame 1 lost: data=ce eps=0/10000 par=2 two_stop=0 (t=12037765000)
+  detected  M5 start-bit glitch filter removed
+            1 errors; first: ** FAIL: T6 runt pulse queues no byte  got=1 exp=0  (t=23071415000)
+  detected  M6 overrun OVERWRITES the oldest byte instead of dropping the new one
+            3 errors; first: ** FAIL: T5 rx_full set with 8 queued  got=0 exp=1  (t=23066375000)
+  detected  M7 rx_sync bypassed (receiver samples the pin asynchronously)
+            4 errors; first: ** FAIL: swept slow 630 bp outside the derived band 520..590 bp
+
+  detected 7   escaped 0   voided 0
+
+  P6 (pre-registered in the testbench): this bench DETECTS M1, the
+  BAUD_DIV mutant that escaped the 2026-09-24 loopback bench.
