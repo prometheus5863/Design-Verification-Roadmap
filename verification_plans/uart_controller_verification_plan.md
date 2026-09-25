@@ -18,6 +18,7 @@ strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
 |---|---|---|
 | v1 | 2026-09-05 | Initial spec-first plan, Phase 3 milestone |
 | **v2** | **2026-09-19** | **STATUS re-specified.** v1's blanket "Live status" wording is **wrong for the three error bits** and could not have been implemented as written. Three independent Phase 4 findings forced it: (a) the RTL bring-up (2026-09-17) could not make a live-status error bit observable through a register read at all, since the condition is gone by the time software reads it; (b) the UVM environment's read-to-clear check (2026-09-18) showed that checking such a bit *sets* is not checking it, because one read per run cannot distinguish "never clears" from "correctly re-set"; (c) the register model (2026-09-19) cannot express the two halves of STATUS in one `uvm_reg` access policy — the live bits are RO+volatile, the error bits are RC. Also adds the RX_DATA read-side-effect note and its consequence for generic register sequences. **v1's text is annotated in place below, not deleted.** |
+| **v3** | **2026-09-25** | **F7 re-specified, and four further corrections absorbed.** v1 assigned F7 to *directed* testing of the TX bit period, and that plan is not wrong so much as **unable to reach the thing F7 is about**: every bench in this repo until today ran in loopback, where the TX and RX engines share one baud generator, so a wrong divisor desynchronises nothing and the baud tolerance is infinite. F7's tolerance number, flagged open since v1 ("to be finalized once RTL exists"), could not be produced by any bench the plan described. It is now **measured** — see 2.7 below — and the strategy changes to a driven-pin receiver on an **independent timebase**. Also absorbed: (i) v2's STATUS correction, already in place; (ii) **reset values were unspecified** (2026-09-22); (iii) **C6/C7's behaviour was assigned to formal where formal provably cannot reach it** (2026-09-23); (iv) **Section 3's CRV assignment is satisfiable for the register interface and the loopback datapath but NOT for F7**, for the structural reason above (2026-09-24). **No v1 or v2 text is deleted; every change is annotated in place.** |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -301,6 +302,72 @@ documented `clk/(16*(div+1))` relationship (Section 1) across the full
   feature is a simple, fully-deterministic arithmetic relationship best
   checked exactly at chosen corners rather than swept randomly).
 
+#### 2.7 annotated (v3, 2026-09-25): F7 as written could not be reached, and the number is now measured
+
+**What was wrong with the plan, not with the RTL.** The check above measures
+the **TX** bit period against arithmetic. That is a check on the baud
+*generator*, and it is worth having, but F7's engineering content is the
+**receiver's tolerance to a transmitter running at a different rate** — the
+number a system integrator actually needs. v1 flagged that number as "to be
+finalized once RTL exists"; it stayed open for twenty days because **no bench
+the plan described could produce it.** Every UART bench in this repo ran in
+loopback, where `CTRL.loopback_en` routes `tx` internally back to the receiver
+and both engines share one baud generator. A wrong divisor moves both sides
+together, so the data is perfect and the tolerance is infinite. The 2026-09-24
+mutation test demonstrated this rather than argued it: the mutant *"BAUD_DIV
+ignored by the baud generator"* **escaped** a 60-check self-checking suite, and
+escaped it for a structural reason.
+
+**Revised strategy (supersedes "directed (corner divisor values)"):** F7 needs
+a **driven-pin receiver test with an independent timebase** — a driver holding
+its own bit period, reading nothing from the DUT's clock, baud counter or
+oversample tick. The v1 TX-period check is retained as a separate, weaker
+check; it is necessary and it is not sufficient.
+
+**The measured number** (`examples/phase6_rx_pin_driver/`, 2026-09-25):
+
+| config | fast transmitter | slow transmitter | binding sample |
+|---|---|---|---|
+| 8N1 | −4.50% | +6.25% | data bit 7 / stop 1 |
+| 8N2 | −4.50% | +6.25% | data bit 7 / stop 2 |
+| 8E1 | −4.05% | +5.60% | parity bit / stop 1 |
+| 8O1 | −4.05% | +5.60% | parity bit / stop 1 |
+
+**Three things about that table the plan must now say, because each one changes
+how a sign-off criterion should be written:**
+
+1. **The tolerance is ASYMMETRIC, and not by accident.** Drifting *late* off a
+   stop bit is harmless, because the line idles high and a late sample of idle
+   still reads 1; drifting *early* off the final stop bit lands in a data bit
+   that may be 0. So the fast limit is set by the last sample carrying a
+   *value* and the slow limit by the last *stop* bit. A criterion of the form
+   "±X%" mis-states the design by assuming a symmetry it does not have.
+2. **Parity costs tolerance.** Adding a parity bit pushes the last checked
+   sample one bit further from the resync point, tightening the limit from
+   6.25%/4.50% to 5.60%/4.05%. So F7's acceptance number is **per frame
+   format**, not one number for the block. A second stop bit, by contrast,
+   costs nothing measurable.
+3. **The limit is a BAND, not a number.** The arrival edge's phase against the
+   DUT's free-running 16× oversample counter is uncontrolled and quantises the
+   effective sample point in 1/16-bit steps, one of which is 0.69% of the baud
+   error. Quoting F7 to two decimal places would be spurious precision. **The
+   defensible sign-off statement is: better than ±4.0% in every configuration
+   measured, asymmetric, tighter with parity than without.**
+
+**Coverage consequence.** `cp_baud_div`'s corner bins check the divisor
+*register*, not the tolerance. F7 needs a coverpoint on the **baud error** of
+the driven stimulus — at minimum bins for {0, within ±2%, within ±4%, beyond
+the measured limit} — and that coverpoint is unreachable without the
+independent-timebase driver, which is the same structural point as above
+appearing in Section 5.
+
+**Also now reachable, and therefore now assignable in Section 3:** framing
+errors, parity errors, and the start-bit glitch filter are all driven at the
+pin in that bench. In loopback the DUT's own transmitter never emits a bad stop
+bit, wrong parity, or a runt pulse, so F4's corrupted-parity check and F3's
+sampling-margin corners were being asserted against stimulus that could not
+produce them.
+
 ### 2.8 Interrupt generation (F8) -- P0
 
 `irq` asserts if and only if at least one unmasked (`INT_EN`) condition
@@ -352,11 +419,11 @@ quick regression-planning view:
 |---|---|
 | F1 Register access | CRV + 1 directed (illegal write) |
 | F2 TX data path | CRV (loopback-based) |
-| F3 RX data path | CRV (loopback) + directed (sampling-margin corners) |
-| F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) |
+| F3 RX data path | CRV (loopback) + directed (sampling-margin corners) — **v3: the sampling-margin corners are only reachable at the pin; in loopback the DUT's own transmitter cannot produce them** |
+| F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) — **v3: "corrupted parity" is unreachable in loopback; now driven at the pin** |
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
-| F7 Baud rate | Directed (corner divisor values) |
+| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
 
