@@ -248,6 +248,14 @@ never been measured, because Icarus has no native support; and F7's
 baud-tolerance number is unmeasured. These are Phase 6 / capstone items
 now, not Phase 4 gaps to reopen.
 
+> **Updated 2026-09-25.** The third is now closed too. F7's baud
+> tolerance is measured in `examples/phase6_rx_pin_driver/` by a driven-pin
+> receiver on an independent timebase -- 8N1 +6.25% / -4.50%, 8E1 +5.60% /
+> -4.05% -- and the plan's F7 strategy is revised to match (v3). **Only
+> code coverage remains unmeasured of the three**, and that one is a
+> toolchain limit rather than a gap in the work: Icarus has no native
+> support.
+
 > **Updated 2026-09-24.** The first of those three is closed:
 > `examples/phase6_crv_uart/` drives constrained-random, coverage-driven
 > stimulus with a closure pass criterion, over the register interface and
@@ -412,6 +420,23 @@ measured rather than quietly dropped.
 - [ ] Capstone: UVM verification environment for register-mapped
       peripheral (UART/SPI controller with interrupt + FIFO datapath)
       - [~] Verification plan written -- early draft completed in Phase 3
+            (**v3 revision DONE 2026-09-25**: F7 re-specified. v1 assigned
+            F7 to directed checking of the TX bit period -- a check on the
+            baud GENERATOR -- while F7's engineering content is the
+            RECEIVER's tolerance to a transmitter at a different rate.
+            v1 flagged that number "to be finalized once RTL exists" and it
+            stayed open twenty days because **no bench the plan described
+            could produce it**: every bench ran in loopback. The strategy
+            becomes a driven-pin receiver on an independent timebase, the
+            v1 TX-period check is retained as necessary and explicitly
+            insufficient, and the measured table is inserted. The same
+            revision absorbs the four other corrections the item had been
+            carrying: unspecified reset values (09-22), C6/C7 assigned to
+            formal where formal provably cannot reach them (09-23),
+            Section 3's CRV assignment being unsatisfiable for F7 (09-24),
+            and F3's sampling-margin corners plus F4's corrupted-parity
+            check having been assigned to loopback stimulus that cannot
+            produce them)
             (**v2 revision DONE 2026-09-19**: the plan's "live status"
             wording could not hold for the three STATUS error bits, which
             must be sticky/read-to-clear to be observable through a
@@ -451,13 +476,54 @@ measured rather than quietly dropped.
             2 escaped, **6/6 verdicts as predicted in advance**
             (`mutation_test_report_2026-09-24.txt`)
       - [ ] Written summary of methodology/results
-      - [ ] Constrained-random stimulus driven at the RX PIN rather than
+      - [x] Constrained-random stimulus driven at the RX PIN rather than
             through loopback -- created 2026-09-24 by mutation M5, and
-            the reason F7's baud tolerance is still unmeasured: in
+            the reason F7's baud tolerance was unmeasured: in
             loopback the TX and RX engines SHARE one baud generator, so a
             wrong divisor desynchronises nothing and **no loopback bench
             at any level of sophistication can detect a baud-rate
-            error**. Structural, not a stimulus gap
+            error**. Structural, not a stimulus gap.
+            (**DONE 2026-09-25**, `examples/phase6_rx_pin_driver/`, 888
+            lines, 93 checks, 0 errors, 3 seeds.) The driver holds its own
+            bit period and reads nothing from the DUT's clock, baud
+            counter or oversample tick; loopback is off throughout.
+            **F7 measured at last**: 8N1 tolerates a transmitter 6.25%
+            slow / 4.50% fast, 8E1 5.60% / 4.05%. Three properties of
+            that matter more than the numbers -- it is **asymmetric**
+            (late drift off a stop bit is harmless because the line idles
+            high, so the fast side is bound by the last sample carrying a
+            VALUE and the slow side by the last STOP bit); **parity costs
+            tolerance**, so F7's number is per frame format, while a
+            second stop bit costs nothing; and it is a **band, not a
+            number**, because uncontrolled edge phase against the
+            free-running 16x counter quantises the sample point in
+            1/16-bit steps, one of which is 0.69% of eps. The defensible
+            claim is "better than +/-4.0% in every configuration
+            measured". T0 **measures** the sample point rather than
+            trusting the RTL comment, which says mid-bit (0.5000) and is
+            wrong by up to two oversample ticks -- so pre-registered
+            predictions P1 and P4, derived from that comment, are scored
+            FAIL and left in the file. Two independent routes to the
+            tolerance (a sweep, and arithmetic on the measured sample
+            point) agree, and that cross-check is the only thing in the
+            suite that catches two of the seven mutants. **Mutation: 7
+            injected, 7 detected, 0 escaped** -- including M1, the
+            BAUD_DIV mutant that escaped the 09-24 loopback bench, which
+            is the row the directory exists for
+            (`mutation_test_report_2026-09-25.txt`). Also newly reachable
+            and all impossible in loopback: framing errors, parity errors
+            in both polarities, deterministic overrun with the eight
+            queued bytes verified intact, and the start-bit glitch filter
+      - [ ] A coverpoint on the driven baud ERROR -- created 2026-09-25 by
+            the v3 plan revision. `cp_baud_div`'s corner bins measure the
+            divisor REGISTER, not the tolerance; F7 needs bins on
+            {0, within +/-2%, within +/-4%, beyond the limit} and a
+            closure criterion over them. The stimulus now exists; the
+            coverage model does not
+      - [ ] Fold the independent-timebase driver into the Phase 4 UVM
+            environment as a real `uvm_driver` -- created 2026-09-25. The
+            serial agent there drives RX at the DUT's own rate, so the UVM
+            environment still cannot reach what this bench reaches
 
 ## Notes
 
