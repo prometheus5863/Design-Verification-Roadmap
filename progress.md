@@ -514,16 +514,88 @@ measured rather than quietly dropped.
             and all impossible in loopback: framing errors, parity errors
             in both polarities, deterministic overrun with the eight
             queued bytes verified intact, and the start-bit glitch filter
-      - [ ] A coverpoint on the driven baud ERROR -- created 2026-09-25 by
+      - [x] A coverpoint on the driven baud ERROR -- created 2026-09-25 by
             the v3 plan revision. `cp_baud_div`'s corner bins measure the
             divisor REGISTER, not the tolerance; F7 needs bins on
             {0, within +/-2%, within +/-4%, beyond the limit} and a
             closure criterion over them. The stimulus now exists; the
-            coverage model does not
+            coverage model does not.
+            (**DONE 2026-09-26**, `examples/phase6_baud_error_coverage/`,
+            ~1030 lines, 11 checks, 0 errors, 3 seeds; mutation 5 detected,
+            1 expected escape, 0 unexpected, 0 voided.) T1 disposes of the
+            premise first: sweeping eps from -8% to +8%, which takes the
+            receiver from perfect through broken and back, `cp_baud_div`
+            reports **1 of 4 bins hit, unchanged throughout** -- a coverage
+            report on a register nobody wrote.
+            **The bins the item asked for are the wrong bins, measured
+            three ways.** They do not PARTITION the domain (8N1's slow
+            limit is +6.25%, so +5% is outside "within +/-4%" and inside
+            the limit and belongs to no band; a fifth band was needed and
+            took 19 of the 28 frames of the steered closure run). Their
+            absolute edges disagree with the DUT on **7 of 12** probe rows.
+            And the "beyond the limit" edge is a MEASURED number that moved
+            **0.50% of eps, optimistically**, when two of six trial bytes
+            were swapped (`0x3C`/`0x81` for `0x01`/`0x80` -- the latter put
+            a lone 1 next to the start and stop bits, exactly where a
+            drifting sample lands on a differing neighbour), so a bin whose
+            edge is measured inherits the optimism of the stimulus that
+            measured it.
+            **What must not be written into sign-off:** "beyond the limit
+            implies an error". It is false and data-dependent, as 09-25's
+            own staircase showed (8/8 frames failed with `data[7]=0`, 0/8
+            with `data[7]=1`), so it is neither a bin nor an assertion.
+            **Reachable is not reached:** pure random stimulus did NOT
+            close in 250 frames -- the error outcome in the fifth band
+            lives in the last few basis points below the limit -- while the
+            same criterion closes in 28 once the generator aims at its
+            first unhit cell. A cell can be reachable, correctly judged
+            reachable, and still out of a uniform generator's reach.
+            **The coverage model itself detects nothing:** in every detected
+            mutation row the first failure is the anchored cross-check of
+            the measured tolerance against 09-25's values, and every mutant
+            fills the same bins. Plan revised to **v4**
+      - [x] **A reachability pre-pass turned into illegal bins fires
+            against correct RTL -- created and closed 2026-09-26.** 09-24's
+            finding 9 says to check a bin is reachable before putting it in
+            a closure criterion. Implemented with TWO verdicts (reachable
+            if the pre-pass produced the cell, unreachable otherwise, every
+            unreachable cell an illegal bin), an illegal bin **fired
+            against correct RTL 21 frames into the random run** -- band 3 x
+            byte-lost, eps = -4.71% on 8O1, with a data pattern and edge
+            phase the pre-pass had not tried. **A pre-pass answers "did my
+            attempts reach it", which is not "is it reachable".** Fixed
+            with three verdicts: REACHED (into the closure criterion),
+            EXCLUDED BY ARGUMENT (the only illegal bins -- at eps = 0 no
+            drift accumulates and the initial phase is worth < 1/16 bit
+            against a half-bit margin) and OPEN (neither goal nor
+            assertion, an honest unknown). Seed 2 of the committed output
+            shows the same refutation happening safely under the new
+            scheme, at frame 127, reported as a result. Also recorded:
+            "unreachable" is a property of a bin AND a stimulus space --
+            `eps == 0` x frame error is excluded for well-formed frames and
+            trivially reachable once the stop bit may be corrupted
       - [ ] Fold the independent-timebase driver into the Phase 4 UVM
-            environment as a real `uvm_driver` -- created 2026-09-25. The
-            serial agent there drives RX at the DUT's own rate, so the UVM
-            environment still cannot reach what this bench reaches
+            environment as a real `uvm_driver` -- created 2026-09-25 and
+            now the clear top item. The serial agent there drives RX at the
+            DUT's own rate, so the UVM environment still cannot reach what
+            these benches reach. **2026-09-26 makes it a prerequisite
+            rather than a nice-to-have:** the pin driver is now duplicated
+            VERBATIM in two directories, deliberately (so a difference in
+            results cannot be a difference in the driver), and that
+            reasoning does not survive a third copy
+      - [ ] A coverpoint on the data pattern's adjacent-bit TRANSITION
+            count -- created 2026-09-26 by the trial-set experiment above.
+            The baud tolerance depends on whether adjacent bits differ, so
+            the right data coverpoint for F7 is the transition count and
+            not the byte value; `cp_data`'s one-hot / AA-55 / popcount bins
+            do not measure it
+      - [ ] Apply the three-valued outcome axis to `phase6_crv_uart`'s
+            crosses -- created 2026-09-26. Those 30 bins are all
+            stimulus-side; today's cross shows the reachability structure
+            lives on the OUTCOME axis, where 7 of 15 cells turned out
+            unreachable because the axes are causally linked. The question
+            is how many of the CRV bench's cells are illegal bins in
+            disguise
 
 ## Notes
 
@@ -531,6 +603,19 @@ This checklist is updated by each automated study session as work is
 completed. See `AUTOMATION_LOG.md` for the dated narrative log of what
 was actually done in each session (more detail than this checklist
 alone conveys).
+
+**A pre-pass answers "did my attempts reach it" (2026-09-26).** Not "is it
+reachable". A reachability pre-pass converted directly into illegal bins fired
+against correct RTL 21 frames into a random run. Reachability needs three
+verdicts, not two: reached, excluded *by argument*, and open — and only the
+argued exclusions may be asserted. "Unreachable" is also never a property of a
+bin, but of a bin and a stimulus space.
+
+**A coverage bin licenses no implication (2026-09-26).** It records that
+stimulus reached a region, not what happens there. "Beyond the measured
+tolerance ⇒ an error" is false and data-dependent for this DUT, so it is
+neither a bin nor an assertion. Relatedly: in every mutation row the detector
+was a check, never the coverage model — every mutant filled the same bins.
 
 **A cover can be reached for the wrong reason (2026-09-21).** The vacuity
 cover written for the STATUS read-to-clear property passed on its first
