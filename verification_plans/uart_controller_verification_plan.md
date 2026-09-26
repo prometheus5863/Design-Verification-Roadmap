@@ -19,6 +19,7 @@ strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
 | v1 | 2026-09-05 | Initial spec-first plan, Phase 3 milestone |
 | **v2** | **2026-09-19** | **STATUS re-specified.** v1's blanket "Live status" wording is **wrong for the three error bits** and could not have been implemented as written. Three independent Phase 4 findings forced it: (a) the RTL bring-up (2026-09-17) could not make a live-status error bit observable through a register read at all, since the condition is gone by the time software reads it; (b) the UVM environment's read-to-clear check (2026-09-18) showed that checking such a bit *sets* is not checking it, because one read per run cannot distinguish "never clears" from "correctly re-set"; (c) the register model (2026-09-19) cannot express the two halves of STATUS in one `uvm_reg` access policy — the live bits are RO+volatile, the error bits are RC. Also adds the RX_DATA read-side-effect note and its consequence for generic register sequences. **v1's text is annotated in place below, not deleted.** |
 | **v3** | **2026-09-25** | **F7 re-specified, and four further corrections absorbed.** v1 assigned F7 to *directed* testing of the TX bit period, and that plan is not wrong so much as **unable to reach the thing F7 is about**: every bench in this repo until today ran in loopback, where the TX and RX engines share one baud generator, so a wrong divisor desynchronises nothing and the baud tolerance is infinite. F7's tolerance number, flagged open since v1 ("to be finalized once RTL exists"), could not be produced by any bench the plan described. It is now **measured** — see 2.7 below — and the strategy changes to a driven-pin receiver on an **independent timebase**. Also absorbed: (i) v2's STATUS correction, already in place; (ii) **reset values were unspecified** (2026-09-22); (iii) **C6/C7's behaviour was assigned to formal where formal provably cannot reach it** (2026-09-23); (iv) **Section 3's CRV assignment is satisfiable for the register interface and the loopback datapath but NOT for F7**, for the structural reason above (2026-09-24). **No v1 or v2 text is deleted; every change is annotated in place.** |
+| **v4** | **2026-09-26** | **The F7 coverage bins v3 specified are the wrong bins, and the pre-pass v3 demanded is not sufficient on its own.** v3's coverage consequence asked for bins on {0, within ±2%, within ±4%, beyond the measured limit}. Built and measured (`examples/phase6_baud_error_coverage/`), those four bands **do not partition the baud error** — for 8N1 the slow limit is +6.25%, so +5% is outside "within ±4%" and inside the limit and belongs to no band; a **fifth band** is required. The absolute edges also **disagree with the DUT** (7 of 12 probe rows classify differently under 4.00% than under the per-configuration measured limit), and **"beyond the limit ⇒ an error" is false and data-dependent**, so it is neither a bin nor an assertion. Separately, v3 inherited 09-24's rule "check a bin is reachable before putting it in a closure criterion" — and a reachability pre-pass turned into illegal bins **fired against correct RTL** 21 frames into a random run. Sign-off therefore distinguishes **excluded by argument** from **not reached**, and only the former is asserted. **No v1–v3 text is deleted; every change is annotated in place.** |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -361,6 +362,76 @@ the measured limit} — and that coverpoint is unreachable without the
 independent-timebase driver, which is the same structural point as above
 appearing in Section 5.
 
+> **v4 annotation (2026-09-26): the bins above are the wrong bins, and this
+> is measured rather than argued.** The coverpoint was built
+> (`examples/phase6_baud_error_coverage/uart_baud_cov_tb.v`, 3 seeds, 11
+> checks, 0 errors) and the specified band set fails three ways.
+>
+> 1. **It does not partition the baud error.** 8N1's slow limit is +6.25%, so
+>    eps = +5% is outside "within ±4%" and inside the limit — it belongs to
+>    none of the four bands. A closure criterion over a non-partition reports
+>    every bin hit while never sampling that region. A **fifth band,
+>    4% < |eps| ≤ the measured limit**, is required, and it took 19 of the 28
+>    frames of the steered closure run.
+> 2. **The absolute edges are a claim the DUT does not honour.** Of twelve
+>    probe rows across the four configurations, **seven** are classified
+>    differently by the 4.00% edge and by the per-configuration measured
+>    limit. An absolute bin edge on a tolerance is a scale assumption.
+> 3. **A measured bin edge is a claim about the measuring stimulus.** Swapping
+>    two of the six trial bytes — `0x3C`/`0x81` for `0x01`/`0x80`, same
+>    trial-set size, same DUT, same sweep — moved 8O1's fast limit by
+>    **0.50% of eps, in the optimistic direction**, because `0x01` and `0x80`
+>    put a lone 1 adjacent to the start and stop bits, exactly where a
+>    drifting sample lands on a differing neighbour. The BEYOND band's edge
+>    inherits that optimism.
+>
+> **The outcome axis matters more than the band axis.** The cross of five
+> bands with three outcomes (clean / error bit set / byte lost or wrong) has
+> **15 cells, of which only 8 are reachable** by well-formed frames: every
+> inside-the-limit band is clean by construction. A cross whose axes are
+> causally linked is mostly illegal bins rather than coverage.
+>
+> **What must NOT be written into sign-off:** "beyond the measured limit ⇒ an
+> error". It is false and data-dependent — past every measured limit, a frame
+> whose drifting bit lands on an *identical* neighbour is received cleanly,
+> which 09-25's own T1b staircase already showed (8/8 frames failed with
+> `data[7]=0`, 0/8 with `data[7]=1`). It is not a bin and not an assertion.
+>
+> **The corrected coverage requirement for F7** is therefore: five bands over
+> the driven baud error (zero / |eps| ≤ 2% / 2% < |eps| ≤ 4% / 4% < |eps| ≤
+> the per-configuration measured limit / beyond it), crossed with the
+> three-valued outcome, with **the closure criterion over the reachable cells
+> only** and the two cells excluded *by argument* (an exactly-nominal
+> well-formed frame cannot lose a bit or miss its stop bit) carried as illegal
+> bins. Closure requires **coverage-driven steering**: pure random stimulus
+> did not close in 250 frames, because the error outcome in the fifth band
+> lives in the last few basis points below the limit.
+
+> **v4 annotation (2026-09-26): "check a bin is reachable first" is not
+> sufficient as stated, and this cost a false failure.** 09-24's finding 9,
+> which v3 inherited, says to establish a bin is reachable before putting it
+> in a closure criterion. Implemented as a directed pre-pass with two verdicts
+> — reachable if the pre-pass produced the cell, unreachable otherwise, and
+> every unreachable cell an illegal bin — **an illegal bin fired against
+> correct RTL 21 frames into the random run** (band 3 × byte-lost, from an eps
+> of −4.71% on 8O1 with a data pattern and edge phase the pre-pass had not
+> tried). A pre-pass answers *"did my attempts reach it"*, which is not *"is
+> it reachable"*.
+>
+> Sign-off therefore uses **three** verdicts, and only the second is asserted:
+>
+> | verdict | basis | goes into |
+> |---|---|---|
+> | REACHED | the pre-pass produced it | the closure criterion |
+> | EXCLUDED | an **argument** about the mechanism, checked but not based on the attempts | an illegal bin / assertion |
+> | OPEN | not reached, not ruled out | neither — recorded as unknown |
+>
+> "Unreachable" is also never a property of a bin alone but of a bin *and a
+> stimulus space*: `eps == 0 × frame error` is excluded for well-formed frames
+> and trivially reachable once the stop bit may be corrupted, which the bench
+> demonstrates deliberately. **A coverage report that does not name its
+> stimulus space cannot say what an unhit bin means.**
+
 **Also now reachable, and therefore now assignable in Section 3:** framing
 errors, parity errors, and the start-bit glitch filter are all driven at the
 pin in that bench. In loopback the DUT's own transmitter never emits a bad stop
@@ -424,6 +495,7 @@ quick regression-planning view:
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
 | F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated) |
+| F7 Baud rate — coverage | ~~`cp_baud_div` corner bins~~ → ~~{0, ±2%, ±4%, beyond the limit}~~ → **five bands over the driven baud error × three-valued outcome, closure over the reachable cells only, coverage-driven steering required** (v4, 2026-09-26 — the four-band set does not partition the domain and its absolute edges disagree with the measured limit; see 2.7 v4 annotations) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
 
