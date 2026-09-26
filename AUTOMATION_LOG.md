@@ -2729,3 +2729,218 @@ recorded outputs; the vplan v3 revision; the study note; progress.md). This
 AUTOMATION_LOG.md entry makes 5. Commit hashes differ from the first attempt
 because of the VM restart described above; the content is identical and was
 re-verified before re-committing.
+
+---
+
+## 2026-09-26 — The reachability pre-pass this repo asked for, turned into illegal bins, fired against correct RTL 21 frames in
+
+**The item closed:** *"A coverpoint on the driven baud ERROR — created today by
+the v3 revision and the natural top item. `cp_baud_div`'s corner bins measure
+the divisor register, not the tolerance; F7 needs bins on {0, within ±2%,
+within ±4%, beyond the limit} and a closure criterion over them. The stimulus
+now exists; the coverage model does not, and 09-24's finding 9 is the warning
+attached — check a new bin is reachable before putting it in a closure
+criterion."* Created 2026-09-25. Both halves of that item turned out to be
+wrong, and in the more useful direction: **the bins are not the right bins, and
+the warning is not sufficient as stated.**
+
+Code: `examples/phase6_baud_error_coverage/` — `uart_baud_cov_tb.v`
+(~1030 lines), `run_baud_cov.sh`, `uart_baud_cov_sim_output_2026-09-26.txt`
+(3 seeds, 11 checks each, 0 errors), `run_mutation_tests.sh`,
+`mutation_test_report_2026-09-26.txt`. Plan: **v4**. Study note:
+`notes/2026-09-26-baud-error-coverage-and-the-reachability-prepass.md`.
+
+1. **THE PREMISE, disposed of in one measurement.** Sweeping the driven baud
+   error from **−8% to +8%** — taking the receiver from perfect through broken
+   and back — `cp_baud_div` reports **1 of 4 bins hit, unchanged throughout**,
+   because it samples a register nobody wrote. A coverage report built on it
+   reads "covered" across the entire range of the behaviour it is nominally
+   about. That is the whole justification for the item, and it is now a number
+   rather than an argument.
+
+2. **THE HEADLINE — the pre-pass fired against CORRECT RTL.** The first version
+   had two verdicts: a cross cell was *reachable* if the pre-pass produced it
+   and *unreachable* otherwise, and every unreachable cell became an illegal
+   bin. **Twenty-one frames into the random closure run, one fired** — band 3
+   (4% < |eps| ≤ the measured limit) × *byte lost*, from eps = **−4.71%** on
+   8O1 with a data pattern and edge phase the pre-pass had not tried. Correct
+   RTL, legal stimulus, a bench reporting failure. **A pre-pass answers "did my
+   attempts reach it", which is not "is it reachable", and collapsing the two
+   manufactures false failures.** This is the verdict-vs-checking class landing
+   on the **reachability analysis** — after checkers (six occurrences 09-17 to
+   09-23), measurement (09-24), and stimulus and thresholds (09-25). Every part
+   of a testbench has now supplied an instance, and so has the part that
+   decides what the testbench may assert.
+
+3. **The fix is three verdicts, and only one of them is asserted.**
+   `CLS_REACHED` (produced by the pre-pass) enters the closure criterion;
+   `CLS_EXCLUDED` (excluded **by argument**) becomes an illegal bin;
+   `CLS_OPEN` (not reached, not ruled out) becomes **neither** — an honest
+   unknown, which is what a report owes a bin it can neither hit nor exclude,
+   and which the two-verdict scheme had no way to express. Only **2 of 15**
+   cells are excluded, and the argument is in the source rather than inferred
+   from the attempts: at eps = 0 the driver's bit period equals the DUT's
+   nominal exactly, so no drift accumulates, and the only free variable is the
+   initial edge phase — worth **< 1/16 bit against a half-bit margin**. The
+   pre-pass's attempts are a **check on** that argument (the run fails if the
+   pre-pass ever produces an excluded cell), not its basis. **Seed 2 of the
+   committed output shows the same refutation happening safely under the new
+   scheme, at frame 127, reported as a result.**
+
+4. **"Unreachable" is never a property of a bin — only of a bin AND a stimulus
+   space.** T4b: `eps == 0 × frame error` is excluded for well-formed frames
+   and trivially reachable the moment the stop bit may be driven low, which the
+   bench does deliberately and excludes from `cls[]`. **A coverage report that
+   does not name its stimulus space cannot say what an unhit bin means.**
+
+5. **RESULT — the specified bins are the wrong bins, three ways.** (a) They **do
+   not partition** the domain: 8N1's slow limit is +6.25%, so eps = +5% is
+   outside "within ±4%" and inside the limit and belongs to no band. Four bins
+   that do not partition their domain silently drop stimulus, and a closure
+   criterion over them reports 4/4 hit while never sampling the dropped region
+   — a **fifth band** was added and took **19 of the 28 frames** of the steered
+   closure run. (b) An **absolute** bin edge on a tolerance is a scale
+   assumption: **7 of 12** probe rows classify differently under the 4.00% edge
+   and under the per-configuration measured limit. This is the graphene repo's
+   standing lesson — *a numeric default is a claim about scale* — arriving in
+   Verilog as a **coverage bin** rather than a threshold, on the same day that
+   repo closed a numeric-default audit. (c) A **measured** bin edge is a claim
+   about the measuring stimulus.
+
+6. **RESULT — the measured edge moved 0.50% of eps when two trial bytes were
+   swapped, and the anchored cross-check is what caught it.** Same DUT, same
+   sweep, same trial-set *size*: `0x3C`/`0x81` in place of `0x01`/`0x80` moved
+   8O1's fast limit by **0.50% of eps, in the OPTIMISTIC direction**. `0x01`
+   and `0x80` put a lone 1 adjacent to the start and stop bits — exactly where
+   a drifting sample lands on a **differing** neighbour. The BEYOND band's edge
+   is derived from that number, so the bin inherits the optimism. Kept as a
+   standing experiment (T0b) rather than a paragraph. **The cross-check against
+   09-25's limits FAILING on the first run is what produced this**, which is the
+   argument for anchored cross-checks in one line.
+
+7. **The cross-check's own tolerance is DERIVED, not chosen** — 09-25's measured
+   0.69%-of-eps phase sensitivity plus the 25 bp sweep grid. An independent
+   bench landing **inside that window** rather than on the number (8N1 fast
+   **+25 bp**, 8E1 fast **−5 bp**) turns 09-25's *"quote it as a band, not a
+   number"* from an inference about sampling geometry into a **second
+   measurement**.
+
+8. **RESULT — what must NOT be written into sign-off.** "Beyond the limit ⇒ an
+   error" is **false and data-dependent**, and 09-25 already held the
+   counterexample: at eps = +6.80%, past every measured limit, frame_err
+   appeared on **8/8** bytes with `data[7]=0` and **0/8** with `data[7]=1`. C3
+   confirms (beyond × clean) is reachable. **A coverage bin records that
+   stimulus reached a region; it licenses no implication about what happens
+   there.** So it is neither a bin nor an assertion, and v4 says so explicitly
+   rather than leaving the implication available to a future reader.
+
+9. **RESULT — reachable is not reached.** The same closure criterion, run twice.
+   Pure random stimulus drawing the fifth band **uniformly** over 4.05%–5.55%
+   — the natural first choice — **did not close in 250 frames** on seed 1,
+   because the *error* outcome in that band lives in the last few basis points
+   below the limit. It closes in **28 frames** once the generator aims its band
+   at the first unhit cell, the same steering `phase6_crv_uart` uses. The sharp
+   statement is the pair: **a cell can be reachable, correctly judged
+   reachable, and still out of a uniform generator's reach** — 09-24's finding 9
+   arising from a *correct* reachability judgement rather than an unreachable
+   bin.
+
+10. **Two predictions failed, and one failure is better than the prediction
+    was.** **C1 FAIL:** 8E1 at −3.90%, inside the absolute ±4% bin, lost **0 of
+    24** frames with the edge phase randomised across one oversample tick. The
+    mechanism is real but sits one band out — at −4.30%, past the measured
+    limit, **12 of 24** frames were clean, so the limit *is* a band in the phase
+    variable. The ±4% bin is the wrong bin for reasons 5(a) and 5(b), not this
+    one. **C4 FAIL badly:** predicted 2 non-reachable cells, measured **7 of
+    15**, because every inside-the-limit band is clean *by construction*. **A
+    cross whose axes are causally linked is mostly illegal bins, not
+    coverage** — so the useful half of this model is the outcome axis, not the
+    band axis, and writing the naive 15-cell cross into a closure criterion
+    makes closure unachievable. C2, C3, C5, C6 PASS.
+
+11. **MUTATION TEST: 5 detected, 1 expected escape, 0 unexpected, 0 voided —
+    and the coverage model detects none of them.** In **every** detected row the
+    first failure is the anchored cross-check of the measured tolerance:
+    `BAUD_DIV` ignored (the 09-24 loopback escape, 9 errors), sample position
+    moved to tick 7 (1 error) and to tick 12 (6), the stop-bit check removed
+    (2), parity polarity swapped (5). Every one of those mutants **fills exactly
+    the same coverage bins.** The glitch-filter mutant escapes and the row says
+    so with its reason — no check here observes a runt start pulse; an expected
+    escape reported as one is cheaper than rediscovering that it was.
+    **Coverage records what the stimulus reached; only a check can say the DUT
+    was right. A bench whose coverage closes and whose checks are thin is a
+    bench that measures its own stimulus.**
+
+12. **Nothing was quietly rewritten.** v3's bin list stays in Section 2.7 with
+    the v4 correction beside it; the 09-25 measured limits stay as the
+    cross-check's reference; the two failing predictions stay in the testbench
+    source and are scored FAIL rather than edited to match.
+
+**Methodological note.** Today's portable finding is item 2, and it is the
+first time this repo's recurring class has reached the layer that decides what
+may be asserted at all: **a pre-pass answers "did my attempts reach it", not
+"is it reachable", and the difference is a false failure.** Its companion is
+item 8 — **a coverage bin licenses no implication** — and its counterweight is
+item 11: coverage detected nothing today, every detected mutant was caught by a
+check, and the check that caught them was an *anchored cross-check against an
+independently measured value*, which is also the thing that caught item 6. Two
+sessions running, in two repositories, the load-bearing instrument has been an
+anchored comparison rather than a self-consistent one.
+
+**Not yet covered (candidates for future runs):**
+- **Fold the independent-timebase driver into the Phase 4 UVM environment as a
+  real `uvm_driver`** — open since 09-25 and now the clear top item. Today
+  promotes it from nice-to-have to **prerequisite**: the pin driver is
+  duplicated **verbatim** in two directories, deliberately (so a difference in
+  results cannot be a difference in the driver), and that reasoning does not
+  survive a third copy
+- **A coverpoint on the data pattern's adjacent-bit TRANSITION count** — created
+  today by item 6. The tolerance depends on whether adjacent bits differ, so the
+  right data coverpoint for F7 is the transition count and not the byte value;
+  `cp_data`'s one-hot / AA-55 / popcount bins do not measure it
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** —
+  created today. Those 30 bins are all stimulus-side; item 10 shows the
+  reachability structure lives on the **outcome** axis. The question is how many
+  of that bench's cells are illegal bins in disguise
+- **A less greedy steering policy** — created 09-24, and today gives it a
+  concrete test case: the steering here aims at the **highest** unhit band
+  first and closed in 28 frames; nothing establishes that ordering is good
+- **Two transmitters at once** — created 09-25, untouched. A link's tolerance is
+  the *intersection* of two one-sided budgets, which is how a real
+  clock-accuracy spec is written (±2% at each end, not ±4% total)
+- **`abc pdr` as a second engine** — unchanged since 09-23 and still the best
+  single experiment available; items 6, 7 and 11 are all arguments for it, being
+  the same "get a second independent route" move applied to formal
+- **Per-property coverage of the PHASE 4 UVM environment** — open since 09-23
+- **Widen the coverage model** — created 09-24, untouched
+- **A mutation script for `examples/phase4_uvm_milestone/`** — open since 09-19;
+  today's script is a second adaptable template
+- **Mutants not yet attempted**: interrupt *enable* combinations, the loopback
+  mux itself, reset asserted mid-frame
+- **A property that actually needs a strengthening invariant** — blocked on the
+  same bound
+- **The SVA sequence layer** — runnable on neither tool here; open since 09-20
+- **Code coverage measurement** — Icarus has none; open since 09-18, and the
+  only remaining item of the three Phase 4 carried forward
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health:** Device reachable at the **04:34 UTC** firing (the first
+of the day's three), folder connected; neither repo had a 2026-09-26 entry and
+neither had commits since midnight, so a full session was run. Plain `git
+clone` of both repos completed normally and fast. `git config
+user.name/user.email` was again absent in the fresh clones and set **in its own
+call** per 09-24's finding. `tools/setup_iverilog.sh` worked first time and
+**both 2026-09-17 gotchas still apply and were avoided** — source it without a
+pipe, and wrap the real `vvp` binary in `timeout` rather than the shell
+function. The 09-25 VM restart did **not** reproduce, but its lesson was
+followed anyway: the four content commits were **pushed before this log entry
+was written** rather than batched to the end of the session. The new bench runs
+3 seeds in **2.4 s** and the mutation script in well under the 170 s call
+budget, so neither needed splitting.
+
+**Commits this run:** 4 (the bench with its runner, mutation harness and two
+recorded outputs; the vplan v4 revision; the study note; progress.md). This
+AUTOMATION_LOG.md entry makes 5. The vplan revision is its own commit because
+it corrects **two** documents' worth of guidance — v3's bin list and 09-24's
+finding 9 — and a plan correction that arrives buried in a testbench commit is
+a plan correction nobody reads.
