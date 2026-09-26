@@ -1,0 +1,29 @@
+==============================================================
+BAUD-ERROR COVERAGE BENCH MUTATION TEST   date: 2026-09-26
+  each mutant is injected into a COPY of rtl/uart_controller.v
+  a mutant the bench does not fail on is an ESCAPE unless the
+  row is marked EXPECTED ESCAPE with a stated reason
+==============================================================
+
+  baseline (unmutated RTL): PASS
+
+  detected  M1 BAUD_DIV ignored by the baud generator (the 2026-09-24 loopback ESCAPE)
+            9 errors; first: ERROR: 8N1 fast limit outside 09-25 +/- the phase band
+  detected  M2 RX samples at oversample position 7 instead of 8
+            1 errors; first: ERROR: 8N1 fast limit outside 09-25 +/- the phase band
+  detected  M3 RX samples at oversample position 12 (far off mid-bit)
+            6 errors; first: ERROR: 8N1 fast limit outside 09-25 +/- the phase band
+  detected  M4 stop-bit check removed from RX_STOP1
+            2 errors; first: ERROR: 8N1 slow limit outside 09-25 +/- the phase band
+  detected  M5 RX parity polarity swapped
+            5 errors; first: ERROR: 8E1 fast limit outside 09-25 +/- the phase band
+  esc(exp)  M6 start-bit glitch filter removed (EXPECTED ESCAPE -- not checked here)
+            expected: no check in this bench observes a runt start pulse
+
+  detected 5   escaped 1 (unexpected: 0)   voided 0
+
+  The detector in this bench is the ANCHORED CROSS-CHECK of the measured
+  tolerance against 09-25's independently measured values.  A coverage
+  model on its own detects nothing: every mutant below still fills the
+  same bins.  That is the point worth keeping -- coverage records what
+  the stimulus reached, and only a check can say the DUT was right.

@@ -1,0 +1,486 @@
+################ seed 1 ################
+==============================================================
+UART BAUD-ERROR COVERAGE MODEL   seed=1
+  DUT bit period : 320.0 ns  (16 x (BAUD_DIV=1 + 1) x 10.0 ns)
+  one oversample tick : 20.0 ns = 1/16 bit
+  loopback       : OFF everywhere (a baud error is invisible in it)
+==============================================================
+
+--- T0: per-configuration limits, re-measured here (25 bp steps, 6 patterns) ---
+  cfg     fast      slow     09-25 reference (5 bp, 6 patterns)
+  8N1   -4.75%   +6.25%    -4.50% / +6.25%
+  8N2   -4.50%   +6.25%    -4.50% / +6.25%
+  8E1   -4.00%   +5.50%    -4.05% / +5.60%
+  8O1   -4.25%   +5.50%    -4.05% / +5.60%
+  ANCHORED CROSS-CHECK against 09-25, and the TOLERANCE OF THAT
+  CHECK IS DERIVED, not chosen.  Two effects separate the two
+  benches: the 25 bp grid (this sweep reports the largest multiple
+  of 25 at or below the limit) and the uncontrolled start-up phase
+  between the driver's timebase and the DUT's free-running
+  oversample counter, which 09-25 measured as moving each limit by
+  69 bp.  So the window is 09-25's value -69-25 bp .. +69 bp:
+  measured spread vs 09-25: 8N1 fast +25 bp, 8E1 fast -5 bp.
+  An independent bench landing inside that window rather than ON the
+  number is 09-25's 'quote it as a band' CONFIRMED by a second
+  measurement instead of inferred from the sampling geometry.
+
+--- T0b: the same limit, measured with two trial bytes swapped ---
+  trial set A (09-25's): 00 FF AA 55 01 80
+  trial set B (this one): 00 FF AA 55 3C 81
+  cfg   fast(set A)   fast(set B)   difference
+  0      -4.75%       -4.75%       +0.00%
+  1      -4.50%       -4.50%       +0.00%
+  2      -4.00%       -4.00%       +0.00%
+  3      -4.25%       -4.75%       +0.50%
+  worst shift from swapping two of six trial bytes: 0.50% of eps
+  0x01 and 0x80 put a lone 1 at each END of the byte, adjacent to
+  the start and stop bits -- exactly where a drifting sample lands
+  on a DIFFERING neighbour.  0x3C and 0x81 do not.  A tolerance
+  measured without those two is not a noisier measurement of the
+  same quantity; it is a measurement of a different one, and it is
+  OPTIMISTIC, which is the direction that matters for a bin edge.
+  refined to the 5 bp grid:  8N1 -4.75%/+6.25%   8E1 -4.05%/+5.60%
+
+--- T1: what cp_baud_div sees while eps sweeps its whole range (C6) ---
+  eps swept -8.00% .. +8.00%; cp_baud_div bins hit: 1 of 4
+  cp_baud_div samples the DIVISOR REGISTER, which never changed.
+  A coverage report built on it reads 'covered' across a sweep
+  that takes the receiver from perfect to broken and back.
+
+--- T2: absolute bin edge (4.00%) vs measured limit (C5) ---
+  cfg   eps      'within +/-4%'?   inside measured limit?   agree?
+  0    -3.95%        yes                 yes              yes
+  0    -4.05%        no                  yes              NO
+  0    -4.15%        no                  yes              NO
+  1    -3.95%        yes                 yes              yes
+  1    -4.05%        no                  yes              NO
+  1    -4.15%        no                  yes              NO
+  2    -3.95%        yes                 yes              yes
+  2    -4.05%        no                  yes              NO
+  2    -4.15%        no                  no               yes
+  3    -3.95%        yes                 yes              yes
+  3    -4.05%        no                  yes              NO
+  3    -4.15%        no                  yes              NO
+  disagreements: 7
+  An absolute bin edge on a tolerance is a claim about scale.
+  Where the two columns differ, a closure report over the
+  absolute bins describes a region the DUT does not have.
+
+--- T3: is a band safe once the edge phase is randomised? (C1, C2) ---
+  24 frames per point, edge phase uniform over one oversample tick (20 ns)
+  C2, the inner band:
+    cfg 0  eps = +2.00%   clean 24/24   lost 0
+    cfg 0  eps = -2.00%   clean 24/24   lost 0
+    cfg 1  eps = +2.00%   clean 24/24   lost 0
+    cfg 1  eps = -2.00%   clean 24/24   lost 0
+    cfg 2  eps = +2.00%   clean 24/24   lost 0
+    cfg 2  eps = -2.00%   clean 24/24   lost 0
+    cfg 3  eps = +2.00%   clean 24/24   lost 0
+    cfg 3  eps = -2.00%   clean 24/24   lost 0
+  C1, 8E1 just inside the absolute +/-4% bin:
+    8E1    eps = -3.90%   clean 24/24   lost 0   (measured limit -4.05%)
+    8E1    eps = -4.30%   clean 18/24   lost 6   (past the measured limit)
+  The second row is the interesting one either way: a nonzero
+  clean count past the measured limit means the limit is a band
+  in the phase variable, which is what 09-25 could only infer.
+
+--- T4: reachability pre-pass over all 15 cross cells ---
+  stimulus space: well-formed frames; eps, data, edge phase, config
+  band \ outcome         CLEAN    ERRBIT     LOST
+  B0 eps==0         REACHED    EXCLUDED   EXCLUDED
+  B1 |eps|<=2%      REACHED      open       open  
+  B2 2%<|eps|<=4%   REACHED      open       open  
+  B3 4%<|eps|<=L    REACHED    REACHED      open  
+  B4 |eps|>L        REACHED    REACHED    REACHED 
+  90 frames attempted; 8 REACHED, 2 EXCLUDED by argument, 5 OPEN
+  Only the 2 EXCLUDED cells become illegal bins. The 5 OPEN cells
+  are carried as unknown: not in the closure criterion, not asserted.
+
+--- T4b: 'unreachable' is a property of the STIMULUS SPACE ---
+  eps == 0 exactly, stop bit driven LOW -> outcome ERRBIT
+  So (B0 x ERRBIT) is reachable in the full space and not in the
+  pre-pass's.  Neither verdict is wrong; a report that omits the
+  space is.  This frame is NOT recorded in cls[] or in coverage.
+
+--- T5a, pure random: closure over the 8 cells the pre-pass REACHED (budget 250) ---
+  NOT CLOSED in 250 frames; unhit reachable cells:
+    band 3 x outcome 1
+  illegal-bin hits: 0 (must be 0)
+  cells this pass refuted (reached though the pre-pass had not): 0
+  cumulative refutations: 0 -- the measured rate at which a
+  directed pre-pass under-reports reachability.
+
+--- T5b, coverage-DRIVEN: closure over the 8 cells the pre-pass REACHED (budget 250) ---
+  CLOSED after 28 frames
+  illegal-bin hits: 0 (must be 0)
+  cells this pass refuted (reached though the pre-pass had not): 0
+  cumulative refutations: 0 -- the measured rate at which a
+  directed pre-pass under-reports reachability.
+
+--- COVERAGE REPORT (closure run) ---
+  band                    frames   CLEAN  ERRBIT   LOST
+  B0 eps==0               1       1       0      0
+  B1 |eps|<=2%            1       1       0      0
+  B2 2%<|eps|<=4%         2       2       0      0
+  B3 4%<|eps|<=L         19      18       1      0
+  B4 |eps|>L              5       1       1      3
+  cross cells hit: 8 of 15 total; the pre-pass had reached 8
+
+--- PRE-REGISTERED PREDICTIONS, SCORED ---
+  C1 8E1 at -3.90% loses >=1 of 24 with random phase    FAIL  (lost 0)
+  C2 eps = +/-2.00% loses ZERO frames, all configs      PASS  (lost 0)
+  C3 (beyond-limit x CLEAN) is REACHABLE                PASS
+  C4 exactly 2 non-reachable cells, both in B0          FAIL  (5 open + 2 excluded)
+  C5 absolute and measured edges disagree somewhere     PASS  (7 rows)
+  C6 cp_baud_div hits one bin across the whole sweep    PASS  (1 bins)
+  Predictions are REPORTED, not asserted: a wrong prediction about
+  the DUT is a result, and failing the run on one would hide it.
+
+--- FOUND WHILE IMPLEMENTING (not pre-registered) ---
+  The four bands the item specified -- {0, +/-2%, +/-4%, beyond the
+  limit} -- DO NOT PARTITION eps.  For 8N1 the slow limit is
+  +6.25%, so eps = +5.00% is outside 'within +/-4%' and inside
+  the limit, belonging to no band.  B3 exists to hold that region;
+  it took 19 frames of the closure run, which a four-band model
+  would have reported as covered while never sampling them.
+
+==============================================================
+  checks 11   errors 0
+  F7 COVERAGE MODEL: 5 bands x 3 outcomes. Pre-pass: 8 REACHED,
+  2 EXCLUDED by argument (the only illegal bins), 5 OPEN.
+  Closure over the REACHED cells: met. Illegal-bin hits: 0.
+  Closure cost: pure random did NOT close in budget; coverage-
+  driven closed in 28 frames. A cell can be reachable and still
+  be out of a uniform generator's reach -- which is what steering is for.
+  No OPEN cell was refuted on this seed. The three-way
+  classification is still what makes that safe: on the first run
+  of this bench, with two verdicts, band 3 x LOST fired as an
+  illegal bin 21 frames in, against correct RTL.
+  The closure criterion deliberately excludes any implication of
+  the form 'beyond the limit => error': C3 shows that is false and
+  data-dependent, so it is not a bin and not an assertion.
+RESULT: PASS
+==============================================================
+################ seed 2 ################
+==============================================================
+UART BAUD-ERROR COVERAGE MODEL   seed=2
+  DUT bit period : 320.0 ns  (16 x (BAUD_DIV=1 + 1) x 10.0 ns)
+  one oversample tick : 20.0 ns = 1/16 bit
+  loopback       : OFF everywhere (a baud error is invisible in it)
+==============================================================
+
+--- T0: per-configuration limits, re-measured here (25 bp steps, 6 patterns) ---
+  cfg     fast      slow     09-25 reference (5 bp, 6 patterns)
+  8N1   -4.75%   +6.25%    -4.50% / +6.25%
+  8N2   -4.50%   +6.25%    -4.50% / +6.25%
+  8E1   -4.00%   +5.50%    -4.05% / +5.60%
+  8O1   -4.25%   +5.50%    -4.05% / +5.60%
+  ANCHORED CROSS-CHECK against 09-25, and the TOLERANCE OF THAT
+  CHECK IS DERIVED, not chosen.  Two effects separate the two
+  benches: the 25 bp grid (this sweep reports the largest multiple
+  of 25 at or below the limit) and the uncontrolled start-up phase
+  between the driver's timebase and the DUT's free-running
+  oversample counter, which 09-25 measured as moving each limit by
+  69 bp.  So the window is 09-25's value -69-25 bp .. +69 bp:
+  measured spread vs 09-25: 8N1 fast +25 bp, 8E1 fast -5 bp.
+  An independent bench landing inside that window rather than ON the
+  number is 09-25's 'quote it as a band' CONFIRMED by a second
+  measurement instead of inferred from the sampling geometry.
+
+--- T0b: the same limit, measured with two trial bytes swapped ---
+  trial set A (09-25's): 00 FF AA 55 01 80
+  trial set B (this one): 00 FF AA 55 3C 81
+  cfg   fast(set A)   fast(set B)   difference
+  0      -4.75%       -4.75%       +0.00%
+  1      -4.50%       -4.50%       +0.00%
+  2      -4.00%       -4.00%       +0.00%
+  3      -4.25%       -4.75%       +0.50%
+  worst shift from swapping two of six trial bytes: 0.50% of eps
+  0x01 and 0x80 put a lone 1 at each END of the byte, adjacent to
+  the start and stop bits -- exactly where a drifting sample lands
+  on a DIFFERING neighbour.  0x3C and 0x81 do not.  A tolerance
+  measured without those two is not a noisier measurement of the
+  same quantity; it is a measurement of a different one, and it is
+  OPTIMISTIC, which is the direction that matters for a bin edge.
+  refined to the 5 bp grid:  8N1 -4.75%/+6.25%   8E1 -4.05%/+5.60%
+
+--- T1: what cp_baud_div sees while eps sweeps its whole range (C6) ---
+  eps swept -8.00% .. +8.00%; cp_baud_div bins hit: 1 of 4
+  cp_baud_div samples the DIVISOR REGISTER, which never changed.
+  A coverage report built on it reads 'covered' across a sweep
+  that takes the receiver from perfect to broken and back.
+
+--- T2: absolute bin edge (4.00%) vs measured limit (C5) ---
+  cfg   eps      'within +/-4%'?   inside measured limit?   agree?
+  0    -3.95%        yes                 yes              yes
+  0    -4.05%        no                  yes              NO
+  0    -4.15%        no                  yes              NO
+  1    -3.95%        yes                 yes              yes
+  1    -4.05%        no                  yes              NO
+  1    -4.15%        no                  yes              NO
+  2    -3.95%        yes                 yes              yes
+  2    -4.05%        no                  yes              NO
+  2    -4.15%        no                  no               yes
+  3    -3.95%        yes                 yes              yes
+  3    -4.05%        no                  yes              NO
+  3    -4.15%        no                  yes              NO
+  disagreements: 7
+  An absolute bin edge on a tolerance is a claim about scale.
+  Where the two columns differ, a closure report over the
+  absolute bins describes a region the DUT does not have.
+
+--- T3: is a band safe once the edge phase is randomised? (C1, C2) ---
+  24 frames per point, edge phase uniform over one oversample tick (20 ns)
+  C2, the inner band:
+    cfg 0  eps = +2.00%   clean 24/24   lost 0
+    cfg 0  eps = -2.00%   clean 24/24   lost 0
+    cfg 1  eps = +2.00%   clean 24/24   lost 0
+    cfg 1  eps = -2.00%   clean 24/24   lost 0
+    cfg 2  eps = +2.00%   clean 24/24   lost 0
+    cfg 2  eps = -2.00%   clean 24/24   lost 0
+    cfg 3  eps = +2.00%   clean 24/24   lost 0
+    cfg 3  eps = -2.00%   clean 24/24   lost 0
+  C1, 8E1 just inside the absolute +/-4% bin:
+    8E1    eps = -3.90%   clean 24/24   lost 0   (measured limit -4.05%)
+    8E1    eps = -4.30%   clean 16/24   lost 8   (past the measured limit)
+  The second row is the interesting one either way: a nonzero
+  clean count past the measured limit means the limit is a band
+  in the phase variable, which is what 09-25 could only infer.
+
+--- T4: reachability pre-pass over all 15 cross cells ---
+  stimulus space: well-formed frames; eps, data, edge phase, config
+  band \ outcome         CLEAN    ERRBIT     LOST
+  B0 eps==0         REACHED    EXCLUDED   EXCLUDED
+  B1 |eps|<=2%      REACHED      open       open  
+  B2 2%<|eps|<=4%   REACHED      open       open  
+  B3 4%<|eps|<=L    REACHED    REACHED      open  
+  B4 |eps|>L        REACHED    REACHED    REACHED 
+  90 frames attempted; 8 REACHED, 2 EXCLUDED by argument, 5 OPEN
+  Only the 2 EXCLUDED cells become illegal bins. The 5 OPEN cells
+  are carried as unknown: not in the closure criterion, not asserted.
+
+--- T4b: 'unreachable' is a property of the STIMULUS SPACE ---
+  eps == 0 exactly, stop bit driven LOW -> outcome ERRBIT
+  So (B0 x ERRBIT) is reachable in the full space and not in the
+  pre-pass's.  Neither verdict is wrong; a report that omits the
+  space is.  This frame is NOT recorded in cls[] or in coverage.
+
+--- T5a, pure random: closure over the 8 cells the pre-pass REACHED (budget 250) ---
+    refuted: band 3 x outcome 2 reached at frame 127 (eps=-470 bp, cfg 0)
+  CLOSED after 158 frames
+  illegal-bin hits: 0 (must be 0)
+  cells this pass refuted (reached though the pre-pass had not): 1
+  cumulative refutations: 1 -- the measured rate at which a
+  directed pre-pass under-reports reachability.
+
+--- T5b, coverage-DRIVEN: closure over the 8 cells the pre-pass REACHED (budget 250) ---
+  CLOSED after 12 frames
+  illegal-bin hits: 0 (must be 0)
+  cells this pass refuted (reached though the pre-pass had not): 0
+  cumulative refutations: 1 -- the measured rate at which a
+  directed pre-pass under-reports reachability.
+
+--- COVERAGE REPORT (closure run) ---
+  band                    frames   CLEAN  ERRBIT   LOST
+  B0 eps==0               1       1       0      0
+  B1 |eps|<=2%            1       1       0      0
+  B2 2%<|eps|<=4%         1       1       0      0
+  B3 4%<|eps|<=L          5       4       1      0
+  B4 |eps|>L              4       1       1      2
+  cross cells hit: 8 of 15 total; the pre-pass had reached 8
+
+--- PRE-REGISTERED PREDICTIONS, SCORED ---
+  C1 8E1 at -3.90% loses >=1 of 24 with random phase    FAIL  (lost 0)
+  C2 eps = +/-2.00% loses ZERO frames, all configs      PASS  (lost 0)
+  C3 (beyond-limit x CLEAN) is REACHABLE                PASS
+  C4 exactly 2 non-reachable cells, both in B0          FAIL  (5 open + 2 excluded)
+  C5 absolute and measured edges disagree somewhere     PASS  (7 rows)
+  C6 cp_baud_div hits one bin across the whole sweep    PASS  (1 bins)
+  Predictions are REPORTED, not asserted: a wrong prediction about
+  the DUT is a result, and failing the run on one would hide it.
+
+--- FOUND WHILE IMPLEMENTING (not pre-registered) ---
+  The four bands the item specified -- {0, +/-2%, +/-4%, beyond the
+  limit} -- DO NOT PARTITION eps.  For 8N1 the slow limit is
+  +6.25%, so eps = +5.00% is outside 'within +/-4%' and inside
+  the limit, belonging to no band.  B3 exists to hold that region;
+  it took 5 frames of the closure run, which a four-band model
+  would have reported as covered while never sampling them.
+
+==============================================================
+  checks 11   errors 0
+  F7 COVERAGE MODEL: 5 bands x 3 outcomes. Pre-pass: 8 REACHED,
+  2 EXCLUDED by argument (the only illegal bins), 5 OPEN.
+  Closure over the REACHED cells: met. Illegal-bin hits: 0.
+  Closure cost: 158 frames pure-random vs 12 coverage-driven.
+  1 OPEN cells were REFUTED by the random run: the pre-pass had
+  not reached them and they are reachable. Only ARGUED exclusions
+  are asserted here, which is why that was a result and not a
+  false failure.
+  The closure criterion deliberately excludes any implication of
+  the form 'beyond the limit => error': C3 shows that is false and
+  data-dependent, so it is not a bin and not an assertion.
+RESULT: PASS
+==============================================================
+################ seed 3 ################
+==============================================================
+UART BAUD-ERROR COVERAGE MODEL   seed=3
+  DUT bit period : 320.0 ns  (16 x (BAUD_DIV=1 + 1) x 10.0 ns)
+  one oversample tick : 20.0 ns = 1/16 bit
+  loopback       : OFF everywhere (a baud error is invisible in it)
+==============================================================
+
+--- T0: per-configuration limits, re-measured here (25 bp steps, 6 patterns) ---
+  cfg     fast      slow     09-25 reference (5 bp, 6 patterns)
+  8N1   -4.75%   +6.25%    -4.50% / +6.25%
+  8N2   -4.50%   +6.25%    -4.50% / +6.25%
+  8E1   -4.00%   +5.50%    -4.05% / +5.60%
+  8O1   -4.25%   +5.50%    -4.05% / +5.60%
+  ANCHORED CROSS-CHECK against 09-25, and the TOLERANCE OF THAT
+  CHECK IS DERIVED, not chosen.  Two effects separate the two
+  benches: the 25 bp grid (this sweep reports the largest multiple
+  of 25 at or below the limit) and the uncontrolled start-up phase
+  between the driver's timebase and the DUT's free-running
+  oversample counter, which 09-25 measured as moving each limit by
+  69 bp.  So the window is 09-25's value -69-25 bp .. +69 bp:
+  measured spread vs 09-25: 8N1 fast +25 bp, 8E1 fast -5 bp.
+  An independent bench landing inside that window rather than ON the
+  number is 09-25's 'quote it as a band' CONFIRMED by a second
+  measurement instead of inferred from the sampling geometry.
+
+--- T0b: the same limit, measured with two trial bytes swapped ---
+  trial set A (09-25's): 00 FF AA 55 01 80
+  trial set B (this one): 00 FF AA 55 3C 81
+  cfg   fast(set A)   fast(set B)   difference
+  0      -4.75%       -4.75%       +0.00%
+  1      -4.50%       -4.50%       +0.00%
+  2      -4.00%       -4.00%       +0.00%
+  3      -4.25%       -4.75%       +0.50%
+  worst shift from swapping two of six trial bytes: 0.50% of eps
+  0x01 and 0x80 put a lone 1 at each END of the byte, adjacent to
+  the start and stop bits -- exactly where a drifting sample lands
+  on a DIFFERING neighbour.  0x3C and 0x81 do not.  A tolerance
+  measured without those two is not a noisier measurement of the
+  same quantity; it is a measurement of a different one, and it is
+  OPTIMISTIC, which is the direction that matters for a bin edge.
+  refined to the 5 bp grid:  8N1 -4.75%/+6.25%   8E1 -4.05%/+5.60%
+
+--- T1: what cp_baud_div sees while eps sweeps its whole range (C6) ---
+  eps swept -8.00% .. +8.00%; cp_baud_div bins hit: 1 of 4
+  cp_baud_div samples the DIVISOR REGISTER, which never changed.
+  A coverage report built on it reads 'covered' across a sweep
+  that takes the receiver from perfect to broken and back.
+
+--- T2: absolute bin edge (4.00%) vs measured limit (C5) ---
+  cfg   eps      'within +/-4%'?   inside measured limit?   agree?
+  0    -3.95%        yes                 yes              yes
+  0    -4.05%        no                  yes              NO
+  0    -4.15%        no                  yes              NO
+  1    -3.95%        yes                 yes              yes
+  1    -4.05%        no                  yes              NO
+  1    -4.15%        no                  yes              NO
+  2    -3.95%        yes                 yes              yes
+  2    -4.05%        no                  yes              NO
+  2    -4.15%        no                  no               yes
+  3    -3.95%        yes                 yes              yes
+  3    -4.05%        no                  yes              NO
+  3    -4.15%        no                  yes              NO
+  disagreements: 7
+  An absolute bin edge on a tolerance is a claim about scale.
+  Where the two columns differ, a closure report over the
+  absolute bins describes a region the DUT does not have.
+
+--- T3: is a band safe once the edge phase is randomised? (C1, C2) ---
+  24 frames per point, edge phase uniform over one oversample tick (20 ns)
+  C2, the inner band:
+    cfg 0  eps = +2.00%   clean 24/24   lost 0
+    cfg 0  eps = -2.00%   clean 24/24   lost 0
+    cfg 1  eps = +2.00%   clean 24/24   lost 0
+    cfg 1  eps = -2.00%   clean 24/24   lost 0
+    cfg 2  eps = +2.00%   clean 24/24   lost 0
+    cfg 2  eps = -2.00%   clean 24/24   lost 0
+    cfg 3  eps = +2.00%   clean 24/24   lost 0
+    cfg 3  eps = -2.00%   clean 24/24   lost 0
+  C1, 8E1 just inside the absolute +/-4% bin:
+    8E1    eps = -3.90%   clean 24/24   lost 0   (measured limit -4.05%)
+    8E1    eps = -4.30%   clean 17/24   lost 7   (past the measured limit)
+  The second row is the interesting one either way: a nonzero
+  clean count past the measured limit means the limit is a band
+  in the phase variable, which is what 09-25 could only infer.
+
+--- T4: reachability pre-pass over all 15 cross cells ---
+  stimulus space: well-formed frames; eps, data, edge phase, config
+  band \ outcome         CLEAN    ERRBIT     LOST
+  B0 eps==0         REACHED    EXCLUDED   EXCLUDED
+  B1 |eps|<=2%      REACHED      open       open  
+  B2 2%<|eps|<=4%   REACHED      open       open  
+  B3 4%<|eps|<=L    REACHED      open       open  
+  B4 |eps|>L        REACHED    REACHED    REACHED 
+  90 frames attempted; 7 REACHED, 2 EXCLUDED by argument, 6 OPEN
+  Only the 2 EXCLUDED cells become illegal bins. The 6 OPEN cells
+  are carried as unknown: not in the closure criterion, not asserted.
+
+--- T4b: 'unreachable' is a property of the STIMULUS SPACE ---
+  eps == 0 exactly, stop bit driven LOW -> outcome ERRBIT
+  So (B0 x ERRBIT) is reachable in the full space and not in the
+  pre-pass's.  Neither verdict is wrong; a report that omits the
+  space is.  This frame is NOT recorded in cls[] or in coverage.
+
+--- T5a, pure random: closure over the 7 cells the pre-pass REACHED (budget 250) ---
+  CLOSED after 17 frames
+  illegal-bin hits: 0 (must be 0)
+  cells this pass refuted (reached though the pre-pass had not): 0
+  cumulative refutations: 0 -- the measured rate at which a
+  directed pre-pass under-reports reachability.
+
+--- T5b, coverage-DRIVEN: closure over the 7 cells the pre-pass REACHED (budget 250) ---
+  CLOSED after 13 frames
+  illegal-bin hits: 0 (must be 0)
+  cells this pass refuted (reached though the pre-pass had not): 0
+  cumulative refutations: 0 -- the measured rate at which a
+  directed pre-pass under-reports reachability.
+
+--- COVERAGE REPORT (closure run) ---
+  band                    frames   CLEAN  ERRBIT   LOST
+  B0 eps==0               1       1       0      0
+  B1 |eps|<=2%            1       1       0      0
+  B2 2%<|eps|<=4%         1       1       0      0
+  B3 4%<|eps|<=L          1       1       0      0
+  B4 |eps|>L              9       3       1      5
+  cross cells hit: 7 of 15 total; the pre-pass had reached 7
+
+--- PRE-REGISTERED PREDICTIONS, SCORED ---
+  C1 8E1 at -3.90% loses >=1 of 24 with random phase    FAIL  (lost 0)
+  C2 eps = +/-2.00% loses ZERO frames, all configs      PASS  (lost 0)
+  C3 (beyond-limit x CLEAN) is REACHABLE                PASS
+  C4 exactly 2 non-reachable cells, both in B0          FAIL  (6 open + 2 excluded)
+  C5 absolute and measured edges disagree somewhere     PASS  (7 rows)
+  C6 cp_baud_div hits one bin across the whole sweep    PASS  (1 bins)
+  Predictions are REPORTED, not asserted: a wrong prediction about
+  the DUT is a result, and failing the run on one would hide it.
+
+--- FOUND WHILE IMPLEMENTING (not pre-registered) ---
+  The four bands the item specified -- {0, +/-2%, +/-4%, beyond the
+  limit} -- DO NOT PARTITION eps.  For 8N1 the slow limit is
+  +6.25%, so eps = +5.00% is outside 'within +/-4%' and inside
+  the limit, belonging to no band.  B3 exists to hold that region;
+  it took 1 frames of the closure run, which a four-band model
+  would have reported as covered while never sampling them.
+
+==============================================================
+  checks 11   errors 0
+  F7 COVERAGE MODEL: 5 bands x 3 outcomes. Pre-pass: 7 REACHED,
+  2 EXCLUDED by argument (the only illegal bins), 6 OPEN.
+  Closure over the REACHED cells: met. Illegal-bin hits: 0.
+  Closure cost: 17 frames pure-random vs 13 coverage-driven.
+  No OPEN cell was refuted on this seed. The three-way
+  classification is still what makes that safe: on the first run
+  of this bench, with two verdicts, band 3 x LOST fired as an
+  illegal bin 21 frames in, against correct RTL.
+  The closure criterion deliberately excludes any implication of
+  the form 'beyond the limit => error': C3 shows that is false and
+  data-dependent, so it is not a bin and not an assertion.
+RESULT: PASS
+==============================================================
+
+ALL 3 SEEDS PASS
