@@ -20,6 +20,7 @@ strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
 | **v2** | **2026-09-19** | **STATUS re-specified.** v1's blanket "Live status" wording is **wrong for the three error bits** and could not have been implemented as written. Three independent Phase 4 findings forced it: (a) the RTL bring-up (2026-09-17) could not make a live-status error bit observable through a register read at all, since the condition is gone by the time software reads it; (b) the UVM environment's read-to-clear check (2026-09-18) showed that checking such a bit *sets* is not checking it, because one read per run cannot distinguish "never clears" from "correctly re-set"; (c) the register model (2026-09-19) cannot express the two halves of STATUS in one `uvm_reg` access policy — the live bits are RO+volatile, the error bits are RC. Also adds the RX_DATA read-side-effect note and its consequence for generic register sequences. **v1's text is annotated in place below, not deleted.** |
 | **v3** | **2026-09-25** | **F7 re-specified, and four further corrections absorbed.** v1 assigned F7 to *directed* testing of the TX bit period, and that plan is not wrong so much as **unable to reach the thing F7 is about**: every bench in this repo until today ran in loopback, where the TX and RX engines share one baud generator, so a wrong divisor desynchronises nothing and the baud tolerance is infinite. F7's tolerance number, flagged open since v1 ("to be finalized once RTL exists"), could not be produced by any bench the plan described. It is now **measured** — see 2.7 below — and the strategy changes to a driven-pin receiver on an **independent timebase**. Also absorbed: (i) v2's STATUS correction, already in place; (ii) **reset values were unspecified** (2026-09-22); (iii) **C6/C7's behaviour was assigned to formal where formal provably cannot reach it** (2026-09-23); (iv) **Section 3's CRV assignment is satisfiable for the register interface and the loopback datapath but NOT for F7**, for the structural reason above (2026-09-24). **No v1 or v2 text is deleted; every change is annotated in place.** |
 | **v4** | **2026-09-26** | **The F7 coverage bins v3 specified are the wrong bins, and the pre-pass v3 demanded is not sufficient on its own.** v3's coverage consequence asked for bins on {0, within ±2%, within ±4%, beyond the measured limit}. Built and measured (`examples/phase6_baud_error_coverage/`), those four bands **do not partition the baud error** — for 8N1 the slow limit is +6.25%, so +5% is outside "within ±4%" and inside the limit and belongs to no band; a **fifth band** is required. The absolute edges also **disagree with the DUT** (7 of 12 probe rows classify differently under 4.00% than under the per-configuration measured limit), and **"beyond the limit ⇒ an error" is false and data-dependent**, so it is neither a bin nor an assertion. Separately, v3 inherited 09-24's rule "check a bin is reachable before putting it in a closure criterion" — and a reachability pre-pass turned into illegal bins **fired against correct RTL** 21 frames into a random run. Sign-off therefore distinguishes **excluded by argument** from **not reached**, and only the former is asserted. **No v1–v3 text is deleted; every change is annotated in place.** |
+| **v5** | **2026-09-27** | **F7's oracle may not be the serial monitor, and F7's limits may not be quoted as two independent numbers.** Two corrections, both produced by measuring F7 for the third time — from the Phase 4 UVM environment, at `BAUD_DIV=0`, where the earlier two benches ran at `BAUD_DIV=1`. (i) v3 correctly required a **driven pin on an independent timebase** but said nothing about the **observer**. A serial monitor that samples `rx` on the DUT's clock with the DUT's own algorithm drifts *with* the DUT and agrees with it: 182 probes spanning ±7% baud error produced only **5** monitor-versus-DUT disagreements, and 4 of those 5 were the monitor flagging a framing error the DUT did not. Such a monitor is not an independent observer but a second receiver carrying the same assumption, so F7's oracle must be the **driven byte compared against the register read**, never a monitor decode. (ii) Sign-off criterion 5 as written is **divisor-dependent**: the measured window is −4.50%/+6.25% at `BAUD_DIV=1` and −4.00%/+6.75% at `BAUD_DIV=0` — the **width is 10.75% in both, identical to the basis point**, and the whole window is **displaced by +0.50%**. A per-limit criterion would fail the same RTL at a different divisor while its actual tolerance is unchanged, so F7 is signed off on **window width plus a stated centre offset**. **No v1–v4 text is deleted; every change is annotated in place.** |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -432,6 +433,60 @@ appearing in Section 5.
 > demonstrates deliberately. **A coverage report that does not name its
 > stimulus space cannot say what an unhit bin means.**
 
+> **v5 annotation (2026-09-27): the plan specified an independent DRIVER and
+> forgot the OBSERVER, and a clock-synchronous monitor cannot serve as F7's
+> oracle.** v3 changed F7's strategy to a driven pin on an independent
+> timebase and was right to. It said nothing about what watches the result.
+> The Phase 4 UVM environment's serial monitor decodes `rx` by waiting
+> `BIT_CYCLES/2` to mid-start-bit and then `BIT_CYCLES` per bit — the DUT's
+> own sampling algorithm, on the DUT's own clock. Under a deliberate baud
+> mismatch it therefore **drifts with the DUT**: across 182 probes spanning
+> ±7% of baud error, the scoreboard fed by that monitor mispredicted only
+> **5** times out of 1274 checks, and **4 of the 5 were the monitor flagging
+> a framing error the DUT did not flag** — a disagreement between two
+> implementations of one algorithm, clustered at the tolerance limits where
+> their drift finally lands on different bits.
+>
+> So a quiet F7 checker built on a serial monitor is **not evidence the
+> receiver worked**; it is the loopback fallacy relocated from the driver to
+> the observer. This repo's own Phase 4 driver docstring has warned since
+> 2026-09-18 that *"a loopback test cannot distinguish a receiver that works
+> from a receiver that happens to agree with the transmitter's own idea of
+> the frame format"*, and the same sentence holds with *monitor* in place of
+> *transmitter*.
+>
+> **Requirement.** F7's oracle is the **byte the BFM was told to drive**
+> compared against the **byte read back from `RX_DATA`**, plus the STATUS
+> error bits — all of it register-side, none of it derived from a decode of
+> the line. A serial monitor may still be instantiated for coverage and for
+> debug, and its decodes may be reported, but they may not be the pass/fail
+> basis for a baud-tolerance result. This is the verdict-versus-checking
+> class (six occurrences 09-17 to 09-23, then 09-24, 09-25, 09-26) landing on
+> the **observer's timebase**.
+
+> **v5 annotation (2026-09-27): F7's limits are a WIDTH and a CENTRE, not two
+> numbers.** Measured 8N1 windows, same unmodified RTL, two divisors:
+>
+> | environment | `BAUD_DIV` | bit | fast limit | slow limit | width | centre |
+> |---|---|---|---|---|---|---|
+> | `phase6_rx_pin_driver` (09-25) | 1 | 32 clk | −4.50% | +6.25% | **10.75%** | +0.875% |
+> | `phase4_uvm_milestone` (09-27) | 0 | 16 clk | −4.00% | +6.75% | **10.75%** | +1.375% |
+>
+> The width is identical to the basis point and the window is displaced by
+> +0.50%. A displacement at constant width is a **sampling-point offset**,
+> not a change in tolerance. Candidate mechanism, stated as a hypothesis
+> because the grid cannot confirm it: `rx_sync`'s one-clock delay is 1/32 of
+> a bit at `BAUD_DIV=1` and 1/16 at `BAUD_DIV=0`, and 0.03125 bit spread over
+> the ~9.5-bit last checked sample predicts ≈0.33%, which is inside one 25 bp
+> grid step of the measured 0.50%. **Not asserted as the explanation.**
+>
+> **Consequence for Section 6 criterion 5**, which is corrected below: a
+> criterion of the form "fast limit ≥ 4.50%" would **fail this same RTL** at
+> `BAUD_DIV=0`, where the fast limit is 4.00%, while the DUT's actual
+> tolerance width has not moved at all. The number a system integrator needs
+> is the width; the centre is a property of the divisor and must be quoted
+> beside it rather than folded into a pass/fail threshold.
+
 **Also now reachable, and therefore now assignable in Section 3:** framing
 errors, parity errors, and the start-bit glitch filter are all driven at the
 pin in that bench. In loopback the DUT's own transmitter never emits a bad stop
@@ -494,7 +549,7 @@ quick regression-planning view:
 | F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) — **v3: "corrupted parity" is unreachable in loopback; now driven at the pin** |
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
-| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated) |
+| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**) |
 | F7 Baud rate — coverage | ~~`cp_baud_div` corner bins~~ → ~~{0, ±2%, ±4%, beyond the limit}~~ → **five bands over the driven baud error × three-valued outcome, closure over the reachable cells only, coverage-driven steering required** (v4, 2026-09-26 — the four-band set does not partition the domain and its absolute edges disagree with the measured limit; see 2.7 v4 annotations) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
@@ -576,6 +631,32 @@ forced into a contrived coverage-hitting test.
 5. Baud-rate tolerance (F7) finalized against actual RTL behavior --
    currently an open item (Section 2.7) since no RTL exists yet to
    measure real rounding/timing behavior against.
+
+> **v5 correction (2026-09-27).** No longer open, and no longer a single
+> number. Criterion 5 reads, from v5 onward:
+>
+> **5.** F7 is signed off on the **width** of the 8N1 baud-tolerance window,
+> **≥ 10.0% of eps**, measured with the trial set of 2026-09-26 item 6
+> (`0x01`, `0x80`, `0x3C`, `0x81` — bytes that put a lone 1 adjacent to the
+> start and stop bits), together with the **measured centre offset stated for
+> the divisor under test** and the divisor itself. Measured: 10.75% at both
+> `BAUD_DIV=0` (centre +1.375%) and `BAUD_DIV=1` (centre +0.875%).
+>
+> **Why the shape of the criterion changed and not just its value.** The
+> obvious form — "fast limit ≥ 4.50% and slow limit ≥ 6.25%" — is
+> **divisor-dependent**: the same RTL measures a 4.00% fast limit at
+> `BAUD_DIV=0` and would fail, while its tolerance width is unchanged. A
+> criterion that a correct design fails on a configuration change is not a
+> criterion, it is a latent false failure, and this repository has now
+> produced one of those at every other layer of the testbench (09-24
+> measurement, 09-25 thresholds, 09-26 reachability, 09-27 the regression
+> runner's own gate). The width form is invariant across the divisors
+> measured; the centre is reported rather than asserted, because only two
+> divisors have been measured and a two-point fit is not a law.
+>
+> **And the oracle is constrained too**, per the v5 annotation in 2.7: the
+> width must be measured register-side, driven byte against `RX_DATA` read,
+> not from a serial monitor's decode.
 
 ---
 
