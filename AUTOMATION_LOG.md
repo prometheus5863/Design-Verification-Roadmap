@@ -2944,3 +2944,316 @@ AUTOMATION_LOG.md entry makes 5. The vplan revision is its own commit because
 it corrects **two** documents' worth of guidance — v3's bin list and 09-24's
 finding 9 — and a plan correction that arrives buried in a testbench commit is
 a plan correction nobody reads.
+
+## 2026-09-27 — The regression runner was grepping yesterday's log, and the UVM environment finally gets a timebase of its own
+
+**The item closed:** *"Fold the independent-timebase driver into the Phase 4
+UVM environment as a real `uvm_driver` — open since 09-25 and now the clear
+top item. Today promotes it from nice-to-have to prerequisite: the pin driver
+is duplicated VERBATIM in two directories, deliberately (so a difference in
+results cannot be a difference in the driver), and that reasoning does not
+survive a third copy."* Created 2026-09-25, top item 2026-09-26. **Closed,
+with the prerequisite discharged first and proved rather than asserted** — and
+the session's most portable finding is not in the item at all but in the
+script that was supposed to be checking the work.
+
+Code: `bfm/uart_rx_pin_bfm.v` (173 lines), `bfm/uart_rx_pin_legacy_ref.v`
+(157), `examples/phase6_bfm_equivalence/` (bench, runner, mutation harness,
+two recorded outputs), `examples/phase4_uvm_milestone/uart_uvm_top.v` and
+`run_phase4_uvm.sh` plus ~340 new lines in `uart_uvm_tb.py`, and the pin
+driver removed from both phase6 benches. Plan: **v5**. Study note:
+`notes/2026-09-27-shared-pin-bfm-and-the-observers-timebase.md`.
+Pre-registration: `notes/2026-09-27-pin-driver-bfm-preregistration.md`,
+seven questions Q1–Q7 and five validations V1–V5, committed **before the BFM
+existed**, continuing the practice adopted 09-21.
+
+1. **THE HEADLINE, and it was found by accident — both phase6 regression
+   runners reported PASS while reading the PREVIOUS DAY'S log.** Establishing
+   a pre-refactor baseline meant diffing today's output against the committed
+   output instead of trusting the runner's verdict. Buried in 500 lines of
+   bench output, on stderr: `tee: /tmp/baudcov_seed_1.log: Permission
+   denied`. The runner piped each seed to a **fixed** `/tmp` path and gated on
+   `grep -q "RESULT: PASS"` against it; the sandbox reuses `/tmp` across
+   sessions with **different uid mappings**, so those three files existed
+   owned by `nobody:nogroup` dated **2026-09-26**, `tee` could not open them,
+   and `grep` read yesterday's file — which said PASS.
+
+   **Demonstrated, not inferred.** The bench was edited to force `errors > 0`
+   so it printed `RESULT: FAIL`; the unchanged runner printed **`ALL 1 SEEDS
+   PASS` and exited 0**. With the fix the same broken bench gives exit 1.
+   Both failure directions are live: a stale PASS log gives a **false pass**,
+   and no writable log at all gives a **false failure**. **A gate that cannot
+   write its evidence should not be able to reach a verdict either way.**
+
+   Fixed with three defences, each counting as FAILURE rather than success: a
+   private `mktemp` log per seed, an empty log treated as failure, and
+   **exactly one** `^RESULT:` line required so a concatenated or partial log
+   cannot satisfy the gate. **For two days "ALL 3 SEEDS PASS" was a sentence
+   about a file rather than about the DUT.** Nothing published moves — both
+   benches reproduce their committed outputs byte for byte, which is how this
+   was caught rather than a lucky escape from it.
+
+2. **The class, now complete.** This is the verdict-versus-checking finding at
+   the **outermost layer**. Previous instances: checkers (six, 09-17 to
+   09-23), a measurement (09-24), stimulus and thresholds (09-25), the
+   reachability pre-pass that decides what may be *asserted* (09-26). This one
+   is in the thing that decides whether the regression passed at all. Every
+   layer of a testbench has now supplied an instance, including the layer
+   outside the testbench.
+
+3. **The fix validated itself within the hour, in the safe direction.** The
+   new Phase 4 runner, built with the same three defences, reported FAILURE
+   for three tests that had all passed — its `grep -cE '^\*\* TESTS='` was
+   anchored at `^` and cocotb pads that line with leading spaces. **A gate
+   whose first bug is a false failure is a gate built the right way round.**
+
+4. **RESULT — the extraction is a pure refactor, at PICOSECOND resolution,
+   with zero tolerance.** `bfm/uart_rx_pin_bfm.v` is now the repository's only
+   pin driver: no clock port, no cycles counted, its only timebase `bit_ps` in
+   integer picoseconds. `bfm/uart_rx_pin_legacy_ref.v` keeps the old task
+   character for character and **re-derives** the bit period from eps in basis
+   points as the phase6 benches did — because the interesting half of the
+   equivalence question is not whether two identical delay statements agree
+   but whether **rounding a real to integer ps in the caller** gives the same
+   waveform as letting `#(real_ns)` quantise it inside a `1ns/1ps` module.
+   Two different roundings of one product. `examples/phase6_bfm_equivalence/`
+   runs both off ONE stimulus stream and compares every transition timestamp:
+   **3534 trials, 7126 checks, 0 errors.** Q1 predicted exact agreement;
+   correct. The eps table is deliberately unlovely (1, 7, 37, 1234, 4751 bp)
+   because a table of multiples of 100 bp would miss precisely the products
+   that do not land on a ps boundary.
+
+5. **V4, the negative control, is why V1 is not sufficient on its own.** A BFM
+   that passed the equivalence sweep while *also* agreeing with a
+   cycle-counted driver at every eps would have a decorative independent
+   timebase. T3 requires **disagreement** at eps ≠ 0, of exactly `9*bit_ps`
+   over an 8N1 `0x00` frame, at 16 eps values. T1 proves sameness, T3 proves
+   difference, and neither alone is the claim being made.
+
+6. **A check of mine was wrong and the constant was NOT simply corrected.**
+   T2 first hardcoded *"0xAA in 8N1 gives 10 transitions, every span 32
+   cycles"*. It failed with 8 transitions and one bad span, and **the BFM was
+   right**: the start bit is 0 and 0xAA's LSB is 0, so the first boundary has
+   no transition and the first span is 64 cycles. The fix is not `10 → 8` —
+   a hand-written expected value is a second implementation with no tests, so
+   T2 now **derives** the expected transition list from the frame's level
+   sequence across 40 configurations. 09-26 item 2's lesson at the scale of
+   one constant.
+
+7. **MUTATION TEST: 7 detected, 0 escaped, 1 deliberate void — and a ONE
+   PICOSECOND error is caught.** `bit_ps + 1` — 3e-6 of a bit period — gives
+   7077 errors, first failure "delta 9 ps at transition 1". That defect is
+   four orders of magnitude below the 5 bp sweep grid and **no DUT-level check
+   in this repository can see it**. Read against **09-26**, where a mutation
+   test of the coverage model detected **0 of 5** and every detection came
+   from an anchored cross-check: the contrast is the argument for keeping both
+   kinds of instrument. The void mutant is kept on purpose — its `sed` pattern
+   spans two lines and matches nothing — as a live check that the harness
+   scores an unmatched pattern as **void rather than as a pass**.
+
+8. **The end-to-end form, which is the one that matters for the numbers.**
+   Both phase6 benches reproduce their committed outputs **byte for byte** —
+   every measured limit, every coverage count, every closure frame count —
+   with every task *signature* preserved so that not one of the ~2000 lines of
+   tests in those two files was touched by the extraction. **Q2 predicted "not
+   by one basis point"; correct.** One deliberate non-tidy-up: `idle_gap`
+   keeps `#(n_bits * drv_bit_ns)` rather than being rewritten in integer ps,
+   because converting it would have moved inter-frame spacing by up to a
+   picosecond and broken reproduction **for a reason unrelated to the change
+   under test**.
+
+9. **The item itself — and what the 100%-coverage regression had never
+   done.** `UartSerialDriver` advanced one bit with `for _ in
+   range(BIT_CYCLES): await RisingEdge(dut.clk)`, so its timebase WAS the
+   DUT's clock. A baud mismatch was inexpressible, and — the part that
+   mattered more — **every frame this environment had ever driven had its bit
+   edges exactly on DUT clock edges with zero edge-phase variation**, under a
+   69-check regression at 100% functional coverage. The receiver's
+   oversampling had never been exercised off-grid here at all: 09-26 item 8 in
+   one line. Deliberately **not** reimplemented in Python, which would have
+   been the third pin driver the item existed to prevent; Phase 4 and both
+   phase6 benches now drive the same module from two languages. The handshake
+   watches the monotonic `done_cnt` rather than `busy`'s rising edge, because
+   polling for a rising `busy` from Python misses any action shorter than a
+   clock period — safe for a 160-cycle frame, **which is exactly why the
+   unsafe version would have survived review**.
+
+10. **RESULT — a third independent measurement of F7, and the unpredicted part
+    is better than the prediction.** phase6 runs `BAUD_DIV=1` (32-cycle bit);
+    this environment runs `BAUD_DIV=0` (16-cycle bit). The oversampling ratio
+    is 16 in both, so the *fractional* limit must agree if tolerance is a
+    property of the oversampling structure rather than of the divisor.
+
+    | | fast | slow | **width** | centre |
+    |---|---|---|---|---|
+    | `phase6_rx_pin_driver`, 09-25, `BAUD_DIV=1` | −4.50% | +6.25% | **10.75%** | +0.875% |
+    | `phase4_uvm_milestone`, 09-27, `BAUD_DIV=0` | −4.00% | +6.75% | **10.75%** | +1.375% |
+
+    Both inside the **derived** ±1.00% band (09-25's measured 0.69%-of-eps
+    phase sensitivity plus this test's 25 bp grid) — **Q7 PASS**, inside the
+    band rather than on the number, as predicted. Unpredicted and sharper:
+    **the width is identical to the basis point and the entire window is
+    displaced by +0.50%.** A displacement at constant width is a
+    **sampling-point offset, not a change in tolerance**. Candidate mechanism,
+    recorded as a hypothesis the grid cannot confirm: `rx_sync`'s one-clock
+    delay is 1/32 of a bit at `BAUD_DIV=1` and 1/16 at `BAUD_DIV=0`, and
+    0.03125 bit over the ~9.5-bit last checked sample predicts ≈0.33% against
+    a measured 0.50% — inside one 25 bp grid step. **Not asserted as the
+    explanation.**
+
+11. **Q4 confirmed in direction, REFUTED in magnitude, and the refutation is
+    the better finding.** `test_uart_scoreboard_timebase_assumption` runs the
+    sweep with the three-valued path disabled and **asserts the reference
+    model mispredicts**. It does — **5 times in 1274 checks over 182 probes
+    spanning ±7% of baud error**, far less than Q4 implied. **Four of the five
+    are `STATUS.frame_err: expected 1, got 0`: the MONITOR decoded a low stop
+    bit and the DUT did not flag one.** The monitor samples `rx` on the DUT's
+    clock using the DUT's own algorithm, so under a mismatch it **drifts with
+    the DUT and agrees with it**.
+
+    So: **a clock-synchronous monitor on an asynchronous line is not an
+    independent observer — it is a second receiver carrying the same
+    assumption, and its agreement with the DUT is not evidence the DUT was
+    right.** This is the loopback fallacy *relocated from the transmitter to
+    the observer*, and this environment's own driver docstring has warned
+    about it since 09-18 in the words "a loopback test cannot distinguish a
+    receiver that works from a receiver that happens to agree with the
+    transmitter's own idea of the frame format" — the same sentence, one noun
+    changed, and nobody noticed it applied. The 5 disagreements cluster at the
+    tolerance limits, where the two samplers' drift finally lands on different
+    bits, so the count measures **the difference between two sampling
+    implementations**, not the DUT's correctness, and a larger number would
+    not have meant a worse DUT.
+
+12. **The three-valued scoreboard.** `cfg.predictable = False` makes the
+    scoreboard **count** rx traffic as OPEN instead of checking it — observed,
+    not predicted, not asserted. Explicitly **not** a loosened tolerance: one
+    wide enough to accept a corrupted byte would also accept a real bug. Same
+    three verdicts as 09-26's coverage model (REACHED / EXCLUDED-by-argument /
+    OPEN), arriving in a scoreboard. `report_phase` errors if `open_rx == 0`,
+    so the path cannot silently stop executing and leave the test green.
+
+13. **Q3 SPLIT, with the discrepancy accounted for exactly rather than waved
+    at.** The milestone regression is unchanged — 69 scoreboard checks, 0
+    errors, 100% coverage — but the predicted **identical end time FAILS**:
+    60830.0 ns became 61070.0 ns. The new handshake adds 2 clock edges per
+    driven frame (one aligning the start to a clock edge, one after
+    completion), and 12 rx frames × 2 × 10 ns = **240 ns**, which is the whole
+    difference.
+
+14. **Q5 correct, trivially: exactly 2 copies**, with the Phase 4 Python
+    driver as a third *reimplementation* rather than a copy. Also measured
+    rather than eyeballed: `drive_frame`'s 25 lines and `idle_gap`'s 6 are
+    **code-identical** between the two benches (the second copy had its
+    comments stripped), `drive_glitch` existed only in the rx-pin bench, and
+    `drive_phased` only in the baud-coverage one.
+
+15. **Q6 correct** — every injected BFM defect detected, see item 7.
+
+16. **vplan v5, two corrections, nothing deleted.** (i) v3 required a driven
+    pin on an independent timebase and said **nothing about the observer**;
+    F7's oracle is now required to be register-side — driven byte against the
+    `RX_DATA` read — with monitor decodes allowed for coverage and debug but
+    never as the pass/fail basis. (ii) **Sign-off criterion 5 was
+    divisor-dependent**: "fast limit ≥ 4.50%" would **fail this same RTL** at
+    `BAUD_DIV=0`, where the fast limit is 4.00%, while its tolerance width had
+    not moved at all. F7 is now signed off on **window width ≥ 10.0% of eps**
+    with the 09-26 trial set, plus the measured centre offset and the divisor
+    **stated rather than asserted** — two divisors is not a law. A criterion a
+    correct design fails on a configuration change is a latent false failure,
+    and this repository has now produced one at every other testbench layer.
+
+**Methodological note.** Today's portable finding is item 1, and it is the
+plainest form the recurring class has taken: **a pass/fail gate must consume
+the artefact it just produced, and must be unable to consume anything else.**
+Its companion is item 11 — **an observer that shares the DUT's timebase is not
+an observer** — and the pair rhyme: in both cases something that looked like
+independent confirmation was reading a copy of the thing it was meant to
+check. The counterweight is item 7: a zero-tolerance comparison against an
+independent implementation caught a one-picosecond defect that nothing else
+here could see, on the same day a coverage model was recorded detecting none
+of five. Three sessions running, across two repositories, the load-bearing
+instrument has been an **anchored** comparison rather than a self-consistent
+one — and today added the corollary that an anchor must be freshly produced,
+not merely present on disk.
+
+**Not yet covered (candidates for future runs):**
+- **An INDEPENDENT observer for the serial line** — created today by item 11
+  and the clear top item. `UartSerialMonitor` decodes on the DUT's clock with
+  the DUT's algorithm; vplan v5 now forbids it as F7's oracle, and what does
+  not yet exist is a monitor with its **own** timebase. The BFM shows the
+  shape of the answer, and the honest version also needs the two decoders'
+  disagreement rate reported as a **result** rather than as errors
+- **The tolerance window's WIDTH is divisor-invariant and its CENTRE is not**
+  — created today by item 10, and the most concrete open experiment: one
+  bench, both divisors, a 5 bp grid, to separate the ≈0.33% predicted from the
+  0.50% measured. Two data points are not a law and this run cannot tell the
+  candidate mechanism from a coincidence
+- **Audit every remaining runner and harness for the item-1 pattern** — two of
+  seventeen shell scripts had it; the other fifteen were checked for `tee` to
+  a fixed `/tmp` path and gating on it, and none matched, but "greps a file it
+  did not just write" is the general shape and a `tee` search is not a proof
+- **A coverpoint on the data pattern's adjacent-bit TRANSITION count** — open
+  since 09-26. The tolerance depends on whether adjacent bits differ, so the
+  right data coverpoint for F7 is the transition count, not the byte value
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** —
+  open since 09-26; today put the same three verdicts in a scoreboard, so the
+  pattern now has two instances and a third would settle whether it
+  generalises
+- **A less greedy steering policy** — created 09-24, untouched
+- **Two transmitters at once** — created 09-25, untouched. A link's tolerance
+  is the *intersection* of two one-sided budgets, which is how a real
+  clock-accuracy spec is written
+- **`abc pdr` as a second engine** — unchanged since 09-23 and still the best
+  single experiment available; items 7 and 11 are both arguments for it, being
+  the same "get a second independent route" move applied to formal
+- **Per-property coverage of the PHASE 4 UVM environment** — open since 09-23
+- **Widen the coverage model** — created 09-24, untouched
+- **A mutation script for `examples/phase4_uvm_milestone/`** — open since
+  09-19, and now cheaper than it was: `run_phase4_uvm.sh` gives it a runner
+  with a gate that works, and today's BFM mutation script is a third adaptable
+  template
+- **Mutants not yet attempted**: interrupt *enable* combinations, the loopback
+  mux itself, reset asserted mid-frame
+- **A property that actually needs a strengthening invariant** — blocked on
+  the same bound
+- **The SVA sequence layer** — runnable on neither tool here; open since 09-20
+- **Code coverage measurement** — Icarus has none; open since 09-18, and the
+  only remaining item of the three Phase 4 carried forward
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health:** Device reachable at the **12:52 UTC** firing (the
+second of the day's three, delivered late from a 10:33 schedule); folder
+connected. **Step 0 found the graphene repo already had a 2026-09-27 entry
+and this one did not**, so per the standing instruction only this repo was
+worked — the 04:34 firing had completed the graphene half and stopped, or was
+interrupted after it. Single-repo session, by design rather than by accident.
+`git clone` of both repos completed normally; `git config
+user.name/user.email` was again absent in the fresh clones and set in its own
+call per 09-24. The four content commits were **pushed as they were made**
+rather than batched, per 09-25. Both 2026-09-17 Icarus gotchas still apply and
+were avoided. New for the toolchain notes: **uvm-python's `run_test()` can be
+called at most ONCE per simulator process** — a second call is `UVM_FATAL
+[TTINST]`, so three `@cocotb.test()` coroutines in one file give `TESTS=3
+PASS=1 FAIL=2` where neither failure is about the DUT; `run_phase4_uvm.sh`
+runs each test in its own invocation via cocotb's `TESTCASE`. The install
+needed **four** `--no-deps` packages, not the three in the 09-06 note:
+`uvm-python` pulls `cocotb-coverage`, which demands `cocotb>=2.0` and breaks
+the pin, so `cocotb-coverage`, `cocotb-bus` and `regex` all go in with
+`--no-deps` after `cocotb<2.0`; four sequential `ModuleNotFoundError`s is the
+expected path. `cocotb`'s `make` needs `$HOME/.local/bin` on `PATH` or it
+fails as `Makefile:20: /Makefile.sim: No such file or directory`, which does
+not name its cause. Timing: the equivalence bench runs 3534 trials in 0.55 s,
+the BFM mutation suite in well under the 170 s call budget, and the three
+Phase 4 tests in ~7 s each, so nothing needed splitting.
+
+**Commits this run:** 8 (the pre-registration; the BFM with its legacy
+reference, equivalence bench and mutation harness; the runner-gate fix; the
+two phase6 benches switched to the BFM; the Phase 4 environment; the vplan v5
+revision; the study note; progress.md). This AUTOMATION_LOG.md entry makes
+9. The runner-gate fix is its own commit
+because it is a correction to the instrument that judges every other commit in
+this repository, and one that arrives buried inside a refactor is one nobody
+reads. The vplan revision is its own commit for the same reason it was on
+09-26: it corrects a **sign-off criterion**, and a criterion that would fail
+correct RTL at a different divisor needs to be findable.
