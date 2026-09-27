@@ -1,0 +1,52 @@
+========================================================================
+ Mutation test: examples/phase6_bfm_equivalence/bfm_equiv_tb.v
+ Target: bfm/uart_rx_pin_bfm.v (a COPY is mutated; the real file is not)
+ Date (UTC): 2026-09-27
+========================================================================
+
+A mutant is DETECTED when the equivalence bench reports errors > 0.
+The checker compares transition timestamps against an independent
+implementation at picosecond resolution with ZERO tolerance, so there
+is no slack for a mutant to hide in.  Compare with the 2026-09-26 run
+in examples/phase6_baud_error_coverage/, where the coverage model
+detected 0 of 5 and every detection came from a check instead.
+
+[1] bit_ps_off_by_one_ps: DETECTED (7077 errors)
+     why it matters: one picosecond per bit -- 3e-6 of a bit period.  No DUT-level check can see this: it is four orders of magnitude below the 5 bp sweep grid and would never move a measured tolerance limit.  Only a timestamp comparison catches it.
+     first failure: ** FAIL[T1]: transition 1 bfm t=2880009 v=1  ref t=2880000 v=1  (delta 9 ps)
+
+[2] phase_ignored: DETECTED (764 errors)
+     why it matters: the initial edge phase silently dropped.  09-25 measured edge phase moving a tolerance limit by 0.69% of eps, so a driver that ignores it reports optimistically biased limits -- the dangerous direction.
+     first failure: ** FAIL[T1b]: transition 0 bfm t=0 v=0  ref t=8000 v=0  (delta -8000 ps)
+
+[3] data_msb_first: DETECTED (1954 errors)
+     why it matters: bit order reversed.  Palindromic bytes (0x00, 0xFF, 0x3C, 0x81) cannot see this at all, so detection depends on the data table containing 0x01, 0x80, 0xAA, 0x55 -- the mutant is a test of the trial set as much as of the checker.
+     first failure: ** FAIL[T1]: transition COUNT 10 (bfm) vs 8 (ref)
+
+[4] parity_polarity_swapped: DETECTED (2353 errors)
+     why it matters: even and odd parity exchanged.
+     first failure: ** FAIL[T1]: transition 1 bfm t=2880000 v=1  ref t=3200000 v=1  (delta -320000 ps)
+
+[5] bad_stop_ignored: DETECTED (1751 errors)
+     why it matters: the deliberate frame-error injection stops working, so the stop bit is always driven high.  This is a defect that makes benches PASS more often, which is the direction that does not announce itself.
+     first failure: ** FAIL[T1]: transition 1 bfm t=2880000 v=1  ref t=3200000 v=1  (delta -320000 ps)
+
+[6] two_stop_ignored: DETECTED (1752 errors)
+     why it matters: the second stop bit never driven -- 8x2 frames silently become 8x1.
+     first failure: ** FAIL[T1]: completion time 3200000 (bfm) vs 3520000 (ref) ps
+
+[7] stop_bit_delay_dropped: VOID -- the sed program matched nothing, so NO defect was
+     injected.  Reported as void rather than counted as a detection: a
+     mutation harness whose unmatched patterns score as passes is the
+     same failure mode as a testbench that passes against broken RTL.
+
+[8] idle_return_dropped: DETECTED (968 errors)
+     why it matters: the pin left at the stop-bit value instead of being returned to idle.  Harmless when the stop bit was high, a stuck-low line when bad_stop was set -- so detection depends on the trial set exercising bad_stop, which T1 does across 12 of its 24 configs.
+     first failure: ** FAIL[T1]: transition COUNT 1 (bfm) vs 2 (ref)
+
+------------------------------------------------------------------------
+ mutants attempted : 8
+ detected          : 7
+ escaped           : 0
+ void              : 1
+------------------------------------------------------------------------

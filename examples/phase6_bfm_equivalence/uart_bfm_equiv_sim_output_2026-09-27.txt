@@ -1,0 +1,34 @@
+/sessions/rcw-01tmj7cxvsymhxpzbucmmcee/work/Design-Verification-Roadmap/tools/setup_iverilog.sh: line 123: /tmp/iverilog_install/bin/iverilog: Permission denied
+/sessions/rcw-01tmj7cxvsymhxpzbucmmcee/work/Design-Verification-Roadmap/tools/setup_iverilog.sh: line 127: /tmp/iverilog_install/bin/vvp: Permission denied
+chmod: changing permissions of '/tmp/iverilog_install/bin/iverilog': Operation not permitted
+chmod: changing permissions of '/tmp/iverilog_install/bin/vvp': Operation not permitted
+=========================================================
+ BFM / legacy-task equivalence -- zero tolerance, ps resolution
+ bfm/uart_rx_pin_bfm.v  vs  bfm/uart_rx_pin_legacy_ref.v
+ nominal bit = 320000 ps = 32 clk cycles
+=========================================================
+
+T1  structured sweep: 24 frame configs x 8 data x 16 eps (V1)
+    3072 trials, 6144 checks so far, 0 errors
+
+T1b random trials with a random initial edge phase (V1)
+    3472 trials cumulative, 0 errors
+
+T1c glitch and idle modes (V1)
+    3478 trials cumulative, 0 errors
+
+T2  exact clock-grid alignment at eps=0, phase=0 (V2)
+    expected transitions DERIVED from the frame, not hardcoded
+    40 frame configs, off-grid transitions: 0, wrong timestamps: 0, wrong counts: 0
+    every bit boundary is EXACTLY 32 clock cycles -- the BFM at eps=0
+    reproduces the cycle-counted driver's grid exactly
+
+T3  NEGATIVE control: the timebase must actually move (V4)
+    16 eps values, exact 9*bit_ps span, 0 bad
+
+=========================================================
+ trials : 3534
+ checks : 7126
+ errors : 0
+ RESULT : PASS -- the extraction is a pure refactor at ps resolution
+=========================================================
