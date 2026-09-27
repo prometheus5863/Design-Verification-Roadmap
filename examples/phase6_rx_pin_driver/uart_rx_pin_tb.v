@@ -89,7 +89,69 @@ module uart_rx_pin_tb;
     reg        pwrite = 1'b0, psel = 1'b0, penable = 1'b0;
     wire [7:0] prdata;
     wire       pready, tx, irq;
-    reg        rx = 1'b1;          // idle high; THIS is the pin we drive
+    // -----------------------------------------------------------------
+    // THE PIN.  Driven by the SHARED BFM, not by a task in this file.
+    // -----------------------------------------------------------------
+    // Until 2026-09-27 the pin driver was a `task drive_frame` duplicated
+    // VERBATIM here and in the other phase6 bench.  The duplication was
+    // deliberate: two benches that must agree about a measured tolerance
+    // limit are more convincing when a disagreement between them cannot be
+    // a disagreement between their drivers.  That argument does not survive
+    // a third copy, and the Phase 4 UVM environment needed one -- so the
+    // driver became bfm/uart_rx_pin_bfm.v and this bench programs it.
+    //
+    // The extraction is PROVED, not asserted, twice over:
+    //   * examples/phase6_bfm_equivalence/ compares the BFM against a
+    //     verbatim copy of the old task at PICOSECOND resolution with zero
+    //     tolerance -- 3534 trials, 7126 checks, 0 errors;
+    //   * this bench's committed output is reproduced BYTE FOR BYTE, which
+    //     is the same claim in end-to-end form.
+    // The second is the one that matters for the numbers in this file: a
+    // refactor that moved a measured limit by one basis point would not
+    // have been a refactor.
+    wire        rx;
+    reg         bfm_go        = 1'b0;
+    reg  [1:0]  bfm_mode      = 2'd0;
+    reg  [7:0]  bfm_data      = 8'h00;
+    reg  [1:0]  bfm_par       = 2'b00;
+    reg         bfm_two_stop  = 1'b0;
+    reg         bfm_bad_stop  = 1'b0;
+    reg         bfm_bad_par   = 1'b0;
+    reg  [31:0] bfm_bit_ps    = 32'd320000;
+    reg  [31:0] bfm_phase_ps  = 32'd0;
+    reg  [31:0] bfm_glitch_ps = 32'd60000;
+    wire        bfm_busy;
+    wire [31:0] bfm_done_cnt;
+
+    uart_rx_pin_bfm u_rx_bfm (
+        .rx(rx), .go(bfm_go), .busy(bfm_busy), .done_cnt(bfm_done_cnt),
+        .mode(bfm_mode), .data(bfm_data), .par(bfm_par),
+        .two_stop(bfm_two_stop), .bad_stop(bfm_bad_stop),
+        .bad_par(bfm_bad_par), .bit_ps(bfm_bit_ps),
+        .phase_ps(bfm_phase_ps), .glitch_ps(bfm_glitch_ps)
+    );
+
+    // ns (real) -> ps (integer).  THE one arithmetic change the refactor
+    // introduces.  The old path let `#(real_ns)` quantise to the 1ps
+    // precision of this module's timescale; this rounds the same real
+    // explicitly.  phase6_bfm_equivalence T1 is the check that the two give
+    // identical waveforms, including at deliberately awkward eps values.
+    function [31:0] ps_round(input real ns);
+        begin
+            ps_round = $rtoi(ns * 1000.0 + 0.5);
+        end
+    endfunction
+
+    // The handshake is built from LEVEL waits, not edges, so it cannot
+    // depend on delta-cycle ordering between this bench and the BFM.
+    task bfm_start;
+        begin
+            bfm_go = 1'b1;
+            wait (bfm_busy === 1'b1);
+            bfm_go = 1'b0;
+            wait (bfm_busy === 1'b0);
+        end
+    endtask
 
     uart_controller dut (
         .clk(clk), .rst_n(rst_n),
@@ -166,33 +228,25 @@ module uart_rx_pin_tb;
     endtask
 
     // -----------------------------------------------------------------
-    // THE PIN DRIVER.  Its only timebase is drv_bit_ns.
+    // THE PIN DRIVER, now a thin wrapper over the shared BFM.
     // -----------------------------------------------------------------
-    // bad_stop: drive the (first) stop bit LOW instead of high.
-    // bad_par : invert the parity bit that would otherwise be correct.
+    // The SIGNATURE is unchanged on purpose: every call site in this file --
+    // the tolerance sweep, the CRV burst, the staircase, the error tests --
+    // is untouched by the extraction, so a change in their results could
+    // only come from the driver.  bad_stop and bad_par keep their meanings
+    // (drive the first stop bit low; invert an otherwise-correct parity bit).
     task drive_frame(input [7:0] data, input [1:0] par, input two_stop,
                      input real drv_bit_ns, input bad_stop, input bad_par);
-        integer i;
-        reg p;
         begin
-            rx = 1'b0;                       // start bit
-            #(drv_bit_ns);
-            for (i = 0; i < 8; i = i + 1) begin
-                rx = data[i];                // LSB first
-                #(drv_bit_ns);
-            end
-            if (par != PAR_NONE) begin
-                p = (par == PAR_EVEN) ? ^data : ~(^data);
-                rx = bad_par ? ~p : p;
-                #(drv_bit_ns);
-            end
-            rx = bad_stop ? 1'b0 : 1'b1;     // stop 1
-            #(drv_bit_ns);
-            if (two_stop) begin
-                rx = 1'b1;                   // stop 2
-                #(drv_bit_ns);
-            end
-            rx = 1'b1;                       // return to idle
+            bfm_mode     = 2'd0;              // MODE_FRAME
+            bfm_data     = data;
+            bfm_par      = par;
+            bfm_two_stop = two_stop;
+            bfm_bad_stop = bad_stop;
+            bfm_bad_par  = bad_par;
+            bfm_bit_ps   = ps_round(drv_bit_ns);
+            bfm_phase_ps = 32'd0;
+            bfm_start;
         end
     endtask
 
@@ -200,15 +254,22 @@ module uart_rx_pin_tb;
     // re-check must discard it.
     task drive_glitch(input real width_ns);
         begin
-            rx = 1'b0;
-            #(width_ns);
-            rx = 1'b1;
+            bfm_mode      = 2'd1;             // MODE_GLITCH
+            bfm_glitch_ps = ps_round(width_ns);
+            bfm_phase_ps  = 32'd0;
+            bfm_start;
         end
     endtask
 
     task idle_gap(input real n_bits, input real drv_bit_ns);
         begin
-            rx = 1'b1;
+            // The BFM returns the pin to idle itself at the end of every
+            // action, so this is now purely a delay.  The delay EXPRESSION is
+            // kept byte-identical to the pre-BFM version -- rewriting it in
+            // integer ps here would have been tidier and would have changed
+            // the inter-frame spacing by up to a picosecond, which is exactly
+            // the kind of incidental edit that makes a committed output stop
+            // reproducing for a reason unrelated to the change under test.
             #(n_bits * drv_bit_ns);
         end
     endtask

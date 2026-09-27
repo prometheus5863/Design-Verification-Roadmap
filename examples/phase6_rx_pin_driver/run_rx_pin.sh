@@ -19,7 +19,7 @@ IVL_LIB="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/lib/x86_64-linux-gnu
 
 SIM="$(mktemp -u /tmp/rxpin_sim.XXXXXX)"
 "$IVL_BIN/iverilog" -B "$IVL_LIB" -g2012 -o "$SIM" \
-    rtl/uart_controller.v examples/phase6_rx_pin_driver/uart_rx_pin_tb.v || exit 1
+    rtl/uart_controller.v bfm/uart_rx_pin_bfm.v examples/phase6_rx_pin_driver/uart_rx_pin_tb.v || exit 1
 
 FAILED=0
 for s in $(seq 1 "$N"); do
