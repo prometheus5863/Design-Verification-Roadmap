@@ -256,6 +256,19 @@ now, not Phase 4 gaps to reopen.
 > toolchain limit rather than a gap in the work: Icarus has no native
 > support.
 
+> **Updated 2026-09-27.** The Phase 4 UVM environment now measures F7 itself.
+> `UartSerialDriver` no longer counts DUT clock cycles: it programs
+> `bfm/uart_rx_pin_bfm.v`, the repository's single pin driver, whose only
+> timebase is `bit_ps`. Measured at `BAUD_DIV=0`: 8N1 **+6.75% / -4.00%**,
+> both inside the derived +/-1.00% band around the 09-25 numbers measured at
+> `BAUD_DIV=1`. **The window WIDTH is 10.75% at both divisors, identical to
+> the basis point, with the whole window displaced +0.50%** -- which is why
+> vplan v5 signs F7 off on width plus a stated centre offset rather than on
+> two limits. Recorded honestly alongside it: until today every frame this
+> environment had ever driven had its bit edges exactly on DUT clock edges,
+> so the receiver's oversampling had never been exercised off-grid here --
+> under a 69-check regression at 100% functional coverage.
+
 > **Updated 2026-09-24.** The first of those three is closed:
 > `examples/phase6_crv_uart/` drives constrained-random, coverage-driven
 > stimulus with a closure pass criterion, over the register interface and
@@ -574,15 +587,57 @@ measured rather than quietly dropped.
             "unreachable" is a property of a bin AND a stimulus space --
             `eps == 0` x frame error is excluded for well-formed frames and
             trivially reachable once the stop bit may be corrupted
-      - [ ] Fold the independent-timebase driver into the Phase 4 UVM
-            environment as a real `uvm_driver` -- created 2026-09-25 and
-            now the clear top item. The serial agent there drives RX at the
-            DUT's own rate, so the UVM environment still cannot reach what
-            these benches reach. **2026-09-26 makes it a prerequisite
-            rather than a nice-to-have:** the pin driver is now duplicated
-            VERBATIM in two directories, deliberately (so a difference in
-            results cannot be a difference in the driver), and that
-            reasoning does not survive a third copy
+      - [x] **Fold the independent-timebase driver into the Phase 4 UVM
+            environment as a real `uvm_driver` -- DONE 2026-09-27**, with
+            the prerequisite discharged first. Created 2026-09-25, top item
+            from 2026-09-26. `bfm/uart_rx_pin_bfm.v` is now the
+            repository's ONE pin driver -- no clock port, no cycles
+            counted, its only timebase `bit_ps` -- and Phase 4 plus both
+            phase6 benches drive it, from two languages. The verbatim
+            duplication is gone. `examples/phase4_uvm_milestone/
+            uart_uvm_top.v` instantiates the DUT beside the BFM and
+            `UartSerialDriver` programs it instead of bit-banging
+            `dut.rx`; `UartFrameItem` gained `eps_bp` and `phase_ps`.
+            Deliberately not a Python reimplementation of the timebase --
+            that would have been the third copy the item existed to
+            prevent. Measured from UVM: 8N1 slow **+6.75%**, fast
+            **-4.00%**, both inside the derived +/-1.00% band around
+            09-25's numbers, at `BAUD_DIV=0` where phase6 ran at
+            `BAUD_DIV=1`. See `examples/phase6_bfm_equivalence/` for the
+            ps-resolution proof that the extraction is a pure refactor
+      - [x] **Both phase6 regression runners were reading YESTERDAY'S log
+            -- FOUND AND FIXED 2026-09-27.** Not previously on any list.
+            `run_rx_pin.sh` and `run_baud_cov.sh` piped each seed to a
+            FIXED `/tmp` path and gated on `grep -q 'RESULT: PASS'`
+            against it; the sandbox reuses `/tmp` across sessions with
+            different uid mappings, so `tee` failed with "Permission
+            denied" and `grep` read the 2026-09-26 file, which said PASS.
+            Demonstrated: a bench edited to print `RESULT: FAIL` was
+            reported as `ALL 1 SEEDS PASS`, exit 0. Both directions are
+            live -- a stale PASS log gives a false pass, no writable log
+            gives a false failure. Fixed with a private `mktemp` log, an
+            empty log counting as FAILURE, and exactly one `^RESULT:` line
+            required. The verdict-vs-checking class at the OUTERMOST layer
+      - [ ] The tolerance window's WIDTH is divisor-invariant and its
+            CENTRE is not -- created 2026-09-27, and the most concrete
+            open experiment. 10.75% wide at both `BAUD_DIV=0` and
+            `BAUD_DIV=1`, identical to the basis point, with the whole
+            window displaced +0.50%. Candidate mechanism: `rx_sync`'s
+            one-clock delay is 1/32 of a bit at `BAUD_DIV=1` and 1/16 at
+            `BAUD_DIV=0`, predicting ~0.33% against a measured 0.50% --
+            inside one 25 bp grid step, so this grid cannot tell them
+            apart. The experiment: one bench, both divisors, 5 bp grid
+      - [ ] An INDEPENDENT observer for the serial line -- created
+            2026-09-27 and the natural top item now. `UartSerialMonitor`
+            decodes `rx` on the DUT's clock with the DUT's own algorithm,
+            so under a baud mismatch it drifts WITH the DUT: 182 probes
+            across +/-7% of eps produced only 5 disagreements in 1274
+            checks, and 4 of the 5 were the monitor flagging a framing
+            error the DUT did not. A clock-synchronous monitor is a second
+            receiver carrying the same assumption, not an independent
+            observer -- the loopback fallacy moved from the driver to the
+            observer. vplan v5 now forbids it as F7's oracle; what does
+            not yet exist is a monitor with its own timebase
       - [ ] A coverpoint on the data pattern's adjacent-bit TRANSITION
             count -- created 2026-09-26 by the trial-set experiment above.
             The baud tolerance depends on whether adjacent bits differ, so
