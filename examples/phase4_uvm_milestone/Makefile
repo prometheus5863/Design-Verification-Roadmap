@@ -11,8 +11,10 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
 VERILOG_SOURCES += $(PWD)/../../rtl/uart_controller.v
+VERILOG_SOURCES += $(PWD)/../../bfm/uart_rx_pin_bfm.v
+VERILOG_SOURCES += $(PWD)/uart_uvm_top.v
 
-TOPLEVEL = uart_controller
+TOPLEVEL = uart_uvm_top
 MODULE = uart_uvm_tb
 
 include $(shell cocotb-config --makefiles)/Makefile.sim

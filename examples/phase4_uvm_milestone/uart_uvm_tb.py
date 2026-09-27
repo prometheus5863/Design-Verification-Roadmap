@@ -88,6 +88,11 @@ UVMAnalysisImpTx = uvm_analysis_imp_decl("_tx")
 CLK_NS = 10
 BAUD_DIV = 0
 BIT_CYCLES = 16 * (BAUD_DIV + 1)
+# The BFM's timebase, in picoseconds.  This is the SAME nominal bit period
+# the old cycle-counting driver produced -- BIT_CYCLES clock periods -- but
+# expressed in the BFM's own units, which is what makes eps != 0 sayable.
+BIT_PS_NOM = int(BIT_CYCLES * CLK_NS * 1000)
+BFM_MODE_FRAME, BFM_MODE_GLITCH, BFM_MODE_IDLE = 0, 1, 2
 
 ADDR_CTRL, ADDR_STATUS, ADDR_BAUD, ADDR_TX, ADDR_RX, ADDR_INT = range(6)
 
@@ -111,6 +116,21 @@ class UartCfg:
         self.parity_mode = PARITY_NONE
         self.two_stop = False
         self.baud_div = BAUD_DIV
+        # THREE-VALUED PREDICTION, added 2026-09-27.  When False, the
+        # scoreboard stops CHECKING rx-side traffic and starts COUNTING it as
+        # OPEN -- observed, not predicted, not asserted.  This exists because
+        # the reference model predicts the received byte from the driven byte,
+        # which is only a prediction while the driver shares the DUT's
+        # timebase.  Under a deliberate baud mismatch the DUT may legitimately
+        # receive a different byte, or none, and a model with two verdicts has
+        # no way to say 'this outcome is not mine to predict'.
+        #
+        # It is deliberately NOT a loosened check.  A tolerance wide enough to
+        # accept a corrupted byte would also accept a real bug; an OPEN count
+        # accepts nothing and asserts nothing.  Same three verdicts as
+        # 2026-09-26's coverage model (REACHED / EXCLUDED-by-argument / OPEN),
+        # arriving in a scoreboard.
+        self.predictable = True
 
     def frame_bits(self):
         return 1 + 8 + (0 if self.parity_mode == PARITY_NONE else 1) + \
@@ -162,6 +182,17 @@ class UartFrameItem(UVMSequenceItem):
         self.parity_bit = None     # as decoded/driven
         self.parity_ok = True
         self.stop_ok = True
+        # --- independent-timebase controls, added 2026-09-27 ---
+        # eps_bp is the fractional baud mismatch in BASIS POINTS (1 bp =
+        # 0.01%), the same unit the phase6 benches sweep in, so a number
+        # measured there can be driven here without a conversion to get
+        # wrong. phase_ps is the initial edge phase: the offset between the
+        # arriving start edge and the DUT's oversample grid, which 2026-09-25
+        # measured moving a tolerance limit by 0.69% of eps. Both default to
+        # the synchronous behaviour this driver had before, so every existing
+        # sequence is unaffected.
+        self.eps_bp = 0
+        self.phase_ps = 0
 
     def convert2string(self):
         return (f"frame data=0x{self.data:02x} corrupt={self.corrupt} "
@@ -286,19 +317,53 @@ uvm_component_utils(UartRegAgent)
 # Serial agent -- ONE class, instantiated active on rx and passive on tx
 # ---------------------------------------------------------------------
 class UartSerialDriver(UVMDriver):
-    """Bit-bangs a frame onto the DUT's `rx` input at the configured baud.
+    """Drives a frame onto the DUT's `rx` input by PROGRAMMING the shared
+    pin BFM (bfm/uart_rx_pin_bfm.v), whose timebase is its own.
 
-    This is the standalone RX bit-driver the roadmap listed as part of
-    the milestone. It deliberately does NOT reuse the DUT's own
-    transmitter via loopback: a loopback test cannot distinguish a
-    receiver that works from a receiver that happens to agree with the
-    transmitter's own idea of the frame format.
+    It deliberately does NOT reuse the DUT's own transmitter via loopback: a
+    loopback test cannot distinguish a receiver that works from a receiver
+    that happens to agree with the transmitter's own idea of the frame
+    format.
+
+    WHAT CHANGED ON 2026-09-27, AND WHY IT IS NOT COSMETIC
+    -----------------------------------------------------
+    This driver used to advance one bit with
+
+        for _ in range(BIT_CYCLES): await RisingEdge(dut.clk)
+
+    so its timebase was the DUT's clock. Every frame this environment had
+    ever driven therefore had its bit edges exactly on DUT clock edges, with
+    zero edge-phase variation, and a baud mismatch could not be expressed at
+    all. Now the driver writes `bit_ps` and `phase_ps` to a BFM that counts
+    neither clocks nor cycles, and the frame is laid down in the BFM's own
+    time.
+
+    WHY PROGRAM AN RTL BFM RATHER THAN BIT-BANG IN PYTHON
+    ----------------------------------------------------
+    A Python driver with its own `Timer`-based timebase would work, and
+    would be a THIRD implementation of the pin driver. The 09-26 item that
+    asked for this work asked for it because the driver was already
+    duplicated verbatim in two benches and a third copy would end the
+    argument that made the duplication defensible. So the Phase 4
+    environment and both phase6 benches now drive the SAME module, from two
+    languages, and examples/phase6_bfm_equivalence/ is the proof that the
+    module is the old task.
+
+    THE HANDSHAKE, AND WHY IT WATCHES done_cnt RATHER THAN busy
+    ---------------------------------------------------------
+    Polling `busy` for its rising edge is a race: an action shorter than one
+    clock period can start and finish before the next poll, and the driver
+    would then wait forever for a `busy` it already missed. `done_cnt` is
+    monotonic, so "has this number moved" cannot be missed. A full frame
+    holds `busy` for ~160 clock periods and would have been safe either way,
+    which is exactly why the unsafe version would have survived review.
     """
 
     def __init__(self, name, parent):
         super().__init__(name, parent)
         self.dut = None
         self.cfg = None
+        self.driven = 0
 
     def build_phase(self, phase):
         super().build_phase(phase)
@@ -311,26 +376,51 @@ class UartSerialDriver(UVMDriver):
             self.uvm_report_fatal("NOCFG", "cfg not in config db")
         self.cfg = arr2[0]
 
+    @staticmethod
+    def bit_ps_for(eps_bp):
+        """Nominal bit period scaled by the baud error.
+
+        The same expression the phase6 benches use, rounded to integer ps
+        the same way -- and phase6_bfm_equivalence T1 is the check that this
+        rounding gives a waveform identical to letting `#(real_ns)` quantise
+        it, over 3472 trials at deliberately awkward eps values.
+        """
+        return int(round(BIT_PS_NOM * (1.0 + eps_bp / 10000.0)))
+
+    async def _bfm_run(self):
+        """One BFM action, start to finish. See the class docstring on why
+        this watches done_cnt."""
+        dut = self.dut
+        before = int(dut.bfm_done_cnt.value)
+        # Start on a clock edge. Not required by the BFM -- which has no
+        # clock -- but it makes the frame's position deterministic, and at
+        # eps = 0 and phase = 0 it puts every bit edge back exactly where
+        # the cycle-counting driver put it.
+        await RisingEdge(dut.clk)
+        dut.bfm_go.value = 1
+        while int(dut.bfm_done_cnt.value) == before:
+            await RisingEdge(dut.clk)
+        dut.bfm_go.value = 0
+        await RisingEdge(dut.clk)
+
     async def run_phase(self, phase):
         dut = self.dut
-        dut.rx.value = 1
         while True:
             item = await self.seq_item_port.get_next_item()
-            bits = [0]                                   # start
-            bits += [(item.data >> i) & 1 for i in range(8)]  # LSB first
-            par = self.cfg.expected_parity(item.data)
-            if par is not None:
-                bits.append(par ^ (1 if item.corrupt == "parity" else 0))
-            bits.append(0 if item.corrupt == "frame" else 1)   # stop 1
-            if self.cfg.two_stop:
-                bits.append(1)                                  # stop 2
-            for b in bits:
-                dut.rx.value = b
-                for _ in range(BIT_CYCLES):
-                    await RisingEdge(dut.clk)
-            dut.rx.value = 1
+            dut.bfm_mode.value     = BFM_MODE_FRAME
+            dut.bfm_data.value     = item.data & 0xFF
+            dut.bfm_par.value      = self.cfg.parity_mode
+            dut.bfm_two_stop.value = 1 if self.cfg.two_stop else 0
+            dut.bfm_bad_stop.value = 1 if item.corrupt == "frame" else 0
+            dut.bfm_bad_par.value  = 1 if item.corrupt == "parity" else 0
+            dut.bfm_bit_ps.value   = self.bit_ps_for(item.eps_bp)
+            dut.bfm_phase_ps.value = int(item.phase_ps)
+            await self._bfm_run()
+            self.driven += 1
             # One idle bit between frames so the receiver returns to IDLE
-            # before the next start edge.
+            # before the next start edge. Counted in DUT clocks on purpose:
+            # this is a GAP, not stimulus timing, and it should not shrink
+            # when the driven baud is fast.
             for _ in range(BIT_CYCLES):
                 await RisingEdge(dut.clk)
             self.seq_item_port.item_done()
@@ -491,6 +581,10 @@ class UartScoreboard(UVMScoreboard):
         self.pend_frame_err = False
         self.checks = 0
         self.errors = 0
+        # OPEN outcomes: observed while cfg.predictable was False.
+        self.open_rx = 0
+        self.open_reads = 0
+        self.open_status = 0
 
     def build_phase(self, phase):
         super().build_phase(phase)
@@ -513,6 +607,9 @@ class UartScoreboard(UVMScoreboard):
             self.exp_tx.append(item.data & 0xFF)
             return
         if not item.is_write and item.addr == ADDR_RX:
+            if not self.cfg.predictable:
+                self.open_reads += 1
+                return
             if not self.exp_rx:
                 self._check(False, f"RX_DATA read 0x{item.rdata:02x} with "
                                    f"nothing predicted in the RX FIFO")
@@ -523,6 +620,14 @@ class UartScoreboard(UVMScoreboard):
                         f"got 0x{item.rdata:02x}")
             return
         if not item.is_write and item.addr == ADDR_STATUS:
+            if not self.cfg.predictable:
+                # The model is still ADVANCED (read-to-clear happens in the
+                # DUT whether or not we are checking), but nothing is
+                # asserted about what the bits were.
+                self.open_status += 1
+                self.pend_parity_err = False
+                self.pend_frame_err = False
+                return
             got_par = bool((item.rdata >> ST_PARITY_ERR) & 1)
             got_frm = bool((item.rdata >> ST_FRAME_ERR) & 1)
             self._check(got_par == self.pend_parity_err,
@@ -538,6 +643,9 @@ class UartScoreboard(UVMScoreboard):
 
     # --- from the ACTIVE rx agent's monitor ---------------------------
     def write_rx(self, item):
+        if not self.cfg.predictable:
+            self.open_rx += 1
+            return
         # Every frame is pushed to the RX FIFO by this RTL, error or not
         # (rtl/uart_controller.v: errors are flagged, the byte is still
         # queued unless the FIFO is full).
@@ -573,7 +681,9 @@ class UartScoreboard(UVMScoreboard):
                 f"{len(self.exp_rx)} predicted rx byte(s) never appeared")
         self.uvm_report_info(
             "SB_SUMMARY",
-            f"scoreboard: checks={self.checks} errors={self.errors}")
+            f"scoreboard: checks={self.checks} errors={self.errors} "
+            f"open(rx={self.open_rx} rx_reads={self.open_reads} "
+            f"status={self.open_status})")
 
 
 uvm_component_utils(UartScoreboard)
@@ -596,6 +706,14 @@ class UartCoverage(UVMComponent):
         self.reg_export = UVMAnalysisImpReg("cov_reg_export", self)
         self.rx_export = UVMAnalysisImpRx("cov_rx_export", self)
         self.tx_export = UVMAnalysisImpTx("cov_tx_export", self)
+        # Whether falling short of TARGET is an ERROR.  True for the
+        # milestone test, whose job is the feature->coverpoint chain.  False
+        # for the 2026-09-27 baud-tolerance tests, whose job is a timebase
+        # sweep in one frame format -- they cannot reach the parity and
+        # stop-bit bins and it would be dishonest to lower TARGET so that
+        # they appear to.  The opt-out is explicit and per-test rather than a
+        # softened global target.
+        self.enforce_target = True
         self.cfg = None
         self.bins = {
             "cp_parity_mode": {"none": 0, "even": 0, "odd": 0},
@@ -613,6 +731,9 @@ class UartCoverage(UVMComponent):
         if not UVMConfigDb.get(self, "", "cfg", arr):
             self.uvm_report_fatal("NOCFG", "cfg not in config db")
         self.cfg = arr[0]
+        arr2 = []
+        if UVMConfigDb.get(self, "", "cov_target_enforced", arr2):
+            self.enforce_target = bool(arr2[0])
 
     @staticmethod
     def _data_bin(d):
@@ -688,7 +809,7 @@ class UartCoverage(UVMComponent):
             "functional coverage\n" + "\n".join(lines)
             + f"\n  cross(parity_mode x rx_error): {crosses}"
             + f"\n  TOTAL bin coverage: {pct:.1f}% (target {self.TARGET:.0f}%)")
-        if pct < self.TARGET:
+        if pct < self.TARGET and self.enforce_target:
             missing = [f"{cpn}.{b}" for cpn, cp in self.bins.items()
                        for b, v in cp.items() if not v]
             self.uvm_report_error(
@@ -967,7 +1088,8 @@ class UartMilestoneTest(UVMTest):
         dut.pwrite.value = 0
         dut.paddr.value = 0
         dut.pwdata.value = 0
-        dut.rx.value = 1
+        # `rx` is a wire driven by the BFM now; there is no reg to write and
+        # the BFM initialises the pin high itself.
         for _ in range(8):
             await RisingEdge(dut.clk)
         dut.rst_n.value = 1
@@ -1055,6 +1177,343 @@ class UartMilestoneTest(UVMTest):
 uvm_component_utils(UartMilestoneTest)
 
 
+# ---------------------------------------------------------------------
+# 2026-09-27: baud tolerance FROM THE UVM ENVIRONMENT
+# ---------------------------------------------------------------------
+class UartOneFrameSeq(UVMSequence):
+    """One serial frame at a chosen baud error and initial edge phase.
+
+    This sequence is the smallest thing that could not be written before
+    today: `eps_bp` and `phase_ps` had no meaning while the driver counted
+    DUT clock cycles.
+    """
+
+    def __init__(self, name="UartOneFrameSeq"):
+        super().__init__(name)
+        self.data = 0x5A
+        self.eps_bp = 0
+        self.phase_ps = 0
+
+    async def body(self):
+        item = UartFrameItem("tol_frame")
+        item.data = self.data
+        item.eps_bp = self.eps_bp
+        item.phase_ps = self.phase_ps
+        await self.start_item(item)
+        await self.finish_item(item)
+
+
+uvm_object_utils(UartOneFrameSeq)
+
+
+class UartReadSeq(UVMSequence):
+    """Reads a list of register addresses and keeps the data in `self.got`."""
+
+    def __init__(self, name="UartReadSeq"):
+        super().__init__(name)
+        self.addrs = [ADDR_STATUS]
+        self.got = []
+
+    async def body(self):
+        self.got = []
+        for a in self.addrs:
+            item = UartRegItem("rd")
+            item.is_write = False
+            item.addr = a
+            await self.start_item(item)
+            await self.finish_item(item)
+            self.got.append(item.rdata)
+
+
+uvm_object_utils(UartReadSeq)
+
+
+class UartBaudToleranceTest(UVMTest):
+    """Measures the DUT's 8N1 baud tolerance from inside the UVM environment,
+    and cross-checks it against the number two non-UVM benches measured.
+
+    WHY THIS IS NOT A THIRD REDUNDANT MEASUREMENT
+    --------------------------------------------
+    `examples/phase6_rx_pin_driver` (2026-09-25) and
+    `examples/phase6_baud_error_coverage` (2026-09-26) both run at
+    BAUD_DIV = 1 -- a 32-cycle bit, a 20 ns oversample tick. This
+    environment runs at BAUD_DIV = 0 -- a 16-cycle bit, a 10 ns tick. The
+    oversampling RATIO is 16 in both, so if the tolerance is a property of
+    the oversampling structure rather than of the divisor, the FRACTIONAL
+    limits must agree. If it is not, they will not. So this is a
+    measurement of the same fraction under a different divisor, by a
+    different testbench architecture, through a different driver API -- and
+    a disagreement would be diagnostic rather than merely awkward.
+
+    THE COMPARISON BAND IS DERIVED, NOT CHOSEN
+    -----------------------------------------
+    09-25 measured one oversample tick of initial edge phase moving the
+    limit by 0.69% of eps, and this test sweeps a 25 bp grid where that
+    bench swept 5 bp. 0.69% + 0.25% = 0.94%, rounded to 1.00%. Quoting a
+    band rather than a number is 09-25's own conclusion, and 09-26 item 7
+    turned it from an inference into a second measurement; this is the
+    third.
+    """
+
+    EPS_STEP_BP = 25
+    EPS_MAX_BP = 900
+    # 09-26 item 6's trial set: 0x01 and 0x80 put a lone 1 adjacent to the
+    # start and stop bits, which is where a drifting sample lands on a
+    # DIFFERING neighbour. Swapping them for 0x3C/0x81 moved a measured limit
+    # by 0.50% of eps in the OPTIMISTIC direction, so the choice is not free.
+    TRIAL_DATA = [0x01, 0x80, 0x3C, 0x81]
+    REF_FAST_PCT = 4.50      # uart_rx_pin_sim_output_2026-09-25.txt, 8N1
+    REF_SLOW_PCT = 6.25      # ditto
+    BAND_PCT = 1.00
+
+    def __init__(self, name="UartBaudToleranceTest", parent=None):
+        super().__init__(name, parent)
+        self.env = None
+        self.dut = None
+        self.cfg = None
+        self.measured = {}
+        self.probes = 0
+
+    def build_phase(self, phase):
+        super().build_phase(phase)
+        self.env = UartEnv.type_id.create("env", self)
+        arr = []
+        if not UVMConfigDb.get(self, "", "dut", arr):
+            self.uvm_report_fatal("NODUT", "dut handle not in config db")
+        self.dut = arr[0]
+        arr2 = []
+        UVMConfigDb.get(self, "", "cfg", arr2)
+        self.cfg = arr2[0]
+
+    async def _reset(self):
+        dut = self.dut
+        dut.rst_n.value = 0
+        dut.psel.value = 0
+        dut.penable.value = 0
+        dut.pwrite.value = 0
+        dut.paddr.value = 0
+        dut.pwdata.value = 0
+        for _ in range(8):
+            await RisingEdge(dut.clk)
+        dut.rst_n.value = 1
+        await RisingEdge(dut.clk)
+
+    async def _drain(self):
+        """Empty the RX FIFO and clear the sticky error bits, so the next
+        probe starts from a known state. Bounded: an unbounded drain loop
+        against a DUT stuck with RX_AVAIL high would hang the regression
+        instead of failing it."""
+        rd = UartReadSeq.type_id.create("drain_rd")
+        for _ in range(8):
+            rd.addrs = [ADDR_STATUS]
+            await rd.start(self.env.vseqr.reg_seqr)
+            if not ((rd.got[0] >> ST_RX_AVAIL) & 1):
+                break
+            rd.addrs = [ADDR_RX]
+            await rd.start(self.env.vseqr.reg_seqr)
+        # One more STATUS read to clear anything the drain itself flagged.
+        rd.addrs = [ADDR_STATUS]
+        await rd.start(self.env.vseqr.reg_seqr)
+
+    async def _probe(self, data, eps_bp):
+        """Drive one frame and classify the outcome. Returns True when the
+        byte arrived intact with no error bit set."""
+        fr = UartOneFrameSeq.type_id.create("probe")
+        fr.data = data
+        fr.eps_bp = eps_bp
+        await fr.start(self.env.vseqr.serial_seqr)
+        # Let the frame finish being received. The DUT's own bit period is
+        # BIT_CYCLES; the DRIVEN one may be up to 9% longer, so the wait is
+        # scaled by the driven period, not the nominal one.
+        settle = int(BIT_CYCLES * 13 * (1.0 + abs(eps_bp) / 10000.0)) + BIT_CYCLES
+        for _ in range(settle):
+            await RisingEdge(self.dut.clk)
+        rd = UartReadSeq.type_id.create("probe_rd")
+        rd.addrs = [ADDR_STATUS, ADDR_RX]
+        await rd.start(self.env.vseqr.reg_seqr)
+        st, got = rd.got[0], rd.got[1]
+        self.probes += 1
+        avail = bool((st >> ST_RX_AVAIL) & 1)
+        err = bool((st >> ST_FRAME_ERR) & 1) or \
+            bool((st >> ST_PARITY_ERR) & 1) or \
+            bool((st >> ST_OVERRUN_ERR) & 1)
+        await self._drain()
+        return avail and not err and (got == data)
+
+    async def _limit(self, sign):
+        """Walk |eps| outward until a frame is no longer received cleanly;
+        return the last eps at which EVERY trial byte was clean.
+
+        The oracle here deliberately does NOT go through the scoreboard. A
+        tolerance sweep drives past the limit on purpose, and counting those
+        frames as failures would make the test fail by design -- the same
+        reason examples/phase6_rx_pin_driver's recv_expect does not call
+        check_eq.
+        """
+        last_good = None
+        e = 0
+        while e <= self.EPS_MAX_BP:
+            ok = True
+            for d in self.TRIAL_DATA:
+                if not await self._probe(d, sign * e):
+                    ok = False
+                    break
+            if not ok:
+                break
+            last_good = e
+            e += self.EPS_STEP_BP
+        return last_good, e
+
+    async def run_phase(self, phase):
+        phase.raise_objection(self)
+        await self._reset()
+
+        cfg_seq = UartConfigSeq.type_id.create("cfg_seq")
+        cfg_seq.cfg = self.cfg
+        cfg_seq.parity_mode = PARITY_NONE
+        cfg_seq.two_stop = False
+        await cfg_seq.start(self.env.vseqr.reg_seqr)
+
+        # From here on the scoreboard STOPS PREDICTING rx traffic and starts
+        # counting it as OPEN. See UartCfg.predictable.
+        self.cfg.predictable = False
+
+        for name, sign in (("slow", +1), ("fast", -1)):
+            last_good, first_bad = await self._limit(sign)
+            self.measured[name] = (last_good, first_bad)
+            self.uvm_report_info(
+                "BAUD_TOL",
+                f"8N1 {name} (eps {'+' if sign > 0 else '-'}): last clean "
+                f"eps = {'None' if last_good is None else f'{last_good/100.0:.2f}%'}, "
+                f"first lost at {first_bad/100.0:.2f}%")
+
+        phase.drop_objection(self)
+
+    def report_phase(self, phase):
+        super().report_phase(phase)
+        sb = self.env.scoreboard
+        slow = self.measured.get("slow", (None, None))[0]
+        fast = self.measured.get("fast", (None, None))[0]
+        lines = [f"  probes driven      : {self.probes}",
+                 f"  scoreboard checks  : {sb.checks} (errors {sb.errors})",
+                 f"  scoreboard OPEN    : rx={sb.open_rx} "
+                 f"rx_reads={sb.open_reads} status={sb.open_status}"]
+        for name, meas, ref in (("slow", slow, self.REF_SLOW_PCT),
+                                ("fast", fast, self.REF_FAST_PCT)):
+            if meas is None:
+                self.uvm_report_error(
+                    "BAUD_TOL",
+                    f"8N1 {name}: no eps was clean, not even 0 -- the "
+                    f"environment cannot receive a frame at all")
+                continue
+            pct = meas / 100.0
+            delta = pct - ref
+            verdict = "WITHIN" if abs(delta) <= self.BAND_PCT else "OUTSIDE"
+            lines.append(
+                f"  8N1 {name:<4} limit  : {pct:.2f}%  vs 09-25 {ref:.2f}%  "
+                f"delta {delta:+.2f}%  {verdict} the derived +/-"
+                f"{self.BAND_PCT:.2f}% band")
+            if abs(delta) > self.BAND_PCT:
+                self.uvm_report_error(
+                    "BAUD_XCHECK",
+                    f"8N1 {name} limit {pct:.2f}% disagrees with the "
+                    f"2026-09-25 measurement {ref:.2f}% by {delta:+.2f}%, "
+                    f"outside the derived +/-{self.BAND_PCT:.2f}% band. Two "
+                    f"testbenches at different BAUD_DIV should agree on the "
+                    f"FRACTIONAL limit; they do not.")
+        # An anchored cross-check is only a check if it can fail, and it can
+        # only fail if the sweep actually ran.
+        if self.probes == 0:
+            self.uvm_report_error("NO_PROBES", "the sweep drove no frames")
+        if sb.open_rx == 0:
+            self.uvm_report_error(
+                "NO_OPEN",
+                "no rx frame was recorded as OPEN, so the three-valued "
+                "scoreboard path never executed and this test would pass "
+                "even if it were broken")
+        self.uvm_report_info("TOL_SUMMARY", "\n" + "\n".join(lines))
+
+        svr = UVMCoreService.get().get_report_server()
+        n_err = svr.get_severity_count(UVM_ERROR)
+        n_fatal = svr.get_severity_count(UVM_FATAL)
+        self.uvm_report_info(
+            "VERDICT", f"UVM_ERROR={n_err} UVM_FATAL={n_fatal}")
+        assert n_err == 0 and n_fatal == 0, (
+            f"baud-tolerance test FAILED: {n_err} UVM_ERROR and {n_fatal} "
+            f"UVM_FATAL reported")
+
+
+uvm_component_utils(UartBaudToleranceTest)
+
+
+class UartScoreboardTimebaseTest(UartBaudToleranceTest):
+    """The SAME stimulus with the scoreboard left PREDICTING, asserting that
+    it mispredicts.
+
+    This is question Q4 of today's pre-registration turned into a permanent
+    regression test. The reference model predicts the received byte from the
+    driven byte; that is a prediction only while the driver shares the DUT's
+    timebase. Drive the identical sweep without the three-valued path and the
+    model must go wrong -- and if some future change makes it stop going
+    wrong, this test fails and someone has to explain why, which is the
+    opposite of the usual arrangement where a silently-passing assumption
+    rots unobserved.
+
+    Note what is being asserted: NOT that the DUT is broken. The DUT is fine.
+    What is broken under a mismatch is the MODEL, and the finding is that the
+    model never said so.
+    """
+
+    EPS_MAX_BP = 700
+
+    def __init__(self, name="UartScoreboardTimebaseTest", parent=None):
+        super().__init__(name, parent)
+
+    async def run_phase(self, phase):
+        phase.raise_objection(self)
+        await self._reset()
+        cfg_seq = UartConfigSeq.type_id.create("cfg_seq")
+        cfg_seq.cfg = self.cfg
+        cfg_seq.parity_mode = PARITY_NONE
+        cfg_seq.two_stop = False
+        await cfg_seq.start(self.env.vseqr.reg_seqr)
+        # cfg.predictable stays TRUE -- that is the whole experiment.
+        for name, sign in (("slow", +1), ("fast", -1)):
+            last_good, first_bad = await self._limit(sign)
+            self.measured[name] = (last_good, first_bad)
+        phase.drop_objection(self)
+
+    def report_phase(self, phase):
+        # Deliberately NOT calling UartBaudToleranceTest.report_phase: this
+        # test's pass condition is the opposite one.
+        sb = self.env.scoreboard
+        n_sb_err = sb.errors
+        self.uvm_report_info(
+            "TIMEBASE_ASSUMPTION",
+            f"\n  scoreboard checks : {sb.checks}"
+            f"\n  scoreboard errors : {n_sb_err}"
+            f"\n  probes driven     : {self.probes}"
+            f"\n  8N1 slow/fast     : {self.measured.get('slow')} / "
+            f"{self.measured.get('fast')}")
+        assert self.probes > 0, "the sweep drove no frames"
+        assert n_sb_err > 0, (
+            "the scoreboard did NOT mispredict under a deliberate baud "
+            "mismatch. Q4 predicted it would. If this assertion fires, "
+            "either the sweep never drove past the tolerance limit, or the "
+            "model has become genuinely timebase-independent -- and the "
+            "second would be a result worth a log entry, not a test to "
+            "delete.")
+        self.uvm_report_info(
+            "TIMEBASE_ASSUMPTION",
+            f"CONFIRMED: {n_sb_err} scoreboard mispredictions under baud "
+            f"mismatch with the three-valued path disabled. A reference "
+            f"model written against a synchronous driver encodes that "
+            f"driver's timebase as an assumption.")
+
+
+uvm_component_utils(UartScoreboardTimebaseTest)
+
+
 @cocotb.test()
 async def test_uart_uvm_milestone(dut):
     cocotb.start_soon(Clock(dut.clk, CLK_NS, units="ns").start())
@@ -1062,3 +1521,30 @@ async def test_uart_uvm_milestone(dut):
     UVMConfigDb.set(None, "*", "dut", dut)
     UVMConfigDb.set(None, "*", "cfg", cfg)
     await run_test("UartMilestoneTest")
+
+
+@cocotb.test()
+async def test_uart_baud_tolerance(dut):
+    """The 09-26 top item, closed: the UVM environment measuring baud
+    tolerance, which it could not express before today."""
+    cocotb.start_soon(Clock(dut.clk, CLK_NS, units="ns").start())
+    cfg = UartCfg()
+    UVMConfigDb.set(None, "*", "dut", dut)
+    UVMConfigDb.set(None, "*", "cfg", cfg)
+    # This test sweeps one frame format, so it cannot reach the parity and
+    # stop-bit coverpoints. Opted out explicitly rather than by lowering the
+    # target -- see UartCoverage.enforce_target.
+    UVMConfigDb.set(None, "*", "cov_target_enforced", 0)
+    await run_test("UartBaudToleranceTest")
+
+
+@cocotb.test()
+async def test_uart_scoreboard_timebase_assumption(dut):
+    """Q4 as a permanent regression test: the reference model must mispredict
+    under a baud mismatch when the three-valued OPEN path is disabled."""
+    cocotb.start_soon(Clock(dut.clk, CLK_NS, units="ns").start())
+    cfg = UartCfg()
+    UVMConfigDb.set(None, "*", "dut", dut)
+    UVMConfigDb.set(None, "*", "cfg", cfg)
+    UVMConfigDb.set(None, "*", "cov_target_enforced", 0)
+    await run_test("UartScoreboardTimebaseTest")
