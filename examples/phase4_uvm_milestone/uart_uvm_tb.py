@@ -66,7 +66,8 @@ from collections import deque
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, FallingEdge, Timer
+from cocotb.triggers import RisingEdge, FallingEdge, Edge, Timer
+from cocotb.utils import get_sim_time
 
 from uvm import (
     UVMSequenceItem, UVMSequence, UVMSequencer, UVMDriver, UVMMonitor,
@@ -441,6 +442,10 @@ class UartSerialMonitor(UVMMonitor):
         self.line = "tx"
         self.ap = UVMAnalysisPort("ap", self)
         self.count = 0
+        # Added 2026-09-28: a per-frame record, so this decoder can be
+        # compared against the independent one frame by frame rather than
+        # only through the scoreboard.
+        self.frames = []
 
     def build_phase(self, phase):
         super().build_phase(phase)
@@ -498,11 +503,256 @@ class UartSerialMonitor(UVMMonitor):
                 await self._cycles(BIT_CYCLES)
                 item.stop_ok = item.stop_ok and ((int(sig.value) & 1) == 1)
             self.count += 1
+            self.frames.append({"data": item.data, "stop_ok": item.stop_ok,
+                                "parity_ok": item.parity_ok})
             self.ap.write(item)
             prev = 1
 
 
 uvm_component_utils(UartSerialMonitor)
+
+
+# =====================================================================
+# THE INDEPENDENT OBSERVER -- added 2026-09-28
+# =====================================================================
+class UartSerialMonitorIndep(UVMMonitor):
+    """Decodes frames off the serial line WITHOUT EVER LOOKING AT dut.clk.
+
+    WHY THIS CLASS EXISTS
+    ---------------------
+    `UartSerialMonitor` advances with `RisingEdge(dut.clk)` and counts
+    `BIT_CYCLES` of them, so its timebase IS the DUT's.  Under a baud
+    mismatch it drifts WITH the DUT: on 2026-09-27, 182 probes across +/-7%
+    of eps produced only 5 disagreements in 1274 checks, and 4 of those 5
+    were the monitor flagging a framing error the DUT did not.  A
+    clock-synchronous monitor is a SECOND RECEIVER carrying the same
+    assumption -- the loopback fallacy, moved from the driver to the
+    observer.  vplan v5 forbids it as F7's oracle for that reason.
+
+    WHAT MAKES THIS ONE INDEPENDENT
+    -------------------------------
+    Two things, and only the second is about honesty rather than mechanism:
+
+      * it waits on `FallingEdge(pin)` -- a PHYSICAL event on the wire, not
+        a clock event -- and then advances with `Timer(..., units="ps")`
+        using its OWN nominal bit period;
+      * that period comes from the spec (`BIT_PS_NOM`, i.e. the oversampling
+        ratio times the programmed divisor times the nominal clock period)
+        and NEVER from the driver's `bit_ps`, which carries the injected
+        error.  A monitor handed the driven period would track the
+        transmitter perfectly and be a third copy of the same assumption.
+
+    So under a driven baud error this observer drifts relative to the
+    transmitter exactly as a real link partner with its own crystal would,
+    which is the situation F7 is a specification about.
+
+    ITS OWN BUDGET, DERIVED BEFORE IT WAS MEASURED
+    ----------------------------------------------
+    It locks once on the start edge and then counts its own periods, so for
+    8N1 it samples the stop bit 9.5 bit periods after the edge it locked to
+    and mis-samples when the accumulated error reaches half a bit:
+
+        |eps|_max = 0.5 / 9.5 = 5.263%   ->  window 10.53% wide, SYMMETRIC
+
+    The DUT's measured window is 10.75% wide.  **This observer's window is
+    therefore NARROWER than the DUT's**, which is the awkward result
+    pre-registered as Q3: swapping a clock-synchronous observer for a naive
+    independent one exchanges a correlated oracle for an UNDER-BUDGETED one.
+    `UartEdgeRecorder` below is the instrument that fixes it.
+    """
+
+    def __init__(self, name, parent):
+        super().__init__(name, parent)
+        self.dut = None
+        self.cfg = None
+        self.line = "rx"
+        self.ap = UVMAnalysisPort("ap", self)
+        self.count = 0
+        self.frames = []
+        # V3's mutation hook: a deliberate error in the observer's OWN idea
+        # of the bit period, in basis points.  Zero in normal operation.
+        self.self_error_bp = 0
+
+    def build_phase(self, phase):
+        super().build_phase(phase)
+        arr = []
+        if not UVMConfigDb.get(self, "", "dut", arr):
+            self.uvm_report_fatal("NODUT", "dut handle not in config db")
+        self.dut = arr[0]
+        arr2 = []
+        if not UVMConfigDb.get(self, "", "cfg", arr2):
+            self.uvm_report_fatal("NOCFG", "cfg not in config db")
+        self.cfg = arr2[0]
+        arr3 = []
+        if UVMConfigDb.get(self, "", "line", arr3):
+            self.line = arr3[0]
+
+    def own_bit_ps(self):
+        """This observer's own nominal bit period.  Spec-derived.  The only
+        place `self_error_bp` enters, so V3 can corrupt exactly this."""
+        return int(round(BIT_PS_NOM * (1.0 + self.self_error_bp / 10000.0)))
+
+    async def run_phase(self, phase):
+        sig = getattr(self.dut, self.line)
+        while True:
+            await FallingEdge(sig)
+            bit_ps = self.own_bit_ps()
+            await Timer(bit_ps // 2, units="ps")
+            try:
+                if int(sig.value) != 0:
+                    continue          # glitch, not a start bit
+            except ValueError:
+                continue
+            item = UartFrameItem("decoded_indep")
+            data = 0
+            for i in range(8):
+                await Timer(bit_ps, units="ps")
+                data |= (int(sig.value) & 1) << i
+            item.data = data
+            exp_par = self.cfg.expected_parity(data)
+            if exp_par is not None:
+                await Timer(bit_ps, units="ps")
+                item.parity_bit = int(sig.value) & 1
+                item.parity_ok = (item.parity_bit == exp_par)
+            await Timer(bit_ps, units="ps")
+            item.stop_ok = (int(sig.value) & 1) == 1
+            if self.cfg.two_stop:
+                await Timer(bit_ps, units="ps")
+                item.stop_ok = item.stop_ok and ((int(sig.value) & 1) == 1)
+            self.count += 1
+            self.frames.append({"data": item.data, "stop_ok": item.stop_ok,
+                                "parity_ok": item.parity_ok})
+            self.ap.write(item)
+
+
+uvm_component_utils(UartSerialMonitorIndep)
+
+
+class UartEdgeRecorder(UVMComponent):
+    """Records every transition's TIMESTAMP and decodes offline.
+
+    WHY A DIFFERENT KIND OF INSTRUMENT, NOT A BETTER SAMPLER
+    -------------------------------------------------------
+    A sampling observer commits to a decision at an instant, so its budget
+    is set by how far that instant can drift -- half a bit, 9.5 bit periods
+    after the edge it locked to, giving the 10.53% window derived in
+    UartSerialMonitorIndep.  That is NARROWER than the DUT's 10.75%, so a
+    sampling observer cannot arbitrate the DUT's own limits: at the edges of
+    the DUT's window a disagreement is evidence about the observer.
+
+    This component does not sample.  It records `(t_ps, level)` for every
+    edge on the pin and decodes afterwards by asking what the level WAS at
+    each nominal sampling instant.  The decision is arithmetic on recorded
+    times, so the window is not set by a commitment deadline, and -- the
+    part that matters more -- it can report **how close it came to being
+    wrong** with every frame.
+
+    THE MARGIN
+    ----------
+    For each frame, margin = min over sampled instants of the distance from
+    that instant to the nearest transition, in units of the bit period.  It
+    is positive for every frame decoded from unambiguous samples and crosses
+    zero exactly where a sampling decoder would start guessing.  An oracle
+    that cannot state its own margin is the thing this session is trying to
+    stop building.
+    """
+
+    def __init__(self, name, parent):
+        super().__init__(name, parent)
+        self.dut = None
+        self.line = "rx"
+        self.edges = []          # (t_ps, new_level)
+        self.t0 = 0
+
+    def build_phase(self, phase):
+        super().build_phase(phase)
+        arr = []
+        if not UVMConfigDb.get(self, "", "dut", arr):
+            self.uvm_report_fatal("NODUT", "dut handle not in config db")
+        self.dut = arr[0]
+        arr2 = []
+        if UVMConfigDb.get(self, "", "line", arr2):
+            self.line = arr2[0]
+
+    async def run_phase(self, phase):
+        sig = getattr(self.dut, self.line)
+        while True:
+            await Edge(sig)
+            try:
+                lvl = int(sig.value) & 1
+            except ValueError:
+                continue
+            self.edges.append((get_sim_time("ps"), lvl))
+
+    # ---- offline decode -------------------------------------------------
+    def level_at(self, t_ps):
+        """The level on the wire at time t, from the recorded transitions.
+        The line idles high, so the level before the first transition is 1."""
+        lvl = 1
+        for t, v in self.edges:
+            if t <= t_ps:
+                lvl = v
+            else:
+                break
+        return lvl
+
+    def nearest_edge_distance(self, t_ps):
+        if not self.edges:
+            return None
+        return min(abs(t - t_ps) for t, _ in self.edges)
+
+    def decode_frames(self, bit_ps, n_data=8, parity=False, two_stop=False,
+                      since=0):
+        """Walk the recorded edges and decode every frame whose start edge is
+        at or after `since`.
+
+        A start edge is a falling transition preceded by at least one bit
+        period of idle high AND NOT ALREADY INSIDE A FRAME.  The second
+        condition was missing in the first version of this method and is the
+        whole bug: with 8N1 the idle-high run before a data-bit falling edge
+        can be exactly one bit period -- e.g. data 0x01 gives edges at
+        t, t+bit, t+2*bit -- so every such edge was counted as another frame
+        start.  242 driven frames decoded as 309, each probe saw
+        `len(dec) != 1`, and every per-probe verdict came out False while the
+        aggregate decode looked healthy (309 frames, margin 0.5).  A decoder
+        that over-segments does not announce itself; it produces a plausible
+        total and a broken per-frame comparison.
+        """
+        out = []
+        n_extra = (1 if parity else 0) + (2 if two_stop else 1)
+        n_total = 1 + n_data + n_extra
+        idx = 0
+        frame_end = None
+        while idx < len(self.edges):
+            t, lvl = self.edges[idx]
+            if lvl != 0 or t < since or (frame_end is not None and t < frame_end):
+                idx += 1
+                continue
+            if idx > 0 and self.edges[idx - 1][1] != 1:
+                idx += 1
+                continue
+            prev_t = self.edges[idx - 1][0] if idx > 0 else self.t0
+            if t - prev_t < bit_ps:
+                idx += 1
+                continue
+            instants = [t + int((i + 1.5) * bit_ps) for i in range(n_data)]
+            instants += [t + int((n_data + 1.5 + k) * bit_ps)
+                         for k in range(n_extra)]
+            data = 0
+            for i in range(n_data):
+                data |= (self.level_at(instants[i]) & 1) << i
+            margins = [self.nearest_edge_distance(x) / float(bit_ps)
+                       for x in instants]
+            stop_ok = self.level_at(
+                instants[n_data + (1 if parity else 0)]) == 1
+            out.append({"t": t, "data": data, "stop_ok": stop_ok,
+                        "margin": min(margins)})
+            frame_end = t + n_total * bit_ps
+            idx += 1
+        return out
+
+
+uvm_component_utils(UartEdgeRecorder)
 
 
 class UartSerialAgent(UVMAgent):
@@ -1013,6 +1263,10 @@ class UartEnv(UVMEnv):
         self.scoreboard = None
         self.coverage = None
         self.vseqr = None
+        # Added 2026-09-28: a second and a third observer of the SAME rx
+        # line, neither of which references dut.clk.
+        self.rx_indep = None
+        self.rx_recorder = None
 
     def build_phase(self, phase):
         super().build_phase(phase)
@@ -1030,6 +1284,10 @@ class UartEnv(UVMEnv):
         self.scoreboard = UartScoreboard.type_id.create("scoreboard", self)
         self.coverage = UartCoverage.type_id.create("coverage", self)
         self.vseqr = UartVirtualSequencer.type_id.create("vseqr", self)
+        UVMConfigDb.set(self, "rx_indep", "line", "rx")
+        UVMConfigDb.set(self, "rx_recorder", "line", "rx")
+        self.rx_indep = UartSerialMonitorIndep.type_id.create("rx_indep", self)
+        self.rx_recorder = UartEdgeRecorder.type_id.create("rx_recorder", self)
 
     def connect_phase(self, phase):
         super().connect_phase(phase)
@@ -1514,6 +1772,445 @@ class UartScoreboardTimebaseTest(UartBaudToleranceTest):
 uvm_component_utils(UartScoreboardTimebaseTest)
 
 
+class UartIndepObserverTest(UartBaudToleranceTest):
+    """Measures the SAME F7 window with FOUR decoders at once and reports where
+    they disagree as a RESULT rather than as errors.
+
+    The four:
+      1. the DUT, read back through its register interface;
+      2. `UartSerialMonitor`  -- clock-synchronous, i.e. a second receiver
+         sharing the DUT's timebase (vplan v5 forbids it as F7's oracle);
+      3. `UartSerialMonitorIndep` -- own timebase, `Timer` in ps, never
+         references dut.clk;
+      4. `UartEdgeRecorder` -- records transition TIMESTAMPS and decodes
+         offline, reporting a per-frame margin.
+
+    Pre-registered as Q1-Q5 in
+    notes/2026-09-28-independent-observer-preregistration.md, committed before
+    this class existed.  The uncomfortable prediction is Q3: the naive
+    independent observer's derived window (10.53%) is NARROWER than the DUT's
+    measured one (10.75%), so replacing a correlated oracle with an
+    under-budgeted one is not a fix.
+
+    Neither new observer is connected to the scoreboard.  That is deliberate:
+    a tolerance sweep drives past every decoder's limit on purpose, and an
+    observer whose disagreements are counted as errors is an observer that
+    forces the test to fail by design -- the same reason `_limit` does not go
+    through the scoreboard.
+    """
+
+    WIDE_STEP_BP = 25
+    WIDE_MAX_BP = 900
+    FINE_LO_BP = 480
+    FINE_HI_BP = 580
+    FINE_STEP_BP = 5
+    # Pre-registered (Q2) as 2 x 0.5/9.5 = 10.53%.  CORRECTED in-session to
+    # 2 x 1/18 = 11.111%: the multiplier is the number of bit periods of drift
+    # accumulated by the boundary preceding the last sampled bit (9), not the
+    # position of the sample itself (9.5).  Both are printed, and Q2 is scored
+    # against what was registered, not against the correction.
+    OBS_WINDOW_DERIVED_PCT = 100.0 * 2.0 * 0.5 / 9.5      # 10.526%, as filed
+    OBS_WINDOW_CORRECTED_PCT = 100.0 * 2.0 / 18.0         # 11.111%, derived
+    OBS_BAND_PCT = 0.30                                   # Q2's stated slack
+    DUT_WIDTH_PCT = 10.75                                 # measured 09-27
+    SYNC_DISAGREE_PCT_0927 = 100.0 * 5.0 / 1274.0         # 0.39%
+
+    def __init__(self, name="UartIndepObserverTest", parent=None):
+        super().__init__(name, parent)
+        self.rows = []
+        self.v3 = None
+
+
+    @staticmethod
+    def derived_margin(eps_bp, data, n_data=8, parity=False, two_stop=False):
+        """EXACT prediction of the edge recorder's per-frame margin.
+
+        TWO CORRECTIONS TO THE PRE-REGISTERED DERIVATION, both derived rather
+        than fitted, and both kept on the record because each was a wrong idea
+        about what limits a sampling observer.
+
+        (1) THE MULTIPLIER IS 9, NOT 9.5.  Q2 reasoned from where the last
+            sample SITS (9.5 bit periods after the start edge) and predicted a
+            budget of 0.5/9.5 = 5.263%.  What limits the sampler is the drift
+            accumulated by the BOUNDARY PRECEDING that sample.  The 8N1 stop
+            cell spans [9B, 10B] with B = b_nom(1+eps); the sample is at
+            9.5 b_nom; the distance to the near boundary is b_nom(0.5 - 9 eps),
+            which vanishes at eps = 1/18 = 5.5556%, giving an 11.111% window.
+            Measured: 5.55% each way on a 5 bp grid -- the last grid point
+            below 1/18 -- and 11.10% wide.
+
+        (2) THE MARGIN IS DATA-DEPENDENT, because a bit boundary with no
+            TRANSITION across it is not an edge and the recorder records
+            edges.  A first version of this predictor assumed a transition at
+            every boundary and was wrong by up to 0.27 bit.  Transitions exist
+            only where adjacent bits differ, so the margin depends on the
+            frame's adjacent-bit TRANSITION PATTERN -- which is exactly the
+            coverpoint progress.md has wanted since 2026-09-26, arriving here
+            as a quantitative requirement rather than as a preference.
+        """
+        eps = eps_bp / 10000.0
+        bits = [0] + [(data >> i) & 1 for i in range(n_data)]
+        if parity:
+            bits.append(0)          # value irrelevant to boundary positions
+        bits.append(1)
+        if two_stop:
+            bits.append(1)
+        n = len(bits)
+        B = 1.0 + eps               # driven bit period, in nominal bit units
+        trans = [0.0]               # idle high -> start bit, always present
+        for m in range(1, n):
+            if bits[m] != bits[m - 1]:
+                trans.append(m * B)
+        if bits[-1] == 0:
+            trans.append(n * B)     # return to idle high
+        best = 1.0
+        for k in range(1, n):
+            t = k + 0.5
+            best = min(best, min(abs(t - x) for x in trans))
+        return best
+
+    async def _probe4(self, data, eps_bp):
+        """One frame, four verdicts."""
+        env = self.env
+        sync_mon = env.rx_agent.monitor
+        indep = env.rx_indep
+        rec = env.rx_recorder
+        n_sync, n_indep = len(sync_mon.frames), len(indep.frames)
+        t_start = get_sim_time("ps")
+        dut_ok = await self._probe(data, eps_bp)
+        new_sync = sync_mon.frames[n_sync:]
+        new_indep = indep.frames[n_indep:]
+
+        def one(lst):
+            if len(lst) != 1:
+                return False
+            f = lst[0]
+            return (f["data"] == data and f["stop_ok"] and
+                    (f["parity_ok"] is None or f["parity_ok"]))
+        dec = rec.decode_frames(BIT_PS_NOM, parity=False,
+                               two_stop=False, since=t_start)
+        rec_ok = len(dec) == 1 and dec[0]["data"] == data and dec[0]["stop_ok"]
+        margin = dec[0]["margin"] if len(dec) == 1 else None
+        row = {"eps": eps_bp, "data": data, "dut": dut_ok,
+               "sync": one(new_sync), "indep": one(new_indep),
+               "rec": rec_ok, "margin": margin,
+               "n_sync": len(new_sync), "n_indep": len(new_indep),
+               "n_rec": len(dec)}
+        self.rows.append(row)
+        return row
+
+    @staticmethod
+    def _window(rows, key, step_bp, max_bp):
+        """Last eps at which EVERY trial byte was clean, walking outward from
+        zero, for one decoder.  Returns (slow_bp, fast_bp)."""
+        out = {}
+        for sign, name in ((+1, "slow"), (-1, "fast")):
+            last = None
+            e = 0
+            while e <= max_bp:
+                trials = [r for r in rows if r["eps"] == sign * e]
+                if not trials:
+                    break
+                if not all(r[key] for r in trials):
+                    break
+                last = e
+                e += step_bp
+            out[name] = last
+        return out["slow"], out["fast"]
+
+    async def run_phase(self, phase):
+        phase.raise_objection(self)
+        await self._reset()
+        cfg_seq = UartConfigSeq.type_id.create("cfg_seq")
+        cfg_seq.cfg = self.cfg
+        cfg_seq.parity_mode = PARITY_NONE
+        cfg_seq.two_stop = False
+        await cfg_seq.start(self.env.vseqr.reg_seqr)
+        self.cfg.predictable = False
+        self.env.rx_recorder.t0 = get_sim_time("ps")
+
+        # ---- V1: exact agreement at zero error, before anything else
+        v1_rows = [await self._probe4(d, 0) for d in self.TRIAL_DATA]
+        self.v1_ok = all(r["dut"] and r["sync"] and r["indep"] and r["rec"]
+                         for r in v1_rows)
+
+        # ---- wide sweep, both signs, the 09-26 worst-case byte pair
+        wide = self.TRIAL_DATA[:2]
+        e = 0
+        while e <= self.WIDE_MAX_BP:
+            for sign in (+1, -1):
+                if e == 0 and sign < 0:
+                    continue
+                for d in wide:
+                    await self._probe4(d, sign * e)
+            e += self.WIDE_STEP_BP
+
+        # ---- fine sweep across the independent observer's derived limit
+        e = self.FINE_LO_BP
+        while e <= self.FINE_HI_BP:
+            for sign in (+1, -1):
+                for d in wide:
+                    await self._probe4(d, sign * e)
+            e += self.FINE_STEP_BP
+
+        # ---- V3: MUTATE THE OBSERVER'S OWN BIT PERIOD.
+        #      THE FIRST FORM OF THIS CHECK FAILED, AND IT FAILED CORRECTLY:
+        #      it injected 2%, and 2% over 9.5 bit periods is 19% of a bit --
+        #      comfortably inside the observer's own half-bit budget, so the
+        #      decode did NOT change and it should not have.  A mutation
+        #      smaller than the thing it is trying to break is not evidence of
+        #      insensitivity; it is a badly chosen mutant, which is the classic
+        #      mutation-testing failure and is recorded rather than quietly
+        #      re-tuned.  The check is rewritten to SWEEP the self-error and
+        #      report the smallest value that changes the decode -- which
+        #      measures the observer's own budget from the inside and must land
+        #      near the derived 5.26%.
+        indep = self.env.rx_indep
+        base = [await self._probe4(d, 0) for d in self.TRIAL_DATA]
+        thresh = None
+        trace = []
+        for err_bp in (200, 400, 500, 525, 550, 600, 700, 800, 1000):
+            indep.self_error_bp = err_bp
+            bad = False
+            for d in self.TRIAL_DATA[:2]:
+                n = len(indep.frames)
+                await self._probe(d, 0)
+                got = indep.frames[n:]
+                if len(got) != 1 or got[0]["data"] != d or not got[0]["stop_ok"]:
+                    bad = True
+            trace.append((err_bp, bad))
+            if bad and thresh is None:
+                thresh = err_bp
+        indep.self_error_bp = 0
+        self.v3 = {
+            "clean": all(r["indep"] for r in base),
+            "threshold_bp": thresh,
+            "trace": trace,
+            "derived_pct": 100.0 * 0.5 / 9.5,
+        }
+        phase.drop_objection(self)
+
+    # ------------------------------------------------------------------
+    def report_phase(self, phase):
+        import inspect
+        rows = self.rows
+        wide = [r for r in rows if r["eps"] % self.WIDE_STEP_BP == 0
+                and abs(r["eps"]) <= self.WIDE_MAX_BP]
+        lines = []
+        wins = {}
+        for key, label, step in (("dut", "DUT (register readback)", self.WIDE_STEP_BP),
+                                 ("sync", "clock-synchronous monitor", self.WIDE_STEP_BP),
+                                 ("indep", "INDEPENDENT monitor", self.WIDE_STEP_BP),
+                                 ("rec", "edge-timestamp recorder", self.WIDE_STEP_BP)):
+            s, f = self._window(wide, key, step, self.WIDE_MAX_BP)
+            wins[key] = (s, f)
+            width = None if (s is None or f is None) else (s + f) / 100.0
+            centre = None if (s is None or f is None) else (s - f) / 200.0
+            lines.append(
+                "  %-27s slow %s  fast %s   width %s  centre %s"
+                % (label,
+                   "  n/a" if s is None else "%5.2f%%" % (s / 100.0),
+                   "  n/a" if f is None else "%5.2f%%" % (f / 100.0),
+                   " n/a" if width is None else "%5.2f%%" % width,
+                   " n/a" if centre is None else "%+5.2f%%" % centre))
+
+        # ---- Q1/Q2 on the FINE grid, which is what they were stated against
+        fine = [r for r in rows if self.FINE_LO_BP <= abs(r["eps"]) <= self.FINE_HI_BP]
+        def fine_limit(key, sign):
+            best = None
+            e = self.FINE_LO_BP
+            while e <= self.FINE_HI_BP:
+                tr = [r for r in fine if r["eps"] == sign * e]
+                if tr and all(r[key] for r in tr):
+                    best = e
+                e += self.FINE_STEP_BP
+            return best
+        i_slow, i_fast = fine_limit("indep", +1), fine_limit("indep", -1)
+        i_width = None if (i_slow is None or i_fast is None) else (i_slow + i_fast) / 100.0
+        i_centre = None if (i_slow is None or i_fast is None) else (i_slow - i_fast) / 200.0
+
+        # ---- Q4: disagreement rates against the DUT
+        def disagree(key, subset):
+            n = len(subset)
+            d = sum(1 for r in subset if r[key] != r["dut"])
+            return d, n, (100.0 * d / n if n else 0.0)
+        d_sync = disagree("sync", wide)
+        d_indep = disagree("indep", wide)
+        d_rec = disagree("rec", wide)
+        # the band where the DUT succeeds and the naive observer does not
+        band = sorted({r["eps"] for r in rows if r["dut"] and not r["indep"]})
+
+        # ---- V2: structural, not a comment
+        srcs = inspect.getsource(UartSerialMonitorIndep)
+        body = srcs.split('"""', 2)[-1]        # exclude the docstring
+        v2_hits = [tok for tok in ("dut.clk", "RisingEdge", "BIT_CYCLES")
+                   if tok in body]
+        v2_ok = not v2_hits
+
+        # ---- V5: THE MARGIN AGAINST A DERIVED CURVE, not against its sign.
+        #      The first form of this check required the margin to be positive
+        #      for every correct decode.  IT FAILED, and it was the check that
+        #      was wrong: at eps = +5.55% the drift at the last sampled bit is
+        #      9.5 x 0.0555 = 0.527 bit, so the sampling instant can land
+        #      EXACTLY on a transition -- margin 0 -- and the decode can still
+        #      come out right, because the neighbouring bit happened to carry
+        #      the same value.  A zero margin means "correct by luck", which is
+        #      a finding about the instrument, not a fault.
+        #      What IS derivable: a mid-bit sampler locked on the start edge
+        #      sits half a bit from the nearest transition at eps = 0, and its
+        #      margin shrinks by 9.5 bit-fractions per unit of eps (the drift
+        #      accumulated at the 8N1 stop bit).  So
+        #          margin(eps) = max(0, 0.5 - 9.5|eps|)
+        #      is an exact prediction, and it is checked as one.
+        m0 = [r["margin"] for r in rows
+              if r["eps"] == 0 and r["margin"] is not None]
+        v5_zero_exact = bool(m0) and max(abs(m - 0.5) for m in m0) < 1e-9
+        curve = [(r["eps"], r["margin"],
+                  self.derived_margin(r["eps"], r["data"]))
+                 for r in wide if r["margin"] is not None]
+        # tolerance: the recorder's instants are integer ps out of a 160000 ps
+        # bit and its edges are recorded at simulator resolution, so the
+        # derived value can be off by a few ps -- 1e-4 of a bit is generous
+        v5_tol = 1e-3
+        worst = max((abs(m - p) for _, m, p in curve), default=1.0)
+        v5_ok = v5_zero_exact and worst <= v5_tol
+        good = [r["margin"] for r in rows if r["rec"] and r["margin"] is not None]
+        bad = [r["margin"] for r in rows if not r["rec"] and r["margin"] is not None]
+
+        report = ["", "=" * 68,
+                  "FOUR DECODERS, ONE SWEEP -- F7's oracle examined",
+                  "=" * 68,
+                  "  probes driven : %d" % self.probes,
+                  "  rows recorded : %d" % len(rows), ""]
+        report += lines
+        report += [
+            "",
+            "  Q1/Q2 -- the independent observer on the 5 bp fine grid:",
+            "    slow limit %s   fast limit %s" % (
+                "n/a" if i_slow is None else "%.2f%%" % (i_slow / 100.0),
+                "n/a" if i_fast is None else "%.2f%%" % (i_fast / 100.0)),
+            "    width  %s   vs PRE-REGISTERED %.2f%% (0.5/9.5) -- Q2 as filed"
+            % ("n/a" if i_width is None else "%.2f%%" % i_width,
+               self.OBS_WINDOW_DERIVED_PCT),
+            "                    vs CORRECTED    %.3f%% (2/18, derived in "
+            "session)" % self.OBS_WINDOW_CORRECTED_PCT,
+            "    centre %s   vs DERIVED %+.2f%% (symmetric: no rx_sync, no"
+            " oversampler)" % (
+                "n/a" if i_centre is None else "%+.2f%%" % i_centre, 0.0),
+            "",
+            "  Q3 -- is the naive independent observer a valid oracle?",
+            "    DUT window   %.2f%% (measured 2026-09-27)" % self.DUT_WIDTH_PCT,
+            "    observer     %s" % ("n/a" if i_width is None
+                                     else "%.2f%%" % i_width),
+            "    the observer's window is %s than the DUT's" % (
+                "n/a" if i_width is None else
+                ("NARROWER" if i_width < self.DUT_WIDTH_PCT else "WIDER")),
+            "    -- BUT WIDTH IS NOT CONTAINMENT, and that is the result. The",
+            "       DUT's window is displaced (+1.38% centre at BAUD_DIV=0)",
+            "       while the observer's is exactly centred, so neither",
+            "       contains the other however wide it is. An oracle must",
+            "       CONTAIN the window it arbitrates, not merely exceed it in",
+            "       width.",
+            "    eps values where the DUT succeeds and the observer fails: %d"
+            % len(band),
+            "      %s" % (", ".join("%+.2f%%" % (b / 100.0)
+                                    for b in band[:14]) or "none"),
+            "",
+            "  Q4 -- disagreement with the DUT, reported as a RESULT:",
+            "    clock-synchronous : %4d / %4d = %5.2f%%   (09-27 measured "
+            "%.2f%% on its own sweep)" % (d_sync[0], d_sync[1], d_sync[2],
+                                          self.SYNC_DISAGREE_PCT_0927),
+            "    INDEPENDENT       : %4d / %4d = %5.2f%%"
+            % (d_indep[0], d_indep[1], d_indep[2]),
+            "    edge recorder     : %4d / %4d = %5.2f%%"
+            % (d_rec[0], d_rec[1], d_rec[2]),
+            "",
+            "  V1 all four agree at eps = 0            : %s" % self.v1_ok,
+            "  V2 observer body free of clock refs     : %s%s" % (
+                v2_ok, "" if v2_ok else "  FOUND %s" % v2_hits),
+            "  V3 observer's OWN budget measured from the INSIDE by",
+            "     sweeping a deliberate error in its own bit period:",
+            "       clean at 0%%            : %s" % self.v3["clean"],
+            "       smallest error that breaks its decode : %s" % (
+                "none up to 10.00%%" if self.v3["threshold_bp"] is None
+                else "%.2f%%" % (self.v3["threshold_bp"] / 100.0)),
+            "       derived half-bit budget : %.2f%%" % self.v3["derived_pct"],
+            "       sweep: %s" % ", ".join(
+                "%.2f%%:%s" % (b / 100.0, "BREAKS" if x else "ok")
+                for b, x in self.v3["trace"]),
+            "  V5 the recorder's margin against the EXACT derived curve",
+            "     (distance from every sampled instant to the nearest DRIVEN",
+            "      boundary; see derived_margin(). The pre-registered 0.5/9.5",
+            "      budget was WRONG -- the multiplier is 9, not 9.5, so the",
+            "      limit is exactly 1/18 = 5.5556%, and the fine grid's 5.55%",
+            "      is the last 5 bp point below it):",
+            "       margin at eps = 0 is EXACTLY 0.5 bit : %s" % v5_zero_exact,
+            "       worst |measured - derived| over the wide sweep: %.4f bit"
+            % worst,
+            "       tolerance %.4f  -> %s" % (v5_tol, v5_ok),
+            "       min margin over CORRECT decodes: %s" % (
+                "n/a" if not good else "%.4f bit" % min(good)),
+            "       -- and it is ZERO, which is a finding rather than a fault:",
+            "          a sample taken exactly on a transition can still read",
+            "          the right bit when the neighbouring bit carries the same",
+            "          value, i.e. the decoder can be CORRECT BY LUCK. That is",
+            "          why the margin is reported per frame instead of being",
+            "          collapsed into a pass/fail.",
+        ]
+        rec = self.env.rx_recorder
+        all_dec = rec.decode_frames(BIT_PS_NOM, since=rec.t0)
+        _ratio = (len(all_dec) / float(self.probes)) if self.probes else 0.0
+        report += [
+            "",
+            "  recorder self-report (a decoder that over-segments produces a",
+            "  plausible TOTAL and a broken per-frame comparison, which is how",
+            "  the first version of decode_frames hid):",
+            "    transitions recorded      : %d" % len(rec.edges),
+            "    frames decoded in total   : %d" % len(all_dec),
+            "    frames driven             : %d" % self.probes,
+            "    ratio decoded/driven      : %.3f" % _ratio,
+            "      (must be ~1.0; the first version of decode_frames gave",
+            "       309/242 = 1.277 and every per-frame verdict was False)",
+        ]
+        self.uvm_report_info("INDEP_OBSERVER", "\n".join(report))
+
+        # ---- hard assertions: only the checks, never the measurements
+        assert self.probes > 0, "the sweep drove no frames"
+        assert self.v1_ok, (
+            "V1 FAILED: the four decoders do not agree at eps = 0. An "
+            "independent observer that cannot decode a perfect frame is "
+            "broken, not independent.")
+        assert v2_ok, (
+            "V2 FAILED: UartSerialMonitorIndep's body references %s. Its "
+            "independence is a structural claim and has to hold "
+            "structurally." % v2_hits)
+        assert self.v3["clean"], (
+            "V3 FAILED: the observer cannot decode a clean frame with its own "
+            "period uncorrupted.")
+        assert self.v3["threshold_bp"] is not None, (
+            "V3 FAILED: corrupting the observer's own bit period by up to 10%% "
+            "never changed what it decodes. A monitor insensitive to its own "
+            "timebase is not measuring with it. Sweep: %s" % self.v3["trace"])
+        assert v5_ok, (
+            "V5 FAILED: the recorder's margin does not follow the exact "
+            "derived curve. exact-at-zero=%s worst "
+            "deviation=%.4f bit against a %.4f tolerance."
+            % (v5_zero_exact, worst, v5_tol))
+        assert d_indep[1] > 0, "no wide-sweep rows to compare"
+
+        svr = UVMCoreService.get().get_report_server()
+        n_err = svr.get_severity_count(UVM_ERROR)
+        n_fatal = svr.get_severity_count(UVM_FATAL)
+        self.uvm_report_info("VERDICT",
+                             "UVM_ERROR=%d UVM_FATAL=%d" % (n_err, n_fatal))
+        assert n_err == 0 and n_fatal == 0, (
+            "independent-observer test FAILED: %d UVM_ERROR, %d UVM_FATAL"
+            % (n_err, n_fatal))
+
+
+uvm_component_utils(UartIndepObserverTest)
+
+
 @cocotb.test()
 async def test_uart_uvm_milestone(dut):
     cocotb.start_soon(Clock(dut.clk, CLK_NS, units="ns").start())
@@ -1548,3 +2245,16 @@ async def test_uart_scoreboard_timebase_assumption(dut):
     UVMConfigDb.set(None, "*", "cfg", cfg)
     UVMConfigDb.set(None, "*", "cov_target_enforced", 0)
     await run_test("UartScoreboardTimebaseTest")
+
+
+@cocotb.test()
+async def test_uart_independent_observer(dut):
+    """F7's oracle examined: four decoders on one sweep, and the two new ones
+    never reference dut.clk. Pre-registered as Q1-Q5 in
+    notes/2026-09-28-independent-observer-preregistration.md."""
+    cocotb.start_soon(Clock(dut.clk, CLK_NS, units="ns").start())
+    cfg = UartCfg()
+    UVMConfigDb.set(None, "*", "dut", dut)
+    UVMConfigDb.set(None, "*", "cfg", cfg)
+    UVMConfigDb.set(None, "*", "cov_target_enforced", 0)
+    await run_test("UartIndepObserverTest")

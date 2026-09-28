@@ -1,0 +1,1781 @@
+################ test_uart_uvm_milestone ################
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1790575927
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_tb.test_uart_uvm_milestone
+     0.00ns INFO     cocotb.regression                  running test_uart_uvm_milestone (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartMilestoneTest...
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+UVM_INFO @ 80.0NS: uvm_test_top [TEST] --- run 1/3: parity=none stop=1 ---
+UVM_INFO @ 1730.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x00, got 0x00
+UVM_INFO @ 1730.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 parity bit correct (got None, expected None)
+UVM_INFO @ 1730.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 stop bit high
+UVM_INFO @ 3340.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x3c, got 0x3c
+UVM_INFO @ 3340.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c parity bit correct (got None, expected None)
+UVM_INFO @ 3340.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c stop bit high
+UVM_INFO @ 4950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xa5, got 0xa5
+UVM_INFO @ 4950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 parity bit correct (got None, expected None)
+UVM_INFO @ 4950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 stop bit high
+UVM_INFO @ 6560.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xd2, got 0xd2
+UVM_INFO @ 6560.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 parity bit correct (got None, expected None)
+UVM_INFO @ 6560.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 stop bit high
+UVM_INFO @ 7300.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x5a, got 0x5a
+UVM_INFO @ 7330.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 7360.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x7e, got 0x7e
+UVM_INFO @ 7390.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0xc3, got 0xc3
+UVM_INFO @ 7420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 7420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 7450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 7450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 8170.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xff, got 0xff
+UVM_INFO @ 8170.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff parity bit correct (got None, expected None)
+UVM_INFO @ 8170.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff stop bit high
+UVM_INFO @ 18650.0NS: uvm_test_top [TEST] --- run 2/3: parity=even stop=1 ---
+UVM_INFO @ 20460.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x00, got 0x00
+UVM_INFO @ 20460.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 parity bit correct (got 0, expected 0)
+UVM_INFO @ 20460.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 stop bit high
+UVM_INFO @ 22230.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x3c, got 0x3c
+UVM_INFO @ 22230.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c parity bit correct (got 0, expected 0)
+UVM_INFO @ 22230.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c stop bit high
+UVM_INFO @ 24000.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xa5, got 0xa5
+UVM_INFO @ 24000.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 parity bit correct (got 0, expected 0)
+UVM_INFO @ 24000.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 stop bit high
+UVM_INFO @ 25770.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xd2, got 0xd2
+UVM_INFO @ 25770.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 parity bit correct (got 0, expected 0)
+UVM_INFO @ 25770.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 stop bit high
+UVM_INFO @ 26510.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x5a, got 0x5a
+UVM_INFO @ 26540.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 26570.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x7e, got 0x7e
+UVM_INFO @ 26600.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0xc3, got 0xc3
+UVM_INFO @ 26630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 1, got 1
+UVM_INFO @ 26630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 26660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 26660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 27540.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xff, got 0xff
+UVM_INFO @ 27540.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff parity bit correct (got 0, expected 0)
+UVM_INFO @ 27540.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff stop bit high
+UVM_INFO @ 38980.0NS: uvm_test_top [TEST] --- run 3/3: parity=odd stop=2 ---
+UVM_INFO @ 40950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x00, got 0x00
+UVM_INFO @ 40950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 parity bit correct (got 1, expected 1)
+UVM_INFO @ 40950.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x00 stop bit high
+UVM_INFO @ 42880.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0x3c, got 0x3c
+UVM_INFO @ 42880.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c parity bit correct (got 1, expected 1)
+UVM_INFO @ 42880.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0x3c stop bit high
+UVM_INFO @ 44810.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xa5, got 0xa5
+UVM_INFO @ 44810.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 parity bit correct (got 1, expected 1)
+UVM_INFO @ 44810.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xa5 stop bit high
+UVM_INFO @ 46740.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xd2, got 0xd2
+UVM_INFO @ 46740.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 parity bit correct (got 1, expected 1)
+UVM_INFO @ 46740.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xd2 stop bit high
+UVM_INFO @ 47480.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x5a, got 0x5a
+UVM_INFO @ 47510.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 47540.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x7e, got 0x7e
+UVM_INFO @ 47570.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0xc3, got 0xc3
+UVM_INFO @ 47600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 1, got 1
+UVM_INFO @ 47600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 47630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 47630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 48670.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame: expected 0xff, got 0xff
+UVM_INFO @ 48670.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff parity bit correct (got 1, expected 1)
+UVM_INFO @ 48670.0NS: uvm_test_top.env.scoreboard [SB_PASS] tx frame 0xff stop bit high
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 61070.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 61070.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 61070.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+UVM_INFO @ 61070.0NS: uvm_test_top.env.scoreboard [SB_SUMMARY] scoreboard: checks=69 errors=0 open(rx=0 rx_reads=0 status=0)
+UVM_INFO @ 61070.0NS: uvm_test_top.env.coverage [COVERAGE] functional coverage
+  cp_parity_mode   3/3 bins hit  none=1 even=1 odd=1
+  cp_stop_bits     2/2 bins hit  one=2 two=1
+  cp_tx_data       5/5 bins hit  zero=3 low=3 mid=3 high=3 ones=3
+  cp_rx_error      3/3 bins hit  clean=7 parity=2 frame=3
+  cp_reg_access    6/6 bins hit  wr_ctrl=3 wr_baud=3 wr_int=3 wr_txdata=15 rd_status=6 rd_rxdata=12
+  cross(parity_mode x rx_error): even/clean=2 even/frame=1 even/parity=1 none/clean=3 none/frame=1 odd/clean=2 odd/frame=1 odd/parity=1
+  TOTAL bin coverage: 100.0% (target 100%)
+UVM_INFO @ 61070.0NS: uvm_test_top [TEST_SUMMARY] 
+  rx frames decoded : 12
+  tx frames decoded : 15
+  scoreboard checks : 69
+  scoreboard errors : 0
+  functional cover  : 100.0%
+  active agents     : reg_agent, rx_agent
+  passive agents    : tx_agent (no driver, no sequencer)
+UVM_INFO @ 61070.0NS: uvm_test_top [VERDICT] UVM_ERROR=0 UVM_FATAL=0
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 61070.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 93
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[TEST] 3
+[SB_PASS] 69
+[PH/TRC/EXE/ALLDROP] 1
+[SB_SUMMARY] 1
+[COVERAGE] 1
+[TEST_SUMMARY] 1
+[VERDICT] 1
+
+UVM_INFO @ 61070.0NS: reporter [FINISH] $finish was reached in run_test()
+ 61070.00ns INFO     cocotb.regression                  test_uart_uvm_milestone passed
+ 61070.00ns INFO     cocotb.regression                  *********************************************************************************************
+                                                        ** TEST                                 STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *********************************************************************************************
+                                                        ** uart_uvm_tb.test_uart_uvm_milestone   PASS       61070.00           0.67      91181.14  **
+                                                        *********************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     61070.00           0.71      86411.85  **
+                                                        *********************************************************************************************
+                                                        
+
+################ test_uart_baud_tolerance ################
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1790575930
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_tb.test_uart_baud_tolerance
+     0.00ns INFO     cocotb.regression                  running test_uart_baud_tolerance (1/1)
+                                                          The 09-26 top item, closed: the UVM environment measuring baud
+                                                          tolerance, which it could not express before today.
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartBaudToleranceTest...
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+UVM_INFO @ 480955.0NS: uvm_test_top [BAUD_TOL] 8N1 slow (eps +): last clean eps = 6.75%, first lost at 7.00%
+UVM_INFO @ 766585.0NS: uvm_test_top [BAUD_TOL] 8N1 fast (eps -): last clean eps = 4.00%, first lost at 4.25%
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 766585.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 766585.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 766585.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+UVM_INFO @ 766585.0NS: uvm_test_top.env.scoreboard [SB_SUMMARY] scoreboard: checks=0 errors=0 open(rx=182 rx_reads=182 status=546)
+UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COVERAGE] functional coverage
+  cp_parity_mode   1/3 bins hit  none=1 even=0 odd=0
+  cp_stop_bits     1/2 bins hit  one=1 two=0
+  cp_tx_data       0/5 bins hit  zero=0 low=0 mid=0 high=0 ones=0
+  cp_rx_error      2/3 bins hit  clean=177 parity=0 frame=5
+  cp_reg_access    5/6 bins hit  wr_ctrl=1 wr_baud=1 wr_int=1 wr_txdata=0 rd_status=546 rd_rxdata=182
+  cross(parity_mode x rx_error): none/clean=177 none/frame=5
+  TOTAL bin coverage: 47.4% (target 100%)
+UVM_INFO @ 766585.0NS: uvm_test_top [TOL_SUMMARY] 
+  probes driven      : 182
+  scoreboard checks  : 0 (errors 0)
+  scoreboard OPEN    : rx=182 rx_reads=182 status=546
+  8N1 slow limit  : 6.75%  vs 09-25 6.25%  delta +0.50%  WITHIN the derived +/-1.00% band
+  8N1 fast limit  : 4.00%  vs 09-25 4.50%  delta -0.50%  WITHIN the derived +/-1.00% band
+UVM_INFO @ 766585.0NS: uvm_test_top [VERDICT] UVM_ERROR=0 UVM_FATAL=0
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 766585.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 23
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[BAUD_TOL] 2
+[PH/TRC/EXE/ALLDROP] 1
+[SB_SUMMARY] 1
+[COVERAGE] 1
+[TOL_SUMMARY] 1
+[VERDICT] 1
+
+UVM_INFO @ 766585.0NS: reporter [FINISH] $finish was reached in run_test()
+766585.00ns INFO     cocotb.regression                  test_uart_baud_tolerance passed
+766585.00ns INFO     cocotb.regression                  **********************************************************************************************
+                                                        ** TEST                                  STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **********************************************************************************************
+                                                        ** uart_uvm_tb.test_uart_baud_tolerance   PASS      766585.00           7.68      99810.41  **
+                                                        **********************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     766585.00           7.73      99215.37  **
+                                                        **********************************************************************************************
+                                                        
+
+################ test_uart_scoreboard_timebase_assumption ################
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1790575939
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_tb.test_uart_scoreboard_timebase_assumption
+     0.00ns INFO     cocotb.regression                  running test_uart_scoreboard_timebase_assumption (1/1)
+                                                          Q4 as a permanent regression test: the reference model must mispredict
+                                                          under a baud mismatch when the three-valued OPEN path is disabled.
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartScoreboardTimebaseTest...
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+UVM_INFO @ 4200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 4200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 4230.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 4260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 4260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 4290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 4290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 8330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 8330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 8360.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 8390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 8390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 8420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 8420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 12460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 12460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 12490.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 12520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 12520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 12550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 12550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 16590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 16590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 16620.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 16650.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 16650.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 16680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 16680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 20730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 20730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 20760.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 20790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 20790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 20820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 20820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 24870.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 24870.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 24900.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 24930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 24930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 24960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 24960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 29010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 29010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 29040.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 29070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 29070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 29100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 29100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 33150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 33150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 33180.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 33210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 33210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 33240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 33240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 37300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 37300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 37330.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 37360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 37360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 37390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 37390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 41450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 41450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 41480.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 41510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 41510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 41540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 41540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 45600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 45600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 45630.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 45660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 45660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 45690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 45690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 49750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 49750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 49780.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 49810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 49810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 49840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 49840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 53910.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 53910.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 53940.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 53970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 53970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 54000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 54000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 58070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 58070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 58100.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 58130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 58130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 58160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 58160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 62230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 62230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 62260.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 62290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 62290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 62320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 62320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 66390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 66390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 66420.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 66450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 66450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 66480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 66480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 70560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 70560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 70590.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 70620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 70620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 70650.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 70650.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 74730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 74730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 74760.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 74790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 74790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 74820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 74820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 78900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 78900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 78930.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 78960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 78960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 78990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 78990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 83070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 83070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 83100.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 83130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 83130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 83160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 83160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 87240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 87240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 87270.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 87300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 87300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 87330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 87330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 91410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 91410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 91440.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 91470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 91470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 91500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 91500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 95580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 95580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 95610.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 95640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 95640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 95670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 95670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 99750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 99750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 99780.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 99810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 99810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 99840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 99840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 103940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 103940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 103970.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 104000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 104000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 104030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 104030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 108130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 108130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 108160.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 108190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 108190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 108220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 108220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 112320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 112320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 112350.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 112380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 112380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 112410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 112410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 116510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 116510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 116540.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 116570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 116570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 116600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 116600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 120700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 120700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 120730.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 120760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 120760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 120790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 120790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 124890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 124890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 124920.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 124950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 124950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 124980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 124980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 129080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 129080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 129110.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 129140.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 129140.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 129170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 129170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 133270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 133270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 133300.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 133330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 133330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 133360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 133360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 137480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 137480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 137510.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 137540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 137540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 137570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 137570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 141690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 141690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 141720.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 141750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 141750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 141780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 141780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 145900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 145900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 145930.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 145960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 145960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 145990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 145990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 150110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 150110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 150140.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 150170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 150170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 150200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 150200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 154320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 154320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 154350.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 154380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 154380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 154410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 154410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 158530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 158530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 158560.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 158590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 158590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 158620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 158620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 162740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 162740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 162770.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 162800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 162800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 162830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 162830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 166950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 166950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 166980.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 167010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 167010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 167040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 167040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 171170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 171170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 171200.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 171230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 171230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 171260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 171260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 175390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 175390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 175420.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 175450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 175450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 175480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 175480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 179610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 179610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 179640.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 179670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 179670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 179700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 179700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 183830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 183830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 183860.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 183890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 183890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 183920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 183920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 188060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 188060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 188090.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 188120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 188120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 188150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 188150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 192290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 192290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 192320.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 192350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 192350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 192380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 192380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 196520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 196520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 196550.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 196580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 196580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 196610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 196610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 200750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 200750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 200780.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 200810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 200810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 200840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 200840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 204990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 204990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 205020.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 205050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 205050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 205080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 205080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 209230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 209230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 209260.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 209290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 209290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 209320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 209320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 213470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 213470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 213500.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 213530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 213530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 213560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 213560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 217710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 217710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 217740.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 217770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 217770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 217800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 217800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 221960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 221960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 221990.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 222020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 222020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 222050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 222050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 226210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 226210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 226240.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 226270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 226270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 226300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 226300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 230460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 230460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 230490.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 230520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 230520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 230550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 230550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 234710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 234710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 234740.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 234770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 234770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 234800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 234800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 238970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 238970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 239000.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 239030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 239030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 239060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 239060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 243230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 243230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 243260.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 243290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 243290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 243320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 243320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 247490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 247490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 247520.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 247550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 247550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 247580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 247580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 251750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 251750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 251780.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 251810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 251810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 251840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 251840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 256010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 256010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 256040.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 256070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 256070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 256100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 256100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 260270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 260270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 260300.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 260330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 260330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 260360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 260360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 264530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 264530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 264560.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 264590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 264590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 264620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 264620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 268790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 268790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 268820.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 268850.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 268850.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 268880.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 268880.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 273070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 273070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 273100.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 273130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 273130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 273160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 273160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 277350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 277350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 277380.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 277410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 277410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 277440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 277440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 281630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 281630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 281660.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 281690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 281690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 281720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 281720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 285910.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 285910.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 285940.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 285970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 285970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 286000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 286000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 290190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 290190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 290220.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 290250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 290250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 290280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 290280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 294470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 294470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 294500.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 294530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 294530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 294560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 294560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 298750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 298750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 298780.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 298810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 298810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 298840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 298840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 303030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 303030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 303060.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 303090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 303090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 303120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 303120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 307330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 307330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 307360.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 307390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 307390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 307420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 307420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 311630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 311630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 311660.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 311690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 311690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 311720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 311720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 315930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 315930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 315960.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 315990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 315990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 316020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 316020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 320230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 320230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 320260.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 320290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 320290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 320320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 320320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 324530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 324530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 324560.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 324590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 324590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 324620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 324620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 328830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 328830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 328860.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 328890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 328890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 328920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 328920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 333130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 333130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 333160.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 333190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 333190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 333220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 333220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 337430.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 337430.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 337460.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 337490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 337490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 337520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 337520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 341740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 341740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 341770.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 341800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 341800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 341830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 341830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 346050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 346050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 346080.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 346110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 346110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 346140.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 346140.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 350360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 350360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 350390.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 350420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 350420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 350450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 350450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 354670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 354670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 354700.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 354730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 354730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 354760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 354760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 358990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 358990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 359020.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 359050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 359050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 359080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 359080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 363310.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 363310.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 363340.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 363370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 363370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 363400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 363400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 367630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 367630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 367660.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 367690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 367690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 367720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 367720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 371950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 371950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 371980.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 372010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 372010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 372040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 372040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 376280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 376280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 376310.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 376340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 376340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 376370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 376370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 380610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 380610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 380640.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 380670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 380670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 380700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 380700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 384940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 384940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 384970.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 385000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 385000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 385030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 385030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 389270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 389270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 389300.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 389330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 389330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 389360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 389360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 393610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 393610.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 393640.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 393670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 393670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 393700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 393700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 397950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 397950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 397980.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 398010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 398010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 398040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 398040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 402290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 402290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 402320.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 402350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 402350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 402380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 402380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 406630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 406630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 406660.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 406690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 406690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 406720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 406720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 410980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 410980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 411010.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 411040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 411040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 411070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 411070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 415330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 415330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 415360.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 415390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 415390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 415420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 415420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 419680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 419680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 419710.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 419740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 419740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 419770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 419770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 424030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 424030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 424060.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 424090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 424090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 424120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 424120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 428390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 428390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 428420.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 428450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 428450.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 428480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 428480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 432750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 432750.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 432780.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 432810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 432810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 432840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 432840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 437110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 437110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 437140.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 437170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 437170.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 437200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 437200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 441470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 441470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 441500.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 441530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 441530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 441560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 441560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 445840.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_ERROR @ 445840.0NS: uvm_test_top.env.scoreboard [SB_FAIL] STATUS.frame_err: expected 1, got 0
+UVM_INFO @ 445870.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 445900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 445900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 445930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 445930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 450210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 450210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 450240.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 450270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 450270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 450300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 450300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 454580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_ERROR @ 454580.0NS: uvm_test_top.env.scoreboard [SB_FAIL] STATUS.frame_err: expected 1, got 0
+UVM_INFO @ 454610.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 454640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 454640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 454670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 454670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 458950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 458950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 458980.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 459010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 459010.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 459040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 459040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 463330.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_ERROR @ 463330.0NS: uvm_test_top.env.scoreboard [SB_FAIL] STATUS.frame_err: expected 1, got 0
+UVM_INFO @ 463360.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 463390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 463390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 463420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 463420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 467710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 467710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 467740.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 467770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 467770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 467800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 467800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 472090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_ERROR @ 472090.0NS: uvm_test_top.env.scoreboard [SB_FAIL] STATUS.frame_err: expected 1, got 0
+UVM_INFO @ 472120.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 472150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 472150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 472180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 472180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 476470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 476470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 476500.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 476530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 476530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 476560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 476560.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 480860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 480860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 1, got 1
+UVM_INFO @ 480890.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 480920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 480920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 480950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 480950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 484990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 484990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 485020.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 485050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 485050.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 485080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 485080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 489120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 489120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 489150.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 489180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 489180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 489210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 489210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 493250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 493250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 493280.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 493310.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 493310.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 493340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 493340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 497380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 497380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 497410.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 497440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 497440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 497470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 497470.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 501510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 501510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 501540.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 501570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 501570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 501600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 501600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 505640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 505640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 505670.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 505700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 505700.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 505730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 505730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 509770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 509770.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 509800.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 509830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 509830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 509860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 509860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 513900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 513900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 513930.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 513960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 513960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 513990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 513990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 518040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 518040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 518070.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 518100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 518100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 518130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 518130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 522180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 522180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 522210.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 522240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 522240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 522270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 522270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 526320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 526320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 526350.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 526380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 526380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 526410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 526410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 530460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 530460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 530490.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 530520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 530520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 530550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 530550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 534590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 534590.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 534620.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 534650.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 534650.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 534680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 534680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 538720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 538720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 538750.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 538780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 538780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 538810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 538810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 542850.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 542850.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 542880.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 542910.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 542910.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 542940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 542940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 546980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 546980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 547010.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 547040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 547040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 547070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 547070.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 551120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 551120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 551150.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 551180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 551180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 551210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 551210.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 555260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 555260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 555290.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 555320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 555320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 555350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 555350.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 559400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 559400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 559430.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 559460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 559460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 559490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 559490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 563540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 563540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 563570.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 563600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 563600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 563630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 563630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 567670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 567670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 567700.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 567730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 567730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 567760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 567760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 571800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 571800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 571830.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 571860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 571860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 571890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 571890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 575930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 575930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 575960.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 575990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 575990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 576020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 576020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 580060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 580060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 580090.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 580120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 580120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 580150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 580150.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 584200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 584200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 584230.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 584260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 584260.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 584290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 584290.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 588340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 588340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 588370.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 588400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 588400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 588430.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 588430.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 592480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 592480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 592510.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 592540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 592540.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 592570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 592570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 596620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 596620.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 596650.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 596680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 596680.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 596710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 596710.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 600760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 600760.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 600790.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 600820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 600820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 600850.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 600850.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 604900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 604900.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 604930.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 604960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 604960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 604990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 604990.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 609040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 609040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 609070.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 609100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 609100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 609130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 609130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 613180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 613180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 613210.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 613240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 613240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 613270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 613270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 617320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 617320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 617350.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 617380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 617380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 617410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 617410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 621460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 621460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 621490.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 621520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 621520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 621550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 621550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 625600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 625600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 625630.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 625660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 625660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 625690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 625690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 629740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 629740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 629770.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 629800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 629800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 629830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 629830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 633880.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 633880.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 633910.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 633940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 633940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 633970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 633970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 638020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 638020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 638050.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 638080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 638080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 638110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 638110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 642160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 642160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 642190.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 642220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 642220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 642250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 642250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 646300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 646300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 646330.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 646360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 646360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 646390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 646390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 650440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 650440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 650470.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 650500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 650500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 650530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 650530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 654580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 654580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 654610.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 654640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 654640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 654670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 654670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 658720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 658720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 658750.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 658780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 658780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 658810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 658810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 662860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 662860.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 662890.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 662920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 662920.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 662950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 662950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 667000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 667000.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 667030.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 667060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 667060.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 667090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 667090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 671140.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 671140.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 671170.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 671200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 671200.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 671230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 671230.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 675280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 675280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 675310.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 675340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 675340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 675370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 675370.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 679420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 679420.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 679450.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 679480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 679480.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 679510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 679510.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 683570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 683570.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 683600.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 683630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 683630.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 683660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 683660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 687720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 687720.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 687750.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 687780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 687780.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 687810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 687810.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 691870.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 691870.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 691900.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 691930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 691930.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 691960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 691960.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 696020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 696020.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 696050.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 696080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 696080.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 696110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 696110.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 700160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 700160.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 700190.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 700220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 700220.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 700250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 700250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 704300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 704300.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 704330.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 704360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 704360.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 704390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 704390.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 708440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 708440.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 708470.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 708500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 708500.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 708530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 708530.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 712580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 712580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 712610.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 712640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 712640.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 712670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 712670.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 716730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 716730.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 716760.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 716790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 716790.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 716820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 716820.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 720880.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 720880.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 720910.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 720940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 720940.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 720970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 720970.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 725030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 725030.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 725060.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 725090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 725090.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 725120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 725120.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 729180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 729180.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 729210.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 729240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 729240.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 729270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 729270.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 733320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 733320.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 733350.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 733380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 733380.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 733410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 733410.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 737460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 737460.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 737490.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 737520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 737520.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 737550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 737550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 741600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 741600.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 741630.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 741660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 741660.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 741690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 741690.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 745740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 745740.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 745770.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 745800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 745800.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 745830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 745830.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 749890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 749890.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 749920.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x01, got 0x01
+UVM_INFO @ 749950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 749950.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 749980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 749980.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 754040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 754040.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 754070.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x80, got 0x80
+UVM_INFO @ 754100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 754100.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 754130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 754130.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 758190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 758190.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 758220.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x3c, got 0x3c
+UVM_INFO @ 758250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 758250.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 758280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 758280.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 762340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 762340.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 762370.0NS: uvm_test_top.env.scoreboard [SB_PASS] RX_DATA read: expected 0x81, got 0x81
+UVM_INFO @ 762400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 762400.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 762430.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 762430.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 766490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 766490.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_ERROR @ 766520.0NS: uvm_test_top.env.scoreboard [SB_FAIL] RX_DATA read: expected 0x01, got 0x81
+UVM_INFO @ 766550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 766550.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO @ 766580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.parity_err: expected 0, got 0
+UVM_INFO @ 766580.0NS: uvm_test_top.env.scoreboard [SB_PASS] STATUS.frame_err: expected 0, got 0
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 766585.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 766585.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 766585.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+UVM_INFO @ 766585.0NS: uvm_test_top.env.scoreboard [SB_SUMMARY] scoreboard: checks=1274 errors=5 open(rx=0 rx_reads=0 status=0)
+UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COVERAGE] functional coverage
+  cp_parity_mode   1/3 bins hit  none=1 even=0 odd=0
+  cp_stop_bits     1/2 bins hit  one=1 two=0
+  cp_tx_data       0/5 bins hit  zero=0 low=0 mid=0 high=0 ones=0
+  cp_rx_error      2/3 bins hit  clean=177 parity=0 frame=5
+  cp_reg_access    5/6 bins hit  wr_ctrl=1 wr_baud=1 wr_int=1 wr_txdata=0 rd_status=546 rd_rxdata=182
+  cross(parity_mode x rx_error): none/clean=177 none/frame=5
+  TOTAL bin coverage: 47.4% (target 100%)
+UVM_INFO @ 766585.0NS: uvm_test_top [TIMEBASE_ASSUMPTION] 
+  scoreboard checks : 1274
+  scoreboard errors : 5
+  probes driven     : 182
+  8N1 slow/fast     : (675, 700) / (400, 425)
+UVM_INFO @ 766585.0NS: uvm_test_top [TIMEBASE_ASSUMPTION] CONFIRMED: 5 scoreboard mispredictions under baud mismatch with the three-valued path disabled. A reference model written against a synchronous driver encodes that driver's timebase as an assumption.
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 766585.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 1290
+UVM_WARNING : 0
+UVM_ERROR : 5
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[SB_PASS] 1269
+[SB_FAIL] 5
+[PH/TRC/EXE/ALLDROP] 1
+[SB_SUMMARY] 1
+[COVERAGE] 1
+[TIMEBASE_ASSUMPTION] 2
+
+UVM_INFO @ 766585.0NS: reporter [FINISH] $finish was reached in run_test()
+766585.00ns INFO     cocotb.regression                  test_uart_scoreboard_timebase_assumption passed
+766585.00ns INFO     cocotb.regression                  **************************************************************************************************************
+                                                        ** TEST                                                  STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************************************
+                                                        ** uart_uvm_tb.test_uart_scoreboard_timebase_assumption   PASS      766585.00           7.50     102155.58  **
+                                                        **************************************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                     766585.00           7.54     101678.32  **
+                                                        **************************************************************************************************************
+                                                        
+
+################ test_uart_independent_observer ################
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1790575948
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_tb.test_uart_independent_observer
+     0.00ns INFO     cocotb.regression                  running test_uart_independent_observer (1/1)
+                                                          F7's oracle examined: four decoders on one sweep, and the two new ones
+                                                          never reference dut.clk. Pre-registered as Q1-Q5 in
+                                                          notes/2026-09-28-independent-observer-preregistration.md.
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartIndepObserverTest...
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1080465.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1080465.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1080465.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+UVM_INFO @ 1080465.0NS: uvm_test_top.env.scoreboard [SB_SUMMARY] scoreboard: checks=0 errors=0 open(rx=256 rx_reads=256 status=768)
+UVM_INFO @ 1080465.0NS: uvm_test_top.env.coverage [COVERAGE] functional coverage
+  cp_parity_mode   1/3 bins hit  none=1 even=0 odd=0
+  cp_stop_bits     1/2 bins hit  one=1 two=0
+  cp_tx_data       0/5 bins hit  zero=0 low=0 mid=0 high=0 ones=0
+  cp_rx_error      2/3 bins hit  clean=245 parity=0 frame=11
+  cp_reg_access    5/6 bins hit  wr_ctrl=1 wr_baud=1 wr_int=1 wr_txdata=0 rd_status=768 rd_rxdata=256
+  cross(parity_mode x rx_error): none/clean=245 none/frame=11
+  TOTAL bin coverage: 47.4% (target 100%)
+UVM_INFO @ 1080465.0NS: uvm_test_top [INDEP_OBSERVER] 
+====================================================================
+FOUR DECODERS, ONE SWEEP -- F7's oracle examined
+====================================================================
+  probes driven : 256
+  rows recorded : 238
+
+  DUT (register readback)     slow  6.75%  fast  4.00%   width 10.75%  centre +1.38%
+  clock-synchronous monitor   slow  6.25%  fast  4.75%   width 11.00%  centre +0.75%
+  INDEPENDENT monitor         slow  5.50%  fast  5.50%   width 11.00%  centre +0.00%
+  edge-timestamp recorder     slow  5.50%  fast  5.50%   width 11.00%  centre +0.00%
+
+  Q1/Q2 -- the independent observer on the 5 bp fine grid:
+    slow limit 5.55%   fast limit 5.55%
+    width  11.10%   vs PRE-REGISTERED 10.53% (0.5/9.5) -- Q2 as filed
+                    vs CORRECTED    11.111% (2/18, derived in session)
+    centre +0.00%   vs DERIVED +0.00% (symmetric: no rx_sync, no oversampler)
+
+  Q3 -- is the naive independent observer a valid oracle?
+    DUT window   10.75% (measured 2026-09-27)
+    observer     11.10%
+    the observer's window is WIDER than the DUT's
+    -- BUT WIDTH IS NOT CONTAINMENT, and that is the result. The
+       DUT's window is displaced (+1.38% centre at BAUD_DIV=0)
+       while the observer's is exactly centred, so neither
+       contains the other however wide it is. An oracle must
+       CONTAIN the window it arbitrates, not merely exceed it in
+       width.
+    eps values where the DUT succeeds and the observer fails: 13
+      +5.60%, +5.65%, +5.70%, +5.75%, +5.80%, +6.00%, +6.25%, +6.50%, +6.75%, +7.00%, +7.25%, +7.50%, +7.75%
+
+  Q4 -- disagreement with the DUT, reported as a RESULT:
+    clock-synchronous :   13 /  170 =  7.65%   (09-27 measured 0.39% on its own sweep)
+    INDEPENDENT       :   32 /  170 = 18.82%
+    edge recorder     :   31 /  170 = 18.24%
+
+  V1 all four agree at eps = 0            : True
+  V2 observer body free of clock refs     : True
+  V3 observer's OWN budget measured from the INSIDE by
+     sweeping a deliberate error in its own bit period:
+       clean at 0%            : True
+       smallest error that breaks its decode : 6.00%
+       derived half-bit budget : 5.26%
+       sweep: 2.00%:ok, 4.00%:ok, 5.00%:ok, 5.25%:ok, 5.50%:ok, 6.00%:BREAKS, 7.00%:BREAKS, 8.00%:BREAKS, 10.00%:BREAKS
+  V5 the recorder's margin against the EXACT derived curve
+     (distance from every sampled instant to the nearest DRIVEN
+      boundary; see derived_margin(). The pre-registered 0.5/9.5
+      budget was WRONG -- the multiplier is 9, not 9.5, so the
+      limit is exactly 1/18 = 5.5556%, and the fine grid's 5.55%
+      is the last 5 bp point below it):
+       margin at eps = 0 is EXACTLY 0.5 bit : True
+       worst |measured - derived| over the wide sweep: 0.0000 bit
+       tolerance 0.0010  -> True
+       min margin over CORRECT decodes: 0.0000 bit
+       -- and it is ZERO, which is a finding rather than a fault:
+          a sample taken exactly on a transition can still read
+          the right bit when the neighbouring bit carries the same
+          value, i.e. the decoder can be CORRECT BY LUCK. That is
+          why the margin is reported per frame instead of being
+          collapsed into a pass/fail.
+
+  recorder self-report (a decoder that over-segments produces a
+  plausible TOTAL and a broken per-frame comparison, which is how
+  the first version of decode_frames hid):
+    transitions recorded      : 773
+    frames decoded in total   : 256
+    frames driven             : 256
+    ratio decoded/driven      : 1.000
+      (must be ~1.0; the first version of decode_frames gave
+       309/242 = 1.277 and every per-frame verdict was False)
+UVM_INFO @ 1080465.0NS: uvm_test_top [VERDICT] UVM_ERROR=0 UVM_FATAL=0
+UVM_INFO /sessions/rcw-01hwvk4imtf5yz1cpdahkbds/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 1080465.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 21
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[PH/TRC/EXE/ALLDROP] 1
+[SB_SUMMARY] 1
+[COVERAGE] 1
+[INDEP_OBSERVER] 1
+[VERDICT] 1
+
+UVM_INFO @ 1080465.0NS: reporter [FINISH] $finish was reached in run_test()
+1080465.00ns INFO     cocotb.regression                  test_uart_independent_observer passed
+1080465.00ns INFO     cocotb.regression                  ****************************************************************************************************
+                                                         ** TEST                                        STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                         ****************************************************************************************************
+                                                         ** uart_uvm_tb.test_uart_independent_observer   PASS     1080465.00           9.94     108695.43  **
+                                                         ****************************************************************************************************
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                          1080465.00           9.98     108286.67  **
+                                                         ****************************************************************************************************
+                                                         
+
+ALL 4 PHASE 4 UVM TESTS PASS

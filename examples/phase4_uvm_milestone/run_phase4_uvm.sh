@@ -37,6 +37,7 @@ TESTS=(
   test_uart_uvm_milestone
   test_uart_baud_tolerance
   test_uart_scoreboard_timebase_assumption
+  test_uart_independent_observer
 )
 
 cd "${HERE}"
