@@ -3257,3 +3257,277 @@ this repository, and one that arrives buried inside a refactor is one nobody
 reads. The vplan revision is its own commit for the same reason it was on
 09-26: it corrects a **sign-off criterion**, and a criterion that would fail
 correct RTL at a different divisor needs to be findable.
+
+---
+
+## 2026-09-28 — An observer with its own timebase, and the finding that width is not containment
+
+**Status:** Automated session. Live web search **not used** — the work was
+building an instrument this repository specified for itself on 09-27 and
+measuring what it can and cannot arbitrate. Device reachable at the **05:28
+UTC** firing (scheduled 04:33, delivered late); folder connected. Neither repo
+had a 2026-09-28 entry and neither had commits since midnight, so a full
+session was run on both. The graphene repo's half was done first.
+
+**Pre-registration committed first** (commit `1d29d22`, before the code
+existed): `notes/2026-09-28-independent-observer-preregistration.md`, five
+questions Q1–Q5 and five checks V1–V5.
+
+1. **Built, and the item closes as BUILT rather than as SOLVED.** Two new
+   components in the Phase 4 UVM environment, neither wired to the scoreboard
+   (a tolerance sweep drives past every decoder's limit on purpose, so an
+   observer whose disagreements count as errors forces the test to fail by
+   design). `UartSerialMonitorIndep` never references `dut.clk`: it waits on
+   `FallingEdge(pin)` — a physical event on the wire — then advances with
+   `Timer` in ps on its **own** spec-derived period, never the driver's
+   `bit_ps`. `UartEdgeRecorder` records every transition's **timestamp** and
+   decodes offline with a per-frame **margin**.
+
+2. **The independence is enforced STRUCTURALLY, not by comment.** Check V2
+   reads `UartSerialMonitorIndep`'s own source and fails the test if
+   `dut.clk`, `RisingEdge` or `BIT_CYCLES` appears in its body. A claim about
+   a timebase that is enforced only by intention is not enforced — and this
+   repository has spent four sessions learning that a check nobody can make
+   fail is not a check.
+
+3. **Four decoders, one sweep** of 256 frames (25 bp wide grid over ±9%, plus
+   a 5 bp fine grid across the observer's own limit):
+
+   | decoder | slow | fast | width | centre |
+   |---|---|---|---|---|
+   | DUT (register readback) | 6.75% | 4.00% | 10.75% | **+1.38%** |
+   | clock-synchronous monitor | 6.25% | 4.75% | 11.00% | +0.75% |
+   | **independent monitor** | 5.50% | 5.50% | 11.00% | **+0.00%** |
+   | edge-timestamp recorder | 5.50% | 5.50% | 11.00% | +0.00% |
+
+   On the 5 bp grid the independent observer measures **±5.55%**, width
+   **11.10%**, centre **+0.00%**.
+
+4. **Q1 PASSES, more strongly than it was filed, and it settles half of an
+   09-27 question.** The independent observer's window is centred at
+   **exactly +0.00%** — no `rx_sync`, no oversampler anywhere in it — against
+   the DUT's **+1.38%**. So the whole of the window's asymmetry belongs to
+   **the receiver**, not to the measurement path. v5 reported the offset and
+   declined to assert it because nothing distinguished those two; that half is
+   now settled. The **divisor dependence** of the offset (+0.50% between the
+   two divisors) remains a two-point observation and is still reported rather
+   than asserted.
+
+5. **Q3 FAILS, and its replacement is the session's result: WIDTH IS NOT
+   CONTAINMENT.** The pre-registration predicted the observer's window would
+   be **narrower** than the DUT's (10.53% vs 10.75%). It is **wider**: 11.10%.
+   And it makes no difference. The DUT's window is displaced and the
+   observer's is centred, so **neither contains the other however wide it
+   is**, and at **13 baud errors from +5.60% to +7.75% the DUT receives a
+   clean frame while the independent observer does not**. A disagreement at
+   any of them is evidence about the observer.
+
+6. **The disqualification is ARITHMETIC, not empirical, which is what makes it
+   a sign-off criterion.** Any observer that **locks once on the start edge
+   and then counts a nominal bit period** has, for 8N1, a budget of exactly
+   **1/18 = 5.5556%** either side — the drift accumulated at the **boundary
+   preceding the last sampled bit** (9 bit periods), not at the sample itself
+   (9.5). The DUT's slow limit is **6.75%**. That entire class of observer is
+   ruled out at `BAUD_DIV=0` before anyone measures anything, and making it
+   better at its own job cannot help. **Q5 FAILS for the same reason:** the
+   edge recorder's window is identical to the naive monitor's, because it too
+   locks once and counts nominal periods. Its advantage is **diagnostic**, not
+   a wider budget.
+
+7. **Q4 answered as a RESULT rather than as errors, which is what the item
+   asked for.** Disagreement with the DUT over the wide sweep: **7.65%**
+   clock-synchronous (13/170), **18.82%** independent (32/170), **18.24%**
+   recorder (31/170). 09-27 measured **0.39%** for the clock-synchronous
+   monitor on its own sweep, so a genuinely independent observer disagrees
+   roughly **24× more often** — the quantitative content of "a
+   clock-synchronous monitor is a second receiver, not an observer". The ≥5%
+   prediction holds and so does the concentration prediction: every
+   disagreement is at |eps| ≥ 4.75%.
+
+8. **Q2 FAILS on its stated band, and the correction is derived twice.**
+   Measured 11.10% against a pre-registered 10.53%, outside the ±0.30% slack.
+   The filed derivation used the position of the last **sample** (9.5 bit
+   periods); the quantity that limits a mid-bit sampler is the drift at the
+   **boundary before** it (9), giving **2/18 = 11.111%** — and the fine grid's
+   5.55% is the last 5 bp point below 1/18 = 5.5556%. Q2 is scored against
+   what was registered, not against the correction, and both numbers are
+   printed by the test.
+
+9. **V3 FAILED FIRST, AND FAILED CORRECTLY — the mutant was smaller than the
+   thing it was meant to break.** It injected a 2% error into the observer's
+   own bit period and required the decode to change. 2% over 9 bit periods is
+   18% of a bit, comfortably inside a half-bit budget, so the decode did not
+   change and **should not have**. A mutant weaker than the defect class is a
+   badly chosen mutant, not evidence of insensitivity — the classic
+   mutation-testing failure, and this repository's first instance of it since
+   adopting mutation testing on 09-18. Rewritten as a **sweep** that measures
+   the observer's budget from the inside: clean at 5.50%, first breaks at
+   **6.00%**, against the derived **5.56%**. The check became a measurement.
+
+10. **A DECODER THAT OVER-SEGMENTS PRODUCES A PLAUSIBLE TOTAL AND A BROKEN
+    COMPARISON.** The first `decode_frames` treated every falling edge
+    preceded by one bit period of idle high as a frame start. With 8N1, data
+    `0x01` puts edges exactly one bit period apart, so single frames
+    segmented: **242 driven frames decoded as 309**, every per-frame verdict
+    came out `False`, and the aggregate was entirely reassuring — 309 frames,
+    margin 0.5, no error anywhere. Caught by **V1, the cheapest check in the
+    file**: all four decoders must agree at `eps = 0`. The ratio
+    decoded/driven is now printed with every run and is **1.000**.
+
+11. **V5 FAILED TWICE, and the second correction produced the best result in
+    the run.** First form: "the margin must be positive for every correct
+    decode" — wrong, because at the limit a sample can land exactly on a
+    transition and still read the right bit when the neighbour carries the
+    same value, so the decoder can be **correct by luck**. A zero margin is a
+    legitimate outcome and is now printed as a finding about the instrument.
+    Second form: `max(0, 0.5 − 9.5|eps|)` — wrong twice over: the multiplier
+    is 9 (item 6), and the margin is **DATA-DEPENDENT**, because a bit
+    boundary with no transition across it is not an edge and the recorder
+    records edges. Assuming a transition at every boundary was out by up to
+    **0.27 bit**. Final form — the minimum, over every sampled instant, of the
+    distance to the nearest **actual** transition given the frame's bit
+    pattern — matches the measured margin over the whole sweep to **0.0000
+    bit**.
+
+12. **That data dependence promotes an open item from preference to
+    requirement.** The adjacent-bit **transition-count** coverpoint, open
+    since 09-26 because "the tolerance depends on whether adjacent bits
+    differ", is now a **sign-off dependency** (vplan v6) with a number behind
+    it: the margin is an exact function of the transition pattern, so an F7
+    coverage model over byte **values** cannot span it.
+
+13. **vplan v6**, its own commit. v5 forbade the clock-synchronous monitor as
+    F7's oracle and required register-side checking; both stand. v6 adds that
+    **independence is necessary and NOT sufficient**: any observer offered as
+    F7 evidence must state its **own** measured window and must **contain** the
+    DUT's claimed window with margin, failing which its disagreements are
+    reportable results and may not contribute to a verdict. It also records
+    what would satisfy containment and is not built — an observer that
+    **re-derives the bit period per frame** from the measured edge spacing —
+    and annotates the centre-offset criterion with Q1's result. No v1–v5 text
+    deleted; every change annotated in place. **A sign-off criterion that
+    would accept an unqualified oracle is a latent false PASS**, the mirror of
+    the latent false FAILURE class this repo has produced at every other layer
+    (09-24 measurement, 09-25 thresholds, 09-26 reachability, 09-27 the
+    regression runner's own gate).
+
+14. **All 4 Phase 4 UVM tests pass**, the new one added to
+    `run_phase4_uvm.sh`'s list, log committed as
+    `uart_uvm_sim_output_2026-09-28.txt`. The 09-27 runner gate (private log,
+    empty log counts as failure, exactly one summary line required) did its
+    job on the new test without modification.
+
+**Methodological note, continuing the series.** 09-20 to 09-23 built the
+failure-class taxonomy; 09-24 the anchored comparison; 09-25 the independent
+**driver**; 09-26 that an anchor must be freshly produced; 09-27 the
+independent **observer**, and that a runner can gate on yesterday's log.
+**09-28 completes the oracle requirement and it took three sessions to find
+three properties one at a time: an independent driver, an independent
+observer, and — today — that independence is NECESSARY AND NOT SUFFICIENT,
+because the observer's window must CONTAIN the window it arbitrates. An
+instrument's independence tells you its disagreements are informative; its
+COVERAGE tells you whether they are about the DUT. The first without the
+second produces confident evidence about the instrument.** That is the
+interesting shape of it: the observer built today is uncorrelated with the DUT,
+measurably **wider** than it, and still wrong about the DUT at 13 of the
+operating points F7 is a specification about — against every instinct that a
+wider instrument is a safer one.
+Second, and it is the counterweight rather than a caveat: **all three of
+today's first-form check failures were caught by the two cheapest checks in the
+file** — agreement at zero error, and a printed ratio of frames decoded to
+frames driven. Neither is clever. A 256-probe sweep, a four-way comparison and
+a closed-form margin model were all built on top of a decoder that a one-line
+sanity check caught within a second of first running.
+
+**Predictions scored:** **Q1 PASS** (and stronger than filed: centre exactly
++0.00%, locating the displacement in the DUT). **Q4 PASS** on both its stated
+numbers (≥5% disagreement — measured 18.82% — and concentration at the
+extremes). **Q2 FAIL** on its stated band (11.10% vs 10.53% ± 0.30%), with the
+filed derivation corrected in session to 11.111% and the correction reported
+beside the original. **Q3 FAIL** — the observer is wider, not narrower — and its
+replacement (width is not containment) is the run's result, so the prediction
+failed in the most useful available direction. **Q5 FAIL** — the recorder does
+not widen the window at all. **Checks:** 5/5 pass, with **V3, V4 and V5 failing
+in their first forms**; every first form is kept in the source with the
+derivation that settled it.
+
+**Not yet covered (candidates for future runs):**
+- **An observer that RE-DERIVES the bit period per frame** from measured edge
+  spacing — created today, and the only route to an oracle whose window
+  contains the DUT's. vplan v6 states it as a requirement. **The new top item.**
+- **The DUT's +1.38% displacement needs a NEW candidate mechanism** — created
+  today, and it refutes the standing one: with the measurement path exonerated,
+  `rx_sync`'s one-clock delay is 1/16 of a bit at `BAUD_DIV=0` = **6.25%**,
+  four and a half times the measured 1.38%, so 09-27's candidate does not fit
+  its own magnitude
+- **Audit the other benches' observers for the CONTAINMENT property** — created
+  today. The phase6 benches measure F7 too and not one of them states its own
+  window, which vplan v6 now requires of anything offered as F7 evidence
+- **The tolerance window's WIDTH is divisor-invariant and its CENTRE is not** —
+  created 09-27, and today removed half its ambiguity (the offset is the DUT's)
+  while leaving the other half (whether it scales with the divisor) untouched.
+  The 5 bp two-divisor experiment is still the most concrete open measurement
+- **A coverpoint on the data pattern's adjacent-bit TRANSITION count** — open
+  since 09-26, **promoted today to a sign-off dependency** with a quantitative
+  reason
+- **Audit every remaining runner and harness for the 09-27 item-1 pattern** —
+  two of seventeen shell scripts had it; "greps a file it did not just write"
+  is the general shape and a `tee` search is not a proof
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** — open
+  since 09-26
+- **A less greedy steering policy** — created 09-24, untouched
+- **Two transmitters at once** — created 09-25, untouched. A link's tolerance is
+  the *intersection* of two one-sided budgets, and today's containment result
+  sharpens why that matters: two budgets that merely overlap are not one budget
+- **`abc pdr` as a second engine** — unchanged since 09-23 and still the best
+  single experiment available; today is a third argument for it, being the same
+  "get a second independent route, then ask whether it covers the first" move
+  applied to formal
+- **Per-property coverage of the PHASE 4 UVM environment** — open since 09-23
+- **Widen the coverage model** — created 09-24, untouched
+- **A mutation script for `examples/phase4_uvm_milestone/`** — open since 09-19,
+  and today's V3 is a fourth adaptable template plus a warning about mutant
+  strength
+- **Mutants not yet attempted**: interrupt *enable* combinations, the loopback
+  mux itself, reset asserted mid-frame
+- **A property that actually needs a strengthening invariant** — blocked on the
+  same bound
+- **The SVA sequence layer** — runnable on neither tool here; open since 09-20
+- **Code coverage measurement** — Icarus has none; open since 09-18
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health:** Device reachable at the **05:28 UTC** firing; folder
+connected. Both repos cloned cleanly; `git config user.name/user.email` again
+absent in the fresh clones and set in its own call per 09-24. Every commit was
+pushed as it was made, per 09-25. The uvm-python install again needed the full
+09-27 recipe — `python-constraint --use-pep517`, then `cocotb<2.0`, then
+`uvm-python`, `cocotb-coverage`, `cocotb-bus` and `regex` with `--no-deps` —
+and `$HOME/.local/bin` on `PATH`. Both 2026-09-17 Icarus gotchas avoided.
+**New and worth recording for future runs: `/tmp` in the device VM PERSISTS
+ACROSS SESSIONS, and files left there by a previous session are owned by a
+different uid with mode 600.** The push recipe's `/tmp/.tok` and
+`/tmp/askpass.sh` therefore failed with "Permission denied" and `chmod` with
+"Operation not permitted" — not because `/tmp` is unwritable (it is writable;
+a fresh path works) but because **yesterday's files are still there and cannot
+be overwritten, read or deleted** (`/tmp` is sticky and the owner differs). The
+09-25 `iverilog` install at `/tmp/iverilog_install` is still present for the
+same reason, which is why `setup_iverilog.sh` returned instantly. This session
+used `$HOME/.sess/` instead. **The stale `/tmp/.tok` is a 93-byte file dated
+2026-09-27 04:58 — the same length as the current token — so a plaintext copy
+of the PAT has outlived its session, the documented `shred -u` did not take
+effect, and this session cannot remove it.** Reported to Harsh by
+notification; the recommendation is to rotate the token and to move the recipe
+to `$HOME/.sess/` permanently. **One authoring hazard recurred three times
+across the two repositories today and now has a rule:** a `%` format operator
+placed after the last of several adjacent string literals in a list binds only
+to that literal, producing `TypeError: not all arguments converted`; compute
+the value into a variable first rather than formatting across a multi-line
+literal. Timing: the four Phase 4 tests run in 0.7 s, 7.7 s, 7.5 s and 10.0 s,
+so nothing needed splitting.
+
+**Commits this run:** 5 (the pre-registration; the two observers with the
+four-decoder test and its regression log; vplan v6; the study note;
+progress.md). This AUTOMATION_LOG.md entry makes 6. vplan v6 is its own commit
+for the same reason v5 and v4 were: it corrects a **sign-off criterion**, and a
+criterion that would accept an unqualified oracle is a latent false pass that
+needs to be findable.
