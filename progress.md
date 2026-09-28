@@ -627,23 +627,72 @@ measured rather than quietly dropped.
             `BAUD_DIV=0`, predicting ~0.33% against a measured 0.50% --
             inside one 25 bp grid step, so this grid cannot tell them
             apart. The experiment: one bench, both divisors, 5 bp grid
-      - [ ] An INDEPENDENT observer for the serial line -- created
-            2026-09-27 and the natural top item now. `UartSerialMonitor`
-            decodes `rx` on the DUT's clock with the DUT's own algorithm,
-            so under a baud mismatch it drifts WITH the DUT: 182 probes
-            across +/-7% of eps produced only 5 disagreements in 1274
-            checks, and 4 of the 5 were the monitor flagging a framing
-            error the DUT did not. A clock-synchronous monitor is a second
-            receiver carrying the same assumption, not an independent
-            observer -- the loopback fallacy moved from the driver to the
-            observer. vplan v5 now forbids it as F7's oracle; what does
-            not yet exist is a monitor with its own timebase
+      - [x] An INDEPENDENT observer for the serial line -- created
+            2026-09-27, **BUILT AND CLOSED 2026-09-28**, and it did not
+            give F7 an oracle. `UartSerialMonitorIndep` never references
+            `dut.clk`: it waits on a falling edge of the PIN and advances
+            with `Timer` in ps on its own spec-derived period, enforced
+            structurally (check V2 reads the class's own source and fails
+            if `dut.clk`/`RisingEdge`/`BIT_CYCLES` appears in its body).
+            `UartEdgeRecorder` records transition TIMESTAMPS and decodes
+            offline with a per-frame margin. Both are in the Phase 4 env,
+            neither wired to the scoreboard on purpose. Four decoders on
+            one sweep of 256 frames
+            (`test_uart_independent_observer`): DUT 10.75% wide centred
+            **+1.38%**; clock-synchronous 11.00% at +0.75%; independent
+            **11.10% at exactly +0.00%**; recorder the same.
+            **WIDTH IS NOT CONTAINMENT** -- the observer is WIDER and
+            still does not contain the DUT's displaced window, and at 13
+            baud errors from +5.60% to +7.75% the DUT receives cleanly
+            while the observer does not. Any observer that locks once on
+            the start edge and counts a nominal period has an 8N1 budget
+            of exactly **1/18 = 5.5556%**, against the DUT's 6.75% slow
+            limit, so the whole class is disqualified by arithmetic
+            (vplan v6). Disagreement with the DUT, reported as a RESULT
+            per the item's own request: 7.65% clock-synchronous, 18.82%
+            independent, 18.24% recorder -- against 0.39% measured 09-27,
+            i.e. a genuinely independent observer disagrees ~24x more
+            often. Q1 also **locates v5's centre offset in the DUT**,
+            since the independent observer's window is centred at exactly
+            zero. See notes/2026-09-28-width-is-not-containment.md
       - [ ] A coverpoint on the data pattern's adjacent-bit TRANSITION
             count -- created 2026-09-26 by the trial-set experiment above.
             The baud tolerance depends on whether adjacent bits differ, so
             the right data coverpoint for F7 is the transition count and
             not the byte value; `cp_data`'s one-hot / AA-55 / popcount bins
-            do not measure it
+            do not measure it.
+            **PROMOTED 2026-09-28 from a preference to a SIGN-OFF
+            DEPENDENCY (vplan v6), with a quantitative reason.** The edge
+            recorder's per-frame margin is an EXACT function of the frame's
+            transition pattern -- a boundary with no transition across it
+            is not an edge, so the nearest-edge distance depends on which
+            adjacent bits differ. Matched to a closed form over 170 probes
+            to **0.0000 bit** once the data dependence was included, having
+            been out by up to 0.27 bit while it was assumed away. A
+            coverage model over byte VALUES therefore cannot span the
+            margin
+      - [ ] An observer that RE-DERIVES the bit period per frame from
+            the measured edge spacing -- created 2026-09-28, and the only
+            route to an oracle whose window CONTAINS the DUT's. Every
+            observer built so far locks once on the start edge and counts
+            a nominal period, which caps its 8N1 budget at 1/18 = 5.5556%
+            by arithmetic. The edge recorder is the right KIND of
+            instrument (it decides on recorded times rather than at a
+            committed instant) and does not yet do this -- its window is
+            identical to the naive monitor's. vplan v6 states it as a
+            requirement
+      - [ ] The DUT's +1.38% window displacement needs a NEW candidate
+            mechanism -- created 2026-09-28 by Q1's success, and it
+            refutes the standing one. With the measurement path exonerated
+            (the independent observer's window is centred at exactly zero),
+            the displacement is the receiver's. But `rx_sync`'s one-clock
+            delay is 1/16 of a bit at `BAUD_DIV=0` = 6.25%, four and a half
+            times the measured 1.38%, so that candidate does not fit its
+            own magnitude and the 09-27 note's mechanism has to be replaced
+      - [ ] Audit the other benches' observers for the CONTAINMENT
+            property -- created 2026-09-28. The phase6 benches measure F7
+            too and not one of them states its own window, which vplan v6
+            now requires of anything offered as F7 evidence
       - [ ] Apply the three-valued outcome axis to `phase6_crv_uart`'s
             crosses -- created 2026-09-26. Those 30 bins are all
             stimulus-side; today's cross shows the reachability structure
