@@ -670,17 +670,76 @@ measured rather than quietly dropped.
             to **0.0000 bit** once the data dependence was included, having
             been out by up to 0.27 bit while it was assumed away. A
             coverage model over byte VALUES therefore cannot span the
-            margin
-      - [ ] An observer that RE-DERIVES the bit period per frame from
-            the measured edge spacing -- created 2026-09-28, and the only
-            route to an oracle whose window CONTAINS the DUT's. Every
-            observer built so far locks once on the start edge and counts
-            a nominal period, which caps its 8N1 budget at 1/18 = 5.5556%
-            by arithmetic. The edge recorder is the right KIND of
-            instrument (it decides on recorded times rather than at a
-            committed instant) and does not yet do this -- its window is
-            identical to the naive monitor's. vplan v6 states it as a
-            requirement
+            margin.
+            **Second instance 2026-09-29, and it generalises the item:**
+            the adaptive observer's BUDGET is an exact function of a
+            different per-byte quantity, `1 + ctz(data)`. Two orthogonal
+            per-byte functions now determine what an F7 result means, and
+            neither is a function of the byte's value in any way a value
+            or range coverage model can span. The general form, for the
+            interview answer as much as for the vplan: **an instrument
+            that derives its reference from the signal it measures makes
+            the signal's content part of its own specification, and owes
+            a coverage model over whatever the adaptation depends on**
+      - [x] An observer that RE-DERIVES the bit period per frame from
+            the measured edge spacing -- created 2026-09-28,
+            **BUILT AND CLOSED 2026-09-29, and it DOES contain the DUT's
+            window -- conditionally, and the condition is on the
+            STIMULUS.** Every observer built before it locks once on the
+            start edge and counts a nominal period, which caps its 8N1
+            budget at 1/18 = 5.5556% by arithmetic. The edge recorder was
+            the right KIND of instrument and did not yet do this.
+            `UartAdaptiveEdgeObserver` + `test_uart_adaptive_observer`
+            assign each inter-edge gap an integer bit index
+            `round(dt/T_ref)` and update `T_ref` to the running
+            least-squares estimate, so the period comes from the frame.
+            **The pre-registered budget law `1/(2*g_max)` is WRONG and the
+            replacement is the session's result**: only the FIRST gap is
+            assigned against the observer's own period, because the LS
+            update has already replaced it by the second, so
+            `|eps| < 1/(2*g_first)` with `g_first = 1 + ctz(data)` --
+            **the observer's tolerance is set by the position of the
+            lowest set bit in the payload and by nothing else in the
+            byte**, over a 9x range. Measured on ALL 256 bytes at 1 bp
+            resolution rather than the nine frames the simulation ran
+            (`budget_law_exhaustive.py`, 256/256, `g_max` law kept as a
+            negative control and refuted by 166 bytes, tolerance region
+            verified contiguous, no simulator needed so it runs first in
+            `run_phase4_uvm.sh`). Containment holds for 254 of 256 and
+            fails for exactly `0x00` (5.56%) and `0x80` (6.25%) against
+            the DUT's 6.75% slow limit -- **now a measurement over the
+            whole input space, not an extrapolation.** Also measured: the
+            law is two-sided for `g_first >= 2` and ONE-SIDED for
+            `g_first = 1`, where the decode's `if dn < 1: dn = 1` clamp
+            turns the only value a fast first gap can wrongly round to
+            back into the right one. vplan v7. See
+            notes/2026-09-29-the-lowest-set-bit.md
+      - [ ] A coverpoint on `ctz(data)` -- created 2026-09-29 and a
+            SIGN-OFF DEPENDENCY on arrival (vplan v7), for the same reason
+            as the transition-count coverpoint below and orthogonal to it:
+            `ctz` sets the adaptive observer's BUDGET, transition count
+            sets its per-frame MARGIN, and no coverage model over byte
+            values or ranges spans either. Nine bins (`g_first` 1..9), of
+            which two (`0x80`, `0x00`) must be **excluded** from carrying
+            F7 evidence rather than merely counted -- so this is an
+            illegal-bin question as much as a coverage one
+      - [ ] `0x40` and `0xC0` are BORDERLINE, not passing -- created
+            2026-09-29, and it is a correction to the same day's own
+            254/256 framing. `g_first = 7` gives a 7.143% window against
+            the DUT's 6.75% slow limit: a margin of **39 bp**, while
+            09-25 measured one oversample tick of initial edge phase
+            moving a limit by 0.69% of eps. The margin is inside the
+            uncertainty, so containment at the third-tightest byte class
+            is not established. This is the strongest reason yet to do the
+            two-divisor 5 bp window measurement already open above, and
+            those two items should be closed together
+      - [ ] A mutant on `budget_law_exhaustive.py`'s own STIMULUS
+            generator -- created 2026-09-29 and recorded in the mutation
+            report as not done. The three mutants run today all touch the
+            decode. A defect in `frame_edges`/`bit_ps_for` would move the
+            model without moving the simulation, and V6 -- the one check
+            anchored to the committed simulation log -- is the only thing
+            that would notice, so its sensitivity is untested
       - [ ] The DUT's +1.38% window displacement needs a NEW candidate
             mechanism -- created 2026-09-28 by Q1's success, and it
             refutes the standing one. With the measurement path exonerated
@@ -692,7 +751,13 @@ measured rather than quietly dropped.
       - [ ] Audit the other benches' observers for the CONTAINMENT
             property -- created 2026-09-28. The phase6 benches measure F7
             too and not one of them states its own window, which vplan v6
-            now requires of anything offered as F7 evidence
+            now requires of anything offered as F7 evidence.
+            **Widened 2026-09-29 by vplan v7:** the audit must now ask a
+            second question of each observer -- not only "what is your
+            window" but "does your window DEPEND on the stimulus, and is
+            that dependence covered". Every fixed-period observer answers
+            no to the second, which is the one case where the v6 form of
+            the question was sufficient
       - [ ] Apply the three-valued outcome axis to `phase6_crv_uart`'s
             crosses -- created 2026-09-26. Those 30 bins are all
             stimulus-side; today's cross shows the reachability structure
