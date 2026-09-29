@@ -1,0 +1,88 @@
+==============================================================================
+MUTATION TEST REPORT -- budget_law_exhaustive.py
+2026-09-29
+==============================================================================
+
+WHY A MUTATION TEST ON A CHECK THAT ALREADY PASSES
+--------------------------------------------------
+budget_law_exhaustive.py reports 11/11 PASS against the real observer.  A
+self-checking suite that passes tells you nothing about its own sensitivity,
+and this one is about to carry a sign-off criterion (vplan v7) that names two
+bytes out of 256.  On 2026-09-17 a bench in this repository passed 55/55
+against deliberately broken RTL; on 2026-09-28 a mutant was too weak to break
+what it targeted and the insensitivity was reported as a result.  So every
+mutant below carries a POSITIVE CONTROL that the mutation actually arrived --
+asserted against the mutated source TEXT before the suite is run -- per this
+morning's rule that a mutation which does not arrive is indistinguishable, in
+the output, from a system that does not respond.
+
+METHOD
+------
+Each mutant is injected into a COPY of examples/phase4_uvm_milestone/
+uart_uvm_tb.py in scratch space outside the repository, never into the
+repository's own file.  budget_law_exhaustive.py extracts its classes from
+whichever uart_uvm_tb.py sits beside it, so copying both files into a scratch
+directory mutates the thing under test while leaving the checker untouched.
+
+MUTANT M1 -- remove the `if dn < 1: dn = 1` clamp that follows the
+            integer bit-index assignment in decode_frames_adaptive.
+  POSITIVE CONTROL ON THE MUTATION: the clamp text `if dn < 1` is absent from the mutated source: MUTATION ARRIVED
+  DETECTED BY:
+    - V7 every g_first==1 byte survives to the fast cap  1 of 128
+  VERDICT: RESULT: FAILURES PRESENT   (11 checks, 1 failed: V7 every g_first==1 byte survives to th
+
+MUTANT M2 -- disable the running least-squares update, so the observer
+            keeps its nominal reference period for the whole frame --
+            i.e. turn the adaptive observer back into a fixed-period
+            one, the class vplan v6 disqualified.
+  POSITIVE CONTROL ON THE MUTATION: the string `running LS update DISABLED` is present in the mutated source: MUTATION ARRIVED
+  DETECTED BY:
+    - V3 law A (1/(2*g_first)) holds for all 256 bytes  9/256 match
+    - V4 the measured non-containing set is exactly what law A predicts  measured [0, 1, 2, 3, 4, 5, 6, 7, 8, 
+    - V6 model reproduces the SIMULATED self-error threshold  model 1000 bp, simulation 4000 bp
+    - V7 every g_first==1 byte survives to the fast cap  1 of 128
+  VERDICT: RESULT: FAILURES PRESENT   (11 checks, 4 failed: V3 law A (1/(2*g_first)) holds for all 
+
+MUTANT M3 -- move the sampling instants from mid-bit (i + 1.5) to
+            (i + 1.4): a tenth of a bit period off centre.
+  POSITIVE CONTROL ON THE MUTATION: the string `(i + 1.4)` is present in the mutated source: MUTATION ARRIVED
+  DETECTED BY:
+    - V1 exact at eps=0, 256/256  offenders: [(0, True, 0.4, 0.0), (1, True, 0.4, 0.0), (2, True, 0.4, 0.0), (
+  VERDICT: RESULT: FAILURES PRESENT   (11 checks, 1 failed: V1 exact at eps=0, 256/256)
+
+SUMMARY
+-------
+  mutant  checks that fired                                  detected
+  M1      V7 only                                            yes
+  M2      V3 (law A), V4 (containment), V6 (anchor), V7       yes
+  M3      V1 only                                            yes
+
+3 of 3 mutants detected.  Two results live in the PATTERN rather than in the
+count, and both are more useful than the score:
+
+1. M3 IS CAUGHT BY ONE CHECK, AND IT IS THE EXACTLY-KNOWN-VALUE CHECK.
+   Moving the sampling point a tenth of a bit off centre leaves every byte
+   decoding correctly and leaves all 512 measured budget limits inside their
+   1 bp match window -- because the budget is set by the integer assignment and
+   not by the sampling margin.  The only thing that notices is V1's requirement
+   that the margin be EXACTLY 0.5 bit at eps = 0.  A plausible-range check on
+   the margin would have accepted 0.4 without comment.  Same shape as the
+   graphene repository's 2026-09-17 finding, and the argument for keeping at
+   least one exactly-known value in every suite.
+
+2. M1 DOES NOT MOVE THE CRITERION-BEARING CHECKS AT ALL.  Removing the clamp
+   changes the fast side of the 128-byte g_first = 1 class and nothing else:
+   V3's law, V4's containment set and V6's anchored threshold are bit-identical
+   with and without it.  So that one line is load-bearing for V7's
+   one-sidedness result and irrelevant to the claim vplan v7 rests on -- which
+   is worth knowing in the direction that matters, because it means v7's
+   two-byte set does not depend on it.
+
+WHAT IS NOT COVERED
+-------------------
+These three mutants touch the DECODE.  Nothing here mutates the stimulus
+generator in budget_law_exhaustive.py itself (frame_edges / bit_ps_for): a
+defect there would move the model and the simulation together only if the
+simulation shared it, and V6 -- which anchors one derived threshold against
+the committed simulation log -- is the only check that would notice.  A mutant
+on frame_edges is the obvious next one and is recorded as not done.
