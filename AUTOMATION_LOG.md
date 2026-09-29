@@ -3531,3 +3531,254 @@ progress.md). This AUTOMATION_LOG.md entry makes 6. vplan v6 is its own commit
 for the same reason v5 and v4 were: it corrects a **sign-off criterion**, and a
 criterion that would accept an unqualified oracle is a latent false pass that
 needs to be findable.
+
+## 2026-09-29 — The lowest set bit: an oracle whose competence is a function of the stimulus, measured over all 256 bytes
+
+**Status:** Automated session, and **run in two halves by two different
+firings**, which is recorded first because it shaped what the second half did.
+The **04:30 UTC** firing found the device reachable, ran the graphene half in
+full, ran the substantive half of this repository — the pre-registration and
+the adaptive observer with its regression log, commits `6287781` and `15f784e`,
+both pushed — and then **stopped before this repository's note, vplan,
+`progress.md` and log entry**. The **10:35 UTC** firing found the graphene repo
+with a complete 2026-09-29 entry and this one with today's commits but **no
+2026-09-29 `AUTOMATION_LOG.md` entry**, which is exactly the
+one-repo-only-interrupted case, and did this repository only. No graphene work
+was done or re-done at 10:35. Live web search **not used**: the work was
+measuring an instrument this repository specified for itself on 09-28.
+
+**Pre-registration committed first** (commit `6287781`, before the code
+existed): `notes/2026-09-29-adaptive-observer-preregistration.md`, five
+predictions P1–P5 with numbers attached.
+
+### The morning half (04:30 firing)
+
+1. **09-28's top item closes as BUILT, and it DOES contain the DUT's window.**
+   `UartAdaptiveEdgeObserver` and `UartAdaptiveObserverTest` in the Phase 4
+   environment: per frame, lock on the start edge, assign each consecutive gap
+   an integer bit-index increment `round(dt/T_ref)`, and after each assignment
+   update `T_ref` to the running least-squares estimate through the origin.
+   The period comes from the frame, not from the observer. All **5** Phase 4
+   UVM tests pass (0.7 s, 8.1 s, 7.8 s, 10.5 s, 21.2 s), log committed as
+   `uart_uvm_sim_output_2026-09-29.txt`.
+
+2. **P1 FAILS ON 4 OF 9 BYTES AND ITS REPLACEMENT IS THE RESULT.** P1 predicted
+   `|eps| < 1/(2*g_max)`, reasoning that the integer assignment can fail on any
+   gap. It cannot: after the FIRST assignment the running least-squares update
+   has already replaced the nominal reference with an estimate of the
+   transmitter's own period, so every later gap is assigned against a reference
+   that is already right. The law is `|eps| < 1/(2*g_first)`, and for 8N1
+   LSB-first `g_first = 1 + ctz(data)` — **the observer's tolerance is set by
+   the position of the lowest set bit and by nothing else in the payload.**
+   Measured on one byte per class: 0xAA 25.00% vs 25.00%, 0x08 12.50% vs
+   12.50%, 0x04 16.60% vs 16.67%, 0x80 6.20% vs 6.25%, 0x00 5.50% vs 5.56%.
+   P1 missed only in the favourable direction.
+
+3. **A2**: the observer MEASURES the baud error, mean `|eps_hat - eps| = 0.000`
+   bp over 408 correct decodes; **A2b** asks 09-28's question of that exact
+   zero and finds it is not a tautology but is narrower than it looks — it is
+   exact because the driver places edges at exact integer multiples of an
+   integer-ps period. Perturbing timestamps by ±J ps, the MEDIAN tracks the
+   derived `2J/lever` scaling across three decades (1.16 vs 1.39, 11.9 vs 13.9,
+   122.8 vs 138.9 bp) while the MAX saturates near 4000 bp: a small
+   perturbation moves the FIT linearly, and near the budget edge it flips an
+   INTEGER ASSIGNMENT, which is bounded however large J is. The
+   P1-replacement mechanism appearing in a statistic not built to look for it.
+
+4. **A4 carries a positive control on the mutation itself**, adopted from the
+   graphene repository's finding the same morning that *a mutation which does
+   not arrive is indistinguishable, in the output, from a system that does not
+   respond* — which is what 09-28's V3 was. The observer absorbs 30% of
+   self-error and breaks at 40%, against ~5.5% for a fixed-period observer.
+
+5. **P5 is scored as a FAIL because it measured the wrong thing.** It predicted
+   total disagreement with the DUT below 10%, treating disagreement as a
+   defect. For an observer that CONTAINS the DUT's window disagreement is
+   required, not merely expected. Split by direction: adaptive 5 rows (1.29%)
+   where the DUT is right and it is not, against 244 (63.05%) where it decodes
+   frames the DUT cannot; only the first column is evidence about the observer,
+   and 09-28's naive recorder scores 9 (2.33%) there.
+
+### The afternoon half (10:35 firing) — nine frames is not a measurement of 256 bytes
+
+6. **The containment conclusion was an extrapolation from five points, and it
+   was about to become a sign-off criterion naming two bytes.** So
+   `examples/phase4_uvm_milestone/budget_law_exhaustive.py` measures the other
+   251. It lifts `UartEdgeRecorder` and `UartAdaptiveEdgeObserver` **out of**
+   `uart_uvm_tb.py` by source extraction (`ast.get_source_segment`) and execs
+   them against a stub base, so the algorithm measured is byte-identical to the
+   one the UVM regression runs — re-typing it would have made a disagreement
+   between the two uninterpretable, which is 09-24's anchored-comparison rule.
+   512 limits at 1 bp resolution in **6.9 s with no simulator**, which is why
+   it runs FIRST in `run_phase4_uvm.sh` under the 09-27 gate discipline
+   (private log, empty log counts as failure, exactly one `RESULT` line).
+
+7. **Law A holds 256/256, exactly.** Nine classes: `g_first` 1..9 over
+   128/64/32/16/8/4/2/1/1 bytes, measured slow limits 4999, 2500, 1666, 1250,
+   999, 833, 714, 625, 555 bp against predictions 5000, 2500, 1666.7, 1250,
+   1000, 833.3, 714.3, 625, 555.6. **The negative control fires:** the
+   pre-registered `g_max` law matches only **90 of 256**, so 166 bytes refute
+   it and the comparison demonstrably can reject a wrong law. The tolerance
+   region is **contiguous for every byte** — checked, not assumed, because a
+   discontiguous one would invalidate the word *budget*. The non-containing set
+   is measured to be exactly `{0x00, 0x80}`, equal to the predicted set.
+
+8. **NEW, and the morning's statement of the law does not say it: the law is
+   two-sided for `g_first >= 2` and ONE-SIDED for `g_first = 1`.** All 128 odd
+   bytes sit at the predicted 4999 bp slow and **do not fail anywhere on the
+   fast side within ±60%**. The mechanism is one line of the decode and not
+   arithmetic: the assignment is `round(dt/T_ref)` followed by
+   `if dn < 1: dn = 1`, and for `g_first = 1` the only value a fast first gap
+   can round down to is **0**, which the clamp turns back into the correct 1.
+   Demonstrated rather than asserted — the raw assignment prints as 0 at −60%
+   for four such bytes. **A guard whose job is to prevent a nonsensical index
+   also removed a failure that was bounding the instrument.** Recorded with its
+   limit: *unbounded* means *did not fail in the scanned ±60%*. The morning's
+   docstring statement of the law is **annotated in place** (commit `eb408a6`),
+   no number withdrawn.
+
+9. **One number, three independent routes.** If the law is really about the
+   first assignment it must also govern a corruption of the observer's OWN
+   starting reference: `g*|1/(1+s) - 1| > 1/2`, i.e.
+   `s* = 1/(1 - 1/(2*g_first)) - 1`, which for A4's binding byte (`0xAA`,
+   `g_first = 2`) is 33.33%, so the first sweep point above it is 4000 bp. The
+   morning's **simulation** broke at 4000 bp. The afternoon's **model** breaks
+   at 4000 bp. The **derivation** was fitted to neither.
+
+10. **Mutation report, 3 of 3 detected, and the pattern is the result** —
+    `mutation_report_budget_law_2026-09-29.txt`, every mutant carrying a
+    positive control asserted against the mutated source TEXT before the suite
+    runs. **M3** (sampling moved from mid-bit 1.5 to 1.4) is caught by **V1
+    alone, the exactly-known-value check**: every byte still decodes and all
+    512 budget limits still match, because the budget is set by the integer
+    assignment and not by the sampling margin — a plausible-range check on the
+    margin would have accepted 0.4 without comment. Same shape as the graphene
+    repository's 09-17 finding, on the second consecutive day. **M1** (clamp
+    removed) moves V7 and leaves V3, V4 and V6 **bit-identical**, so that line
+    is load-bearing for the one-sidedness result and irrelevant to what vplan
+    v7 rests on. **M2** (least-squares update disabled, i.e. the adaptive
+    observer turned back into the disqualified fixed-period class) fires four
+    checks. Recorded as NOT done: no mutant on the new file's own stimulus
+    generator.
+
+11. **vplan v7**, its own commit as v4/v5/v6 were, because it changes sign-off
+    criteria: (i) `0x00` and `0x80` **may not carry F7 evidence** — a uniform
+    random payload draws one of them in **0.78%** of frames, where a
+    disagreement looks exactly like a DUT failure; (ii) **`0x40` and `0xC0` are
+    BORDERLINE rather than passing**, and this is a correction to the same
+    day's own 254/256 framing — `g_first = 7` gives 7.143% against the DUT's
+    6.75%, a margin of **39 bp**, while 09-25 measured one oversample tick of
+    initial edge phase moving a limit by 0.69% of eps, so the margin is inside
+    the uncertainty; (iii) v6's requirement that an observer **state its own
+    window** is amended rather than met — an adaptive observer has no single
+    window, so it must state its window **as a function of what it adapts to
+    and cover that**, making a `ctz(data)` coverpoint a sign-off dependency
+    alongside 09-28's transition-count coverpoint.
+
+**Methodological note, continuing the series.** 09-24 the anchored comparison;
+09-25 the independent driver; 09-26 a freshly produced anchor; 09-27 the
+independent observer; 09-28 that independence is necessary and not sufficient,
+because the observer's window must CONTAIN the one it arbitrates. **09-29 is
+the next link and it is not a property of observers at all: the qualifying
+observer's window is a function of the STIMULUS, so choosing the payload byte
+chooses how competent the oracle is, over a 9x range through one bit of the
+byte. Stimulus selection is oracle selection.** That inverts the usual reading
+of the stimulus/checker split — stimulus is thought of as what reaches the DUT
+and the checker as what judges it, independently — and it is the price of an
+adaptive instrument: it buys accuracy by giving up a fixed, quotable error bar,
+and what you owe in exchange is a coverage model over whatever the adaptation
+depends on. Stated generally, for the interview answer it will eventually be:
+**when an instrument derives its reference from the signal it is measuring, the
+signal's content becomes part of the instrument's specification.**
+Counterweight rather than caveat: the single most informative check in the
+afternoon's suite was **V1, agreement and an exact 0.5-bit margin at eps = 0**,
+which is also the cheapest, and it is the only thing that caught M3. Two
+consecutive days on which an exactly-known value caught what a range check
+passed.
+
+**Predictions scored:** **P1 FAIL**, and its replacement is the run's result —
+the law is `1/(2*g_first)`, not `1/(2*g_max)`, and P1 erred by mislocating the
+failure in the algorithm rather than by mis-estimating a quantity. **P2 PASS**
+and stronger than filed (0.000 bp against a 5 bp bound), with A2b establishing
+that the exact zero is not a tautology. **P3 PASS** in its conclusion — exactly
+two bytes fail containment — and recorded as **right for the wrong reason**,
+since the `g_max` rule names the same two bytes by coincidence. **P4 PASS.**
+**P5 FAIL**, scored as having measured the wrong thing, with a direction-split
+replacement. **Checks:** morning A1–A5 pass; afternoon **11/11 pass**, three
+mutants detected, and V7's one-sidedness result exists only because the
+afternoon scanned the whole input space rather than sampling it.
+
+**Not yet covered (candidates for future runs):**
+- **A `ctz(data)` coverpoint, and the two bytes it must treat as ILLEGAL rather
+  than merely count** — created today and a sign-off dependency on arrival
+  (vplan v7). **The new top item**, because until it exists nothing stops a
+  constrained-random F7 run from drawing `0x00`
+- **`0x40` and `0xC0` are borderline, not passing** — created today, a 39 bp
+  margin inside a measured 0.69%-of-eps phase sensitivity. Closing it means
+  doing the **two-divisor 5 bp window measurement** that has been the most
+  concrete open experiment since 09-27; the two items should now be closed
+  together, which is the first time that experiment has had a sign-off
+  consequence attached
+- **Audit the other benches' observers for CONTAINMENT** — open since 09-28 and
+  **widened today**: the audit must now ask whether each observer's window
+  DEPENDS on the stimulus and whether that dependence is covered, not only what
+  the window is
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** — created
+  today and recorded in the mutation report as not done; V6's anchor to the
+  committed simulation log is the only check that would notice such a defect
+  and its sensitivity is untested
+- **The DUT's +1.38% displacement needs a NEW candidate mechanism** — open
+  since 09-28; `rx_sync`'s one-clock delay is 6.25% at `BAUD_DIV=0`, four and a
+  half times the measured value, so the standing candidate does not fit its own
+  magnitude
+- **A coverpoint on the adjacent-bit TRANSITION count** — open since 09-26, a
+  sign-off dependency since 09-28, and today it acquired an orthogonal partner
+  rather than being closed
+- **Audit every remaining runner and harness for the 09-27 item-1 pattern** —
+  "greps a file it did not just write"; two of seventeen shell scripts had it,
+  and today's addition to `run_phase4_uvm.sh` was written to the fixed pattern
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** — open
+  since 09-26
+- **A less greedy steering policy** — created 09-24, untouched
+- **Two transmitters at once** — created 09-25, untouched, and today sharpens it
+  again: if one observer's budget depends on the payload, a link between two
+  transmitters has an admissibility condition on *both* payloads
+- **`abc pdr` as a second engine** — unchanged since 09-23 and still the best
+  single experiment available
+- **Per-property coverage of the PHASE 4 UVM environment** — open since 09-23
+- **Widen the coverage model** — created 09-24, untouched
+- **A mutation script for `examples/phase4_uvm_milestone/`** — open since 09-19;
+  today's is a fifth adaptable template and the first with a positive control
+  on every mutant
+- **Mutants not yet attempted**: interrupt *enable* combinations, the loopback
+  mux itself, reset asserted mid-frame
+- **A property that actually needs a strengthening invariant** — blocked on the
+  same bound
+- **The SVA sequence layer** — runnable on neither tool here; open since 09-20
+- **Code coverage measurement** — Icarus has none; open since 09-18
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health:** Device reachable and folder connected at the **04:30**
+and **10:35** firings. The step-0 already-ran check did the job it exists for
+and is worth recording as a first: it found the graphene repository with a
+complete 2026-09-29 entry and this one with commits but no entry, correctly
+identified a part-way interruption rather than either a clean slate or a
+finished day, and did only the missing half. **Nothing was double-committed and
+no graphene work was repeated.** The 09-28 finding about `/tmp` persisting
+across sessions with files owned by a different uid held again, so the push
+recipe was run from `$HOME/.sess/` throughout and the temp token copy was
+written and removed there; the **stale `/tmp/.tok` from 2026-09-27 is still
+present and still not removable by this session**, and the recommendation to
+rotate the token stands from 09-28. `git config user.name/user.email` were
+again absent in the fresh clones and set per 09-24. Every commit was pushed as
+it was made, per 09-25, and verified against the GitHub API rather than against
+git's own output. The afternoon half needed **no toolchain at all** — no
+Icarus, no uvm-python, no cocotb, hence none of the three install recipes — the
+first session this month whose substantive check runs on a bare `python3`, and
+the reason the new check went into the runner ahead of the simulator tests
+rather than into a notes file.
+
+**Commits this run:** 2 at 04:30 (the pre-registration; the observer with its
+regression log and runner entry) and 5 at 10:35 (the 256-byte model check with
+its log and mutation report; the in-place annotation of the law; the study note;
+vplan v7; `progress.md`). This `AUTOMATION_LOG.md` entry makes 8 for the day.
