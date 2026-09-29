@@ -22,6 +22,7 @@ strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
 | **v4** | **2026-09-26** | **The F7 coverage bins v3 specified are the wrong bins, and the pre-pass v3 demanded is not sufficient on its own.** v3's coverage consequence asked for bins on {0, within ±2%, within ±4%, beyond the measured limit}. Built and measured (`examples/phase6_baud_error_coverage/`), those four bands **do not partition the baud error** — for 8N1 the slow limit is +6.25%, so +5% is outside "within ±4%" and inside the limit and belongs to no band; a **fifth band** is required. The absolute edges also **disagree with the DUT** (7 of 12 probe rows classify differently under 4.00% than under the per-configuration measured limit), and **"beyond the limit ⇒ an error" is false and data-dependent**, so it is neither a bin nor an assertion. Separately, v3 inherited 09-24's rule "check a bin is reachable before putting it in a closure criterion" — and a reachability pre-pass turned into illegal bins **fired against correct RTL** 21 frames into a random run. Sign-off therefore distinguishes **excluded by argument** from **not reached**, and only the former is asserted. **No v1–v3 text is deleted; every change is annotated in place.** |
 | **v5** | **2026-09-27** | **F7's oracle may not be the serial monitor, and F7's limits may not be quoted as two independent numbers.** Two corrections, both produced by measuring F7 for the third time — from the Phase 4 UVM environment, at `BAUD_DIV=0`, where the earlier two benches ran at `BAUD_DIV=1`. (i) v3 correctly required a **driven pin on an independent timebase** but said nothing about the **observer**. A serial monitor that samples `rx` on the DUT's clock with the DUT's own algorithm drifts *with* the DUT and agrees with it: 182 probes spanning ±7% baud error produced only **5** monitor-versus-DUT disagreements, and 4 of those 5 were the monitor flagging a framing error the DUT did not. Such a monitor is not an independent observer but a second receiver carrying the same assumption, so F7's oracle must be the **driven byte compared against the register read**, never a monitor decode. (ii) Sign-off criterion 5 as written is **divisor-dependent**: the measured window is −4.50%/+6.25% at `BAUD_DIV=1` and −4.00%/+6.75% at `BAUD_DIV=0` — the **width is 10.75% in both, identical to the basis point**, and the whole window is **displaced by +0.50%**. A per-limit criterion would fail the same RTL at a different divisor while its actual tolerance is unchanged, so F7 is signed off on **window width plus a stated centre offset**. **No v1–v4 text is deleted; every change is annotated in place.** |
 | **v6** | **2026-09-28** | **An independent observer is necessary and NOT sufficient: F7's oracle must have a window that CONTAINS the DUT's, and width is not containment.** v5 forbade the clock-synchronous monitor as F7's oracle and required register-side checking. Both stand. What v5 did not say, and what building the independent observer showed, is that **making the observer independent does not by itself make it competent to arbitrate F7**. Measured on one sweep with four decoders (`examples/phase4_uvm_milestone/`, `test_uart_independent_observer`): the DUT's 8N1 window is 10.75% wide **centred at +1.38%**; an observer with its own timebase has a window 11.10% wide **centred at exactly +0.00%** — *wider*, and still not containing the DUT's, because the DUT's is displaced. There are **13 baud errors from +5.60% to +7.75% at which the DUT receives cleanly and the independent observer does not**, and a disagreement there is evidence about the observer. Two consequences for sign-off. (i) The observer's own window must be **measured and stated** alongside any F7 result, and must contain the DUT's claimed window with margin; an observer that locks once on the start edge and counts a nominal period has a budget of exactly **1/18 = 5.5556%** either side for 8N1 (the drift at the boundary preceding the last sampled bit — 9 bit periods, not the 9.5 where the sample sits), and that is **smaller than the DUT's slow limit**, so such an observer can never be sufficient at BAUD_DIV=0. (ii) Q1 of the same run **locates v5's centre offset in the DUT**: the independent observer's window is centred at exactly zero, so the displacement is the receiver's property and not the measurement path's. **Also new, and a requirement rather than a preference:** an edge-timestamp observer's per-frame margin is an exact function of the frame's **adjacent-bit transition pattern** — matched to a closed form to 0.0000 bit over 170 probes — so F7 coverage over byte VALUES cannot span the margin, and the transition-count coverpoint open since 2026-09-26 is now a sign-off dependency. **No v1–v5 text is deleted; every change is annotated in place.** |
+| **v7** | **2026-09-29** | **Containment is ACHIEVED and it is CONDITIONAL ON THE STIMULUS: F7 evidence may not be carried by payload bytes `0x00` or `0x80`, and an adaptive oracle owes a coverage model over whatever its adaptation depends on.** v6 required that F7's oracle contain the DUT's window and named the one design that could -- an observer that re-derives the bit period per frame. It was built (`test_uart_adaptive_observer`) and it does contain the DUT's window, so v6's requirement is met and the fixed-period disqualification stands unchanged. What is new, and what changes a sign-off criterion, is that **this observer does not have a window at all -- it has 256**. Its tolerance is `1/(2*g_first)` with `g_first = 1 + ctz(data)`, i.e. **set by the position of the lowest set bit in the payload and by nothing else in the byte**, ranging over 9x from 50% (`0x01`) to 5.56% (`0x00`). Measured exhaustively over all 256 bytes at 1 bp resolution (`examples/phase4_uvm_milestone/budget_law_exhaustive.py`, 256/256, with the pre-registered `g_max` law kept as a negative control that 166 bytes refute), so the two-byte exclusion below is a measurement over the whole input space and not an extrapolation from the nine frames the simulation ran. **Three consequences for sign-off.** (i) **`0x00` and `0x80` are excluded from carrying F7 evidence**: their windows (5.56%, 6.25%) do not contain the DUT's 6.75% slow limit, and a uniform random payload draws one of them in 0.78% of frames where a disagreement looks exactly like a DUT failure. (ii) **`0x40` and `0xC0` are BORDERLINE, not passing**: `g_first = 7` gives 7.143% against the DUT's 6.75%, a margin of **39 bp**, and 09-25 measured one oversample tick of initial edge phase moving a limit by 0.69% of eps -- larger than the margin. They may not be relied on until the DUT window's phase and divisor dependence is settled. (iii) **A new requirement, general rather than about UARTs: an instrument that derives its reference from the signal it measures makes the signal's content part of its own specification, so it owes a coverage model over whatever the adaptation depends on.** A `ctz(data)` coverpoint joins v6's adjacent-bit transition-count coverpoint as a sign-off dependency; the two are orthogonal -- `ctz` sets the budget, transition count sets the per-frame margin -- and neither is spanned by any coverage model over byte values or ranges. **Also corrected: a budget may not be quoted symmetrically without saying so.** The law is two-sided for `g_first >= 2` and one-sided for `g_first = 1`, where the fast side does not fail within the scanned +/-60% because the decode's `if dn < 1: dn = 1` clamp turns the only wrong value a fast first gap can round to back into the right one. **No v1-v6 text is deleted; every change is annotated in place.** |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -503,6 +504,65 @@ appearing in Section 5.
 > (11.00%/5.50%), because it still locks once and counts nominal periods.
 > Its contribution is the per-frame **margin**, not a wider budget.
 
+> **v7 annotation (2026-09-29): "what would satisfy (b)" was built, it DOES
+> satisfy (b), and the price is that (a) can no longer be answered with one
+> number.** `UartAdaptiveEdgeObserver` re-derives the period per frame exactly
+> as the paragraph above asks: it assigns each inter-edge gap an integer bit
+> index `round(dt/T_ref)` and updates `T_ref` to the running least-squares
+> estimate, so its reference comes from the frame. Every number in the v6
+> annotation above stands; none is withdrawn.
+>
+> **But the budget is a property of the PAYLOAD, not of the observer.** Only
+> the FIRST gap is assigned against a period the observer brought with it --
+> after that the least-squares update has already replaced it with an estimate
+> of the transmitter's own period -- so the tolerance is
+>
+> ```
+> |eps| < 1 / (2 * g_first),    g_first = 1 + ctz(data)   (9 for 0x00)
+> ```
+>
+> i.e. **the position of the lowest set bit in the payload sets the oracle's
+> competence**, over a 9x range. Measured on all 256 bytes at 1 bp resolution:
+> 128 bytes at 4999 bp, then 2500, 1666, 1250, 999, 833, 714, 625, 555 for
+> `g_first` 2..9, every one the last clean step below its bound. The
+> pre-registered `1/(2*g_max)` law is retained as the negative control and is
+> refuted by 166 of 256 bytes.
+>
+> **Admissibility of F7 evidence, therefore, is a condition on the stimulus:**
+>
+> | payload class | `g_first` | observer window | contains DUT's 6.75% slow? |
+> |---|---|---|---|
+> | odd bytes (128) | 1 | 50.00% slow, unbounded fast | yes, by 43x |
+> | `g_first` 2..6 (124) | 2..6 | 25.00% .. 8.33% | yes |
+> | `0x40`, `0xC0` | 7 | 7.143% | **BORDERLINE -- 39 bp margin** |
+> | `0x80` | 8 | 6.250% | **NO** |
+> | `0x00` | 9 | 5.556% | **NO** |
+>
+> `0x00` and `0x80` **may not carry F7 evidence**. `0x40` and `0xC0` are
+> borderline: 39 bp is smaller than the 0.69%-of-eps phase sensitivity 09-25
+> measured, so their containment is not established by today's numbers and they
+> may not be relied on until the two-divisor window measurement is done.
+>
+> **And the requirement v6 added needs a clause.** v6 required that an observer
+> state its own window. An adaptive observer cannot state *a* window, so the
+> requirement becomes: **state the window as a function of the quantity the
+> adaptation depends on, and cover that quantity.** For this observer that is
+> `ctz(data)`; a coverpoint on it is now a sign-off dependency alongside v6's
+> transition-count coverpoint. They are orthogonal -- `ctz` sets the budget,
+> transition count sets the margin -- and no coverage model over byte values or
+> byte ranges spans either.
+>
+> One further correction to the shape of the claim rather than to a number: the
+> law is **two-sided for `g_first >= 2` and one-sided for `g_first = 1`**. The
+> 128 odd bytes never fail on the fast side within the scanned +/-60%, because
+> the decode's `if dn < 1: dn = 1` clamp turns the only value a fast first gap
+> can wrongly round to -- 0 -- back into the correct 1. A guard against a
+> nonsensical index removed a failure that was bounding the instrument. Source:
+> `budget_law_exhaustive.py`, log `budget_law_exhaustive_2026-09-29.txt`,
+> sensitivity `mutation_report_budget_law_2026-09-29.txt` (3/3 mutants caught;
+> removing that clamp moves the one-sidedness result and leaves this table
+> bit-identical).
+
 > **v5 annotation (2026-09-27): F7's limits are a WIDTH and a CENTRE, not two
 > numbers.** Measured 8N1 windows, same unmodified RTL, two divisors:
 >
@@ -588,7 +648,7 @@ quick regression-planning view:
 | F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) — **v3: "corrupted parity" is unreachable in loopback; now driven at the pin** |
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
-| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**) |
+| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**) |
 | F7 Baud rate — coverage | ~~`cp_baud_div` corner bins~~ → ~~{0, ±2%, ±4%, beyond the limit}~~ → **five bands over the driven baud error × three-valued outcome, closure over the reachable cells only, coverage-driven steering required** (v4, 2026-09-26 — the four-band set does not partition the domain and its absolute edges disagree with the measured limit; see 2.7 v4 annotations) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
