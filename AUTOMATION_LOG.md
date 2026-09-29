@@ -3764,12 +3764,23 @@ and is worth recording as a first: it found the graphene repository with a
 complete 2026-09-29 entry and this one with commits but no entry, correctly
 identified a part-way interruption rather than either a clean slate or a
 finished day, and did only the missing half. **Nothing was double-committed and
-no graphene work was repeated.** The 09-28 finding about `/tmp` persisting
-across sessions with files owned by a different uid held again, so the push
-recipe was run from `$HOME/.sess/` throughout and the temp token copy was
-written and removed there; the **stale `/tmp/.tok` from 2026-09-27 is still
-present and still not removable by this session**, and the recommendation to
-rotate the token stands from 09-28. `git config user.name/user.email` were
+no graphene work was repeated.** The push recipe was run from
+`$HOME/.sess/` throughout and the temp token copy was written and shredded
+there. **Correction, made in this same session and before anyone read the
+sentence it replaces: the 09-28 finding about `/tmp` persisting across sessions
+DOES NOT HOLD TODAY, and the first version of this paragraph asserted that it
+did without checking.** `/tmp` in this firing's VM contains only today's files:
+the stale `/tmp/.tok` from 2026-09-27 is **gone**, and so is the 09-25
+`/tmp/iverilog_install`, which is why `setup_iverilog.sh` would have had to
+rebuild had the afternoon needed it. So the VM is sometimes fresh and sometimes
+not, and **the correct standing rule is the weaker one: `/tmp` MAY carry another
+session's files, so never assume a fixed temp path is yours.** Using
+`$HOME/.sess/` remains right for that reason rather than for the one 09-28
+gave. The 09-28 recommendation to rotate the token still stands on its own
+merits — a plaintext copy did outlive its session at least once — but **there is
+no exposed copy on the device now**. Recorded at this length because the
+sentence it replaces was about to become a third-hand fact in tomorrow's
+entry, which is how the 09-27 `/tmp` claim itself propagated. `git config user.name/user.email` were
 again absent in the fresh clones and set per 09-24. Every commit was pushed as
 it was made, per 09-25, and verified against the GitHub API rather than against
 git's own output. The afternoon half needed **no toolchain at all** — no
