@@ -851,6 +851,21 @@ class UartAdaptiveEdgeObserver(UartEdgeRecorder):
 
         i.e. the observer's tolerance is set by the position of the lowest set
         bit and by nothing else in the byte.
+
+        QUALIFIED LATER THE SAME DAY, AND THE NUMBERS ABOVE ALL STAND.
+        `budget_law_exhaustive.py` measured this law on ALL 256 bytes at 1 bp
+        resolution instead of the nine frames the statement above rests on.
+        It holds exactly, 256/256 -- and it is TWO-SIDED ONLY FOR
+        g_first >= 2.  For g_first = 1 (the 128 odd bytes) the SLOW limit is
+        the predicted 4999 bp and the FAST side does not fail anywhere in
+        +/-60%, because the `if dn < 1: dn = 1` clamp below turns the only
+        wrong value a fast first gap can round to -- 0 -- back into the
+        correct 1.  So `|eps| < 1/(2*g_first)` as written above is right for
+        the slow side always and conservative for the fast side of half the
+        input space, and the clamp, which exists to stop a nonsensical index,
+        is what makes it so.  See
+        `mutation_report_budget_law_2026-09-29.txt`: removing that clamp moves
+        this one-sidedness result and leaves the containment set bit-identical.
         """
         pos = cls.edge_positions(data, n_data=n_data, parity=parity,
                                  two_stop=two_stop)
