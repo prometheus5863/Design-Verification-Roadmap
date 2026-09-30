@@ -552,6 +552,64 @@ appearing in Section 5.
 > transition count sets the margin -- and no coverage model over byte values or
 > byte ranges spans either.
 >
+> ---
+>
+> **v8 annotation (2026-09-30): v7's two clauses above CONTRADICT EACH OTHER,
+> and the contradiction follows from them with nothing added.** The coverpoint
+> was built (`examples/phase4_uvm_milestone/payload_coverage_model.py`, 24/24,
+> simulator-free, in `run_phase4_uvm.sh`), and building it produced the
+> following, which is a correction to v7 rather than an elaboration of it.
+>
+> **(a) Excluding `0x00` and `0x80` empties two bins of the coverpoint v7 just
+> made a sign-off dependency.** `g_first = 9` is reachable only by `0x00` and
+> `g_first = 8` only by `0x80`. Over all 256 bytes the `ctz` coverpoint has bins
+> `{1..9}`; over the legal subset it has bins `{1..7}`. **A 9/9 `g_first`
+> coverage goal is therefore unachievable for any legal F7 run**, and stating
+> the goal that way would leave F7 permanently at 7/9 with two bins that cannot
+> be hit without invalidating the evidence they contribute to. *Amendment: F7's
+> `ctz` coverage goal is 7/7 over the legal subset, and the `g_first` 8 and 9
+> bins are declared `illegal_bins`, not uncovered bins.* This is the same
+> distinction v4 drew for the outcome axis and the same one 09-26 got wrong in
+> the other direction.
+>
+> **(b) The illegal bin must RAISE on sample, not be counted.** Counting an
+> inadmissible payload is exactly what lets an uninterpretable frame into an F7
+> pass, since a disagreement on `0x00` is indistinguishable from a DUT failure.
+> `PayloadAdmissibilityCoverage.sample()` raises `IllegalPayload`, with a
+> positive control requiring that it does *not* raise on `0x01` (a mechanism
+> that always raises detects nothing) and a survey mode that records the hits
+> without aborting.
+>
+> **(c) The rate is worse than the 0.78% v7 quotes, once BORDERLINE counts.**
+> 2 inadmissible + 2 borderline of 256 = **1.56% of uniform-random frames, about
+> 1 in 64, are not clean F7 evidence.** The 0.78% figure is confirmed exactly
+> (2/256) and is the inadmissible half only.
+>
+> **(d) The transition-count coverpoint v6 asked for has 5 bins, not 10, and the
+> reason is a parity theorem.** The framed stream begins at 0 (start bit) and
+> ends at 1 (stop bit), and every transition flips the level, so the count
+> between unequal endpoints is necessarily **odd**: bins `{1,3,5,7,9}`. This
+> holds for any payload width and any frame with unequal start and stop levels,
+> so it is a bound on the coverage model, not a measurement of this DUT.
+> Positive control: a 0-start/0-stop frame gives even counts for all 256 bytes.
+> *Amendment: the transition-count goal is 5 bins; a 0..9 coverpoint would sit
+> permanently at 50%.*
+>
+> **(e) The cross is not a grid.** `ctz` x transitions has **23 reachable cells
+> of 35**, enumerated over all 256 bytes rather than argued, because `g_first`
+> fixes the low bits and so constrains the achievable transition count. Closure
+> over the full grid would report 65.7% at actual closure. *Amendment: F7's
+> cross goal is the 23 reachable cells, and the reachable set is a committed
+> artefact rather than a derivation.* A constrained-random generator excluding
+> the illegal bytes closes all 23 in 703 draws, so the exclusion does not make
+> the goal unreachable -- checked, not assumed.
+>
+> **What v8 does not change:** the law, the window, the 39 bp margin, the
+> one-sidedness result, and the borderline status of `0x40`/`0xC0` all stand as
+> v7 states them. The two-divisor 5 bp window measurement is still the open
+> experiment that would settle the borderline pair, and it is now the only thing
+> standing between F7 and a 254/256 rather than 252/256 admissible set.
+>
 > One further correction to the shape of the claim rather than to a number: the
 > law is **two-sided for `g_first >= 2` and one-sided for `g_first = 1`**. The
 > 128 odd bytes never fail on the fast side within the scanned +/-60%, because
@@ -648,7 +706,7 @@ quick regression-planning view:
 | F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) — **v3: "corrupted parity" is unreachable in loopback; now driven at the pin** |
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
-| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**) |
+| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**; **v8, 2026-09-30: the coverpoint is BUILT and v7's two clauses are INCOMPATIBLE as written -- `g_first` 8 and 9 are reachable only by the two excluded bytes, so the goal is 7/7 over the legal subset with those two as `illegal_bins` that RAISE rather than count; the transition-count coverpoint has 5 bins and not 10 by a parity theorem; the cross has 23 reachable cells of 35; and 1.56% of uniform frames, not 0.78%, are not clean F7 evidence once BORDERLINE is included**) |
 | F7 Baud rate — coverage | ~~`cp_baud_div` corner bins~~ → ~~{0, ±2%, ±4%, beyond the limit}~~ → **five bands over the driven baud error × three-valued outcome, closure over the reachable cells only, coverage-driven steering required** (v4, 2026-09-26 — the four-band set does not partition the domain and its absolute edges disagree with the measured limit; see 2.7 v4 annotations) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
