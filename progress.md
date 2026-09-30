@@ -655,8 +655,26 @@ measured rather than quietly dropped.
             often. Q1 also **locates v5's centre offset in the DUT**,
             since the independent observer's window is centred at exactly
             zero. See notes/2026-09-28-width-is-not-containment.md
-      - [ ] A coverpoint on the data pattern's adjacent-bit TRANSITION
+      - [x] A coverpoint on the data pattern's adjacent-bit TRANSITION
             count -- created 2026-09-26 by the trial-set experiment above.
+            **BUILT AND CLOSED 2026-09-30 in the same file as the `ctz`
+            coverpoint, and it has 5 BINS AND NOT 10, by a parity theorem
+            rather than by enumeration:** the framed stream begins at 0
+            (start bit) and ends at 1 (stop bit) and every transition flips
+            the level, so the count between unequal endpoints is
+            necessarily ODD -- bins `{1,3,5,7,9}`. This holds for any
+            payload width and any frame with unequal start and stop levels,
+            so it is a bound on the coverage model, not a measurement of
+            this DUT. Positive control on the argument: a 0-start/0-stop
+            frame gives EVEN counts for all 256 bytes, so the parity comes
+            from the endpoint levels and not from the frame length. A 0..9
+            coverpoint would have sat permanently at 50%. **The cross with
+            `ctz` has 23 reachable cells of 35**, enumerated over all 256
+            bytes rather than argued, because `g_first` fixes the low bits
+            and so constrains the achievable transition count -- full-grid
+            closure would report 65.7% at actual closure. This also answers
+            2026-09-23's question of which rules here could be restated as
+            parities or bounds. ORIGINAL ENTRY FOLLOWS, unchanged:
             The baud tolerance depends on whether adjacent bits differ, so
             the right data coverpoint for F7 is the transition count and
             not the byte value; `cp_data`'s one-hot / AA-55 / popcount bins
@@ -714,7 +732,7 @@ measured rather than quietly dropped.
             turns the only value a fast first gap can wrongly round to
             back into the right one. vplan v7. See
             notes/2026-09-29-the-lowest-set-bit.md
-      - [ ] A coverpoint on `ctz(data)` -- created 2026-09-29 and a
+      - [x] A coverpoint on `ctz(data)` -- created 2026-09-29 and a
             SIGN-OFF DEPENDENCY on arrival (vplan v7), for the same reason
             as the transition-count coverpoint below and orthogonal to it:
             `ctz` sets the adaptive observer's BUDGET, transition count
@@ -722,7 +740,37 @@ measured rather than quietly dropped.
             values or ranges spans either. Nine bins (`g_first` 1..9), of
             which two (`0x80`, `0x00`) must be **excluded** from carrying
             F7 evidence rather than merely counted -- so this is an
-            illegal-bin question as much as a coverage one
+            illegal-bin question as much as a coverage one.
+            **BUILT AND CLOSED 2026-09-30, and building it found that
+            vplan v7's two clauses CONTRADICT each other.**
+            `examples/phase4_uvm_milestone/payload_coverage_model.py`,
+            **24/24**, simulator-free, wired into `run_phase4_uvm.sh` under
+            the 09-27 gate discipline; log
+            `payload_coverage_model_2026-09-30.txt`.
+            - **The contradiction:** `g_first = 9` is reachable only by
+              `0x00` and `g_first = 8` only by `0x80`, so excluding those
+              two bytes EMPTIES two bins of the coverpoint v7 just made a
+              sign-off dependency. A 9/9 goal is unachievable for any legal
+              F7 run. Amended to 7/7 over the legal subset with those two
+              as `illegal_bins` (vplan v8).
+            - **Anchored, not re-derived:** the admissibility classes come
+              from the MEASURED per-byte limit columns of the committed
+              `budget_law_exhaustive_2026-09-29.txt` CSV, read from that
+              file, with `1/(2*g_first)` used only as a second route and
+              required to agree 256/256. Two negative controls confirm the
+              classification tracks the window it is given -- a 500/300
+              window empties the set, a 5000/400 window takes all 256.
+            - **The illegal bin RAISES rather than counts**, with a
+              positive control requiring it NOT to raise on `0x01`.
+            - **1.56% of uniform frames, not 0.78%**, are not clean F7
+              evidence once BORDERLINE is counted; the 0.78% is confirmed
+              exactly as 2/256 and is the inadmissible half only.
+            - **A constrained-random generator excluding the illegal bytes
+              still closes the cross:** 703 draws close all 23 reachable
+              cells, so the exclusion does not make the goal unreachable.
+            - Mutation report: 6 injected, **6 detected, 0 escaped**, each
+              with a positive control on the mutation itself;
+              `mutation_report_payload_coverage_2026-09-30.txt`
       - [ ] `0x40` and `0xC0` are BORDERLINE, not passing -- created
             2026-09-29, and it is a correction to the same day's own
             254/256 framing. `g_first = 7` gives a 7.143% window against
