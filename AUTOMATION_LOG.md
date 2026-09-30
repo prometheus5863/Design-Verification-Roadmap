@@ -3793,3 +3793,248 @@ rather than into a notes file.
 regression log and runner entry) and 5 at 10:35 (the 256-byte model check with
 its log and mutation report; the in-place annotation of the law; the study note;
 vplan v7; `progress.md`). This `AUTOMATION_LOG.md` entry makes 8 for the day.
+
+## 2026-09-30 — The coverpoint vplan v7 demanded, and the discovery that v7's two clauses cannot both be met
+
+**Status:** Automated session, **04:34 UTC** firing, the first of the day's
+three, so the redundancy was not needed. Step 0's already-ran check was clean:
+neither repository had a 2026-09-30 entry or a commit since midnight. Live web
+search **not used** — the work is a coverage model over a measurement this
+repository committed yesterday. **No simulator was needed**, for the second
+consecutive session: the whole check runs on a bare `python3` in under a second.
+
+**The top item closes, and closing it falsified the plan that created it.**
+vplan v7 made a `ctz(data)` coverpoint a sign-off dependency and declared
+`{0x00, 0x80}` inadmissible for F7 evidence. Both clauses were written the same
+day, from the same measurement, and they are incompatible.
+
+### 1. `payload_coverage_model.py` — 24/24, simulator-free, in the runner
+
+`examples/phase4_uvm_milestone/payload_coverage_model.py` with
+`payload_coverage_model_2026-09-30.txt`, wired into `run_phase4_uvm.sh` ahead
+of the five simulator tests under the 09-27 gate discipline (private log, empty
+log counts as failure, exactly one `RESULT` line). Three coverpoints: `ctz`
+(`g_first`), the framed transition count, and their cross, with a three-valued
+admissibility axis and an illegal-bin mechanism.
+
+**Anchored, not re-derived.** The admissibility classes come from the MEASURED
+per-byte limit columns of the committed `budget_law_exhaustive_2026-09-29.txt`
+CSV block, **read from that file**. Re-typing `1/(2*g_first)` here would have
+made the coverage model agree with the law by construction and told us nothing
+about whether the law's own measurement supports v7's two sign-off sets; the law
+is used as a SECOND ROUTE and required to agree, 256/256 (V1). This is the
+09-24 anchored-comparison rule, and it is also why the file reads the committed
+log rather than re-running the measurement: the log is the artefact the criterion
+was written against, so if the two ever diverge the regression must notice.
+
+### 2. THE FINDING: v7's two clauses contradict each other
+
+**`g_first = 9` is reachable only by `0x00`, and `g_first = 8` only by `0x80`.**
+So excluding those two bytes from F7 evidence **empties two bins of the very
+coverpoint v7 made a sign-off dependency**. Over all 256 bytes the coverpoint
+has bins `{1..9}`; over the legal subset it has `{1..7}`. A 9/9 goal leaves F7
+permanently at 7/9, with two bins that cannot be hit without invalidating the
+evidence they would contribute to.
+
+Nothing is added to reach this: it follows from v7's own two clauses and the
+measurement v7 cites. **vplan v8** amends the goal to 7/7 over the legal subset
+with the two bytes as `illegal_bins` rather than uncovered bins — the same
+distinction v4 drew for the outcome axis, and the same one 09-26 got wrong in
+the other direction when illegal bins fired against correct RTL for 21 frames.
+
+### 3. A parity theorem, and the transition-count coverpoint open since 09-26
+
+**The framed transition count is always ODD: 5 bins, not 10.** The framed stream
+begins at 0 (start bit) and ends at 1 (stop bit), and every transition flips the
+level, so the count between unequal endpoints is necessarily odd — bins
+`{1,3,5,7,9}`. This is a **theorem, not an enumeration artefact**: it holds for
+any payload width and any frame with unequal start and stop levels, so it is a
+bound on the coverage model rather than a measurement of this DUT. A 0..9
+coverpoint would have sat permanently at 50% and no amount of stimulus would
+have moved it.
+
+**Positive control on the argument itself**, because a parity claim that cannot
+fail is worth nothing: a 0-start/0-stop frame gives EVEN counts for all 256
+bytes, confirming the parity follows from the endpoint levels and not from the
+frame length. This also answers 2026-09-23's standing question of which rules
+here could be restated as parities or bounds — the first affirmative answer that
+item has had.
+
+### 4. The cross is not a grid, and the closure was checked rather than assumed
+
+**23 reachable cells of 35**, enumerated over all 256 bytes rather than argued,
+because the coverpoints are dependent: `g_first` fixes the low bits, which
+constrains the achievable transition count. A goal stated over the full grid
+would report **65.7% at actual closure** and never reach 100%. The two
+coverpoints are nonetheless **orthogonal rather than redundant** — `g_first = 1`
+alone spans all five transition bins.
+
+And the obvious risk of an exclusion is that it makes the goal unreachable, so
+that was measured: a constrained-random generator drawing from the 254 legal
+bytes **closes all 23 reachable cells in 703 draws**, with no illegal payload
+ever drawn.
+
+### 5. The third state, and why the illegal bin must RAISE
+
+ADMISSIBLE 252 / BORDERLINE 2 / INADMISSIBLE 2. `sample()` raises
+`IllegalPayload` on an inadmissible byte rather than counting it, because
+**counting it is exactly what lets an uninterpretable frame into an F7 pass** —
+a disagreement on `0x00` is indistinguishable from a DUT failure. With a
+positive control requiring that it does NOT raise on `0x01`, since a mechanism
+that always raises detects nothing, and a survey mode that records the hits
+without aborting. This closes the operative half of the 09-26 three-valued-axis
+item: here the axis is intrinsic rather than bolted on.
+
+**And the rate v7 quotes is the inadmissible half only.** 0.78% is confirmed
+exactly as 2/256; with BORDERLINE included, **1.56% of uniform-random frames —
+about 1 in 64 — are not clean F7 evidence.**
+
+### 6. Controls on the one number that is not read from the measurement
+
+`PHASE_UNCERTAINTY_BP = 69` (09-25's 0.69% of eps) is the only value typed into
+the file rather than read from the committed CSV, and the BORDERLINE class turns
+on it, so it gets a sweep rather than trust: 8 thresholds produce 4 distinct
+borderline sets, and **u = 39 bp excludes `{0x40, 0xC0}` while u = 40 bp
+includes them**, recovering 09-29's 39 bp margin from the measured column by a
+route that did not assume it.
+
+**One expectation of mine was wrong and is corrected in place rather than
+removed.** V2's tightened negative control was filed as "128 bytes, the
+`g_first >= 2` class", forgetting that the `g_first = 1` class measures 4999 bp
+and so also fails a 5000 bp demand — it excludes all 256. **A negative control
+whose expected value is wrong is not a control**, and it passed the first run
+only because I had written the assertion to match my error.
+
+### 7. Mutation report: 6 injected, 6 detected, 0 escaped
+
+`mutation_report_payload_coverage_2026-09-30.txt`, every mutant carrying a
+positive control on the mutation itself (a grep for the INSERTED text in the
+mutated source, before the suite runs).
+
+**M4 (transition count off by one) is caught by the ODD-parity check ALONE** —
+the only check that looks at that quantity structurally rather than by value.
+That is the **third consecutive session** in which an exactly-known property
+caught what a plausible-range check would have passed (09-17 in the graphene
+repository, 09-29's M3 here, today's M4). M1 (containment `or` weakened to
+`and`) fires 7 checks; M5 (the illegal bin stops raising) fires exactly the one
+check that exists for it.
+
+**And my own M6 positive control was wrong**, specified as a grep for the text
+the mutation REMOVES rather than the text it INSERTS, so it read ABSENT while
+the mutation had plainly applied. Fixed, re-run, and recorded in the report
+rather than quietly corrected, because it is **the same failure the control
+exists to prevent, one level up** — and it is the second instance today, after
+§6, of a control of mine whose expected value was wrong.
+
+### 8. vplan v8, its own commit
+
+As v4/v5/v6/v7 were, because it changes sign-off criteria: the 7/7 amendment,
+the raise-not-count clause, the 5-bin transition goal, the 23-cell cross goal,
+and the 1.56% figure. **Nothing v7 measured is withdrawn** — the law, the
+window, the 39 bp margin, the one-sidedness result and the borderline status of
+`0x40`/`0xC0` all stand as v7 states them, and the two-divisor 5 bp window
+measurement remains the open experiment that would move the admissible set from
+252/256 to 254/256.
+
+**Methodological note, continuing the series.** 09-24 the anchored comparison;
+09-25 the independent driver; 09-26 a freshly produced anchor; 09-27 the
+independent observer; 09-28 independence is necessary and not sufficient,
+because the observer's window must contain the one it arbitrates; 09-29 the
+qualifying observer's window is a function of the STIMULUS, so stimulus
+selection is oracle selection.
+**09-30 is the consequence nobody costed: WHEN STIMULUS SELECTION IS ORACLE
+SELECTION, THE COVERAGE MODEL AND THE ADMISSIBILITY CONSTRAINT COMPETE FOR THE
+SAME STIMULUS, AND THEY CAN BE UNSATISFIABLE TOGETHER.** A coverage goal says
+*reach every bin*; an admissibility rule says *never drive these inputs*. As
+long as the oracle's competence was independent of the stimulus those were
+orthogonal requirements, argued in different sections of a plan by different
+kinds of reasoning. The moment the oracle's window depends on the payload, the
+bins at the extremes of that dependence are the very inputs the oracle cannot
+arbitrate — so **the hardest-to-cover bins are systematically the inadmissible
+ones**, which is the worst possible correlation and is not a coincidence of this
+UART. It is structural: `g_first = 9` is the tightest budget *because* it is the
+rarest pattern, and it is inadmissible *because* the budget is tightest there.
+The interview form: **an adaptive instrument does not merely owe you a coverage
+model over what it adapts to, it owes you a proof that the model is satisfiable
+under its own exclusions** — and today that proof is the 703-draw closure run,
+which is the only reason the amended 7/7 goal is known to be reachable at all
+rather than merely smaller.
+
+**Checks:** 24/24 in `payload_coverage_model.py`, including 2 negative controls
+on the classification, an 8-point sensitivity sweep on the one hand-carried
+number, 2 positive controls on the raise mechanism, a positive control on the
+parity argument, and a constrained-random closure run. 6 mutants injected, 6
+detected, 0 escaped. Two of my own controls were found to have wrong expected
+values (§6, §7) and both are recorded rather than silently fixed.
+
+**Not yet covered (candidates for future runs):**
+- **The two-divisor 5 bp window measurement** — the most concrete open
+  experiment since 09-27, and now **the top item**, because it is the only thing
+  standing between F7's admissible set at 252/256 and 254/256. Today's work
+  removed the other reason to defer it: the coverpoint that depended on the
+  borderline classification now exists, so the measurement has a consumer
+  waiting rather than a plan entry
+- **Is the hardest-to-cover bin ALWAYS the inadmissible one?** — created today by
+  the methodological note. The correlation is argued structurally there and
+  demonstrated on one instrument; whether it holds for the other benches'
+  observers is the generalisable question, and it would turn the note into a
+  design rule for choosing instruments rather than an observation about this one
+- **Audit the other benches' observers for CONTAINMENT and for
+  stimulus-dependence** — open since 09-28, widened 09-29, and **widened again
+  today**: the audit must now also ask whether each observer's coverage model is
+  SATISFIABLE under its own admissibility exclusions, which is a question none of
+  them currently answers
+- **Wire `PayloadAdmissibilityCoverage` into the live UVM coverage collector** —
+  created today. The model is verified and the runner runs it, but the Phase 4
+  environment's own collector does not yet instantiate it, so an actual
+  simulated F7 run can still draw `0x00` without raising
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** — created
+  09-29, recorded there as not done, still not done
+- **The DUT's +1.38% displacement needs a NEW candidate mechanism** — open since
+  09-28; `rx_sync`'s one-clock delay is 6.25% at `BAUD_DIV=0`, four and a half
+  times the measured value
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** — open
+  since 09-26 and **partly answered today** for the Phase 4 environment, where
+  the axis turned out to be intrinsic rather than bolted on; `phase6_crv_uart`
+  itself is untouched
+- **Audit every remaining runner and harness for the 09-27 item-1 pattern**
+  ("greps a file it did not just write") — open; today's addition to
+  `run_phase4_uvm.sh` was written to the fixed pattern
+- **Per-property coverage of the PHASE 4 UVM environment** — open since 09-23
+- **A less greedy steering policy** — created 09-24, untouched
+- **Two transmitters at once** — created 09-25, untouched, and today sharpens it
+  a third time: if the coverage model and the admissibility rule compete for one
+  transmitter's payload, two transmitters have a JOINT satisfiability condition
+  rather than two independent ones
+- **`abc pdr` as a second engine** — unchanged since 09-23 and still the best
+  single experiment available
+- **Widen the coverage model** — created 09-24, untouched
+- **Mutants not yet attempted**: interrupt *enable* combinations, the loopback
+  mux itself, reset asserted mid-frame
+- **A property that actually needs a strengthening invariant** — blocked on the
+  same bound
+- **The SVA sequence layer** — runnable on neither tool here; open since 09-20
+- **Code coverage measurement** — Icarus has none; open since 09-18
+- Phase 6: lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health:** Device reachable and folder connected at the **04:34**
+firing. `git clone` of both repositories completed normally; `user.name`/
+`user.email` again absent in the fresh clones and set per 09-24. The push recipe
+ran from `$HOME/.sess/` per 09-28 and the 09-29 correction — **`/tmp` MAY carry
+another session's files, so never assume a fixed temp path is yours** — and the
+temp token copy was written and shredded there. Every commit was pushed as it
+was made, per 09-25, and verified against the GitHub API rather than against
+git's own output. **No toolchain was needed at all** for the second consecutive
+session: no Icarus, no uvm-python, no cocotb, hence none of the three install
+recipes, and the 09-17 gotchas about piping `setup_iverilog.sh` and wrapping the
+`vvp` shell function in `timeout` did not arise. The graphene half of the session
+did need `pip install scipy`, which succeeded immediately. **The 09-29 authoring
+rule earned its place twice today, in the other repository:** every patch script
+`ast.parse`d — and where the file is executable, `compile`d — the modified source
+BEFORE writing it, and the `compile` step is the addition, because `ast.parse`
+accepts a `global` declaration that follows a use of the same name while
+`compile` rejects it, which is exactly the error one patch made.
+
+**Commits this run:** 4 (the coverage model with its log and mutation report and
+the runner wiring; vplan v8; progress.md; this entry). The graphene repository
+took 5.
