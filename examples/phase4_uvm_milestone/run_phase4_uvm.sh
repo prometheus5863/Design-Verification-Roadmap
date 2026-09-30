@@ -74,6 +74,38 @@ fi
 rm -f "${MLOG}"
 echo
 
+# ---------------------------------------------------------------------------
+# A SECOND MODEL CHECK, also simulator-free.
+#
+# payload_coverage_model.py is the ctz(data) coverpoint vplan v7 made a sign-off
+# dependency on 2026-09-29, with the two bytes it must treat as ILLEGAL rather
+# than merely count.  It is in the runner and not in a notes file for the same
+# reason budget_law_exhaustive.py is: it derives the {0x00, 0x80} and
+# {0x40, 0xC0} sign-off sets from the COMMITTED measured CSV, so if that
+# measurement is ever re-run and moves, the regression breaks instead of the
+# criterion quietly going stale.
+#
+# Gated identically: private log, empty log counts as failure, exactly one
+# RESULT line (the 2026-09-27 item-1 pattern -- never grep a file you did not
+# just write).
+echo "################ payload_coverage_model (model, no simulator) ################"
+CLOG="$(mktemp)"
+timeout 170 python3 payload_coverage_model.py > "${CLOG}" 2>&1
+crc=$?
+tail -34 "${CLOG}"
+cn="$(grep -cE '^RESULT: ' "${CLOG}")"
+if [ ! -s "${CLOG}" ]; then
+  echo "** RUNNER ERROR: payload_coverage_model produced an empty log -- counting as FAILURE"
+  FAILED=1
+elif [ "${cn}" -ne 1 ]; then
+  echo "** RUNNER ERROR: payload_coverage_model log has ${cn} RESULT lines, expected 1 -- counting as FAILURE"
+  FAILED=1
+elif [ "${crc}" -ne 0 ] || ! grep -qE '^RESULT: ALL CHECKS PASS' "${CLOG}"; then
+  FAILED=1
+fi
+rm -f "${CLOG}"
+echo
+
 for t in "${TESTS[@]}"; do
   echo "################ ${t} ################"
   # Each invocation is a fresh process, so a fresh uvm_test_top.

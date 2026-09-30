@@ -1,0 +1,73 @@
+==============================================================================
+MUTATION REPORT -- payload_coverage_model.py
+2026-09-30.  Six mutants, each injected into a COPY of the file in a scratch
+directory; the original is never modified.
+==============================================================================
+
+METHOD, and the one thing this report does differently from 2026-09-29's.
+Every mutant carries a POSITIVE CONTROL ON THE MUTATION ITSELF -- a grep for
+the mutated text in the mutated source, run before the suite -- because a
+mutation that never arrived and a suite that cannot detect it produce the same
+pass.  That rule came from the graphene repository on 2026-09-29.  The SAME
+repository sharpened it on 2026-09-30 in a way that applies directly here: the
+control must sit at the point of DELIVERY, not downstream, and it must be
+impossible for it to pass vacuously.
+
+A GREP-FOR-THE-NEW-TEXT CONTROL IS THE RIGHT SHAPE AND MINE WAS WRONG ON M6.
+The first run of this report specified M6's control as a grep for the text the
+mutation REMOVES rather than the text it INSERTS, so it reported ABSENT while
+the mutation had demonstrably applied (reachability collapsed from 23 cells to
+7).  Recorded rather than silently corrected, because it is the exact failure
+the control exists to prevent, one level up: a control whose expected value is
+wrong is not a control.  It is fixed below and the report re-run.
+
+VERDICT SUMMARY: 6 injected, 6 DETECTED, 0 escaped.
+
+-------- M1
+  rationale        : containment test weakened from or to and -- a byte failing only the slow side would be called admissible
+  positive control : mutation text PRESENT in the mutated source
+  exit code        : 1   (nonzero = suite rejected the mutant)
+  failing checks   : 7
+  first failures   : [FAIL] derived INADMISSIBLE set == vplan v7's {0x00, 0x80}  got []|[FAIL] derived BORDERLINE set == vplan v7's {0x40, 0xC0}  got ['0x00', '0x40', '0x80', '0xC0']|[FAIL] 39 bp is the exact boundary: u=39 excludes 0x40/0xC0, u=40 includes them  confirms the 09-29 margin of 39 bp from the measured column|
+  RESULT line      : RESULT: 7 CHECK(S) FAILED  ["derived INADMISSIBLE set == vplan v7's {0x00, 0x80}", "derived BORDERLINE set == vplan v7's {0x40, 0xC0}", '39 bp is the exact boundary: u=39 excludes 0x40/0xC0, u=40 includes them', 'sampling 0x00 raises IllegalPayload', 'with raising disabled the illegal hits are still RECORDED', "matches vplan v7's 0.78%%", 'excluding the illegal bytes removes exactly the g_first 8 and 9 bins']
+  VERDICT          : DETECTED
+-------- M2
+  rationale        : the one hand-carried number moved below the measured 39 bp margin, which should empty the BORDERLINE class
+  positive control : mutation text PRESENT in the mutated source
+  exit code        : 1   (nonzero = suite rejected the mutant)
+  failing checks   : 1
+  first failures   : [FAIL] derived BORDERLINE set == vplan v7's {0x40, 0xC0}  got []|
+  RESULT line      : RESULT: 1 CHECK(S) FAILED  ["derived BORDERLINE set == vplan v7's {0x40, 0xC0}"]
+  VERDICT          : DETECTED
+-------- M3
+  rationale        : ctz(0) off by one -- g_first for 0x00 becomes 8 instead of 9, the classic boundary defect
+  positive control : mutation text PRESENT in the mutated source
+  exit code        : 1   (nonzero = suite rejected the mutant)
+  failing checks   : 2
+  first failures   : [FAIL] 1 + ctz(data) == the measured g_first column, 256/256  mismatches: [0]|[FAIL] excluding the illegal bytes removes exactly the g_first 8 and 9 bins  so v7's exclusion and a 9-bin coverage goal are INCOMPATIBLE, and this is a NEW consequence of v7 that v7 does not state|
+  RESULT line      : RESULT: 2 CHECK(S) FAILED  ['1 + ctz(data) == the measured g_first column, 256/256', 'excluding the illegal bytes removes exactly the g_first 8 and 9 bins']
+  VERDICT          : DETECTED
+-------- M4
+  rationale        : transition count off by one -- must break the ODD-parity theorem, which is the only check that looks at it structurally
+  positive control : mutation text PRESENT in the mutated source
+  exit code        : 1   (nonzero = suite rejected the mutant)
+  failing checks   : 1
+  first failures   : [FAIL] every transition count over all 256 bytes is ODD  5 reachable bins [0, 2, 4, 6, 8], not the 10 a naive 0..9 coverpoint would declare|
+  RESULT line      : RESULT: 1 CHECK(S) FAILED  ['every transition count over all 256 bytes is ODD']
+  VERDICT          : DETECTED
+-------- M5
+  rationale        : the illegal bin stops raising and only counts -- exactly the failure mode v7 exists to prevent
+  positive control : mutation text PRESENT in the mutated source
+  exit code        : 1   (nonzero = suite rejected the mutant)
+  failing checks   : 1
+  first failures   : [FAIL] sampling 0x00 raises IllegalPayload  it was silently counted|
+  RESULT line      : RESULT: 1 CHECK(S) FAILED  ['sampling 0x00 raises IllegalPayload']
+  VERDICT          : DETECTED
+-------- M6
+  rationale        : the cross collapses onto one transition bin -- reachability becomes 7 cells, so a closure claim would be trivially met
+  positive control : mutation text PRESENT in the mutated source
+  exit code        : 1   (nonzero = suite rejected the mutant)
+  failing checks   : 3
+  first failures   : [FAIL] the cross is NOT a full grid -- the two coverpoints are dependent  7 of 7 cells reachable; a goal over the full grid could never be met|[FAIL] the two coverpoints are nonetheless ORTHOGONAL, not redundant  g_first=1 alone spans transition counts [1]|[FAIL] a goal over the full 7x1 grid would report 100.0% at closure and never reach 100%  which is why the reachable set is enumerated and not assumed|
+  RESULT line      : RESULT: 3 CHECK(S) FAILED  ['the cross is NOT a full grid -- the two coverpoints are dependent', 'the two coverpoints are nonetheless ORTHOGONAL, not redundant', 'a goal over the full 7x1 grid would report 100.0% at closure and never reach 100%']
+  VERDICT          : DETECTED
