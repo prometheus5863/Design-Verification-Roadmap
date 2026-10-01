@@ -1,0 +1,173 @@
+==============================================================================
+MUTATION REPORT -- examples/phase6_divisor_window/uart_divisor_window_tb.v
+2026-10-01.  Six mutants, each injected into a COPY of rtl/uart_controller.v.
+==============================================================================
+baseline (unmutated RTL): RESULT 13/16 checks passed, 3 failed
+  (A2a, P3 and P5 are pre-registered predictions this file's first run
+   refuted; they are kept in the suite as failing checks, so the baseline
+   tally is not 16/16 and the gate in run_divisor_window.sh pins the exact
+   expected tally rather than demanding zero failures.)
+
+TWO CONTROLS PER MUTANT, AND WHY THE SECOND ONE EXISTS
+-----------------------------------------------------
+The 2026-09-30 rule is that every mutant carries a positive control on the
+mutation itself -- a check that the mutation ARRIVED, so that "the suite did
+not fire" can be told apart from "nothing was changed".  That rule was
+followed here in its 09-30 form, as control A: grep the mutated source for
+the text the mutation INSERTS.
+
+IT WAS NOT ENOUGH, AND THIS FILE'S OWN FIRST MUTATION RUN IS THE EVIDENCE.
+The first version of M3 was meant to bypass the RX synchroniser.  It appended
+a marker comment to the flop and rerouted only the two read sites matching
+`rx_mid && rx_sync` -- which does not include the start-DETECTION read
+`if (!rx_sync)`, the one place the mutant was aimed at.  Control A read
+PRESENT, because the text had indeed arrived.  The suite reported the
+baseline tally with 0 of 37 golden entries moved, and that was filed as an
+ESCAPE: a weakness of the suite.  It was not.  The mutant was inert.
+
+So a second control was added -- control B: the text the mutation REPLACES
+must be ABSENT from the mutated source.  Control B fails on the old M3
+immediately, because the flop assignment `rx_sync <= rx_in` was still there.
+Rebuilt as a genuine combinational bypass it is DETECTED, and it moves 20 of
+the 37 golden entries.
+
+THE LESSON, which is 09-30's one level up: a control that greps for inserted
+TEXT proves the text arrived, not that the SEMANTICS changed.  An inert
+mutant and a blind suite produce the same transcript, which is exactly the
+indistinguishability 09-29 and 09-30 are about -- and the mutation harness
+had become an instance of the fault it was built to detect.  Control B is
+cheap, it is a property of the diff rather than of the run, and it is now
+required of every mutant in this directory.
+
+M1  mid-bit sample moved one oversample tick earlier (rx_os 8 -> 7)
+    why it matters: this is the structural lateness term p itself; one tick is 1/16 of a
+        bit = 69.4 bp of window centre
+    control A, inserted text 'MUT_M1' present : PRESENT
+    control B, replaced text gone from mutant   : CONFIRMED
+    RESULT 10/16 checks passed, 6 failed
+    golden table: entries differing from golden: 37 of 37
+    checks that failed (6):
+      - A2a the committed 675/400 is reproduced exactly at zero edge phase
+      - A2b the committed 675/400 is reproduced exactly at SOME edge phase
+      - P3 the recovered rho is non-negative at every divisor
+      - P5 pair-measured slow limit >= 625 bp in all 24 cases
+      - A4 no divisor or phase makes 0x00 or 0x80 admissible: 252/256 stands
+      - A8 all 37 measured window entries match the committed golden table
+    verdict: DETECTED
+
+M2  bit-boundary strobe at 14 oversample ticks instead of 15
+    why it matters: the obvious cadence knob -- and the one that turns out NOT to be the
+        cadence.  Paired with M6, which mutates the counter wrap instead
+    control A, inserted text 'MUT_M2' present : PRESENT
+    control B, replaced text gone from mutant   : CONFIRMED
+    RESULT 13/16 checks passed, 3 failed
+    golden table: entries differing from golden: 0 of 37
+    checks that failed (3):
+      - A2a the committed 675/400 is reproduced exactly at zero edge phase
+      - P3 the recovered rho is non-negative at every divisor
+      - P5 pair-measured slow limit >= 625 bp in all 24 cases
+    verdict: ESCAPED
+
+M3  RX synchroniser flop genuinely bypassed (rx_sync combinational)
+    why it matters: removes exactly the one-clk term that the 2026-09-28
+        entry proposed as the whole mechanism behind the DUT's +1.38%
+        displacement.  If it were the whole mechanism the centre would fall
+        to the structural floor; this measures how much of it is the flop
+    control A, inserted text 'MUT_M3' present : PRESENT
+    control B, replaced text gone from mutant   : CONFIRMED
+    RESULT 12/16 checks passed, 4 failed
+    golden table: entries differing from golden: 20 of 37
+    checks that failed (4):
+      - A2a the committed 675/400 is reproduced exactly at zero edge phase
+      - P3 the recovered rho is non-negative at every divisor
+      - P5 pair-measured slow limit >= 625 bp in all 24 cases
+      - A8 all 37 measured window entries match the committed golden table
+    verdict: DETECTED
+    NOTE the first build of this mutant was inert and passed control A.  See
+    the header.  Only 20 of 37 entries move, and the three pre-registered
+    failures still fail -- so the synchroniser is a REAL contributor to the
+    sampling lateness and is NOT the whole of it, which is the same verdict
+    the unmutated P3 arrives at from the other direction.
+
+M4  start-bit mid-bit re-check removed (a runt pulse becomes a frame)
+    why it matters: EXPECTED TO ESCAPE and stated so before the run: this suite drives
+        clean frames only, and glitch rejection belongs to
+        examples/phase6_rx_pin_driver/.  A mutant that escapes for a
+        reason given in advance is worth more than one left out
+    control A, inserted text 'MUT_M4' present : PRESENT
+    control B, replaced text gone from mutant   : CONFIRMED
+    RESULT 13/16 checks passed, 3 failed
+    golden table: entries differing from golden: 0 of 37
+    checks that failed (3):
+      - A2a the committed 675/400 is reproduced exactly at zero edge phase
+      - P3 the recovered rho is non-negative at every divisor
+      - P5 pair-measured slow limit >= 625 bp in all 24 cases
+    verdict: ESCAPED
+
+M5  STOP-bit framing error never raised in RX_STOP1
+    why it matters: the stop bit is the binding constraint for every byte with
+        data[7] = 0, so removing it should move those bytes' slow limit
+        from (1/2+p)/9 to (1/2+p)/8 -- a 12.5% change
+    control A, inserted text 'MUT_M5' present : PRESENT
+    control B, replaced text gone from mutant   : CONFIRMED
+    RESULT 7/16 checks passed, 9 failed
+    golden table: entries differing from golden: 28 of 37
+    checks that failed (9):
+      - A2a the committed 675/400 is reproduced exactly at zero edge phase
+      - A2b the committed 675/400 is reproduced exactly at SOME edge phase
+      - P1 true width brackets 1/9 in all 24 divisor-phase cases
+      - P1b 2 x 555.56 bp = 1111.1 bp brackets the DUT width in all 24 cases
+      - P3 the recovered rho is non-negative at every divisor
+      - A4b the pair-based window produces at least one wrong verdict
+      - A7b the four multi-transition control bytes stay admissible
+      - A7c exactly the single-transition bytes fail: no other byte probed does
+      - A8 all 37 measured window entries match the committed golden table
+    verdict: DETECTED
+
+M6  oversample counter wraps at 14 instead of 15 (the cadence itself)
+    why it matters: the companion to M2.  If the sample cadence is set by the
+        counter's wrap rather than by the rx_edge strobe, then this is the
+        load-bearing constant and M2's is not
+    control A, inserted text 'MUT_M6' present : PRESENT
+    control B, replaced text gone from mutant   : CONFIRMED
+    RESULT 4/16 checks passed, 12 failed
+    golden table: entries differing from golden: 37 of 37
+    checks that failed (12):
+      - A1 every byte decodes exactly at eps = 0, 96 cases
+      - A2a the committed 675/400 is reproduced exactly at zero edge phase
+      - A2b the committed 675/400 is reproduced exactly at SOME edge phase
+      - P1 true width brackets 1/9 in all 24 divisor-phase cases
+      - P1b 2 x 555.56 bp = 1111.1 bp brackets the DUT width in all 24 cases
+      - P3 the recovered rho is non-negative at every divisor
+      - P5 pair-measured slow limit >= 625 bp in all 24 cases
+      - A4 no divisor or phase makes 0x00 or 0x80 admissible: 252/256 stands
+      - A4b the pair-based window produces at least one wrong verdict
+      - A6 the window centre depends on the edge phase at some divisor
+      - A7 all nine single-transition bytes are inadmissible, not two
+      - A8 all 37 measured window entries match the committed golden table
+    verdict: DETECTED
+
+------------------------------------------------------------------------------
+6 injected, 4 detected, 2 escaped.
+
+M2 ESCAPES AND IT IS CORRECT THAT IT DOES, which is a measured statement
+about the RTL rather than an excuse.  M2 moves the rx_edge strobe and
+changes NOTHING: 0 of 37 entries.  M6 moves the rx_os wrap and changes
+EVERYTHING: 37 of 37, including the eps = 0 exactness check.  So the
+receiver's sample cadence is set by the counter's own wrap at 15 and the
+rx_edge threshold is REDUNDANT with it for sampling purposes -- the state
+machine's bit boundary can be moved two ticks without moving a single
+sampling instant.  A mutation of one of two redundant encodings of the same
+constant is invisible by construction, and the pair is the only way to see
+which of them is load-bearing.
+
+M4 ESCAPES BY DESIGN, stated before the run: no glitch stimulus exists in
+this suite, so a start-bit re-check removed cannot be seen from here.  It is
+counted as an escape and not excused.
+
+THE SUITE'S ONE NUMERIC ANCHOR IS A8.  Every other check in the file is an
+inequality or a bracket, and of the four detected mutants, A8 is the ONLY
+check that fires on M3 beyond the three already-failing pre-registered ones.
+Without the golden table M3 would have been reported as an escape twice over
+-- once for the wrong reason (an inert mutant) and once for the right one.
+------------------------------------------------------------------------------

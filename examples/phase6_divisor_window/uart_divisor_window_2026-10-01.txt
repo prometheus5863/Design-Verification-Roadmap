@@ -1,0 +1,154 @@
+==============================================================================
+DUT BAUD-TOLERANCE WINDOW vs BAUD_DIV AND EDGE PHASE
+2026-10-01, rtl/uart_controller.v through the APB register read-out, 8N1
+==============================================================================
+clk 10 ns;  one nominal bit = 16*(div+1) clk;  BIT_PS_D0 = 160000 ps
+limit = last |eps| at which EVERY trial byte is clean, from 0 outward
+edge phase q/4 of ONE oversample tick, tick = bit/16
+observer per-byte limits (2026-09-29, law 1/(2*g_first)):
+    0x00 -> 555 bp     0x80 -> 625 bp     (divisor-independent)
+
+A1  eps = 0 is exact at every divisor and phase (4 bytes x 6 div x 4 phases)
+  [PASS] A1 every byte decodes exactly at eps = 0, 96 cases
+
+A2  anchor: 25 bp grid, div 0, committed pair is slow 675 / fast 400
+      phase   slow_bp   fast_bp   matches committed?
+          0       650       450   no
+          1       625       450   no
+          2       675       400   EXACT
+          3       675       425   no
+  [FAIL] A2a the committed 675/400 is reproduced exactly at zero edge phase
+  [PASS] A2b the committed 675/400 is reproduced exactly at SOME edge phase
+
+A3  5 bp grid, trial pair {0x01,0x80}, six divisors x four phases
+      div   phase   bit/clk   slow_bp   fast_bp   width_bp   centre_bp
+        0       0        16       655       450       1105         102
+        0       1        16       640       465       1105          87
+        0       2        16       690       415       1105         137
+        0       3        16       675       430       1105         122
+        1       0        32       605       500       1105          52
+        1       1        32       655       450       1105         102
+        1       2        32       640       465       1105          87
+        1       3        32       625       485       1110          70
+        2       0        48       590       520       1110          35
+        2       1        48       640       465       1105          87
+        2       2        48       625       485       1110          70
+        2       3        48       605       500       1105          52
+        3       0        64       615       490       1105          62
+        3       1        64       595       510       1105          42
+        3       2        64       580       525       1105          27
+        3       3        64       630       475       1105          77
+        7       0       128       585       525       1110          30
+        7       1       128       565       540       1105          12
+        7       2       128       620       490       1110          65
+        7       3       128       600       505       1105          47
+       15       0       256       605       505       1110          50
+       15       1       256       585       520       1105          32
+       15       2       256       570       540       1110          15
+       15       3       256       620       485       1105          67
+
+P1  width brackets 1/9 = 1111.1 bp at every divisor and phase
+      measured width over all 24 cases: min 1105 bp, max 1110 bp
+  [PASS] P1 true width brackets 1/9 in all 24 divisor-phase cases
+
+P1b DUT width == 2 x the observer's 1/18 budget == 1/9, exactly
+  [PASS] P1b 2 x 555.56 bp = 1111.1 bp brackets the DUT width in all 24 cases
+
+P2/P3  rho recovered from the centre, in clk cycles (phase 0 column)
+      div   centre_bp(mid)   p(bits)    rho(clk)
+        0           102.5    0.09225       0.476
+        1            52.5    0.04725      -0.488
+        2            35.0    0.03150      -1.488
+        3            62.5    0.05625      -0.400
+        7            30.0    0.02700      -4.544
+       15            50.0    0.04500      -4.480
+  [FAIL] P3 the recovered rho is non-negative at every divisor
+      (a negative rho is unphysical: it would be a detection that
+       happens BEFORE the edge.  P3 is reported, not repaired.)
+
+P5  the claimed floor: pair-measured slow limit >= 625 bp = 1/16
+      pair-measured slow limit over 24 cases: min 565 bp, max 690 bp
+  [FAIL] P5 pair-measured slow limit >= 625 bp in all 24 cases
+
+A4  per-byte DUT slow limit vs the observer, six divisors x four phases
+      div   phase   slow(0x00)   obs 555      slow(0x80)   obs 625
+        0       0          655     NARROWER          740     NARROWER
+        0       1          640     NARROWER          720     NARROWER
+        0       2          690     NARROWER          780     NARROWER
+        0       3          675     NARROWER          760     NARROWER
+        1       0          605     NARROWER          680     NARROWER
+        1       1          655     NARROWER          740     NARROWER
+        1       2          640     NARROWER          720     NARROWER
+        1       3          625     NARROWER          700     NARROWER
+        2       0          590     NARROWER          660     NARROWER
+        2       1          640     NARROWER          720     NARROWER
+        2       2          625     NARROWER          700     NARROWER
+        2       3          605     NARROWER          680     NARROWER
+        3       0          615     NARROWER          690     NARROWER
+        3       1          595     NARROWER          670     NARROWER
+        3       2          580     NARROWER          650     NARROWER
+        3       3          630     NARROWER          710     NARROWER
+        7       0          585     NARROWER          655     NARROWER
+        7       1          565     NARROWER          635     NARROWER
+        7       2          620     NARROWER          695     NARROWER
+        7       3          600     NARROWER          675     NARROWER
+       15       0          605     NARROWER          680     NARROWER
+       15       1          585     NARROWER          660     NARROWER
+       15       2          570     NARROWER          640     NARROWER
+       15       3          620     NARROWER          700     NARROWER
+  [PASS] A4 no divisor or phase makes 0x00 or 0x80 admissible: 252/256 stands
+      cases where the PAIR window says 0x80 is contained and the
+      per-byte window says it is not: 16 of 24
+  [PASS] A4b the pair-based window produces at least one wrong verdict
+
+A5  positive control: a driven timebase from the wrong divisor
+      div 0 programmed, driven at div 1 bit period: rejected
+  [PASS] A5 a 2x timebase error is detected by the trial mechanism
+      div 1 programmed, driven at div 0 bit period: rejected
+  [PASS] A5b the control fires in both directions
+
+A6  how much of the window position is edge phase, per divisor
+      div   centre min   centre max   spread_bp
+        0           87          137          50
+        1           52          102          50
+        2           35           87          52
+        3           27           77          50
+        7           12           65          53
+       15           15           67          52
+  [PASS] A6 the window centre depends on the edge phase at some divisor
+
+A7  per-byte containment under the observer's OWN law, div 0, phase 0
+      byte   g_first   span   obs_bp   DUT_slow_bp   verdict
+      0x00         9      9      555           650   INADMISSIBLE
+      0x80         8      8      625           725   INADMISSIBLE
+      0xc0         7      7      714           825   INADMISSIBLE
+      0xe0         6      6      833           975   INADMISSIBLE
+      0xf0         5      5     1000          1175   INADMISSIBLE
+      0xf8         4      4     1250          1475   INADMISSIBLE
+      0xfc         3      3     1666          1975   INADMISSIBLE
+      0xfe         2      2     2500          2950   INADMISSIBLE
+      0xff         1      1     5000          5925   INADMISSIBLE
+      0x40         7      9      714           650   contained
+      0x55         1      9     5000           650   contained
+      0xaa         2      8     2500           725   contained
+      0x01         1      9     5000           650   contained
+      inadmissible among the 13 probed: 9
+  [PASS] A7 all nine single-transition bytes are inadmissible, not two
+  [PASS] A7b the four multi-transition control bytes stay admissible
+  [PASS] A7c exactly the single-transition bytes fail: no other byte probed does
+      -> the F7 admissible set is 256 - 9 = 247/256, not 252/256:
+         the 2026-09-29 V4 figure counted only the two bytes whose
+         own DUT limit coincides with the pair-measured window.
+
+A8  golden regression against the 2026-10-01 measured tables
+      entries differing from golden: 0 of 37
+  [PASS] A8 all 37 measured window entries match the committed golden table
+
+------------------------------------------------------------------------------
+frames driven: 18483
+RESULT 13/16 checks passed, 3 failed
+  (P3, P5 and A2a are PRE-REGISTERED PREDICTIONS OF MINE THAT FAILED.
+   They are left in the suite as failing checks rather than deleted:
+   the file's purpose is to decide them, and a prediction
+   removed once refuted cannot be audited later.)
+------------------------------------------------------------------------------
