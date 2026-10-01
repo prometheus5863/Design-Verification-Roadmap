@@ -23,6 +23,7 @@ strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
 | **v5** | **2026-09-27** | **F7's oracle may not be the serial monitor, and F7's limits may not be quoted as two independent numbers.** Two corrections, both produced by measuring F7 for the third time — from the Phase 4 UVM environment, at `BAUD_DIV=0`, where the earlier two benches ran at `BAUD_DIV=1`. (i) v3 correctly required a **driven pin on an independent timebase** but said nothing about the **observer**. A serial monitor that samples `rx` on the DUT's clock with the DUT's own algorithm drifts *with* the DUT and agrees with it: 182 probes spanning ±7% baud error produced only **5** monitor-versus-DUT disagreements, and 4 of those 5 were the monitor flagging a framing error the DUT did not. Such a monitor is not an independent observer but a second receiver carrying the same assumption, so F7's oracle must be the **driven byte compared against the register read**, never a monitor decode. (ii) Sign-off criterion 5 as written is **divisor-dependent**: the measured window is −4.50%/+6.25% at `BAUD_DIV=1` and −4.00%/+6.75% at `BAUD_DIV=0` — the **width is 10.75% in both, identical to the basis point**, and the whole window is **displaced by +0.50%**. A per-limit criterion would fail the same RTL at a different divisor while its actual tolerance is unchanged, so F7 is signed off on **window width plus a stated centre offset**. **No v1–v4 text is deleted; every change is annotated in place.** |
 | **v6** | **2026-09-28** | **An independent observer is necessary and NOT sufficient: F7's oracle must have a window that CONTAINS the DUT's, and width is not containment.** v5 forbade the clock-synchronous monitor as F7's oracle and required register-side checking. Both stand. What v5 did not say, and what building the independent observer showed, is that **making the observer independent does not by itself make it competent to arbitrate F7**. Measured on one sweep with four decoders (`examples/phase4_uvm_milestone/`, `test_uart_independent_observer`): the DUT's 8N1 window is 10.75% wide **centred at +1.38%**; an observer with its own timebase has a window 11.10% wide **centred at exactly +0.00%** — *wider*, and still not containing the DUT's, because the DUT's is displaced. There are **13 baud errors from +5.60% to +7.75% at which the DUT receives cleanly and the independent observer does not**, and a disagreement there is evidence about the observer. Two consequences for sign-off. (i) The observer's own window must be **measured and stated** alongside any F7 result, and must contain the DUT's claimed window with margin; an observer that locks once on the start edge and counts a nominal period has a budget of exactly **1/18 = 5.5556%** either side for 8N1 (the drift at the boundary preceding the last sampled bit — 9 bit periods, not the 9.5 where the sample sits), and that is **smaller than the DUT's slow limit**, so such an observer can never be sufficient at BAUD_DIV=0. (ii) Q1 of the same run **locates v5's centre offset in the DUT**: the independent observer's window is centred at exactly zero, so the displacement is the receiver's property and not the measurement path's. **Also new, and a requirement rather than a preference:** an edge-timestamp observer's per-frame margin is an exact function of the frame's **adjacent-bit transition pattern** — matched to a closed form to 0.0000 bit over 170 probes — so F7 coverage over byte VALUES cannot span the margin, and the transition-count coverpoint open since 2026-09-26 is now a sign-off dependency. **No v1–v5 text is deleted; every change is annotated in place.** |
 | **v7** | **2026-09-29** | **Containment is ACHIEVED and it is CONDITIONAL ON THE STIMULUS: F7 evidence may not be carried by payload bytes `0x00` or `0x80`, and an adaptive oracle owes a coverage model over whatever its adaptation depends on.** v6 required that F7's oracle contain the DUT's window and named the one design that could -- an observer that re-derives the bit period per frame. It was built (`test_uart_adaptive_observer`) and it does contain the DUT's window, so v6's requirement is met and the fixed-period disqualification stands unchanged. What is new, and what changes a sign-off criterion, is that **this observer does not have a window at all -- it has 256**. Its tolerance is `1/(2*g_first)` with `g_first = 1 + ctz(data)`, i.e. **set by the position of the lowest set bit in the payload and by nothing else in the byte**, ranging over 9x from 50% (`0x01`) to 5.56% (`0x00`). Measured exhaustively over all 256 bytes at 1 bp resolution (`examples/phase4_uvm_milestone/budget_law_exhaustive.py`, 256/256, with the pre-registered `g_max` law kept as a negative control that 166 bytes refute), so the two-byte exclusion below is a measurement over the whole input space and not an extrapolation from the nine frames the simulation ran. **Three consequences for sign-off.** (i) **`0x00` and `0x80` are excluded from carrying F7 evidence**: their windows (5.56%, 6.25%) do not contain the DUT's 6.75% slow limit, and a uniform random payload draws one of them in 0.78% of frames where a disagreement looks exactly like a DUT failure. (ii) **`0x40` and `0xC0` are BORDERLINE, not passing**: `g_first = 7` gives 7.143% against the DUT's 6.75%, a margin of **39 bp**, and 09-25 measured one oversample tick of initial edge phase moving a limit by 0.69% of eps -- larger than the margin. They may not be relied on until the DUT window's phase and divisor dependence is settled. (iii) **A new requirement, general rather than about UARTs: an instrument that derives its reference from the signal it measures makes the signal's content part of its own specification, so it owes a coverage model over whatever the adaptation depends on.** A `ctz(data)` coverpoint joins v6's adjacent-bit transition-count coverpoint as a sign-off dependency; the two are orthogonal -- `ctz` sets the budget, transition count sets the per-frame margin -- and neither is spanned by any coverage model over byte values or ranges. **Also corrected: a budget may not be quoted symmetrically without saying so.** The law is two-sided for `g_first >= 2` and one-sided for `g_first = 1`, where the fast side does not fail within the scanned +/-60% because the decode's `if dn < 1: dn = 1` clamp turns the only wrong value a fast first gap can round to back into the right one. **No v1-v6 text is deleted; every change is annotated in place.** |
+| **v9** | **2026-10-01** | **The admissible set is 247/256, not 252/256, and the two sides of the containment test had been measured over different sets.** v7 excluded `0x00` and `0x80` from carrying F7 evidence by comparing each byte's observer limit `1/(2*g_first)` against **one** DUT window -- slow 675 bp, measured over the trial pair `{0x01, 0x80}` at `BAUD_DIV=0` and at an edge phase nobody was controlling. F7 admissibility is a statement about **one byte**, so the window that must be contained is the DUT's window **for that byte**; a pair window is an **intersection** over its bytes and is therefore never wider than any member, so substituting it understates the DUT and **can only ever produce a false "contains"**. The error is fail-unsafe and it fires: in **16 of 24** divisor-phase cases the pair window admits `0x80` where `0x80`'s own window does not. Measured per byte (`examples/phase6_divisor_window/uart_divisor_window_tb.v`, 16 checks, 18483 frames, plain Verilog on Icarus): with `span` = the position of the **last** transition in the framed stream `[0, d0..d7, 1]` and `g_first` = the position of the **first**, containment needs `span/g_first >= 1 + 2p` where `p` is the receiver's sampling lateness in bit periods. Since the stream begins at 0 and ends at 1, `span >= g_first` **always**, with equality exactly for the **nine single-transition bytes** `{0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF}` -- and there containment needs `p <= 0`, which no receiver that samples after an edge can give. All nine measure INADMISSIBLE at `BAUD_DIV=0`, with DUT/observer ratio 1.155-1.185 across a tenfold range of limits; the four multi-transition controls stay admissible. **Three further corrections.** (i) **The two-divisor experiment is CLOSED and its answer is negative**: the DUT's window width is **exactly 1/9 = 1111.1 bp at every one of 24 divisor-phase cases**, divisor- and phase-independent, so no divisor relaxes anything and 254/256 was never reachable. (ii) **v5's and v7's "divisor dependence" is confounded**: the window centre moves **50-53 bp with the edge phase at every divisor**, the same magnitude as the entire divisor-driven variation from div 1 to div 15, so a two-point comparison at an uncontrolled phase cannot separate them -- and v5's candidate `rx_sync` mechanism, mutated out, moves only 20 of 37 measured entries, so it is a real contributor and not the whole of it. (iii) **The committed slow 675 / fast 400 is phase-specific**: it is reproduced EXACTLY at half an oversample tick and at no other of four phases, so it is one sample of a phase-dependent quantity and not a property of the DUT. **`0x40` is now the margin to watch**: it needs `p <= 1/7`, and the largest `p` measured anywhere is 0.1233 against that 0.1429 -- 14% of headroom. **No v1-v8 text is deleted; every change is annotated in place, and v7's two-byte figure is retained as exactly right about the two bytes whose own DUT limit coincides with the pair window.** |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -621,6 +622,113 @@ appearing in Section 5.
 > removing that clamp moves the one-sidedness result and leaves this table
 > bit-identical).
 
+> ---
+>
+> **v9 annotation (2026-10-01): THE TWO SIDES OF THE CONTAINMENT TEST WERE
+> MEASURED OVER DIFFERENT SETS, and the DUT's side was the aggregate.** v7
+> computed the observer's limit **per byte** and compared all 256 of them
+> against **one** DUT number: the slow 675 bp measured over the trial pair
+> `{0x01, 0x80}`. A pair window is an intersection over its bytes, so it is
+> never wider than any member of the pair, so using it in place of the byte's
+> own DUT window **understates the DUT** -- and an understated contained-set
+> makes the containing set look adequate. The error has a known sign and it is
+> the unsafe one. Measured: in **16 of 24** divisor-phase cases the pair window
+> says `0x80` is contained and `0x80`'s own window says it is not.
+>
+> Asked per byte, with `g_first` the position of the FIRST transition in the
+> framed stream `[0, d0..d7, 1]` and `span` the position of the LAST:
+>
+> ```
+> observer limit = (1/2) / g_first
+> DUT slow limit = (1/2 + p) / span        p = sampling lateness, in bits
+> containment   <=>  span / g_first >= 1 + 2p
+> ```
+>
+> The stream begins at 0 and ends at 1, so `span >= g_first` **always**, with
+> equality exactly for the nine **single-transition** bytes -- and there
+> containment requires `p <= 0`. Measured at `BAUD_DIV=0`, 25 bp grid:
+>
+> | byte | g_first | span | observer | DUT slow | verdict |
+> |---|---|---|---|---|---|
+> | `0x00` | 9 | 9 | 555 | 650 | **INADMISSIBLE** |
+> | `0x80` | 8 | 8 | 625 | 725 | **INADMISSIBLE** |
+> | `0xC0` | 7 | 7 | 714 | 825 | **INADMISSIBLE** |
+> | `0xE0` | 6 | 6 | 833 | 975 | **INADMISSIBLE** |
+> | `0xF0` | 5 | 5 | 1000 | 1175 | **INADMISSIBLE** |
+> | `0xF8` | 4 | 4 | 1250 | 1475 | **INADMISSIBLE** |
+> | `0xFC` | 3 | 3 | 1666 | 1975 | **INADMISSIBLE** |
+> | `0xFE` | 2 | 2 | 2500 | 2950 | **INADMISSIBLE** |
+> | `0xFF` | 1 | 1 | 5000 | 5925 | **INADMISSIBLE** |
+> | `0x40` | 7 | 9 | 714 | 650 | contained |
+> | `0x55` | 1 | 9 | 5000 | 650 | contained |
+> | `0xAA` | 2 | 8 | 2500 | 725 | contained |
+> | `0x01` | 1 | 9 | 5000 | 650 | contained |
+>
+> The ratio DUT/observer over the nine is **1.155-1.185**, i.e. `1 + 2p`, held
+> to within the grid across a tenfold range of limits -- the law tested nine
+> times rather than asserted once.
+>
+> *Amendment 1: F7's inadmissible payload set is the NINE single-transition
+> bytes, and the admissible set is 247/256, not 252/256.* v7's figure is not
+> withdrawn as a measurement: it is exactly right about the two bytes whose own
+> DUT limit coincides with the pair window, which is precisely why those two
+> and no others appeared.
+>
+> *Amendment 2: F7's illegal-payload mechanism of v8 must raise on all nine,*
+> not on `{0x00, 0x80}`. `g_first` bins 1 through 9 are each reachable only by
+> one of the nine excluded bytes or by a legal byte, so v8's 7/7 goal over the
+> legal subset needs re-deriving against the nine-byte exclusion rather than
+> the two-byte one; that re-derivation is **not** done here and is the first
+> open item of this revision.
+>
+> *Amendment 3: the TWO-DIVISOR EXPERIMENT IS CLOSED, NEGATIVELY.* The DUT's
+> window **width** is exactly `1/9 = 1111.1 bp` at every one of 24
+> divisor-phase cases (measured 1105-1110 bp, bracketing it in all 24), and it
+> does not move with the divisor **or** the phase, because the slow limit is
+> `(1/2+p)/span` and the fast limit is `(1/2-p)/span` and `p` cancels from the
+> sum. No divisor relaxes anything. The 254/256 set the v8 annotation named as
+> one experiment away was never reachable.
+>
+> *Amendment 4: and that width is the SAME 1/9 as twice v6's `1/18` lock-once
+> budget.* v6 measured 11.00% against 11.10% and called the observer's window
+> wider; the two are **equal**, exactly, and the whole of the containment
+> failure is **displacement**. "Width is not containment" was right and weaker
+> than the truth.
+>
+> *Amendment 5: v5's and v7's divisor dependence is CONFOUNDED with edge
+> phase.* The window centre moves **50-53 bp with the edge phase at every
+> divisor** -- the same magnitude as the whole divisor-driven variation from
+> div 1 to div 15. So the +0.50% two-point shift v5 recorded cannot be
+> attributed to the divisor by any two-point comparison at an uncontrolled
+> phase, and v5 was right to decline to assert the mechanism. v5's candidate
+> (`rx_sync`'s one-clock delay) is now measured by mutating it out: it moves
+> **20 of 37** committed window entries, so it is a genuine contributor and
+> **not** the whole of it. The committed slow 675 / fast 400 pair is itself
+> phase-specific -- reproduced exactly at half an oversample tick and at no
+> other of four phases.
+>
+> *Amendment 6: `0x40` and `0xC0` are no longer one question.* `0xC0` is
+> single-transition and is now **excluded** outright, not borderline. `0x40`
+> is multi-transition and **contained**, and it is the byte to watch: it needs
+> `p <= 1/7 = 0.1429` and the largest `p` measured anywhere here is `0.1233`
+> -- **14% of margin**. v7's 39 bp figure was for the `0xC0` of the pair and is
+> superseded for that byte.
+>
+> **What v9 does not change:** the law `1/(2*g_first)`, the exhaustive 256-byte
+> measurement behind it, the one-sidedness result for `g_first = 1`, the
+> disqualification of the fixed-period observer class, and v8's parity theorem
+> and 23-cell cross all stand as written. Source:
+> `examples/phase6_divisor_window/uart_divisor_window_tb.v`, log
+> `uart_divisor_window_2026-10-01.txt`, sensitivity
+> `mutation_report_divisor_window_2026-10-01.txt` (6 injected, 4 detected; the
+> two escapes are an inert-by-redundancy RTL constant and a stated
+> out-of-scope mutant).
+>
+> **Three of this revision's own pre-registered predictions were refuted and
+> are kept as failing checks in the suite** (A2a, P3, P5), so the bench's
+> expected result is `13/16 ... 3 failed` and its runner gates on exactly that
+> rather than on zero failures.
+
 > **v5 annotation (2026-09-27): F7's limits are a WIDTH and a CENTRE, not two
 > numbers.** Measured 8N1 windows, same unmodified RTL, two divisors:
 >
@@ -706,7 +814,7 @@ quick regression-planning view:
 | F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) — **v3: "corrupted parity" is unreachable in loopback; now driven at the pin** |
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
-| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**; **v8, 2026-09-30: the coverpoint is BUILT and v7's two clauses are INCOMPATIBLE as written -- `g_first` 8 and 9 are reachable only by the two excluded bytes, so the goal is 7/7 over the legal subset with those two as `illegal_bins` that RAISE rather than count; the transition-count coverpoint has 5 bins and not 10 by a parity theorem; the cross has 23 reachable cells of 35; and 1.56% of uniform frames, not 0.78%, are not clean F7 evidence once BORDERLINE is included**) |
+| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**; **v8, 2026-09-30: the coverpoint is BUILT and v7's two clauses are INCOMPATIBLE as written -- `g_first` 8 and 9 are reachable only by the two excluded bytes, so the goal is 7/7 over the legal subset with those two as `illegal_bins` that RAISE rather than count; the transition-count coverpoint has 5 bins and not 10 by a parity theorem; the cross has 23 reachable cells of 35; and 1.56% of uniform frames, not 0.78%, are not clean F7 evidence once BORDERLINE is included**; **v9, 2026-10-01: the containment test had been comparing a PER-BYTE observer limit against an AGGREGATE DUT window measured over a trial pair -- an intersection, so never wider than its members, so the substitution understates the DUT and errs only towards declaring the observer adequate; asked per byte, all NINE single-transition bytes `{0x00,0x80,0xC0,0xE0,0xF0,0xF8,0xFC,0xFE,0xFF}` are inadmissible and the admissible set is 247/256; the two-divisor experiment is closed negatively because the DUT's window WIDTH is exactly 1/9 at all 24 divisor-phase cases; and the window CENTRE is confounded with edge phase at 50-53 bp per divisor**) |
 | F7 Baud rate — coverage | ~~`cp_baud_div` corner bins~~ → ~~{0, ±2%, ±4%, beyond the limit}~~ → **five bands over the driven baud error × three-valued outcome, closure over the reachable cells only, coverage-driven steering required** (v4, 2026-09-26 — the four-band set does not partition the domain and its absolute edges disagree with the measured limit; see 2.7 v4 annotations) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
