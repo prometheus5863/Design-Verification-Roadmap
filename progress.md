@@ -618,9 +618,31 @@ measured rather than quietly dropped.
             gives a false failure. Fixed with a private `mktemp` log, an
             empty log counting as FAILURE, and exactly one `^RESULT:` line
             required. The verdict-vs-checking class at the OUTERMOST layer
-      - [ ] The tolerance window's WIDTH is divisor-invariant and its
-            CENTRE is not -- created 2026-09-27, and the most concrete
-            open experiment. 10.75% wide at both `BAUD_DIV=0` and
+      - [x] The tolerance window's WIDTH is divisor-invariant and its
+            CENTRE is not -- created 2026-09-27, **BUILT AND CLOSED
+            2026-10-01**, and both halves came out stronger than stated.
+            `examples/phase6_divisor_window/uart_divisor_window_tb.v`,
+            16 checks, 18483 frames, plain Verilog on Icarus: six
+            divisors (0,1,2,3,7,15) x four edge phases, 5 bp grid.
+            **The width is EXACTLY 1/9 = 1111.1 bp in all 24 cases**
+            (measured 1105-1110, bracketing it everywhere) and it moves
+            with neither the divisor nor the phase -- because the slow
+            limit is `(1/2+p)/span`, the fast limit is `(1/2-p)/span`,
+            and the sampling lateness `p` cancels from the sum. **And
+            that 1/9 is twice v6's `1/18` lock-once budget**, so the two
+            windows 09-28 called 11.00% and 11.10% are EQUAL and the
+            whole containment failure is displacement. The CENTRE,
+            conversely, moves **50-53 bp with the edge phase at every
+            divisor** -- the same size as the entire divisor-driven
+            variation from div 1 to div 15 -- so the +0.50% two-point
+            shift was confounded, and the committed slow 675 / fast 400
+            pair reproduces exactly at HALF AN OVERSAMPLE TICK and at no
+            other of four phases. Three of my own pre-registered
+            predictions were refuted (A2a, P3, P5) and are kept in the
+            suite as failing checks, so its expected result is
+            `13/16 ... 3 failed` and `run_divisor_window.sh` gates on
+            exactly that. ORIGINAL ITEM TEXT:
+      - [x] (as filed 2026-09-27) The most concrete open experiment. 10.75% wide at both `BAUD_DIV=0` and
             `BAUD_DIV=1`, identical to the basis point, with the whole
             window displaced +0.50%. Candidate mechanism: `rx_sync`'s
             one-clock delay is 1/32 of a bit at `BAUD_DIV=1` and 1/16 at
@@ -771,8 +793,19 @@ measured rather than quietly dropped.
             - Mutation report: 6 injected, **6 detected, 0 escaped**, each
               with a positive control on the mutation itself;
               `mutation_report_payload_coverage_2026-09-30.txt`
-      - [ ] `0x40` and `0xC0` are BORDERLINE, not passing -- created
-            2026-09-29, and it is a correction to the same day's own
+      - [x] `0x40` and `0xC0` are BORDERLINE, not passing -- created
+            2026-09-29, **CLOSED 2026-10-01 by splitting them**, which is
+            not the answer the item expected. `0xC0` is a
+            SINGLE-TRANSITION byte (`g_first = span = 7`) and is now
+            **excluded outright**, not borderline: its measured DUT slow
+            limit is 825 bp against the observer's 714. `0x40` is
+            multi-transition (`g_first = 7`, `span = 9`) and is
+            **contained**, measured 650 bp against 714. So the pair was
+            never one question. `0x40` is the new margin to watch: it
+            needs `p <= 1/7 = 0.1429` and the largest `p` measured
+            anywhere is `0.1233` -- 14% of headroom. The 39 bp figure was
+            for `0xC0` and is superseded for that byte. ORIGINAL TEXT:
+      - [x] (as filed 2026-09-29) A correction to the same day's own
             254/256 framing. `g_first = 7` gives a 7.143% window against
             the DUT's 6.75% slow limit: a margin of **39 bp**, while
             09-25 measured one oversample tick of initial edge phase
@@ -788,9 +821,29 @@ measured rather than quietly dropped.
             model without moving the simulation, and V6 -- the one check
             anchored to the committed simulation log -- is the only thing
             that would notice, so its sensitivity is untested
-      - [ ] The DUT's +1.38% window displacement needs a NEW candidate
-            mechanism -- created 2026-09-28 by Q1's success, and it
-            refutes the standing one. With the measurement path exonerated
+      - [x] The DUT's +1.38% window displacement needs a NEW candidate
+            mechanism -- created 2026-09-28 by Q1's success,
+            **ANSWERED 2026-10-01, and the answer is partly that the
+            quantity is not what it looked like.** (a) The +1.38% is not
+            a property of the DUT alone: the centre spans 87-137 bp over
+            four edge phases at `BAUD_DIV=0`, and +1.38% is the value at
+            one of them. (b) `rx_sync` is a REAL contributor and not the
+            whole: mutated out (a genuine combinational bypass, M3), it
+            moves **20 of 37** committed window entries. (c) The new
+            structural term is the **ninth oversample tick**:
+            `rx_mid = os_tick & (rx_os == 8)` fires on the NINTH tick
+            after `rx_os` is zeroed, not the eighth, which is +1/16 bit
+            of lateness that does not scale with the divisor. (d) My
+            pre-registered quantitative model built on that term is
+            nonetheless **FALSIFIED** -- the latency recovered from the
+            centre is non-monotone in the divisor and comes out negative
+            (P3), which is unphysical. So the mechanism is identified in
+            kind and NOT in magnitude, and that is where it is left.
+            ORIGINAL TEXT:
+      - [x] (as filed 2026-09-28) `rx_sync`'s one-clock delay is 1/16 of
+            a bit at `BAUD_DIV=0` = 6.25%, four and a half times the
+            measured 1.38%, so that candidate does not fit its own
+            magnitude. With the measurement path exonerated
             (the independent observer's window is centred at exactly zero),
             the displacement is the receiver's. But `rx_sync`'s one-clock
             delay is 1/16 of a bit at `BAUD_DIV=0` = 6.25%, four and a half
@@ -806,6 +859,55 @@ measured rather than quietly dropped.
             that dependence covered". Every fixed-period observer answers
             no to the second, which is the one case where the v6 form of
             the question was sufficient
+      - [ ] **v8's illegal-bin mechanism must raise on all NINE excluded
+            bytes, and its 7/7 `g_first` goal needs RE-DERIVING against a
+            nine-byte exclusion** -- created 2026-10-01 and **the new top
+            item**, because it is the one place where today's result
+            leaves a committed sign-off criterion arithmetically stale.
+            v8 derived a 7/7 goal over the legal subset from a TWO-byte
+            exclusion; with nine bytes excluded the reachable `g_first`
+            bins over the legal subset have to be re-enumerated, and the
+            703-draw closure run that proved the goal satisfiable has to
+            be re-run under the larger exclusion. Until then F7's
+            coverage goal and F7's admissibility rule disagree about
+            which bytes exist
+      - [ ] **Audit every containment claim in this repository for an
+            AGGREGATE on the contained side** -- created 2026-10-01 by
+            today's finding, and the general form of it. The error is
+            silent (an aggregate window is an ordinary number that is
+            simply the wrong one) and one-directional (intersecting over
+            a set shrinks the contained window, which flatters the
+            container), so it cannot be caught on the containing side at
+            all. Every `X contains Y` in the vplan and the benches needs
+            the question "what was Y measured over?" asked of it
+      - [ ] **Is `0x40` still contained at a receiver with more sampling
+            lateness?** -- created 2026-10-01. It needs `p <= 1/7` and
+            the worst `p` measured here is 0.1233 against 0.1429. The
+            ten-byte boundary is a property of the frame format only
+            while that inequality holds; one more oversample tick of
+            lateness moves `0x40` into the excluded set and the exclusion
+            stops being derivable from the payload alone
+      - [ ] **Two redundant encodings of the sample cadence, and only one
+            is load-bearing** -- created 2026-10-01 by the M2/M6 mutant
+            pair. Moving the `rx_edge` strobe from 15 ticks to 14 changes
+            NOTHING (0 of 37 entries); moving the `rx_os` wrap from 15 to
+            14 changes EVERYTHING (37 of 37). So the state machine's bit
+            boundary can move two ticks without moving one sampling
+            instant. Whether the redundancy should be removed in the RTL
+            or asserted as an invariant is open -- but a constant that
+            can be mutated with no observable effect is a constant no
+            test can be said to cover
+      - [ ] **Every mutant in this repository needs control B** -- created
+            2026-10-01, and it is a correction to the 09-30 rule rather
+            than an addition. 09-30 required a positive control that the
+            mutation ARRIVED, implemented as a grep for the INSERTED
+            text. This file's own first M3 passed that control while
+            being semantically inert, and was wrongly filed as a suite
+            weakness. Control B -- the REPLACED text must be ABSENT from
+            the mutant -- catches it instantly and is a property of the
+            diff rather than of the run. The existing mutation harnesses
+            (`phase4_ral`, `phase4_rtl_bringup`, `phase4_uvm_milestone`,
+            `phase6_bfm_equivalence`) have control A only
       - [ ] Apply the three-valued outcome axis to `phase6_crv_uart`'s
             crosses -- created 2026-09-26. Those 30 bins are all
             stimulus-side; today's cross shows the reachability structure
