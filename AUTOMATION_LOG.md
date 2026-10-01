@@ -4038,3 +4038,282 @@ accepts a `global` declaration that follows a use of the same name while
 **Commits this run:** 4 (the coverage model with its log and mutation report and
 the runner wiring; vplan v8; progress.md; this entry). The graphene repository
 took 5.
+
+## 2026-10-01 — The containment test had been comparing a per-byte limit against an aggregate, and the error only ever points one way
+
+**Status:** Automated session. **The 04:30 UTC firing did not reach the
+machine; this run is the 06:59 one**, and Step 0's already-ran check was clean:
+neither repository had a 2026-10-01 entry or a commit since midnight. Live web
+search **not used** — the work is a measurement on RTL already in the
+repository. **Icarus was needed** for the first time in three sessions, and
+`tools/setup_iverilog.sh` worked first time (see Automation health for the one
+real operational problem today, which was not the toolchain).
+
+**The top item since 2026-09-27 closes, negatively, and takes a committed
+figure with it.** That item was "the two-divisor 5 bp window measurement", and
+as of 09-30 it was the only thing standing between F7's admissible payload set
+at 252/256 and the hoped-for 254/256. The measurement is done at six divisors
+and four edge phases. 254/256 was never reachable — and **252/256 is itself an
+overcount. The right figure is 247/256.**
+
+### 1. `uart_divisor_window_tb.v` — 16 checks, 18483 frames, no cocotb
+
+`examples/phase6_divisor_window/uart_divisor_window_tb.v` with
+`uart_divisor_window_2026-10-01.txt` and a gated `run_divisor_window.sh`.
+Plain Verilog on Icarus — no cocotb, no uvm-python — reading the DUT through
+its own APB interface with `_probe`'s pass criterion and `_window`'s limit
+definition from `uart_uvm_tb.py` **verbatim**, so the two benches are
+comparable by construction rather than by resemblance. The pin is driven only
+by `bfm/uart_rx_pin_bfm.v`, per the 09-27 single-driver rule.
+
+Five predictions were written into the file's header **before it was first
+run**, derived from reading `rtl/uart_controller.v`. Three of them failed and
+**are left in the suite as failing checks**, so the expected result is
+`13/16 ... 3 failed` and the runner gates on exactly that tally rather than on
+zero failures. A suite whose failures are part of its result needs its result
+pinned, or the next change to it is invisible.
+
+### 2. P1 CONFIRMED exactly, and it collapses a 09-28 approximation
+
+**The DUT's window WIDTH is exactly 1/9 = 1111.1 bp in all 24 divisor-phase
+cases** (measured 1105–1110 bp, bracketing it in every one), and it moves with
+neither the divisor nor the edge phase. It cannot: the slow limit is
+`(1/2 + p)/span` and the fast limit is `(1/2 − p)/span`, so the sampling
+lateness `p` cancels out of the sum entirely. **The window has a size that is
+a property of the frame format and a position that is a property of the
+implementation, and nothing about the implementation touches the size.**
+
+And that size is one already on record. A lock-once-and-count observer has a
+budget of `1/18` each way (09-28 §4), hence a total width of `1/9` — **the same
+number**. 09-28 measured 11.00% against 11.10% and wrote that the observer's
+window is *wider*; they are **EQUAL**, and the entire containment failure is
+displacement. "Width is not containment" was right and weaker than the truth:
+here width is not even a difference.
+
+### 3. THE RESULT: the two sides of the test were measured over different sets
+
+v7 computed the observer's limit **per byte** — `1/(2*g_first)`, exhaustively
+over all 256 — and compared all 256 of them against **one** DUT number: slow
+675 bp, measured over the trial pair `{0x01, 0x80}`.
+
+**A pair window is an INTERSECTION over its bytes.** It is therefore never
+wider than any member, so substituting it for the byte's own DUT window
+**understates the DUT** — and an understated contained-set makes the containing
+set look adequate. The error has a known sign and it is the unsafe one. It
+fires: **in 16 of 24 divisor-phase cases the pair window says `0x80` is
+contained and `0x80`'s own window says it is not.**
+
+Asked per byte the arithmetic closes. With `g_first` the position of the FIRST
+transition in the framed stream `[0, d0..d7, 1]` and `span` the position of the
+LAST:
+
+```
+observer limit = (1/2) / g_first
+DUT slow limit = (1/2 + p) / span
+containment   <=>  span / g_first  >=  1 + 2p
+```
+
+The stream begins at 0 (start) and ends at 1 (stop), so **`span >= g_first`
+always**, with equality **exactly** for the nine single-transition bytes — and
+there containment needs `p <= 0`, which no receiver that samples after an edge
+can give. Measured at `BAUD_DIV=0`:
+
+| byte | g_first | span | observer | DUT slow | ratio |
+|---|---|---|---|---|---|
+| 0x00 | 9 | 9 | 555 | 650 | 1.171 |
+| 0x80 | 8 | 8 | 625 | 725 | 1.160 |
+| 0xC0 | 7 | 7 | 714 | 825 | 1.155 |
+| 0xE0 | 6 | 6 | 833 | 975 | 1.170 |
+| 0xF0 | 5 | 5 | 1000 | 1175 | 1.175 |
+| 0xF8 | 4 | 4 | 1250 | 1475 | 1.180 |
+| 0xFC | 3 | 3 | 1666 | 1975 | 1.185 |
+| 0xFE | 2 | 2 | 2500 | 2950 | 1.180 |
+| 0xFF | 1 | 1 | 5000 | 5925 | 1.185 |
+
+All nine **INADMISSIBLE**. The ratio is `1 + 2p`, constant to within the 25 bp
+grid across a **tenfold** range of limits — the single-parameter law tested nine
+times rather than asserted once. All four multi-transition controls (`0x40`,
+`0x55`, `0xAA`, `0x01`) stay admissible.
+
+**v7's two-byte figure is not withdrawn as a measurement.** It is exactly right
+about the two bytes whose own DUT limit happens to coincide with the pair
+window, which is precisely why those two and no others showed up. It was the
+comparison that was wrong, not the numbers. vplan **v9** carries the amendment
+in its own commit, as v4–v8 did.
+
+### 4. P3 and P5 FALSIFIED, and the centre's variable is not the divisor
+
+The detection latency recovered from the measured centre is 0.48, −0.49, −1.49,
+−0.40, −4.54, −4.48 clk at divisors 0, 1, 2, 3, 7, 15. **A negative latency is
+a detection that happens before the edge**, so the model is wrong and not merely
+imprecise; and the centre is not monotone in the divisor (102, 52, 35, 62, 30,
+50 bp at phase 0). The claimed 625 bp floor on the pair-measured slow limit
+fails too: measured minimum 565 bp.
+
+The diagnosis: **the centre moves 50–53 bp with the edge phase at EVERY
+divisor** — the same magnitude as the entire divisor-driven variation across the
+whole range measured (phase-averaged centre 112 bp at div 0 falling to 41 bp at
+div 15). So a two-point comparison between div 0 and div 1 at an uncontrolled
+phase cannot separate a divisor effect from a phase effect: the two confounds
+are the same size. **09-28's "+0.50% shift between BAUD_DIV 0 and 1" is
+numerically indistinguishable from the phase spread at a single divisor**, which
+is why it was right to file it as unsettled — and why one more divisor would not
+have settled it either.
+
+And the committed anchor is phase-specific. At div 0 on the 25 bp grid the four
+phases give (650,450), (625,450), (675,400), (675,425): **slow 675 / fast 400
+is reproduced EXACTLY at half an oversample tick and at no other phase.** It is
+one sample of a phase-dependent quantity, taken at a value of a variable nobody
+was controlling. The anchor is recovered — but only by naming the variable.
+
+### 5. Mutation report: 6 injected, 4 detected, and the harness was its own bug
+
+`mutation_report_divisor_window_2026-10-01.txt`.
+
+**M3 was inert and the 09-30 control passed it.** M3 was meant to bypass the RX
+synchroniser. Its first build appended a marker comment and rerouted only the
+read sites matching `rx_mid && rx_sync` — which does **not** include the
+start-DETECTION read `if (!rx_sync)`, the one place it was aimed at. The 09-30
+positive control read **PRESENT**, because the text had arrived. The suite
+reported the baseline tally with 0 of 37 golden entries moved, and that was
+filed as a weakness of the suite. **It was not. The mutant did nothing.**
+
+So **control B** was added: the text the mutation REPLACES must be ABSENT from
+the mutated source. It fails the old M3 instantly. Rebuilt as a real
+combinational bypass, M3 is detected and moves **20 of 37** entries — which also
+settles the physics: `rx_sync` is a genuine contributor to `p` and is **not**
+the whole of it, the same verdict the unmutated P3 reaches from the other side.
+
+**M2 escapes and it is correct that it does.** Moving the `rx_edge` strobe from
+15 ticks to 14 changes **nothing** (0 of 37). Moving the `rx_os` wrap from 15 to
+14 (M6) changes **everything** (37 of 37, including the `eps = 0` exactness
+check). So the sample cadence is set by the counter's own wrap and the `rx_edge`
+threshold is **redundant** with it: the state machine's bit boundary can move
+two ticks without moving one sampling instant. **A mutation of one of two
+redundant encodings of the same constant is invisible by construction**, and the
+pair is the only way to learn which is load-bearing. M4 escapes by design,
+stated in advance (no glitch stimulus here).
+
+**A8, the golden table over all 37 measured entries, was added because of this
+report and is the only numeric anchor in the file.** Every other check is an
+inequality or a bracket, and an inequality does not notice a change that stays
+inside it: beyond the three already-failing predictions, A8 is the *only* check
+that fires on M3.
+
+**Methodological note, continuing the series.** 09-24 the anchored comparison;
+09-25 the independent driver; 09-26 a freshly produced anchor; 09-27 the
+independent observer; 09-28 independence is not sufficient, the observer's
+window must contain the one it arbitrates; 09-29 the qualifying observer's
+window is a function of the stimulus; 09-30 so the coverage model and the
+admissibility constraint can be unsatisfiable together.
+**10-01: A CONTAINMENT CLAIM IS A CLAIM ABOUT TWO SETS, AND AN AGGREGATE
+STANDS IN FOR NEITHER.** Every entry in this series has been about making the
+*observer's* window honest. None of them noticed that the **other** window in
+the comparison was an aggregate — one pair-derived number used for all 256
+bytes, while the observer's side was computed per byte. The two sides of a
+containment test were measured over different sets, and the mismatch is silent,
+because an aggregate window is a perfectly ordinary number that is simply the
+wrong one. **It errs in one direction only:** intersecting over bytes shrinks
+the DUT's window, which flatters the observer. **An aggregate on the contained
+side of a containment claim is fail-unsafe by construction, and no amount of
+care on the containing side can detect it.** The interview form: *when you
+check that A contains B, say what B was measured over — and if it was measured
+over a set rather than over the item you are adjudicating, you have checked a
+different claim, and the error has a known sign.*
+**Corollary, and 09-30's inverted.** 09-30: the check most likely to be vacuous
+is the one whose passing you find reassuring. Today the three worst findings all
+came from a check that **FAILED** — A2a, the anchor against a committed number —
+and which on first reading was obviously the new bench's fault. **A failing
+anchor is the easiest failure in the world to attribute to the new instrument.**
+It was the old measurement that was underspecified.
+
+**Checks:** 16 in `uart_divisor_window_tb.v` (18483 frames), of which A1 is an
+exactness check at `eps = 0` over 96 cases, P1/P1b are measured-value-beside-
+derived-bound brackets over 24 cases each, A5 is a two-directional positive
+control on the trial mechanism itself, A7 is a 13-byte per-byte containment
+table with 4 controls required to stay admissible, and A8 is a 37-entry golden
+regression. 6 mutants injected, 4 detected, 2 escaped (one inert-by-redundancy
+RTL constant, one stated out-of-scope). **Three of my own pre-registered
+predictions were refuted and one of my own mutants was built inert**; all four
+are recorded rather than quietly corrected.
+
+**Not yet covered (candidates for future runs):**
+- **vplan v8's 7/7 `g_first` goal was derived from a TWO-byte exclusion and the
+  exclusion is now NINE** — created today and **the new top item**, because it is
+  the one place today's result leaves a committed sign-off criterion
+  arithmetically stale. The reachable `g_first` bins over the legal subset need
+  re-enumerating, and the 703-draw closure run that proved the goal satisfiable
+  needs re-running under the larger exclusion. Until then F7's coverage goal and
+  F7's admissibility rule disagree about which bytes exist
+- **Audit every containment claim in this repository for an AGGREGATE on the
+  contained side** — created today, and the general form of the finding. Silent,
+  one-directional, and undetectable from the containing side
+- **Is `0x40` still contained at a receiver with more sampling lateness?** —
+  created today. It needs `p <= 1/7 = 0.1429` and the worst `p` measured here is
+  `0.1233`: **14% of margin**. The nine-byte boundary is a property of the frame
+  format only while that inequality holds
+- **Two redundant encodings of the sample cadence, and only one is
+  load-bearing** — created today by the M2/M6 pair. A constant that can be
+  mutated with no observable effect is a constant no test can be said to cover
+- **Every mutant in this repository needs control B** — created today, a
+  correction to the 09-30 rule rather than an addition. The four existing
+  mutation harnesses have control A only
+- **Wire `PayloadAdmissibilityCoverage` into the live UVM coverage collector** —
+  created 09-30, untouched, and today widens it: the collector must now raise on
+  nine bytes, not two
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** — created
+  09-29, still not done
+- **Is the hardest-to-cover bin ALWAYS the inadmissible one?** — created 09-30,
+  untouched
+- **Audit the other benches' observers for CONTAINMENT and for
+  stimulus-dependence** — open since 09-28, widened 09-29 and 09-30, and widened
+  again today by the aggregate-side question
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** — open
+  since 09-26; **audit every remaining runner for the 09-27 "greps a file it did
+  not just write" pattern** — open, and today's `run_divisor_window.sh` was
+  written to the fixed pattern; **per-property coverage of the Phase 4 UVM
+  environment** — open since 09-23; a less greedy steering policy (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); widen the
+  coverage model (09-24); mutants not yet attempted (interrupt enable
+  combinations, the loopback mux, reset asserted mid-frame); a property that
+  needs a strengthening invariant; the SVA sequence layer (runnable on neither
+  tool here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep
+
+**Automation health.** Device reachable and folder connected, but **the 04:30
+firing did not land and the real problem today was the DEVICE'S NETWORK, not
+the toolchain.** `git clone` of either repository from inside `device_bash`
+**could not complete**: raw throughput to GitHub measured **~13 KB/s**
+(1.3 MB of tarball in 97 s), so a full clone exceeded the 180 s per-call shell
+limit repeatedly, and `nohup`'d background clones **do not survive between
+`device_bash` calls** — each call is a fresh shell and the children were reaped.
+A blobless `--no-checkout` clone finished in **3 seconds**, which locates the
+problem precisely: git protocol negotiation is fine and bulk packfile transfer
+is throttled. **So the session was restructured rather than abandoned**, and the
+new recipe is recorded here because it will be needed again:
+1. Clone and do all work in the **cloud sandbox** (2 s for both repositories).
+2. `git bundle create <f> <old_origin_main>..main` — 21 KB for this repo's work.
+3. Ship the bundle to the device with `device_commit_files` into
+   `C:\scheduled harsh\_transfer\`.
+4. On the device, `git clone --depth 1 --filter=blob:none --no-checkout` (3 s,
+   196 KB), `git fetch <bundle> refs/heads/main:refs/remotes/incoming/main`,
+   then `git push origin refs/remotes/incoming/main:refs/heads/main`.
+**Pushing from a shallow, blobless, no-checkout clone WORKS** — this was tested
+on the first commit before the rest of the session's work was done, precisely so
+that a broken push path would be found early rather than at the end. A push is a
+few KB, so 13 KB/s is no obstacle to it; only the clone was.
+The `GIT_ASKPASS` recipe ran from `$HOME/.sess/` per 09-28 and the 09-29
+correction (**`/tmp` may carry another session's files**), and the temp token
+copy was shredded. **Deviation from the 09-25 push-as-you-go rule, stated
+deliberately:** each push now costs a bundle, a file transfer and a device
+round-trip, so commits were made locally and pushed in one batch per repository
+at the end, then verified against the GitHub API rather than against git's own
+output. `user.name`/`user.email` were again absent in the fresh clones and set
+per 09-24. Icarus 10.3 installed first try; the 09-17 gotchas both applied and
+both were avoided (`setup_iverilog.sh` sourced without a pipe; `vvp` invoked as
+the real binary under `timeout`, not as the shell function).
+
+**Commits this run:** 5 (the bench with its log and gated runner; the mutation
+report; the study note; vplan v9; progress.md). This AUTOMATION_LOG.md entry
+makes 6. The graphene repository took its own.
