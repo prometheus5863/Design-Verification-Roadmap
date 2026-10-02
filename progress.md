@@ -859,18 +859,54 @@ measured rather than quietly dropped.
             that dependence covered". Every fixed-period observer answers
             no to the second, which is the one case where the v6 form of
             the question was sufficient
-      - [ ] **v8's illegal-bin mechanism must raise on all NINE excluded
-            bytes, and its 7/7 `g_first` goal needs RE-DERIVING against a
-            nine-byte exclusion** -- created 2026-10-01 and **the new top
-            item**, because it is the one place where today's result
-            leaves a committed sign-off criterion arithmetically stale.
-            v8 derived a 7/7 goal over the legal subset from a TWO-byte
-            exclusion; with nine bytes excluded the reachable `g_first`
-            bins over the legal subset have to be re-enumerated, and the
-            703-draw closure run that proved the goal satisfiable has to
-            be re-run under the larger exclusion. Until then F7's
-            coverage goal and F7's admissibility rule disagree about
-            which bytes exist
+      - [x] **The `g_first` / transition / cross goals RE-DERIVED against
+            the nine-byte exclusion (vplan v10, 2026-10-02)** -- the
+            2026-10-01 top item, done. `examples/phase4_uvm_milestone/
+            reachable_cross_under_per_byte_rule.py`, log
+            `reachable_cross_per_byte_rule_2026-10-02.txt`, 21 checks /
+            0 failed; sensitivity
+            `mutation_report_reachable_cross_2026-10-02.txt`, 9 of 9
+            mutants as required with control A **and control B**. The
+            nine are derived three independent ways and required to
+            agree (`span == g_first`, `transitions == 1`, and the closed
+            form `256 - 2^k`, the last being arithmetic rather than a
+            scan so it cannot share a scanning bug with the others), and
+            v8's committed 23-of-35 cross and **703-draw closure at seed
+            20260930 are reproduced EXACTLY** before any new number is
+            computed. Results: **the 7/7 `g_first` goal is UNCHANGED and
+            correct as committed**; the framed-transition goal is **4
+            bins, not 5** (the parity theorem still holds, but
+            `transitions == 1` is true for exactly the nine excluded
+            bytes, so the `1` bin has no legal witness and a 5-bin goal
+            would sit permanently at 80%); the cross is **16 reachable
+            cells of 28**; closure is **663 draws**, which is FASTER than
+            v8's 703 from seven FEWER legal bytes, because 7 of v8's 11
+            single-witness cells were themselves among the newly excluded
+            -- measured, not argued
+      - [ ] **The F7 cross cannot be closed without drawing `0x40`, and
+            `0x40` is BORDERLINE** -- created 2026-10-02 and **the new
+            top item**, because it is the first conflict between two
+            sign-off criteria rather than between a criterion and a
+            number. `0x40` is the sole witness of (`g_first` = 7,
+            transitions = 3), so closing F7's cross requires a frame
+            whose outcome is neither pass nor fail. Three ways out and
+            none is free: declare the cell excused (and say what the
+            coverage number then means), settle `0x40`'s status by
+            measuring `p` at more phases and divisors (it needs
+            `p <= 0.1429` against a worst measured 0.1233), or accept a
+            cross goal that is 15/16 by construction. The decision is a
+            vplan decision and has to be written down as one
+      - [ ] **`payload_coverage_model.py`'s `classify()` still implements
+            the TWO-byte rule** -- created 2026-10-02, and the live half
+            of the item just closed. The model raises `IllegalPayload` on
+            `0x00` and `0x80` and silently admits the other seven, so the
+            live coverage model and vplan v10 disagree about which
+            payloads may carry F7 evidence. Deliberately not touched in
+            the same session: that file carries roughly thirty committed
+            validations and several quote the superseded 0.78% figure, so
+            rewiring it means re-deriving those too. The exact set, the
+            exact goals and the closure evidence it needs are now
+            committed
       - [ ] **Audit every containment claim in this repository for an
             AGGREGATE on the contained side** -- created 2026-10-01 by
             today's finding, and the general form of it. The error is
