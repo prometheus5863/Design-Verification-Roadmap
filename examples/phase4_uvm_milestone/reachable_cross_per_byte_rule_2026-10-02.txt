@@ -1,0 +1,190 @@
+============================================================================
+F7 REACHABLE CROSS UNDER THE 2026-10-01 PER-BYTE RULE
+Re-deriving vplan v8's coverage goals under a nine-byte exclusion
+============================================================================
+
+----------------------------------------------------------------------------
+SECTION 1 -- the nine, derived three independent ways
+----------------------------------------------------------------------------
+  by geometry (span == g_first) : 0x00 0x80 0xC0 0xE0 0xF0 0xF8 0xFC 0xFE 0xFF
+  by transitions (count == 1)   : 0x00 0x80 0xC0 0xE0 0xF0 0xF8 0xFC 0xFE 0xFF
+  by closed form (256 - 2^k)    : 0x00 0x80 0xC0 0xE0 0xF0 0xF8 0xFC 0xFE 0xFF
+  [PASS] all three derivations give the same set
+        geometry^transitions = []
+        geometry^closed = []
+  [PASS] the set has nine members, so the admissible set is 247/256
+        |inadmissible| = 9, admissible = 247
+
+  per-byte table (g_first from the committed CSV, not re-typed):
+    byte   g_first  span   span/g    
+    0x00   9        9      1.0000    
+    0x80   8        8      1.0000    
+    0xC0   7        7      1.0000    
+    0xE0   6        6      1.0000    
+    0xF0   5        5      1.0000    
+    0xF8   4        4      1.0000    
+    0xFC   3        3      1.0000    
+    0xFE   2        2      1.0000    
+    0xFF   1        1      1.0000    
+  [PASS] the committed CSV's g_first agrees with the derivation on all nine
+        mismatched: []
+  [PASS] span/g_first is exactly 1 for every one of the nine
+        which is what collapses the containment inequality to p <= 0
+
+----------------------------------------------------------------------------
+SECTION 2 -- REGRESSION ANCHORS: reproduce v8's committed numbers
+----------------------------------------------------------------------------
+  the live model's exclusion (payload_coverage_model.classify): 0x00 0x80
+  reachable cells 23 of grid 35   g_first bins [1, 2, 3, 4, 5, 6, 7]   transition bins [1, 3, 5, 7, 9]
+  [PASS] reproduces v8's 23 reachable cells
+        got 23
+  [PASS] reproduces v8's 7x5 = 35 full grid
+        got 35
+  [PASS] reproduces v8's 5-bin transition coverpoint
+        got 5: [1, 3, 5, 7, 9]
+  [PASS] reproduces v8's 7/7 g_first goal
+        got 7: [1, 2, 3, 4, 5, 6, 7]
+  closure at seed 20260930: 703 draws over 254 legal bytes
+  [PASS] reproduces v8's 703-draw closure EXACTLY at the same seed
+        got 703 -- if this failed, the new numbers below would not be
+        comparable with the committed ones and nothing here would mean
+        anything
+
+----------------------------------------------------------------------------
+SECTION 3 -- THE RESULT: the goals under the nine-byte exclusion
+----------------------------------------------------------------------------
+                          v8 (2-byte)      v10 (9-byte)
+  legal bytes             254              247
+  reachable cross cells   23               16
+  full grid               35               28
+  g_first bins            [1, 2, 3, 4, 5, 6, 7] [1, 2, 3, 4, 5, 6, 7]
+  transition bins         [1, 3, 5, 7, 9]  [3, 5, 7, 9]
+
+  TWO committed goals move and one does not:
+   * the g_first goal STAYS 7/7 -- every bin 1..7 keeps a legal
+     witness, so v8's 7/7 survives the wider exclusion unchanged
+  [PASS] the g_first goal is unchanged at 7 bins
+        v8's 7/7 g_first criterion is CORRECT as committed and needs no amendment
+   * the TRANSITION-COUNT goal goes 5 bins -> 4.  v8 derived 5 bins
+     {1,3,5,7,9} from a parity theorem and that theorem is still
+     true -- but transitions == 1 holds for EXACTLY the nine
+     excluded bytes (Section 1's second derivation), so over the
+     legal subset the 1 bin has no witness at all.  A 5-bin goal
+     would now sit permanently at 80%.
+  [PASS] the transition-count goal is 4 bins, not v8's 5
+        got [3, 5, 7, 9]; the 1 bin is unreachable because {transitions == 1} is exactly
+        the excluded set, which v8 could not have known because its exclusion
+        was two bytes neither of which exhausted that bin
+   * the CROSS goal goes 23 cells -> 16, of a 28-cell grid
+     (a full-grid goal would report 57.1% at actual closure)
+  [PASS] the cross goal is 16 reachable cells
+        got 16
+
+----------------------------------------------------------------------------
+SECTION 4 -- is the goal still SATISFIABLE?  (the v8 question, re-asked)
+----------------------------------------------------------------------------
+  v8 checked this rather than assuming it, and the wider exclusion
+  re-opens it: an exclusion that removes a cell's only witness makes
+  the goal unreachable, which is worse than a stale number.
+  closure at seed 20260930: 663 draws over 247 legal bytes -> 16/16 cells
+  [PASS] the reduced cross still CLOSES under the nine-byte exclusion
+        663 draws
+  across seeds [1, 2, 3, 20260930, 20261002]: [387, 533, 459, 663, 404]
+    mean 489, min 387, max 663
+  [PASS] closure is seed-robust (every seed closes)
+        [387, 533, 459, 663, 404]
+
+  AND IT CLOSES FASTER THAN BEFORE, WHICH IS NOT THE OBVIOUS WAY
+  ROUND: 663 draws against v8's 703, with SEVEN FEWER legal bytes to
+  draw from.  The reason is in the witness counts below -- the seven
+  bytes the wider exclusion removed were themselves among the very
+  rarest witnesses, so excluding them deleted the hardest cells
+  rather than making the remaining ones harder to reach.
+  [PASS] tightening the exclusion did not make closure slower
+        663 draws (9-byte rule) vs 703 (2-byte rule) at the same seed
+
+----------------------------------------------------------------------------
+SECTION 5 -- single-witness cells, and which byte is now the hardest
+----------------------------------------------------------------------------
+  under v8's 2-byte rule: 11 of 23 cells had exactly ONE witness
+      g_first=1 transitions=1  <- 0xFF  <- excluded by the 9-byte rule
+      g_first=1 transitions=9  <- 0x55
+      g_first=2 transitions=1  <- 0xFE  <- excluded by the 9-byte rule
+      g_first=3 transitions=1  <- 0xFC  <- excluded by the 9-byte rule
+      g_first=3 transitions=7  <- 0x54
+      g_first=4 transitions=1  <- 0xF8  <- excluded by the 9-byte rule
+      g_first=5 transitions=1  <- 0xF0  <- excluded by the 9-byte rule
+      g_first=5 transitions=5  <- 0x50
+      g_first=6 transitions=1  <- 0xE0  <- excluded by the 9-byte rule
+      g_first=7 transitions=1  <- 0xC0  <- excluded by the 9-byte rule
+      g_first=7 transitions=3  <- 0x40
+  under the 9-byte rule: 4 of 16 cells have exactly ONE witness
+      g_first=1 transitions=9  <- 0x55   (ADMISSIBLE)
+      g_first=3 transitions=7  <- 0x54   (ADMISSIBLE)
+      g_first=5 transitions=5  <- 0x50   (ADMISSIBLE)
+      g_first=7 transitions=3  <- 0x40   (BORDERLINE)
+  [PASS] the wider exclusion removed 7 of v8's 11 single-witness cells
+        which is the whole explanation of Section 4's faster closure, and
+        it is measured here rather than asserted there
+
+  THE OPEN ITEM 'is the hardest-to-cover bin ALWAYS the
+  INADMISSIBLE one?' (09-30) gets a NEGATIVE and more specific
+  answer. Under the 9-byte rule NOT ONE single-witness cell is
+  inadmissible -- by construction, since an inadmissible byte is
+  not drawn at all. But one of the four is BORDERLINE:
+      0x40  g_first=7 span=9 -- the multi-transition byte with
+            the largest g_first, needing p <= 1/7 = 0.1429 against
+            a measured worst p of 0.1233: 14% of margin (10-01)
+  [PASS] exactly one single-witness cell is BORDERLINE
+        0x40 is the ONLY witness of its cross cell, so the F7 cross goal
+        CANNOT BE CLOSED WITHOUT DRAWING THE ONE BYTE WHOSE OUTCOME IS
+        NEITHER PASS NOR FAIL. A sign-off criterion that requires an
+        uninterpretable frame is a real finding about the goal, not about
+        the DUT -- and it is new today: under v8's rule this cell had the
+        same single witness, but v8 never asked which cells had one.
+
+----------------------------------------------------------------------------
+SECTION 6 -- controls
+----------------------------------------------------------------------------
+  with NO exclusion: 25 reachable cells, g_first bins [1, 2, 3, 4, 5, 6, 7, 8, 9], transition bins [1, 3, 5, 7, 9]
+  [PASS] C1 the enumerator responds to the exclusion (three sizes, three answers)
+        no exclusion 25, 2-byte 23, 9-byte 16
+  [PASS] C2 g_first bins 8 and 9 exist with no exclusion and not with one
+        they are reachable only by 0x80 and 0x00, as 09-30 recorded
+  [PASS] C3 the closed form is nine DISTINCT bytes
+  [PASS] C4 a goal containing the dead (g_first=1, transitions=1) cell does NOT close
+        5000 draws left it at 16/17 -- so the Section 4 closure is a real
+        measurement and not a loop that always terminates
+
+============================================================================
+SUMMARY
+============================================================================
+  F7 admissible set            247/256  (was 252/256)
+  g_first coverpoint goal      7 bins   UNCHANGED from v8
+  transition coverpoint goal   4 bins   was 5 -- the 1 bin is dead
+  cross goal                   16 cells  was 23, of a 28-cell grid
+  closure                      663 draws at seed 20260930, 387-663 across 5 seeds
+  single-witness cells         4, one of them BORDERLINE (0x40)
+  PASS  all three derivations give the same set
+  PASS  the set has nine members, so the admissible set is 247/256
+  PASS  the committed CSV's g_first agrees with the derivation on all nine
+  PASS  span/g_first is exactly 1 for every one of the nine
+  PASS  reproduces v8's 23 reachable cells
+  PASS  reproduces v8's 7x5 = 35 full grid
+  PASS  reproduces v8's 5-bin transition coverpoint
+  PASS  reproduces v8's 7/7 g_first goal
+  PASS  reproduces v8's 703-draw closure EXACTLY at the same seed
+  PASS  the g_first goal is unchanged at 7 bins
+  PASS  the transition-count goal is 4 bins, not v8's 5
+  PASS  the cross goal is 16 reachable cells
+  PASS  the reduced cross still CLOSES under the nine-byte exclusion
+  PASS  closure is seed-robust (every seed closes)
+  PASS  tightening the exclusion did not make closure slower
+  PASS  the wider exclusion removed 7 of v8's 11 single-witness cells
+  PASS  exactly one single-witness cell is BORDERLINE
+  PASS  C1 the enumerator responds to the exclusion (three sizes, three answers)
+  PASS  C2 g_first bins 8 and 9 exist with no exclusion and not with one
+  PASS  C3 the closed form is nine DISTINCT bytes
+  PASS  C4 a goal containing the dead (g_first=1, transitions=1) cell does NOT close
+
+TOTAL: 21 passed, 0 failed
