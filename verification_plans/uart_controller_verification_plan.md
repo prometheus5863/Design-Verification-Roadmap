@@ -24,6 +24,7 @@ strategy-tradeoffs.md`, Section 1, before any testbench (or DUT) code.
 | **v6** | **2026-09-28** | **An independent observer is necessary and NOT sufficient: F7's oracle must have a window that CONTAINS the DUT's, and width is not containment.** v5 forbade the clock-synchronous monitor as F7's oracle and required register-side checking. Both stand. What v5 did not say, and what building the independent observer showed, is that **making the observer independent does not by itself make it competent to arbitrate F7**. Measured on one sweep with four decoders (`examples/phase4_uvm_milestone/`, `test_uart_independent_observer`): the DUT's 8N1 window is 10.75% wide **centred at +1.38%**; an observer with its own timebase has a window 11.10% wide **centred at exactly +0.00%** — *wider*, and still not containing the DUT's, because the DUT's is displaced. There are **13 baud errors from +5.60% to +7.75% at which the DUT receives cleanly and the independent observer does not**, and a disagreement there is evidence about the observer. Two consequences for sign-off. (i) The observer's own window must be **measured and stated** alongside any F7 result, and must contain the DUT's claimed window with margin; an observer that locks once on the start edge and counts a nominal period has a budget of exactly **1/18 = 5.5556%** either side for 8N1 (the drift at the boundary preceding the last sampled bit — 9 bit periods, not the 9.5 where the sample sits), and that is **smaller than the DUT's slow limit**, so such an observer can never be sufficient at BAUD_DIV=0. (ii) Q1 of the same run **locates v5's centre offset in the DUT**: the independent observer's window is centred at exactly zero, so the displacement is the receiver's property and not the measurement path's. **Also new, and a requirement rather than a preference:** an edge-timestamp observer's per-frame margin is an exact function of the frame's **adjacent-bit transition pattern** — matched to a closed form to 0.0000 bit over 170 probes — so F7 coverage over byte VALUES cannot span the margin, and the transition-count coverpoint open since 2026-09-26 is now a sign-off dependency. **No v1–v5 text is deleted; every change is annotated in place.** |
 | **v7** | **2026-09-29** | **Containment is ACHIEVED and it is CONDITIONAL ON THE STIMULUS: F7 evidence may not be carried by payload bytes `0x00` or `0x80`, and an adaptive oracle owes a coverage model over whatever its adaptation depends on.** v6 required that F7's oracle contain the DUT's window and named the one design that could -- an observer that re-derives the bit period per frame. It was built (`test_uart_adaptive_observer`) and it does contain the DUT's window, so v6's requirement is met and the fixed-period disqualification stands unchanged. What is new, and what changes a sign-off criterion, is that **this observer does not have a window at all -- it has 256**. Its tolerance is `1/(2*g_first)` with `g_first = 1 + ctz(data)`, i.e. **set by the position of the lowest set bit in the payload and by nothing else in the byte**, ranging over 9x from 50% (`0x01`) to 5.56% (`0x00`). Measured exhaustively over all 256 bytes at 1 bp resolution (`examples/phase4_uvm_milestone/budget_law_exhaustive.py`, 256/256, with the pre-registered `g_max` law kept as a negative control that 166 bytes refute), so the two-byte exclusion below is a measurement over the whole input space and not an extrapolation from the nine frames the simulation ran. **Three consequences for sign-off.** (i) **`0x00` and `0x80` are excluded from carrying F7 evidence**: their windows (5.56%, 6.25%) do not contain the DUT's 6.75% slow limit, and a uniform random payload draws one of them in 0.78% of frames where a disagreement looks exactly like a DUT failure. (ii) **`0x40` and `0xC0` are BORDERLINE, not passing**: `g_first = 7` gives 7.143% against the DUT's 6.75%, a margin of **39 bp**, and 09-25 measured one oversample tick of initial edge phase moving a limit by 0.69% of eps -- larger than the margin. They may not be relied on until the DUT window's phase and divisor dependence is settled. (iii) **A new requirement, general rather than about UARTs: an instrument that derives its reference from the signal it measures makes the signal's content part of its own specification, so it owes a coverage model over whatever the adaptation depends on.** A `ctz(data)` coverpoint joins v6's adjacent-bit transition-count coverpoint as a sign-off dependency; the two are orthogonal -- `ctz` sets the budget, transition count sets the per-frame margin -- and neither is spanned by any coverage model over byte values or ranges. **Also corrected: a budget may not be quoted symmetrically without saying so.** The law is two-sided for `g_first >= 2` and one-sided for `g_first = 1`, where the fast side does not fail within the scanned +/-60% because the decode's `if dn < 1: dn = 1` clamp turns the only wrong value a fast first gap can round to back into the right one. **No v1-v6 text is deleted; every change is annotated in place.** |
 | **v9** | **2026-10-01** | **The admissible set is 247/256, not 252/256, and the two sides of the containment test had been measured over different sets.** v7 excluded `0x00` and `0x80` from carrying F7 evidence by comparing each byte's observer limit `1/(2*g_first)` against **one** DUT window -- slow 675 bp, measured over the trial pair `{0x01, 0x80}` at `BAUD_DIV=0` and at an edge phase nobody was controlling. F7 admissibility is a statement about **one byte**, so the window that must be contained is the DUT's window **for that byte**; a pair window is an **intersection** over its bytes and is therefore never wider than any member, so substituting it understates the DUT and **can only ever produce a false "contains"**. The error is fail-unsafe and it fires: in **16 of 24** divisor-phase cases the pair window admits `0x80` where `0x80`'s own window does not. Measured per byte (`examples/phase6_divisor_window/uart_divisor_window_tb.v`, 16 checks, 18483 frames, plain Verilog on Icarus): with `span` = the position of the **last** transition in the framed stream `[0, d0..d7, 1]` and `g_first` = the position of the **first**, containment needs `span/g_first >= 1 + 2p` where `p` is the receiver's sampling lateness in bit periods. Since the stream begins at 0 and ends at 1, `span >= g_first` **always**, with equality exactly for the **nine single-transition bytes** `{0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF}` -- and there containment needs `p <= 0`, which no receiver that samples after an edge can give. All nine measure INADMISSIBLE at `BAUD_DIV=0`, with DUT/observer ratio 1.155-1.185 across a tenfold range of limits; the four multi-transition controls stay admissible. **Three further corrections.** (i) **The two-divisor experiment is CLOSED and its answer is negative**: the DUT's window width is **exactly 1/9 = 1111.1 bp at every one of 24 divisor-phase cases**, divisor- and phase-independent, so no divisor relaxes anything and 254/256 was never reachable. (ii) **v5's and v7's "divisor dependence" is confounded**: the window centre moves **50-53 bp with the edge phase at every divisor**, the same magnitude as the entire divisor-driven variation from div 1 to div 15, so a two-point comparison at an uncontrolled phase cannot separate them -- and v5's candidate `rx_sync` mechanism, mutated out, moves only 20 of 37 measured entries, so it is a real contributor and not the whole of it. (iii) **The committed slow 675 / fast 400 is phase-specific**: it is reproduced EXACTLY at half an oversample tick and at no other of four phases, so it is one sample of a phase-dependent quantity and not a property of the DUT. **`0x40` is now the margin to watch**: it needs `p <= 1/7`, and the largest `p` measured anywhere is 0.1233 against that 0.1429 -- 14% of headroom. **No v1-v8 text is deleted; every change is annotated in place, and v7's two-byte figure is retained as exactly right about the two bytes whose own DUT limit coincides with the pair window.** |
+| **v10** | **2026-10-02** | **v9's own result left three F7 coverage goals stale, and re-deriving them puts a sign-off criterion in tension with F7's evidence rule on a single byte.** v9 widened the F7 exclusion from two bytes to nine and then wrote that v8's parity goal and 23-cell cross "stand as written"; both were derived over a 254-byte legal set that v9 had just made 247. Re-derived (`examples/phase4_uvm_milestone/reachable_cross_under_per_byte_rule.py`, 21 checks, 0 failed; mutation report 9 of 9 including control B), after first reproducing v8's committed 23-of-35 cross and its **703-draw closure at seed 20260930 exactly**, because a revision that cannot reproduce the numbers it revises is not comparable with them. **The `g_first` 7/7 goal is UNCHANGED and correct as committed** -- every bin 1..7 keeps a legal witness. **The framed-transition goal is 4 bins, not 5**: the parity theorem still holds, but `transitions == 1` is true for exactly the nine excluded bytes, so the `1` bin has no legal witness and a 5-bin goal would sit permanently at 80%. **The cross is 16 reachable cells of 28**, and a full-grid goal would report 57.1% at closure. **It still closes, and faster: 663 draws against 703, from seven FEWER legal bytes** (387-663 across five seeds, so neither figure is an expectation) -- measured, not argued: 7 of v8's 11 single-witness cells were among the newly excluded, all in the `transitions = 1` column, so the wider exclusion deleted the hardest cells rather than making the rest harder. **And the finding about the GOAL rather than a number: the cross cannot be closed without drawing `0x40`, which is BORDERLINE.** It is the sole witness of (`g_first` = 7, transitions = 3), so a sign-off criterion now requires a frame whose outcome is neither pass nor fail. This also answers 09-30's "is the hardest-to-cover bin always the inadmissible one?" -- **no, and it cannot be**: an inadmissible byte is never drawn, so no single-witness cell can be inadmissible; the hardest is borderline instead. **No measured number is withdrawn and no v1-v9 text is deleted; three DERIVED goals are restated over the set v9 established, annotated in place.** Still open: `payload_coverage_model.py`'s `classify()` implements the two-byte rule, so the live model and this plan disagree about which payloads may carry F7 evidence. |
 
 Template structure and the features -> checks -> coverage -> tests
 philosophy follow ChipVerify's seven-section vplan template and the
@@ -595,6 +596,10 @@ appearing in Section 5.
 > Positive control: a 0-start/0-stop frame gives even counts for all 256 bytes.
 > *Amendment: the transition-count goal is 5 bins; a 0..9 coverpoint would sit
 > permanently at 50%.*
+> **[v10, 2026-10-02: SUPERSEDED — 4 bins, not 5.** The parity theorem is
+> still true, but `transitions == 1` holds for exactly the nine bytes v9
+> excluded, so over the legal subset the `1` bin has no witness and a 5-bin
+> goal sits permanently at 80%. The 5 is kept: it is right over all 256.**]**
 >
 > **(e) The cross is not a grid.** `ctz` x transitions has **23 reachable cells
 > of 35**, enumerated over all 256 bytes rather than argued, because `g_first`
@@ -604,6 +609,12 @@ appearing in Section 5.
 > artefact rather than a derivation.* A constrained-random generator excluding
 > the illegal bytes closes all 23 in 703 draws, so the exclusion does not make
 > the goal unreachable -- checked, not assumed.
+> **[v10, 2026-10-02: SUPERSEDED — 16 reachable cells of 28, closing in 663
+> draws at the same seed.** Both numbers here are reproduced exactly by the
+> v10 re-derivation before it computes any new one, and both are correct over
+> the 254-byte legal set they were measured on; v9 made that set 247. The
+> closure got FASTER with seven fewer legal bytes, because 7 of the 11
+> single-witness cells were themselves among the newly excluded.**]**
 >
 > **What v8 does not change:** the law, the window, the 39 bp margin, the
 > one-sidedness result, and the borderline status of `0x40`/`0xC0` all stand as
@@ -729,6 +740,89 @@ appearing in Section 5.
 > expected result is `13/16 ... 3 failed` and its runner gates on exactly that
 > rather than on zero failures.
 
+> **v10 annotation (2026-10-02): v9 SAID v8's 5-BIN PARITY GOAL AND 23-CELL
+> CROSS "STAND AS WRITTEN". THEY DO NOT, AND v9's OWN RESULT IS WHY.** v9
+> widened the F7 exclusion from two bytes to nine and then explicitly carried
+> v8's coverage goals forward unchanged. Both were derived over a 254-byte
+> legal set and the legal set is now 247, so this is the one place v9's result
+> left a committed sign-off criterion arithmetically stale. Re-derived today.
+> Source: `examples/phase4_uvm_milestone/reachable_cross_under_per_byte_rule.py`,
+> log `reachable_cross_per_byte_rule_2026-10-02.txt` (21 checks, 0 failed),
+> sensitivity `mutation_report_reachable_cross_2026-10-02.txt` (9 of 9 mutants
+> behaved as required, control A and control B both present).
+>
+> The re-derivation reproduces v8's committed numbers **before** computing any
+> new one -- 23 reachable cells of a 7x5 = 35 grid, and closure in **703 draws
+> at seed 20260930, exactly** -- because a revision that cannot reproduce the
+> numbers it revises is not comparable with them. `g_first` is read from the
+> committed exhaustive-measurement CSV and the primitives are imported from
+> `payload_coverage_model.py` rather than re-typed, per the 09-24 rule.
+>
+> | F7 coverage goal | v8 (2-byte exclusion) | **v10 (9-byte)** |
+> |---|---|---|
+> | legal payloads | 254 | **247** |
+> | `g_first` coverpoint | 7 bins `{1..7}` | **7 bins `{1..7}` — unchanged** |
+> | framed-transition coverpoint | 5 bins `{1,3,5,7,9}` | **4 bins `{3,5,7,9}`** |
+> | `g_first` x transitions cross | 23 reachable of 35 | **16 reachable of 28** |
+> | closure (seed 20260930) | 703 draws | **663 draws** |
+>
+> *Amendment 1: the `g_first` 7/7 goal is CORRECT as committed and needs no
+> change.* Every bin 1..7 keeps a legal witness, so the wider exclusion does
+> not touch it. This is stated positively because v9's open item assumed it
+> would move.
+>
+> *Amendment 2: the framed-transition goal is 4 bins, not 5.* v8's parity
+> theorem is still true -- the framed stream begins at 0 and ends at 1, so the
+> transition count is necessarily odd -- but **`transitions == 1` holds for
+> EXACTLY the nine excluded bytes**, that being one of the three independent
+> derivations of the nine. So over the legal subset the `1` bin has no witness
+> at all, and a 5-bin goal would sit permanently at **80%**. v8 could not have
+> known: neither of its two excluded bytes exhausted that bin.
+>
+> *Amendment 3: the cross goal is 16 reachable cells of a 28-cell grid.* A
+> goal stated over the full grid would report **57.1%** at actual closure.
+>
+> *Amendment 4: the goal is still SATISFIABLE, and it closes FASTER than
+> before.* 663 draws against v8's 703, from **seven fewer** legal bytes, at the
+> same seed; 387-663 across five seeds, so neither figure is an expectation.
+> That is not the obvious direction and it is measured rather than argued: the
+> seven newly-excluded bytes were themselves **7 of v8's 11 single-witness
+> cells**, all of them in the `transitions = 1` column, so the wider exclusion
+> deleted the hardest cells instead of making the remaining ones harder.
+>
+> *Amendment 5, and the finding that is about the GOAL rather than about a
+> number:* **the F7 cross goal cannot be closed without drawing `0x40`, and
+> `0x40` is BORDERLINE.** Four single-witness cells remain -- `0x55`, `0x54`,
+> `0x50` and `0x40` -- and `0x40` is the sole witness of
+> (`g_first` = 7, transitions = 3). So a sign-off criterion requires a frame
+> whose outcome is neither pass nor fail: `0x40` is the multi-transition byte
+> with the largest `g_first`, needing `p <= 1/7 = 0.1429` against a measured
+> worst `p` of `0.1233` (v9, Amendment 6). **Closing F7's cross and keeping F7's
+> evidence clean are now in tension, and the tension is on one byte.** This also
+> answers the 09-30 open item *"is the hardest-to-cover bin always the
+> inadmissible one?"* -- **no**, and under this rule it cannot be: an
+> inadmissible byte is never drawn, so no single-witness cell can be
+> inadmissible. The hardest is borderline instead, which is a third answer
+> rather than a yes or a no.
+>
+> **What v10 does not change:** the law `1/(2*g_first)`, the exhaustive
+> 256-byte measurement, the per-byte containment rule and the nine-byte
+> exclusion itself, the one-sidedness result for `g_first = 1`, the parity
+> theorem as a theorem, and v9's divisor-window measurements all stand as
+> written. No measured number is withdrawn; three derived goals are restated
+> over the set that v9 established.
+>
+> **Still open after v10:** `payload_coverage_model.py`'s own `classify()` and
+> its `IllegalPayload` mechanism still implement the **two-byte** rule, so the
+> live coverage model raises on `0x00` and `0x80` and silently admits the other
+> seven. This revision deliberately does not touch it -- that file carries
+> roughly thirty committed validations and several quote the superseded 0.78%
+> figure, so rewiring it is its own session's work -- but the exact set, the
+> exact goals and the closure evidence it will need are now committed, and
+> until it is rewired **the live model and this plan disagree about which
+> payloads may carry F7 evidence.**
+
+
 > **v5 annotation (2026-09-27): F7's limits are a WIDTH and a CENTRE, not two
 > numbers.** Measured 8N1 windows, same unmodified RTL, two divisors:
 >
@@ -814,7 +908,7 @@ quick regression-planning view:
 | F4 Parity | CRV (common cases) + 2 directed (mode-switch, corrupted parity) — **v3: "corrupted parity" is unreachable in loopback; now driven at the pin** |
 | F5 TX FIFO | CRV + 1 directed (write-while-full) |
 | F6 RX FIFO/overrun | Directed (overrun sequence) |
-| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**; **v8, 2026-09-30: the coverpoint is BUILT and v7's two clauses are INCOMPATIBLE as written -- `g_first` 8 and 9 are reachable only by the two excluded bytes, so the goal is 7/7 over the legal subset with those two as `illegal_bins` that RAISE rather than count; the transition-count coverpoint has 5 bins and not 10 by a parity theorem; the cross has 23 reachable cells of 35; and 1.56% of uniform frames, not 0.78%, are not clean F7 evidence once BORDERLINE is included**; **v9, 2026-10-01: the containment test had been comparing a PER-BYTE observer limit against an AGGREGATE DUT window measured over a trial pair -- an intersection, so never wider than its members, so the substitution understates the DUT and errs only towards declaring the observer adequate; asked per byte, all NINE single-transition bytes `{0x00,0x80,0xC0,0xE0,0xF0,0xF8,0xFC,0xFE,0xFF}` are inadmissible and the admissible set is 247/256; the two-divisor experiment is closed negatively because the DUT's window WIDTH is exactly 1/9 at all 24 divisor-phase cases; and the window CENTRE is confounded with edge phase at 50-53 bp per divisor**) |
+| F7 Baud rate | ~~Directed (corner divisor values)~~ → **driven-pin receiver on an independent timebase** (v3, 2026-09-25; the directed TX-period check is retained as a necessary but insufficient companion — see 2.7 annotated); **v5, 2026-09-27: the OBSERVER must be independent too — the oracle is the driven byte against the `RX_DATA` read, never a clock-synchronous monitor's decode**; **v6, 2026-09-28: independence is necessary and NOT sufficient — an observer must state its own window and CONTAIN the DUT's, and a start-edge-locked observer's 1/18 = 5.5556% budget does not contain the DUT's 6.75% slow limit, so that whole class is disqualified by arithmetic**; **v7, 2026-09-29: containment ACHIEVED by the adaptive observer, and CONDITIONAL ON THE STIMULUS -- its window is `1/(2*(1+ctz(data)))`, measured over all 256 bytes, so `0x00` and `0x80` may not carry F7 evidence and `0x40`/`0xC0` are borderline at a 39 bp margin; a `ctz(data)` coverpoint becomes a sign-off dependency**; **v8, 2026-09-30: the coverpoint is BUILT and v7's two clauses are INCOMPATIBLE as written -- `g_first` 8 and 9 are reachable only by the two excluded bytes, so the goal is 7/7 over the legal subset with those two as `illegal_bins` that RAISE rather than count; the transition-count coverpoint has 5 bins and not 10 by a parity theorem; the cross has 23 reachable cells of 35; and 1.56% of uniform frames, not 0.78%, are not clean F7 evidence once BORDERLINE is included**; **v10, 2026-10-02: v9 widened the exclusion to nine bytes and carried v8's coverage goals forward unchanged, which left them stale -- re-derived over the 247-byte legal set the `g_first` 7/7 goal is UNCHANGED and correct, the transition-count goal is 4 bins not 5 (the `1` bin is reachable only by the nine excluded bytes), the cross is 16 reachable cells of 28, closure is 663 draws, and the cross CANNOT be closed without drawing `0x40` -- the one BORDERLINE byte -- because it is the sole witness of (`g_first`=7, transitions=3), so closing F7's cross and keeping F7's evidence clean are in tension on one byte**; **v9, 2026-10-01: the containment test had been comparing a PER-BYTE observer limit against an AGGREGATE DUT window measured over a trial pair -- an intersection, so never wider than its members, so the substitution understates the DUT and errs only towards declaring the observer adequate; asked per byte, all NINE single-transition bytes `{0x00,0x80,0xC0,0xE0,0xF0,0xF8,0xFC,0xFE,0xFF}` are inadmissible and the admissible set is 247/256; the two-divisor experiment is closed negatively because the DUT's window WIDTH is exactly 1/9 at all 24 divisor-phase cases; and the window CENTRE is confounded with edge phase at 50-53 bp per divisor**) |
 | F7 Baud rate — coverage | ~~`cp_baud_div` corner bins~~ → ~~{0, ±2%, ±4%, beyond the limit}~~ → **five bands over the driven baud error × three-valued outcome, closure over the reachable cells only, coverage-driven steering required** (v4, 2026-09-26 — the four-band set does not partition the domain and its absolute edges disagree with the measured limit; see 2.7 v4 annotations) |
 | F8 Interrupt | CDV (background scoreboard) + 1 directed (all-masked) |
 | F9 Loopback | CRV |
