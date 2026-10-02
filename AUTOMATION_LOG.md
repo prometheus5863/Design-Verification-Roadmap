@@ -4317,3 +4317,267 @@ the real binary under `timeout`, not as the shell function).
 **Commits this run:** 5 (the bench with its log and gated runner; the mutation
 report; the study note; vplan v9; progress.md). This AUTOMATION_LOG.md entry
 makes 6. The graphene repository took its own.
+
+## 2026-10-02 — The top item closes, and the goals it fixed now conflict with F7's own evidence rule on a single byte
+
+**Status:** Automated session, the **04:30 UTC firing** (the first time in three
+sessions that the earliest firing reached the machine). Step 0's already-ran
+check was clean: neither repository had a 2026-10-02 entry or a commit since
+midnight, cross-checked against the GitHub API's `pushed_at` while the clones
+were still running. Live web search **not used** — the work is a re-derivation
+over artefacts already committed here and adds no external citation. **Icarus
+was not needed**: the whole session is exhaustive arithmetic over 256 payload
+bytes in python3. See **Automation health** for the one real operational
+problem, which was again the device's network and worse than on 10-01.
+
+**The 10-01 top item closes.** That item was "vplan v8's 7/7 `g_first` goal was
+derived from a TWO-byte exclusion and the exclusion is now NINE". The precise
+sin is worth naming: **v9 widened the exclusion and then wrote that v8's
+"parity theorem and 23-cell cross all stand as written".** They do not, and
+v9's own result is why. Both were derived over a 254-byte legal set that v9 had
+just made 247.
+
+### 1. `reachable_cross_under_per_byte_rule.py` — 21 checks, 0 failed
+
+`examples/phase4_uvm_milestone/reachable_cross_under_per_byte_rule.py` with
+`reachable_cross_per_byte_rule_2026-10-02.txt`. Pure python3, no simulator.
+
+**The nine are derived three independent ways and required to agree:**
+`span == g_first` (the containment inequality degenerating to `p <= 0`),
+`transitions == 1`, and the closed form `256 - 2^k` for `k = 0..8`. The third
+is arithmetic rather than a scan, so it cannot share a scanning bug with the
+other two. `g_first` is read from the committed exhaustive-measurement CSV and
+the primitives (`framed_bits`, `transition_count`, `g_first_of`, `classify`)
+are **imported** from `payload_coverage_model.py` rather than re-typed, per the
+09-24 anchored-comparison rule.
+
+**Two regression anchors run BEFORE any new number is computed**, because a
+revision that cannot reproduce the numbers it revises is not comparable with
+them: **23 reachable cells of a 7x5 = 35 grid**, and **closure in 703 draws at
+seed 20260930**. Both reproduce **exactly**. This is 09-30's rule applied to a
+re-derivation — the failure that matters is "the new enumeration is not the old
+one with a bigger exclusion", and the place it enters is the enumerator.
+
+### 2. THE RESULT: three goals move, one is confirmed unchanged
+
+| F7 coverage goal | v8 (2-byte) | **v10 (9-byte)** |
+|---|---|---|
+| legal payloads | 254 | **247** |
+| `g_first` coverpoint | 7 bins `{1..7}` | **7 bins — UNCHANGED** |
+| framed-transition coverpoint | 5 bins `{1,3,5,7,9}` | **4 bins `{3,5,7,9}`** |
+| cross | 23 reachable of 35 | **16 reachable of 28** |
+| closure, seed 20260930 | 703 draws | **663 draws** |
+
+**The `g_first` 7/7 goal is correct as committed** — every bin 1..7 keeps a
+legal witness. Stated positively, because the open item assumed it would move
+and it did not.
+
+**The transition-count goal is 4 bins, not 5, and the reason is exact.** v8's
+parity theorem is untouched: the framed stream begins at 0 and ends at 1, so
+the transition count is necessarily odd. But **`transitions == 1` holds for
+EXACTLY the nine excluded bytes** — that is Section 1's second derivation of
+the nine — so over the legal subset the `1` bin has no witness at all and a
+5-bin goal would sit permanently at **80%**. v8 could not have known: neither
+of its two excluded bytes exhausted that bin. **The theorem is not withdrawn;
+the goal derived from it over the legal subset is.**
+
+**The cross is 16 reachable cells of 28.** A full-grid goal would report
+**57.1%** at actual closure.
+
+### 3. It still closes, and FASTER — which is not the obvious direction
+
+**663 draws against v8's 703, from seven FEWER legal bytes**, at the same seed;
+387–663 across five seeds, so neither figure is an expectation and v8's 703 was
+a single-seed number presented as a result.
+
+The explanation is measured rather than asserted: **7 of v8's 11 single-witness
+cells were themselves among the newly excluded bytes**, all of them in the
+`transitions = 1` column. So the wider exclusion **deleted the hardest cells
+instead of making the remaining ones harder**. A tighter admissibility rule
+made the coverage goal cheaper to close, and that is a fact about where the
+rare witnesses were, not a coincidence.
+
+### 4. THE NEW TOP ITEM: two sign-off criteria now conflict, on one byte
+
+Four single-witness cells remain — `0x55`, `0x54`, `0x50` and **`0x40`** — and
+`0x40` is the sole witness of (`g_first` = 7, transitions = 3). **`0x40` is
+BORDERLINE.** So:
+
+> **The F7 cross goal cannot be closed without drawing the one byte whose
+> outcome is neither pass nor fail.**
+
+This is the first finding here that is a conflict between **two criteria**
+rather than between a criterion and a number. Closing F7's cross and keeping
+F7's evidence clean now pull against each other, and the whole tension sits on
+one byte — the multi-transition byte with the largest `g_first`, needing
+`p <= 1/7 = 0.1429` against a worst measured `p` of `0.1233`, which is 10-01's
+14%-of-margin byte. Three ways out and none is free: excuse the cell and say
+what the coverage number then means, settle `0x40` by measuring `p` at more
+phases and divisors, or accept a cross goal that is 15/16 by construction. It
+is a vplan decision and has to be written down as one.
+
+**And it answers the 09-30 item "is the hardest-to-cover bin ALWAYS the
+INADMISSIBLE one?" — no, and structurally rather than incidentally.** Under
+this rule *no* single-witness cell can be inadmissible, because an inadmissible
+byte is never drawn and so can never be a witness of anything. The hardest is
+**borderline** instead. A third answer rather than a yes or a no.
+
+### 5. Mutation testing, with control B — and a mutant of my own that escaped correctly
+
+`mutation_report_reachable_cross_2026-10-02.txt`: **9 of 9 mutants behaved as
+required.** Control A: the unmutated suite is 21/21, so a detection means
+something. Six defects detected (`span_of` collapsed to `g_first`, the closed
+form inverted, the single-transition test moved to `== 3`, the exclusion
+ignored, closure giving up after one draw, the closure seed perturbed).
+
+**Control B is present, which the 10-01 list asks for repository-wide** ("every
+mutant in this repository needs control B — the four existing mutation
+harnesses have control A only"): a semantics-preserving edit, renaming a local
+loop variable, must leave the suite passing. It does. Without it a harness that
+failed on *any* edit would score 6/6 and its detections would say nothing about
+*which* edit.
+
+**M6's first form was mis-specified and escaped, correctly.** It weakened the
+703-draw anchor to `n_old is not None` and required detection. **But a weakened
+assertion still holds on correct input**, so no self-run can catch it: running
+the suite tests the measurement against the assertion, and that mutant changes
+the assertion. Recorded rather than deleted, and replaced by a compound form
+that tests what it was reaching for — **M6a** weakens the anchor alone and must
+survive; **M6b** weakens the anchor *and* perturbs the measurement it guards
+and must **also** survive, which is exactly what makes the weakening dangerous
+rather than untidy; **M6c** perturbs the same measurement with the anchor intact
+and must be detected. Only the three together establish that the anchor's
+strictness is load-bearing.
+
+**The same fault form turned up in the graphene repository the same day**, in
+that session's control C2 — a control built from the wrong quantity. Two
+independent instances in one day in two repositories is worth naming as a class
+rather than twice as an accident.
+
+**Methodological note, continuing the series.** 09-26: an illegal bin can fire
+against correct RTL. 09-27: a runner that greps a file it did not just write is
+not a gate. 09-28: width is not containment. 09-29: an oracle's competence can
+be a function of the stimulus. 09-30: two sign-off clauses can be individually
+true and jointly impossible. 10-01: a containment claim is a claim about two
+sets, and an aggregate on the contained side errs only one way.
+**10-02: AND WHEN A RULE CHANGES, EVERY NUMBER DERIVED FROM IT IS STALE UNTIL
+RE-DERIVED — INCLUDING THE ONES THE SAME SESSION DECLARED UNCHANGED.** v9 did
+the hard part correctly: it found a fail-unsafe comparison, replaced it with a
+per-byte rule, and widened the exclusion from two bytes to nine. Then it listed
+what its result did *not* change, and put v8's parity goal and 23-cell cross on
+that list. Both were arithmetic over the very set it had just resized. **A
+"what this does not change" paragraph is a derivation like any other and needs
+checking like one** — it is the most dangerous paragraph in a revision, because
+it is written in the voice of restraint and reads as the careful part.
+**The second thread:** §4's conflict was reachable from v8's own data — `0x40`
+was already a single-witness cell under the two-byte rule — and v8 never found
+it because it asked *how many* cells are reachable and never *how many bytes
+reach each one*. The cardinality question was one line away from the fragility
+question for two sessions. A coverage goal's cost is not its cell count; it is
+the witness count of its scarcest cell, and nothing here had ever computed that.
+
+**Validations:** re-derivation 21/21, including three independent derivations
+of the nine required to agree, the committed CSV's `g_first` required to agree
+with the derivation on all nine, both regression anchors (23-of-35 and the
+703-draw closure at seed 20260930, both exact), and four controls — the
+enumerator must respond to its exclusion (three sizes, three answers:
+25/23/16), `g_first` bins 8 and 9 must appear only with no exclusion, the
+closed form must be nine distinct bytes, and **a goal containing the now-dead
+`(g_first=1, transitions=1)` cell must NOT close** (5000 draws leave it at
+16/17), so Section 4's closure is a measurement and not a loop that always
+terminates. Mutation report 9/9 with control A and control B. **One fault of my
+own is recorded rather than quietly corrected:** M6's first form was
+mis-specified (§5).
+
+**Not yet covered (candidates for future runs):**
+- **The F7 cross cannot be closed without drawing `0x40`, and `0x40` is
+  BORDERLINE** — created today and **the new top item**, because it is the
+  first conflict between two sign-off criteria rather than between a criterion
+  and a number, and because all three ways out change what a coverage number
+  means
+- **`payload_coverage_model.py`'s `classify()` still implements the TWO-byte
+  rule** — created today, the live half of the item that just closed. The model
+  raises on `0x00` and `0x80` and silently admits the other seven, so the live
+  coverage model and vplan v10 disagree about which payloads may carry F7
+  evidence. Deliberately untouched today: that file carries ~30 committed
+  validations and several quote the superseded 0.78% figure. The exact set,
+  goals and closure evidence it needs are now committed
+- **Compute the WITNESS COUNT of every coverage bin in this repository, not
+  just the reachable-cell count** — created today by §4's second thread. The
+  `0x40` conflict was reachable from v8's own data and was missed because
+  nobody asked how many bytes reach each cell. Every coverage model here
+  reports cardinality and none reports scarcity
+- **Audit every "what this does not change" paragraph in the vplan** — created
+  today, and the general form of the day's finding. v10 contains one of its own
+  and it has had no more checking than v9's did
+- **Audit every containment claim in this repository for an AGGREGATE on the
+  contained side** — created 10-01, untouched. Silent, one-directional, and
+  undetectable from the containing side
+- **Is `0x40` still contained at a receiver with more sampling lateness?** —
+  created 10-01, and today makes it sharper rather than closing it: `0x40` is
+  now load-bearing for a *coverage goal* as well as for the exclusion's
+  derivability, so one more oversample tick of lateness costs both
+- **Two redundant encodings of the sample cadence, and only one is
+  load-bearing** — created 10-01 by the M2/M6 pair, untouched
+- **Control B for the FOUR OLDER mutation harnesses** — created 10-01 as "every
+  mutant in this repository needs control B"; today's new harness has one and
+  the four older ones still do not, so the item is **narrowed rather than
+  closed**
+- **Wire `PayloadAdmissibilityCoverage` into the live UVM coverage collector** —
+  created 09-30, untouched; the collector must raise on nine bytes, and after
+  today it must also use the 4-bin transition goal and the 16-cell cross
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** — created
+  09-29, still not done
+- **Audit the other benches' observers for CONTAINMENT and for
+  stimulus-dependence** — open since 09-28, widened 09-29, 09-30 and 10-01
+- **The UVM environment against the UART RTL** — the register-bus agent, the
+  serial agent with its standalone RX bit-driver, the reference-model
+  scoreboard and the coverage collector. Open since the 09-17 bring-up
+  unblocked it, and **untouched for twelve consecutive sessions** while the
+  measurement work ran ahead of it. Worth saying plainly: Phase 4's stated
+  milestone is this, and the sessions have been doing Phase 6 measurement
+  instead. RAL basics, virtual sequencers, active/passive agents and
+  constrained-random UART stimulus all sit behind it
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** (09-26);
+  **audit every remaining runner for the 09-27 "greps a file it did not just
+  write" pattern**; **per-property coverage of the Phase 4 UVM environment**
+  (09-23); a less greedy steering policy (09-24); two transmitters at once
+  (09-25); `abc pdr` as a second engine (09-23); widen the coverage model
+  (09-24); mutants not yet attempted (interrupt enable combinations, the
+  loopback mux, reset asserted mid-frame); a property that needs a
+  strengthening invariant; the SVA sequence layer (runnable on neither tool
+  here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep
+
+**Automation health.** Device reachable and folder connected, and the 04:30
+firing landed for the first time in three sessions. **The device's network was
+again the only real operational problem, and worse than on 10-01:** throughput
+to GitHub from inside `device_bash` measured **9.3 KB/s** (1.34 MB of tarball
+in 143 s) against 13 KB/s on 10-01, and a bare `api.github.com` request took
+**11.5 s**. `git clone` could not complete inside the 180 s shell limit at
+either full depth or `--depth 20`, and `nohup`'d background clones were
+**re-tested and again did not survive between `device_bash` calls** — each call
+is a fresh shell and the children are reaped. The 10-01 recipe was used
+unchanged and worked unchanged: clone and work in the cloud sandbox, `git
+bundle create <old_origin_main>..main`, ship the bundle to
+`C:\scheduled harsh\_transfer\` with `device_commit_files`, then on the device
+`git clone --depth 1 --filter=blob:none --no-checkout` (**3.8 s**, confirming
+10-01's diagnosis that protocol negotiation is fine and only bulk packfile
+transfer is throttled), fetch the bundle into `refs/remotes/incoming/main` and
+push that. **The push path was tested on the graphene repository FIRST, before
+this session's work began**, per 10-01's reasoning that a broken push should be
+found early rather than at the end: it took 78 s for ~900 KB and was verified
+against the GitHub API rather than against git's own output. The `GIT_ASKPASS`
+recipe ran from `$HOME/.sess/` per 09-28 and the 09-29 correction (`/tmp` may
+carry another session's files), the token was never written into `.git/config`,
+a remote URL, any repository file or the connected folder, and the temp copy
+was shredded. `user.name`/`user.email` were again absent in the fresh clones
+and set per 09-24. **Deviation from the 09-25 push-as-you-go rule, stated
+deliberately and for the second session running:** each push now costs a
+bundle, a file transfer and a device round-trip, so commits were made locally
+and pushed in one batch per repository.
+
+**Commits this run:** 5 (the re-derivation with its log; the mutation harness
+with its report; vplan v10; progress.md). This AUTOMATION_LOG.md entry makes 6.
+The graphene repository took its own 8.
