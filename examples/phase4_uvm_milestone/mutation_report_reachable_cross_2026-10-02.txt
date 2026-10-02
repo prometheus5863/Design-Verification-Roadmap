@@ -1,0 +1,35 @@
+============================================================================
+MUTATION TEST -- reachable_cross_under_per_byte_rule.py  2026-10-02
+============================================================================
+
+CONTROL A -- the unmutated suite
+  21 passed, 0 failed   
+  [PASS] control A: a detection below means something only if this passes
+
+MUTANTS
+----------------------------------------------------------------------------
+  M1 span_of returns g_first, collapsing the nine to all 256 DETECTED (correct)
+        ZeroDivisionError: float division by zero
+  M2 closed form uses 2^k instead of 256 - 2^k               DETECTED (correct)
+        tally: 20 passed, 1 failed
+  M3 the single-transition test becomes == 3                 DETECTED (correct)
+        tally: 20 passed, 1 failed
+  M4 reachable_cross ignores the exclusion it is given       DETECTED (correct)
+        TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+  M5 closure gives up after one draw                         DETECTED (correct)
+        TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+  M6a weaken the 703 anchor alone -- must SURVIVE, because a SURVIVED (correct -- control B)
+        tally: 21 passed, 0 failed
+  M6b weaken the anchor AND perturb the measurement -- must  SURVIVED (correct -- control B)
+        tally: 21 passed, 0 failed
+  M6c perturb the measurement with the anchor INTACT -- must DETECTED (correct)
+        tally: 20 passed, 1 failed
+  CONTROL B -- semantics-preserving: rename a local loop var SURVIVED (correct -- control B)
+        tally: 21 passed, 0 failed
+----------------------------------------------------------------------------
+  9 of 9 mutants behaved as required
+  Six mutants must be DETECTED, three must SURVIVE: the
+  semantics-preserving rename (the 10-01 control-B requirement) and
+  M6a/M6b, which together with M6c show that the 703 anchor's
+  strictness is load-bearing and cannot be tested by a self-run
+  that only weakens it.
