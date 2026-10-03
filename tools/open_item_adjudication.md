@@ -11,8 +11,15 @@ and no cut on it would be defensible as "stale". Keeping the judgement on disk
 with reasons makes it auditable; deriving it from a threshold would make it
 reproducible and arbitrary.
 
-**Last adjudicated: 2026-10-03.** Ranking at that date: 0.606, 0.600, 0.500,
-0.400, 0.308, 0.286 for the six items below.
+**Last adjudicated: 2026-10-03**, twice. The first pass ranked against the
+10-02 list (0.606, 0.600, 0.500, 0.400, 0.308, 0.286); appending this
+session's own list changed the head, so it was re-adjudicated against the
+10-03 list (0.375, 0.333, 0.286, 0.235, 0.222, 0.222). **That is a property of
+the design, not an accident: the adjudication is pinned to a ranking, and the
+ranking moves when the list does, so a new list and a refreshed adjudication
+belong in the same commit.** Note also that the whole ranking fell — the
+highest score dropped from 0.606 to 0.375 once the stale item left the list,
+which is the clearest single piece of evidence that it was the outlier.
 
 ---
 
@@ -114,3 +121,28 @@ than aged.
 **Score 0.286, rank 6. Verdict: OPEN.** Created 10-02 as the general form of
 that session's finding. v10 contains such a paragraph of its own and it has had
 no more checking than v9's did.
+
+## OPEN: The four unchecked capstone boxes as newly disambiguated — constrained-random stimulus inside the UVM environment, SVA checkers bound into it, the coverage wiring, the methodology summary
+
+**Rank 2 on the 10-03 list, score 0.333. Verdict: OPEN.** Created today as the
+named successor to the retired item. It scores high for the obvious reason —
+it quotes the completed Phase 4 milestone in order to say what it is *not* —
+which is a second, benign false-positive mode for the ranker, distinct from
+rank 2 of the first pass: that one shared vocabulary by accident, this one
+shares it on purpose. Both are reasons the verdict is not derived from the
+score.
+
+The substantive sub-item is **(a)**: `examples/phase6_crv_uart/` implements
+constrained-random, coverage-driven UART stimulus in plain Verilog-2001 and has
+never been driven from a UVM sequence. That is an integration task against
+existing, measured machinery rather than new study, which makes it the most
+actionable thing on the list.
+
+## OPEN: Apply the three-valued outcome axis to phase6_crv_uart's crosses, and audit every remaining runner for the "greps a file it did not just write" pattern
+
+**Rank 6 on the 10-03 list, score 0.222. Verdict: OPEN.** A compound bullet
+carrying several items from 09-23 through 09-27. It enters the adjudicated head
+only because the list shortened by one, and nothing in it has been touched.
+Flagged for a future session to **split**: a compound bullet cannot be
+adjudicated as a unit, and S3 scores it as one, so its individual members are
+invisible to the ranking.

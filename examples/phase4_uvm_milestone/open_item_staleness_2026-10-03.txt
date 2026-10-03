@@ -2,7 +2,7 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 20 "Not yet covered" lists; the most recent has 13 items
+  AUTOMATION_LOG.md: 21 "Not yet covered" lists; the most recent has 15 items
   progress.md: 30 completed checkboxes, 4 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
@@ -10,7 +10,7 @@ consistent with the file that records what is finished?  (2026-10-03)
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 2   resolved: 2   unresolved: 0
+  paths named: 4   resolved: 4   unresolved: 0
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
   [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
@@ -18,7 +18,7 @@ S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
 S2 -- every "created <date>" parses and is not in the future
 ------------------------------------------------------------------------------
-  dates found: 6   ok: 6   bad: 0
+  dates found: 10   ok: 10   bad: 0
   [PASS] no open item carries an unparseable or future creation date
 
 ------------------------------------------------------------------------------
@@ -28,16 +28,16 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
   COMPLETED checkbox also contains.  A RANKING, not a verdict.
 
     score  open item
-    0.606  - The UVM environment against the UART RTL — the register-bus agent, the serial agent ...  <-- adjudicate
-    0.600  - Control B for the FOUR OLDER mutation harnesses — created 10-01 as "every mutant in ...  <-- adjudicate
-    0.500  - A mutant on budget_law_exhaustive.py's own stimulus generator — created 09-29, still...  <-- adjudicate
-    0.400  - The F7 cross cannot be closed without drawing 0x40, and 0x40 is BORDERLINE — created...  <-- adjudicate
-    0.308  - Wire PayloadAdmissibilityCoverage into the live UVM coverage collector — created 09-...  <-- adjudicate
-    0.286  - Audit every "what this does not change" paragraph in the vplan — created today, and ...  <-- adjudicate
-    0.233  - payload_coverage_model.py's classify() still implements the TWO-byte rule — created ...
-    0.218  - Apply the three-valued outcome axis to phase6_crv_uart's crosses (09-26); audit ever...
-    0.182  - Audit every containment claim in this repository for an AGGREGATE on the contained s...
-    0.174  - Compute the WITNESS COUNT of every coverage bin in this repository, not just the rea...
+    0.375  - The F7 cross cannot be closed without drawing 0x40, and 0x40 is BORDERLINE — created...  <-- adjudicate
+    0.333  - The four -   capstone boxes as newly disambiguated — (a) constrained-random stimulus...  <-- adjudicate
+    0.286  - Audit every "what this does not change" paragraph in the vplan — created 10-02, adju...  <-- adjudicate
+    0.235  - Wire PayloadAdmissibilityCoverage into the live UartCoverage collector — created 09-...  <-- adjudicate
+    0.222  - A mutant on budget_law_exhaustive.py's own stimulus generator — created 09-29, adjud...  <-- adjudicate
+    0.222  - Apply the three-valued outcome axis to phase6_crv_uart's crosses (09-26); audit ever...  <-- adjudicate
+    0.217  - Run the staleness audit against the GRAPHENE repository's open-items list — created ...
+    0.200  - Compute the WITNESS COUNT of every coverage bin, not just the reachable-cell count —...
+    0.200  - Audit every containment claim for an AGGREGATE on the contained side — created 10-01...
+    0.167  - Is 0x40 still contained at a receiver with more sampling lateness? — created 10-01; ...
 
   top match for the highest-ranked item:
     - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
@@ -45,17 +45,17 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
-  adjudication entries on disk: 6
-    STALE   - The UVM environment against the UART RTL — the register-bu...
-    OPEN    - Control B for the FOUR OLDER mutation harnesses — created ...
-    OPEN    - A mutant on budget_law_exhaustive.py's own stimulus genera...
+  adjudication entries on disk: 8
     OPEN    - The F7 cross cannot be closed without drawing 0x40, and 0x...
-    OPEN    - Wire PayloadAdmissibilityCoverage into the live UVM covera...
+    OPEN    - The four -   capstone boxes as newly disambiguated — (a) c...
     OPEN    - Audit every "what this does not change" paragraph in the v...
+    OPEN    - Wire PayloadAdmissibilityCoverage into the live UartCovera...
+    OPEN    - A mutant on budget_law_exhaustive.py's own stimulus genera...
+    OPEN    - Apply the three-valued outcome axis to phase6_crv_uart's c...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
-  [PASS] the adjudication file contains no entry that no longer matches any top-ranked item
+  [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
   [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
-  verdicts: 1 STALE, 5 OPEN
+  verdicts: 1 STALE, 7 OPEN
 
 ------------------------------------------------------------------------------
 S5 -- controls on the ranker, and its mutation test

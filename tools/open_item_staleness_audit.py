@@ -240,7 +240,7 @@ def s3_rank(items, done_blocks):
     return ranked
 
 
-def s4_adjudication(ranked, cut):
+def s4_adjudication(ranked, cut, all_items=None):
     """
     The committed judgement.  Format: one '## <verdict>: <quoted phrase>'
     heading per adjudicated item, verdict in {STALE, OPEN}, followed by a
@@ -261,14 +261,28 @@ def s4_adjudication(ranked, cut):
                 matched = verdict
                 break
         (covered if matched else uncovered).append((first_line(it, 60), matched))
+    # Orphan detection matches against EVERY item in the list, not just the
+    # head.  An OPEN entry that has merely dropped below the cut is not an
+    # orphan -- its item is still queued, it just is not one of the six the
+    # session must judge.  The first form of this check compared against the
+    # head only and reported a correctly-adjudicated OPEN item as an orphan
+    # the moment the list reordered; that is a check whose verdict depends on
+    # a ranking position rather than on existence.
+    pool = all_items if all_items is not None else [it for _s, it, _w in ranked]
     used = set()
-    for score, it, _w in head:
+    for it in pool:
         ti = tokens(it)
         for i, (verdict, phrase) in enumerate(entries):
             tp = tokens(phrase)
             if tp and len(tp & ti) / float(len(tp)) >= 0.75:
                 used.add(i)
-    extra = [entries[i][1] for i in range(len(entries)) if i not in used]
+    # An ORPHAN is an entry that matches no top-ranked item.  For a STALE
+    # verdict that is CORRECT and permanent: the item was retired from the
+    # list, so of course it no longer ranks -- and the entry is the audit
+    # trail, which must not be deleted to keep a check green.  Only a
+    # lingering OPEN entry is an orphan worth reporting.
+    extra = [entries[i][1] for i in range(len(entries))
+             if i not in used and entries[i][0] == 'OPEN']
     return entries, covered, uncovered, extra
 
 
@@ -399,7 +413,8 @@ def main():
     print('\n' + '-' * 78)
     print('S4 -- the committed adjudication of the top %d' % REPORTING_CUT)
     print('-' * 78)
-    entries, covered, uncovered, extra = s4_adjudication(ranked, REPORTING_CUT)
+    entries, covered, uncovered, extra = s4_adjudication(ranked, REPORTING_CUT,
+                                                        all_items=items)
     print('  adjudication entries on disk: %d' % len(entries))
     for txt, verdict in covered:
         print('    %-7s %s' % (verdict, txt))
@@ -409,8 +424,9 @@ def main():
         print('    ORPHAN  %s' % first_line(e, 70))
     report(not uncovered, 'every item at or above the reporting cut is '
                           'adjudicated on disk, with a reason')
-    report(not extra, 'the adjudication file contains no entry that no longer '
-                      'matches any top-ranked item')
+    report(not extra, 'no OPEN adjudication entry has lost its item from the '
+                      'list entirely (a STALE entry losing its item is the '
+                      'audit trail working, not an orphan)')
     # A STALE verdict retires the only text pointing at a piece of work, so
     # it must say what inherits it.  Without this, an audit of the list that
     # chooses the work can itself delete work -- which is the "repair built
