@@ -65,6 +65,8 @@ SECTION 2 -- REGRESSION ANCHORS: reproduce what v8 and v10 committed
         got 16
   [PASS] reproduces 10-02's no-exclusion control (25 cells)
         got 25
+  [PASS] every closure measured below actually CLOSED within the cap
+        a non-closing run returns None; the cap is 200000 draws
   [PASS] reproduces v8's 703-draw closure at seed 20260930
         got 703
   [PASS] reproduces v10's 663-draw closure at seed 20260930
@@ -287,6 +289,7 @@ SUMMARY
   PASS  reproduces v8's 23 reachable cross cells
   PASS  reproduces v10's 16 reachable cross cells
   PASS  reproduces 10-02's no-exclusion control (25 cells)
+  PASS  every closure measured below actually CLOSED within the cap
   PASS  reproduces v8's 703-draw closure at seed 20260930
   PASS  reproduces v10's 663-draw closure at seed 20260930
   PASS  reproduces 10-02's single-witness cell counts (11 of 23, 4 of 16)
@@ -311,4 +314,4 @@ SUMMARY
   PASS  C5 scarcity and soundness are measured SEPARATELY, not aliased
   PASS  C6 W3's merged cross really loses a cell rather than renaming one
 
-TOTAL: 45 passed, 0 failed
+TOTAL: 46 passed, 0 failed

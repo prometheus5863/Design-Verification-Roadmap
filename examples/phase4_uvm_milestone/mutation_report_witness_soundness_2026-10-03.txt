@@ -1,0 +1,64 @@
+============================================================================
+MUTATION TEST -- witness_soundness.py
+============================================================================
+  a mutant marked DETECT must make the suite FAIL (non-zero exit).
+  a mutant marked SURVIVE must leave it PASSING.
+
+  [PASS] A    expect SURVIVE -> survived | TOTAL: 46 passed, 0 failed
+         control A: no edit at all -- the suite must pass unmutated
+
+  [PASS] B    expect SURVIVE -> survived | TOTAL: 46 passed, 0 failed
+         control B: semantics-preserving -- rename a local loop variable in w
+         itnesses()
+
+  [PASS] M1   expect DETECT  -> detected | TOTAL: 41 passed, 5 failed
+         unsound() tests EMPTINESS instead of admissibility -- the exact conf
+         usion the finding is about
+
+  [PASS] M2   expect DETECT  -> detected | TOTAL: 28 passed, 18 failed
+         soundness() counts BORDERLINE as admissible -- bin 7 would read soun
+         d
+
+  [PASS] M3   expect DETECT  -> detected | TOTAL: 44 passed, 2 failed
+         scarce() looks for two witnesses instead of one
+
+  [PASS] M4   expect DETECT  -> detected | TOTAL: 42 passed, 4 failed
+         CAP6 caps at 7, so W3 merges nothing and cannot equal W1
+
+  [PASS] M5   expect DETECT  -> detected | TOTAL: 34 passed, 12 failed
+         the partition identity is compared against 256 rather than the legal
+          set, so it stops being an identity under any exclusion
+
+  [PASS] M6   expect DETECT  -> detected | TOTAL: 17 passed, 29 failed
+         witnesses() ignores its exclusion argument -- every anchor and contr
+         ol that depends on the exclusion must break
+
+  [PASS] M7   expect DETECT  -> detected | TOTAL: 42 passed, 7 failed
+         closure_draws() computes `need` over all 256 bytes rather than the l
+         egal set, so it waits for bins that cannot be drawn
+
+  [PASS] M8a  expect SURVIVE -> survived | TOTAL: 46 passed, 0 failed
+         weaken C3's threshold ALONE (7 of 7 unsound -> at least one unsound)
+         . A weakened assertion still holds on correct input, so this MUST su
+         rvive; requiring detection here would be the 10-02 M6 mis-specificat
+         ion
+
+  [PASS] M8b  expect SURVIVE -> survived | TOTAL: 46 passed, 0 failed
+         weaken C3's threshold AND perturb what it guards: allbord now marks 
+         only 0x40 borderline. MUST ALSO SURVIVE -- and that is the finding: 
+         the weakened check cannot see a classifier override that no longer o
+         verrides, so C3 would stop being a negative control while still prin
+         ting PASS
+
+  [PASS] M8c  expect DETECT  -> detected | TOTAL: 45 passed, 1 failed
+         perturb the same quantity with C3's threshold INTACT -- must be dete
+         cted, which is what proves the threshold was load-bearing all along
+
+============================================================================
+TOTAL: 12 of 12 mutants behaved as required
+  control A present: the unmutated suite passes, so a detection means
+                     something
+  control B present: a semantics-preserving edit leaves it passing, so
+                     a detection says something about WHICH edit
+  M8a/M8b/M8c: the 10-02 compound form for a weakened assertion, in
+               that form from the start rather than after an escape

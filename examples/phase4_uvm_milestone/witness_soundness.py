@@ -244,6 +244,14 @@ def main():
           "got %d" % len(xr0))
     d8 = closure_draws(two, x_bin(IDENT), CLOSURE_SEED)
     d10 = closure_draws(nine, x_bin(IDENT), CLOSURE_SEED)
+    # Found by mutation testing (M7, 2026-10-03): a closure that never closes
+    # returns None, and the sections below then crash on it.  A crash IS a
+    # detection, but a weaker one than a failed check -- it depends on a later
+    # arithmetic accident rather than on an assertion, so any change in control
+    # flow could mask it.  Asserted here so the defect is caught by design.
+    check("every closure measured below actually CLOSED within the cap",
+          d8 is not None and d10 is not None,
+          "a non-closing run returns None; the cap is %d draws" % CLOSURE_CAP)
     check("reproduces v8's 703-draw closure at seed %d" % CLOSURE_SEED, d8 == V8_DRAWS,
           "got %s" % d8)
     check("reproduces v10's 663-draw closure at seed %d" % CLOSURE_SEED, d10 == V10_DRAWS,
@@ -428,6 +436,11 @@ def main():
     for name in ("W0 status quo", "W1 exclude 0x40", "W3 merge to 6+"):
         _, _, _, _, _, _, excl, gmap = res[name]
         s = [closure_draws(excl, x_bin(gmap), sd) for sd in SWEEP_SEEDS]
+        if any(v is None for v in s):
+            check("the %s sweep closed at every seed" % name, False,
+                  "%d of %d seeds did not close within %d draws"
+                  % (sum(1 for v in s if v is None), len(s), CLOSURE_CAP))
+            s = [v for v in s if v is not None] or [CLOSURE_CAP]
         sweeps[name] = s
         print("    %-17s mean %4.0f  median %4.0f  min %4d  max %4d"
               % (name, statistics.mean(s), statistics.median(s), min(s), max(s)))
