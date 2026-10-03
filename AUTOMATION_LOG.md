@@ -4845,3 +4845,386 @@ cheap pre-check had no latency to hide.
 successor requirement; the `progress.md` disambiguation; the notes; the two
 self-corrections of §7 with the re-adjudication). This AUTOMATION_LOG.md entry
 makes 6. The graphene repository took its own 7.
+
+## 2026-10-03 — A coverage bin needs an ADMISSIBLE witness, and of v10's five amendments the only one declared to need no change is the one that is unsound
+
+**Status:** Automated session, the **04:30 UTC firing**. Step 0's already-ran
+check was **not** clean and the session was shortened accordingly: the graphene
+repository already carried a 2026-10-03 entry and nine commits timestamped
+04:21–04:26 UTC, so an earlier firing had completed that half of the day's work
+and this session did **only** the Design-Verification work, per the
+one-repo-missing branch of Step 0. Live web search **not used** — the work is a
+re-measurement over artefacts already committed here and adds no external
+citation. **Icarus was not needed**: exhaustive arithmetic over 256 payload
+bytes in python3. The device's network was **dramatically better than on 10-01
+or 10-02** and the bundle workaround was not needed; see **Automation health**.
+
+**THIS IS THE SECOND 2026-10-03 ENTRY IN THIS FILE, AND THAT IS A RACE, NOT A
+DOUBLE SESSION.** Two firings ran concurrently. Step 0's check was clean for
+this repository when it ran — the clone completed at 04:34 UTC and carried no
+2026-10-03 entry and no commit since midnight — and the other session pushed
+its six commits at **04:35:54**, after that check and while this session's work
+was in progress. The collision surfaced only at push time, as a
+non-fast-forward. **Neither body of work was discarded and nothing was
+force-pushed:** the other session's thread (an audit of the open-items list
+itself) and this one's (F7 coverage-bin soundness) are disjoint in substance,
+four of this session's five commits rebased without conflict, and the only
+conflict was this file, resolved by keeping **both** entries in push order. The
+honest reading of Step 0 is that it guards against a *sequential* re-run and
+cannot guard against a *simultaneous* one, since its evidence is a clone taken
+before the other session's push existed. **A cheap fix exists and is filed
+below as an open item:** re-check `origin/main` immediately before pushing and
+treat a non-fast-forward as a signal to integrate rather than as an error — this
+session did that by hand.
+
+**AND THE OTHER SESSION'S FINDING LANDS ON THIS ENTRY'S OWN OPEN-ITEMS LIST.**
+Its audit found that the list has been advertising a *finished* milestone as the
+clear next step for twelve entries, rank 1 being "the UVM environment against
+the UART RTL … untouched for twelve consecutive sessions". This entry's list was
+drafted carrying that item forward with the count incremented to thirteen,
+**uninspected, exactly as the twelve entries before it did** — the bullet below
+is corrected against their evidence rather than left standing. It is an
+uncomfortable but useful coincidence: their finding was that nobody checks the
+queue before picking from it, and the concurrently-written entry proves it by
+example.
+
+**The 10-02 top item closes, and two of the three things it asserted were
+wrong.** That item was *"the F7 cross cannot be closed without drawing `0x40`,
+and `0x40` is BORDERLINE"*, filed as the first conflict between two sign-off
+criteria rather than between a criterion and a number — **created that day**,
+affecting **one cell of one coverpoint**, with **three ways out**. The
+re-measurement (`examples/phase4_uvm_milestone/witness_soundness.py`, 46 checks
+/ 0 failed) keeps the conflict and overturns its scope, its age and its
+options.
+
+### 1. The second axis: a bin needs a witness, and it needs an ADMISSIBLE one
+
+10-02's own closing item asks for the witness **count** of every bin in this
+repository, cardinality having proved insufficient. It is insufficient in a
+second way too:
+
+| predicate | definition | what it governs |
+|---|---|---|
+| `scarce(bin)` | exactly one witness | the **cost** of closing it |
+| `evidence_unsound(bin)` | **no** witness is `ADMISSIBLE` | whether closing it **means** anything |
+
+A scarce bin is expensive. An **evidence-unsound** bin cannot be closed by an
+interpretable frame *at all* — every byte that reaches it is a byte whose own
+F7 outcome is neither pass nor fail. **The two are independent**, and this data
+populates three of the four quadrants, so neither predicate can be inferred
+from the other: the framed-transition coverpoint's bin 9 is **scarce and
+perfectly sound** (sole witness `0x55`, ADMISSIBLE), `g_first` bin 7 is
+**scarce and unsound**, and transition bin 3 is **abundant and sound** (84
+witnesses, 83 admissible). So **10-02's witness-count audit would not have
+found what this one found** — they are two separate audits, not one in two
+forms.
+
+The fourth quadrant, abundant-and-unsound, is **empty here and is not claimed
+impossible**. It needs a bin all of whose many witnesses are borderline, and
+this population has only two borderline bytes. A DUT with a wider borderline
+band would have one, **and then no scarcity scan at any threshold would find
+it** — which is the reason the generalisation stays open as its own item rather
+than folding into the witness-count one.
+
+### 2. One byte, but TWO coverpoints — and it is v10's *unchanged* goal
+
+`0x40` is the sole legal witness of **`g_first` bin 7** as well as of cross cell
+(`g_first` = 7, transitions = 3). So 10-02's "the cross cannot be closed
+without `0x40`" understates it: **no 7-bin `g_first` goal can be closed by an
+interpretable frame either.**
+
+That goal is v10's **Amendment 1**, and of v10's five amendments it is the only
+one declared *"CORRECT as committed and needs no change"* — stated positively
+and deliberately, because v9's open item had assumed it would move. **Its
+cardinality claim is exactly right.** Section 3 reproduces it as a PASS: every
+bin 1..7 does keep a legal witness. And the sign-off conclusion does not follow
+from it. Both checks pass at once, and **that is the shape of the finding** —
+not a contradiction of v10 but a demonstration that it tested the wrong one of
+two requirements. **A coverpoint goal is a claim about evidence, not about
+non-emptiness.**
+
+### 3. The defect dates from v8, not from v9's exclusion
+
+Over **all 256 bytes**, `g_first` bin 7 is reached only by `0x40` and `0xC0` —
+and **v7 recorded both as borderline on 09-29**. So the bin has never had an
+admissible witness under *any* exclusion this plan has used, including none at
+all. **The 7/7 goal was evidence-unsound on 09-30, the day the coverpoint was
+written.**
+
+What the nine-byte rule did was remove `0xC0`, turning a two-witness unsound
+bin into a **one-witness** unsound bin — and that is the *only* reason a
+scarcity scan now sees it. 10-02 had just started measuring scarcity, saw the
+scarcity, and read it as a conflict the exclusion had created. It is an old
+conflict the exclusion made **visible**. This matters beyond bookkeeping: **the
+fix does not belong in the nine-byte exclusion's ledger of costs**, and v9 was
+being charged for it.
+
+And the evidence was already on the page. 10-02's own Section 5 printed both
+unsound cells — `(7,1) <- 0xC0` and `(7,3) <- 0x40` — and even annotated the
+first as *"excluded by the 9-byte rule"*. The bytes were in front of it; the
+question *"does this cell have an **admissible** witness"* was not asked. **This
+is 10-02's own lesson recurring one file later.**
+
+### 4. Soundness subsumes the exclusion rule itself
+
+With no exclusion, the unsound `g_first` bins are `{7, 8, 9}`: bins 8 and 9 by a
+single **INADMISSIBLE** witness each (`0x80`, `0x00`), bin 7 by two
+**BORDERLINE** ones. **Bins 8 and 9 are exactly what v8 removed by hand as
+`illegal_bins`.**
+
+So the nine-byte exclusion is the special case of this audit that handles
+inadmissible witnesses, and **bin 7 is the case it cannot reach, because a
+borderline byte is legal to draw.** An audit written on soundness would have
+produced v8's `illegal_bins` *and* bin 7 in one pass. This is the strongest
+available evidence that the instrument measures a real property rather than one
+invented to fit `0x40` — it re-derives a hand-made rule as a corollary. It also
+names the gap: **`illegal_bins` gives the inadmissible case a mechanism and the
+borderline case has none**, which is why bin 7 stayed invisible for four
+revisions while the mechanism for its sibling bins worked exactly as designed.
+
+### 5. Four ways out, and two of them change nothing a reader can see
+
+10-02 said three ways out, none free, all changing what a coverage number
+means. There are four, and the sharper result is that **two are
+indistinguishable from every number this plan reports**:
+
+| option | `g_first` | transitions | cross | unsound | `0x40` driven? |
+|---|---|---|---|---|---|
+| **W0** status quo (v10) | 7 bins | 4 bins | 16 of 28 | **2** | yes, and counted |
+| **W1** exclude `0x40` | **6 bins** | 4 bins | **15 of 24** | 0 | **no** |
+| **W2** admit borderline evidence | 7 bins | 4 bins | 16 of 28 | **2** | yes, and counted |
+| **W3** merge `g_first` 7 into `6+` | **6 bins** | 4 bins | **15 of 24** | 0 | **yes** |
+| **W4** split the oracle, not the bin | 7 bins | 4 bins | 16 of 28 | 0\* | yes |
+
+**W1 and W3 are numerically identical in every figure**, and a **40-seed
+closure sweep does not separate them either** — W1 faster on 22 of 40 seeds,
+means 499 against 421, ranges overlapping almost entirely. **So no number in
+this verification plan distinguishes a plan that still drives `0x40` from one
+that does not. Only the stimulus log does**, and the plan must therefore *name*
+its option, because the coverage report cannot carry that information. They are
+not the same decision: W1 buys a clean number by giving up DUT exercise at the
+byte with the largest `g_first`; W3 gives up a coverage *distinction* and keeps
+the exercise.
+
+**W1 also costs a `g_first` bin, 7/7 → 6/6** — the consequence v10 could not
+see, having concluded that goal needed no amendment and so never asking what
+excluding `0x40` would do to it. **W2 changes no count at all, and that is
+precisely its cost:** the report reads 100% either way while **1 of 16 cross
+cells (6.2%) and 1 of 7 `g_first` bins (14.3%)** rest on an uninterpretable
+frame. **W4** — drive `0x40`, credit the bin, and exclude that one frame from
+F7's *timing* oracle while keeping it under F1's data-integrity oracle — is the
+only option preserving a 7-bin goal; not computed (the asterisk) because it
+needs an oracle change rather than a goal change, and its cost is that "F7 cross
+16/16" would mean two different things in two cells.
+
+**W3 is recommended and FLAGGED FOR SIGN-OFF RATHER THAN APPLIED.** The
+derivation is committed and is not a matter of taste; the *choice* changes a
+committed sign-off criterion, so v11 leaves it for review and **records
+explicitly that until it is decided F7's goal is W0, with two evidence-unsound
+bins** — which was previously implicit. A **new general criterion** is proposed
+alongside: *every coverage bin must have at least one admissible witness, and a
+bin that does not is reported as unsound rather than as covered.*
+
+### 6. A correction of this session's own, recorded rather than quietly fixed
+
+At seed 20260930, W1 closes in **151** draws against W0's **663** — a 4.4×
+speedup, and **it is not one.** Over 40 seeds W1's mean is **499** against W0's
+**473**: removing the single hardest cell did not measurably speed up closure.
+Recorded because the one-seed figure is exactly what a revision would be tempted
+to quote — and because **v10's own `703 → 663` "closes faster" headline rests on
+the same single seed.** v10 hedged it correctly ("387–663 across five seeds, so
+neither figure is an expectation"); this is the measurement behind that hedge,
+and it supports the hedge rather than the headline.
+
+### 7. Mutation testing, and a mutant that improved the suite rather than confirming it
+
+`mutation_report_witness_soundness_2026-10-03.txt`: **12 of 12 mutants behaved
+as required.** Control A: the unmutated suite is 46/46. **Control B is present
+from the start** (a semantics-preserving local-variable rename must leave the
+suite passing), as the 10-01 list requires repository-wide. Seven defects
+detected, each aimed at the confusion the instrument exists to avoid — chiefly
+`unsound()` testing emptiness instead of admissibility, and `soundness()`
+counting BORDERLINE as admissible, which would make bin 7 read sound.
+
+**The compound form was carried forward rather than rediscovered.** 10-02's M6
+weakened an assertion, required detection, and escaped correctly, because a
+weakened assertion still holds on correct input. M8 is in the three-part form
+from the start: **M8a** weakens a threshold alone and must survive; **M8b**
+weakens it *and* perturbs what it guards — an all-BORDERLINE negative control
+that no longer overrides — and must **also** survive, which is the point, since
+that is a real defect the weakened suite cannot see while still printing PASS;
+**M8c** perturbs the same quantity with the threshold intact and must be
+detected. All three behaved as specified.
+
+**And M7 found a real weakness in the suite, not just in the mutant.** On its
+first run M7 was detected only by an unhandled `TypeError`: `closure_draws()`
+returns `None` when it cannot close within the cap, and a later section crashed
+doing arithmetic on it. **A crash is a detection, but a weaker one than a failed
+check** — it rests on an arithmetic accident downstream rather than on an
+assertion, so any change in control flow could mask it. Two guards were added
+and M7 is now detected by **7 failing checks** instead of a stack trace. The
+harness did not merely confirm the suite; it improved it. Suite 45/45 → 46/46.
+
+**Methodological note, continuing the series.** 09-26: an illegal bin can fire
+against correct RTL. 09-27: a runner that greps a file it did not just write is
+not a gate. 09-28: width is not containment. 09-29: an oracle's competence can
+be a function of the stimulus. 09-30: two sign-off clauses can be individually
+true and jointly impossible. 10-01: a containment claim is a claim about two
+sets, and an aggregate on the contained side errs only one way. 10-02: when a
+rule changes, every number derived from it is stale until re-derived —
+including the ones the same session declared unchanged.
+**10-03: A COVERAGE BIN'S WITNESS MUST BE INTERPRETABLE, AND "THE BIN IS
+NON-EMPTY" IS A DIFFERENT CLAIM FROM "THE BIN CAN BE CLOSED".** v10 checked the
+first and reported the second, in the one amendment it declared needed no
+change — and the error was not arithmetic, since its number 7 is correct. **A
+coverage goal is a claim about evidence; cardinality is necessary and
+nowhere near sufficient.** The corollary is the day's structural result:
+`illegal_bins` already enforces this rule for *inadmissible* witnesses, so the
+repository has had half the mechanism for four revisions and no name for the
+property it implements. **Naming the property found the other half.** The
+second corollary is about process rather than coverage: 10-02 diagnosed v9's
+"what this does not change" paragraph and then wrote one of its own, and v10's
+*positive* restatement of an unchanged goal was the most confident sentence in
+the revision. **The voice of restraint and the voice of reassurance fail the
+same way.**
+
+**Validations:** 46 checks / 0 failed. **Four committed anchors reproduced
+exactly before any new number was computed** — v8's 23-of-35 cross and its
+703-draw closure at seed 20260930, v10's 16-of-28 and 663, 10-02's 25-cell
+no-exclusion control, and 10-02's 11-of-23 and 4-of-16 single-witness counts.
+**An exactly-known value:** the per-bin witness counts must sum to the
+legal-set size, since a bin census is a partition — checked for three
+coverpoints × three exclusions, 18 identities, all exact, plus 18 more on the
+admissibility-class census. **Six controls:** the instrument responds to the
+exclusion (25/23/16), to the classifier **both ways** (all-ADMISSIBLE leaves no
+unsound bin; all-BORDERLINE makes 7 of 7 unsound, so "exactly one unsound bin"
+is a fact about the committed classifier and not a constant the file prints), to
+the binner, and **C5 requires scarcity and soundness NOT to be aliased** — the
+transition coverpoint must come back with a scarce bin and *no* unsound bin,
+which an instrument conflating the two could not report. Mutation report 12 of
+12 with control A, control B and the compound triple. Primitives imported from
+`payload_coverage_model` and the exclusion derivations from
+`reachable_cross_under_per_byte_rule`, never re-typed, per 09-24.
+
+**Not yet covered (candidates for future runs):**
+- **DECIDE between W1, W3 and W4 for F7's goal** — created today and **the new
+  top item**, and the one thing today deliberately did not do. The derivation is
+  committed; the choice changes a committed sign-off criterion, so v11 flags it
+  rather than applying it. W3 recommended (numerically identical to W1 while
+  keeping `0x40` in the stimulus, so W1 pays for a clean number with DUT
+  exercise it need not give up); W4 is the only option preserving a 7-bin goal
+  and needs an oracle change. **Until decided, F7's goal is W0 with two
+  evidence-unsound bins**
+- **Run the soundness audit on EVERY OTHER coverage model here** — created
+  today. F7's three coverpoints are done; nothing else is. **Explicitly not
+  subsumed by the witness-count item:** the abundant-and-unsound quadrant is
+  empty in F7's data only because F7 has two borderline bytes, and a model with
+  a wider band would have such a bin that **no scarcity scan at any threshold**
+  would find
+- **Give the BORDERLINE case a mechanism, as `illegal_bins` gives the
+  inadmissible case one** — created today, and the structural half of the day's
+  finding. There is nothing that reports a bin whose only witnesses are
+  borderline, which is why bin 7 survived four revisions
+- **`payload_coverage_model.py`'s `classify()` still implements the TWO-byte
+  rule** — created 10-02, **untouched again today and now two sessions old**.
+  The live model raises on `0x00` and `0x80` and silently admits the other
+  seven, so it and the vplan disagree about which payloads may carry F7
+  evidence. Still deliberately deferred: ~30 committed validations, several
+  quoting the superseded 0.78% figure. Today adds a reason to do it *and* a
+  reason it got harder — the rewiring should now carry the soundness check too,
+  so doing it piecemeal would mean touching the file twice
+- **A coverage model that REPORTS scarcity as well as cardinality** — created
+  10-02, **narrowed today**: the question is answered for F7's coverpoints by an
+  offline instrument, and no *live* model here reports either axis
+- **Audit every "what this does not change" paragraph in the vplan** — created
+  10-02, **and today is the second instance of its failure mode**, in v10's
+  positive-restatement form rather than its restraint form. v11's own such
+  paragraph states that each item in it was re-checked, with the four anchors as
+  the evidence
+- **Audit every containment claim in this repository for an AGGREGATE on the
+  contained side** — created 10-01, untouched. Silent, one-directional, and
+  undetectable from the containing side
+- **Is `0x40` still contained at a receiver with more sampling lateness?** —
+  created 10-01, and today makes it sharper again: `0x40` is now load-bearing
+  for **two** coverage goals as well as for the exclusion's derivability
+- **Control B for the FOUR OLDER mutation harnesses** — created 10-01; today's
+  new harness has one and the four older ones still do not, so the item is
+  **narrowed rather than closed** for the second session running
+- **Two redundant encodings of the sample cadence, and only one is
+  load-bearing** — created 10-01 by the M2/M6 pair, untouched
+- **Wire `PayloadAdmissibilityCoverage` into the live UVM coverage collector** —
+  created 09-30, untouched; after today it must also report soundness, not just
+  raise on inadmissible payloads
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** — created
+  09-29, still not done
+- **Audit the other benches' observers for CONTAINMENT and for
+  stimulus-dependence** — open since 09-28, widened 09-29, 09-30, 10-01
+- ~~**The UVM environment against the UART RTL** — untouched for thirteen
+  consecutive sessions; Phase 4's stated milestone is this and the sessions keep
+  doing Phase 6 measurement instead.~~ **WITHDRAWN 2026-10-03 as factually
+  wrong, on the concurrent session's evidence** (`tools/open_item_adjudication.md`,
+  `tools/open_item_staleness_audit.py`). All four named components —
+  `UartRegAgent`, `UartSerialAgent`/`UartSerialDriver`, `UartScoreboard`,
+  `UartCoverage` — have existed in `examples/phase4_uvm_milestone/uart_uvm_tb.py`
+  since **2026-09-18**, with the milestone recorded complete there (69 scoreboard
+  checks, 0 errors, 100% bin coverage, 5 of 5 mutants killed). The item described
+  work finished before its own count started, and **this entry drafted it forward
+  a thirteenth time before checking.** Struck through rather than deleted,
+  because the error is the more useful artefact. What the capstone's "Full UVM
+  environment built" box still genuinely requires, per their disambiguation, is
+  **(a)** constrained-random stimulus driven from a UVM sequence (the CRV
+  machinery exists only in plain Verilog in `examples/phase6_crv_uart/`),
+  **(b)** the SVA protocol checkers bound into that environment rather than
+  standing alone, **(c)** `PayloadAdmissibilityCoverage` wired into the live
+  `UartCoverage` collector, and **(d)** the written methodology summary — each
+  separately unchecked, so the box is a roll-up and should be checked last
+- **Make Step 0 race-safe: re-check `origin/main` immediately before pushing** —
+  created today by the collision described under Status. Step 0's
+  already-ran check rests on a clone taken minutes earlier, so it cannot see a
+  concurrent firing's push and two sessions can both pass it. Treating a
+  non-fast-forward as "integrate, do not force" rather than as an error is the
+  whole fix, and this session performed it by hand
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses** (09-26);
+  **audit every remaining runner for the 09-27 "greps a file it did not just
+  write" pattern**; **per-property coverage of the Phase 4 UVM environment**
+  (09-23); a less greedy steering policy (09-24); two transmitters at once
+  (09-25); `abc pdr` as a second engine (09-23); widen the coverage model
+  (09-24); mutants not yet attempted (interrupt enable combinations, the
+  loopback mux, reset asserted mid-frame); a property that needs a strengthening
+  invariant; the SVA sequence layer (runnable on neither tool here, open since
+  09-20); code coverage measurement (Icarus has none, open since 09-18); Phase 6
+  lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Automation health.** Device reachable and folder connected, and the 04:30
+firing landed for the second session running. **Step 0 did its job and changed
+what the session did:** the graphene repository already held a 2026-10-03 entry
+and nine commits from 04:21–04:26 UTC, so an earlier firing had completed that
+half; per Step 0's one-repo-missing branch this session did only the
+Design-Verification work and left graphene alone. **The device's network
+recovered completely and the 10-01/10-02 workaround was not needed.** A
+full-history `git clone` of both repositories finished **inside the 180 s shell
+limit on the first attempt**, and a measured depth-1 clone moved **12.0 MB in
+5 s (≈2.4 MB/s)** against **9.3 KB/s on 10-02** — roughly 250× — with
+`api.github.com` answering in **1 s** against 11.5 s. So the bundle-via-
+`_transfer` recipe was not used today; it stays documented in the 10-01 and
+10-02 entries for when the throttle returns, since two consecutive sessions hit
+it and one does not establish that it is gone. The `GIT_ASKPASS` recipe ran
+from `$HOME/.sess/` per 09-28 and the 09-29 correction, the token was never
+written into `.git/config`, a remote URL, any repository file or the connected
+folder, and the temp copy was shredded. `user.name`/`user.email` were again
+absent in the fresh clone and set per 09-24. Push verified against the GitHub
+API rather than git's own output, per 09-26. **The 09-25 push-as-you-go rule is
+back in force** after two sessions of deliberate deviation, the bundle cost
+that justified the deviation having gone. **The push was rejected
+non-fast-forward on the first attempt** because a concurrent firing had pushed
+six commits at 04:35:54; resolved by `git rebase origin/main` (four of five
+commits clean, this file the only conflict, both entries kept) and **not** by
+`--force`, which would have deleted the other session's work. Recorded in full
+under Status, with the one-line fix filed as an open item.
+
+**Commits this run:** 5 (the instrument with its report; the mutation harness
+with its report and the suite hardening it prompted; vplan v11; progress.md).
+This AUTOMATION_LOG.md entry makes 6, rebased onto the concurrent session's 6,
+so this repository takes **12** today across two firings that did disjoint work.
+**The graphene repository was not touched this session** — an earlier firing had
+already done its 9.
