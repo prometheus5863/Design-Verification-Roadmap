@@ -1,0 +1,314 @@
+============================================================================
+WITNESS SOUNDNESS: DOES EVERY F7 COVERAGE BIN HAVE AN ADMISSIBLE
+WITNESS?  (the 2026-10-02 top item, and it is wider than recorded)
+============================================================================
+
+----------------------------------------------------------------------------
+SECTION 1 -- the instrument, and an exactly-known value to anchor it
+----------------------------------------------------------------------------
+  A bin census partitions the legal set: every legal byte lands in
+  exactly one bin of each coverpoint, so the witness counts must sum
+  to the legal-set size EXACTLY.  Not approximately -- this is the
+  arithmetic identity the whole instrument rests on, and a binner
+  that double-counts or drops a byte fails it by construction.
+  [PASS] partition identity: g_first coverpoint, none exclusion
+        sum of witness counts 256 == legal set 256
+  [PASS] class census is complete: g_first / none
+        adm+bord+inadm 256 == legal set 256
+  [PASS] partition identity: transitions coverpoint, none exclusion
+        sum of witness counts 256 == legal set 256
+  [PASS] class census is complete: transitions / none
+        adm+bord+inadm 256 == legal set 256
+  [PASS] partition identity: cross coverpoint, none exclusion
+        sum of witness counts 256 == legal set 256
+  [PASS] class census is complete: cross / none
+        adm+bord+inadm 256 == legal set 256
+  [PASS] partition identity: g_first coverpoint, 2-byte exclusion
+        sum of witness counts 254 == legal set 254
+  [PASS] class census is complete: g_first / 2-byte
+        adm+bord+inadm 254 == legal set 254
+  [PASS] partition identity: transitions coverpoint, 2-byte exclusion
+        sum of witness counts 254 == legal set 254
+  [PASS] class census is complete: transitions / 2-byte
+        adm+bord+inadm 254 == legal set 254
+  [PASS] partition identity: cross coverpoint, 2-byte exclusion
+        sum of witness counts 254 == legal set 254
+  [PASS] class census is complete: cross / 2-byte
+        adm+bord+inadm 254 == legal set 254
+  [PASS] partition identity: g_first coverpoint, 9-byte exclusion
+        sum of witness counts 247 == legal set 247
+  [PASS] class census is complete: g_first / 9-byte
+        adm+bord+inadm 247 == legal set 247
+  [PASS] partition identity: transitions coverpoint, 9-byte exclusion
+        sum of witness counts 247 == legal set 247
+  [PASS] class census is complete: transitions / 9-byte
+        adm+bord+inadm 247 == legal set 247
+  [PASS] partition identity: cross coverpoint, 9-byte exclusion
+        sum of witness counts 247 == legal set 247
+  [PASS] class census is complete: cross / 9-byte
+        adm+bord+inadm 247 == legal set 247
+
+  the committed classifier over all 256 bytes:
+    ADMISSIBLE    252  
+    BORDERLINE      2  0x40 0xC0
+    INADMISSIBLE    2  0x00 0x80
+  [PASS] the classifier has exactly two BORDERLINE bytes
+        0x40 and 0xC0 -- both recorded as borderline by v7 on 09-29, which is
+        why Section 4 can say this defect predates the nine-byte rule
+
+----------------------------------------------------------------------------
+SECTION 2 -- REGRESSION ANCHORS: reproduce what v8 and v10 committed
+----------------------------------------------------------------------------
+  [PASS] reproduces v8's 23 reachable cross cells
+        got 23
+  [PASS] reproduces v10's 16 reachable cross cells
+        got 16
+  [PASS] reproduces 10-02's no-exclusion control (25 cells)
+        got 25
+  [PASS] reproduces v8's 703-draw closure at seed 20260930
+        got 703
+  [PASS] reproduces v10's 663-draw closure at seed 20260930
+        got 663
+  [PASS] reproduces 10-02's single-witness cell counts (11 of 23, 4 of 16)
+        got 11 of 23 and 4 of 16
+        if any anchor above had failed, nothing below would be
+        comparable with the committed goals and none of it would mean
+        anything -- which is the 09-30 rule applied to an instrument
+
+----------------------------------------------------------------------------
+SECTION 3 -- THE RESULT: soundness of every F7 bin, three coverpoints x three rules
+----------------------------------------------------------------------------
+
+  --- no exclusion (legal 256) ---
+    g_first     bins=9   scarce=2  UNSOUND=3  <- 7, 8, 9
+                 bin 7: 2 witness(es) 0x40 0xC0, 0 admissible
+                 bin 8: 1 witness(es) 0x80, 0 admissible
+                 bin 9: 1 witness(es) 0x00, 0 admissible
+    transitions bins=5   scarce=1  UNSOUND=0  
+    cross       bins=25  scarce=13 UNSOUND=4  <- (7, 1), (7, 3), (8, 1), (9, 1)
+                 bin (7, 1): 1 witness(es) 0xC0, 0 admissible
+                 bin (7, 3): 1 witness(es) 0x40, 0 admissible
+                 bin (8, 1): 1 witness(es) 0x80, 0 admissible
+                 bin (9, 1): 1 witness(es) 0x00, 0 admissible
+
+  --- v8 2-byte (legal 254) ---
+    g_first     bins=7   scarce=0  UNSOUND=1  <- 7
+                 bin 7: 2 witness(es) 0x40 0xC0, 0 admissible
+    transitions bins=5   scarce=1  UNSOUND=0  
+    cross       bins=23  scarce=11 UNSOUND=2  <- (7, 1), (7, 3)
+                 bin (7, 1): 1 witness(es) 0xC0, 0 admissible
+                 bin (7, 3): 1 witness(es) 0x40, 0 admissible
+
+  --- v10 9-byte (legal 247) ---
+    g_first     bins=7   scarce=1  UNSOUND=1  <- 7
+                 bin 7: 1 witness(es) 0x40, 0 admissible
+    transitions bins=4   scarce=1  UNSOUND=0  
+    cross       bins=16  scarce=4  UNSOUND=1  <- (7, 3)
+                 bin (7, 3): 1 witness(es) 0x40, 0 admissible
+  [PASS] v10's Amendment 1 is RIGHT about cardinality: every g_first bin 1..7 keeps a legal witness
+        7 bins, all non-empty -- v10 is reproduced as stated, not contradicted
+  [PASS] AND the 7/7 goal is EVIDENCE-UNSOUND: bin 7 has zero admissible witnesses
+        bin 7's only legal witness is 0x40, which is BORDERLINE.
+        Both checks above pass at once, and that is the shape of the finding:
+        v10's claim is true and its conclusion does not follow from it.  A
+        coverpoint goal is a claim about evidence, not about non-emptiness.
+  [PASS] the conflict is on ONE BYTE but TWO coverpoints, not one cell
+        g_first bin 7 and cross cell (7,3) are both witnessed only by 0x40,
+        so 10-02's 'the cross cannot be closed without 0x40' understates it:
+        NO F7 g_first goal of 7 bins can be closed without 0x40 either
+
+----------------------------------------------------------------------------
+SECTION 4 -- THE DEFECT PREDATES v9 AND v10 -- it is not a cost of the nine-byte rule
+----------------------------------------------------------------------------
+  g_first bin 7 over ALL 256 bytes: 0x40:BORD 0xC0:BORD
+  [PASS] g_first bin 7 is unsound under NO exclusion
+        witnesses 0x40 and 0xC0, both BORDERLINE -- the bin has never had an
+        admissible witness, at any exclusion this plan has ever used
+  [PASS] g_first bin 7 is unsound under v8's two-byte rule too
+        so the 7/7 goal was evidence-unsound on 09-30, the day it was written
+  [PASS] but it was NOT scarce under v8, which is why a scarcity scan missed it
+        2 witnesses under v8, 1 under v10.  The nine-byte rule removed 0xC0
+        and so made a long-standing unsound bin newly SCARCE.  10-02 saw the
+        scarcity because it had just started measuring scarcity, and read it
+        as a new conflict created by the exclusion.  It is an old conflict
+        made visible by it -- which matters, because the fix does not belong
+        in the exclusion's ledger of costs.
+
+  v8's cross had TWO unsound cells and 10-02's own table lists both:
+    (7, 1) <- 0xC0
+    (7, 3) <- 0x40
+  [PASS] both of v8's unsound cross cells appear in 10-02's single-witness list
+        (7,1)<-0xC0 and (7,3)<-0x40.  10-02 printed both rows and even
+        annotated (7,1) as 'excluded by the 9-byte rule'.  The bytes were in
+        front of it; the question 'does this cell have an ADMISSIBLE witness'
+        was not asked.  This is 10-02's own lesson recurring one file later.
+
+----------------------------------------------------------------------------
+SECTION 5 -- SCARCITY AND SOUNDNESS ARE INDEPENDENT AXES
+----------------------------------------------------------------------------
+  quadrant           witness bin                 n    admis
+  scarce + SOUND     transitions bin 9           1        1
+  scarce + UNSOUND   g_first bin 7               1        0
+  abundant + SOUND   transitions bin 3          84       83
+  [PASS] three quadrants are populated, so neither predicate implies the other
+        a scarce bin can be perfectly sound (transitions 9, sole witness 0x55,
+        ADMISSIBLE) and an abundant bin can in principle be unsound.  So
+        10-02's witness-count item and this one are two separate audits, and
+        running the first would not have found what Section 3 found.
+
+  The fourth quadrant (abundant + UNSOUND) is EMPTY in this data.  That
+  is reported, not claimed impossible: it needs a bin all of whose many
+  witnesses are borderline, and there are only two borderline bytes in
+  the whole population.  A DUT with a wider borderline band would have
+  one, and then no scarcity scan at any threshold would find it.
+
+  AND SOUNDNESS SUBSUMES THE EXCLUSION RULE ITSELF.  With no exclusion
+  the unsound g_first bins are [7, 8, 9]: bin 7 by two BORDERLINE
+  witnesses, bins 8 and 9 by one INADMISSIBLE witness each -- and bins 8
+  and 9 are exactly what v8 removed by hand as illegal_bins.  So the
+  nine-byte exclusion is the special case of this audit that handles
+  INADMISSIBLE witnesses, and bin 7 is the case it cannot reach, because
+  a borderline byte is legal to draw.  An audit written on soundness
+  would have produced v8's illegal_bins AND bin 7 in one pass.
+  [PASS] the no-exclusion unsound set is {7, 8, 9}, and 8 and 9 are v8's own illegal_bins
+        so this instrument re-derives the hand-made exclusion as a corollary,
+        which is the strongest available evidence that it is measuring the
+        right property rather than a new one invented to fit 0x40
+
+----------------------------------------------------------------------------
+SECTION 6 -- THE WAYS OUT, COMPUTED RATHER THAN WEIGHED
+----------------------------------------------------------------------------
+  option            g bins  t bins  cross          unsound  closure @20260930
+  W0 status quo     7       4       16 of 28       2        663
+  W1 exclude 0x40   6       4       15 of 24       0        151
+  W3 merge to 6+    6       4       15 of 24       0        398
+
+  W2 ADMIT BORDERLINE AS COVERAGE EVIDENCE is not a row above, because
+  it changes no count at all -- that is precisely its cost.  Quantified:
+    1 of 16 cross cells (6.2%) and 1 of 7 g_first bins (14.3%) would
+    rest on a frame whose F7 outcome is neither pass nor fail, and the
+    coverage report would read 100% either way.
+
+  W4 SPLIT THE CHECK, NOT THE BIN: drive 0x40, credit the bin, and
+  exclude that frame from F7's TIMING oracle while keeping it under F1's
+  data-integrity oracle.  It is the only option that preserves a 7-bin
+  goal.  Its cost is that the cross stops being F7 evidence throughout,
+  so 'F7 cross 16/16' would mean two different things in two cells.
+  Not computed here: it needs an oracle change, not a goal change.
+  [PASS] W1 and W3 are NUMERICALLY IDENTICAL goals
+        6 g_first bins, 4 transition bins, 15 reachable cells of a 24-cell
+        grid, zero unsound bins -- for both.  They are not the same decision:
+        W1 stops driving 0x40, W3 keeps driving it and stops distinguishing
+        it.  W1 gives up DUT exercise to buy a clean number; W3 gives up a
+        coverage distinction and keeps the exercise.
+  [PASS] both W1 and W3 remove every unsound bin
+        and W0 leaves two (g_first bin 7 and cross cell (7,3))
+  [PASS] W1 also costs a g_first BIN, not just a cross cell
+        the 7/7 goal becomes 6/6.  This is the consequence v10 could not see,
+        because it had concluded that the g_first goal needed no amendment and
+        so never asked what excluding 0x40 would do to it.
+
+----------------------------------------------------------------------------
+SECTION 7 -- DOES ANY NUMBER SEPARATE W1 FROM W3?  a 40-seed closure sweep
+----------------------------------------------------------------------------
+  At seed 20260930 alone the figures are 151 and 398 draws, which looks like a
+  decisive difference and is not one.  Swept over 40 seeds:
+    W0 status quo     mean  473  median  422  min  111  max 1518
+    W1 exclude 0x40   mean  499  median  410  min  156  max 1450
+    W3 merge to 6+    mean  421  median  374  min  101  max 1455
+  [PASS] closure cost does NOT separate W1 from W3
+        W1 is faster on 22 of 40 seeds, and the ranges overlap almost entirely.
+        So no number this verification plan reports -- not the bin counts, not
+        the cell count, not the grid, not the closure cost -- distinguishes a
+        plan that still drives 0x40 from one that does not.  Only the stimulus
+        log does.  The vplan must therefore name WHICH option it took; the
+        coverage report cannot carry that information.
+  [PASS] and the single-seed 663 -> 151 speedup is seed noise, not a speedup
+        W0 mean 473, W1 mean 499 over 40 seeds.  Removing the hardest cell
+        did not measurably speed up closure.  Recorded because the one-seed
+        comparison is exactly the figure a revision would be tempted to quote,
+        and 10-02's own 703->663 'closes faster' line rests on the same single
+        seed -- it hedged correctly, and this is the measurement behind the
+        hedge.
+
+----------------------------------------------------------------------------
+SECTION 8 -- CONTROLS
+----------------------------------------------------------------------------
+  [PASS] C1 the instrument responds to the EXCLUSION (three sizes, three answers)
+        no exclusion 25, 2-byte 23, 9-byte 16
+  [PASS] C2 the instrument responds to the CLASSIFIER, positively: with every byte ADMISSIBLE no bin is unsound
+        so 'bin 7 is unsound' is a fact about the committed classifier and not
+        a constant this file prints
+  [PASS] C3 the instrument responds to the CLASSIFIER, negatively: with every byte BORDERLINE every bin is unsound
+        7 of 7 -- so the instrument is not hard-coded to find exactly one
+  [PASS] C4 the instrument responds to the BINNER: capping g_first at 6 merges exactly one bin
+        6 bins vs 7, and the merged bin is sound where bin 7 was not
+  [PASS] C5 scarcity and soundness are measured SEPARATELY, not aliased
+        the transition coverpoint has a scarce bin and NO unsound bin; the
+        g_first coverpoint has a bin that is both.  An instrument that aliased
+        the two would have to report transitions bin 9 as unsound, and it does
+        not.
+  [PASS] C6 W3's merged cross really loses a cell rather than renaming one
+        15 cells; (7,3) is gone and 0x40 now lands in (6,3) alongside
+        3 admissible witnesses, which is WHY the bin becomes sound
+
+============================================================================
+SUMMARY
+============================================================================
+  the second axis            a bin needs an ADMISSIBLE witness, not just one
+  g_first 7/7 goal          cardinality CORRECT (v10), evidence UNSOUND (new)
+  unsound bins under v10    g_first bin 7 and cross cell (7,3), both <- 0x40
+  age of the defect         present under v8 and under NO exclusion; v7 had
+                            already recorded 0x40 and 0xC0 as borderline
+  what the 9-byte rule did  made an old unsound bin newly SCARCE, hence visible
+  ways out                  four; W1 and W3 give identical numbers
+  W1 == W3 numerically      6 bins, 4 bins, 15 of 24, 0 unsound -- for both
+  what separates them       nothing this plan reports; only the stimulus log
+  closure sweep             W1 faster on 22 of 40 seeds -- i.e. not faster
+  PASS  partition identity: g_first coverpoint, none exclusion
+  PASS  class census is complete: g_first / none
+  PASS  partition identity: transitions coverpoint, none exclusion
+  PASS  class census is complete: transitions / none
+  PASS  partition identity: cross coverpoint, none exclusion
+  PASS  class census is complete: cross / none
+  PASS  partition identity: g_first coverpoint, 2-byte exclusion
+  PASS  class census is complete: g_first / 2-byte
+  PASS  partition identity: transitions coverpoint, 2-byte exclusion
+  PASS  class census is complete: transitions / 2-byte
+  PASS  partition identity: cross coverpoint, 2-byte exclusion
+  PASS  class census is complete: cross / 2-byte
+  PASS  partition identity: g_first coverpoint, 9-byte exclusion
+  PASS  class census is complete: g_first / 9-byte
+  PASS  partition identity: transitions coverpoint, 9-byte exclusion
+  PASS  class census is complete: transitions / 9-byte
+  PASS  partition identity: cross coverpoint, 9-byte exclusion
+  PASS  class census is complete: cross / 9-byte
+  PASS  the classifier has exactly two BORDERLINE bytes
+  PASS  reproduces v8's 23 reachable cross cells
+  PASS  reproduces v10's 16 reachable cross cells
+  PASS  reproduces 10-02's no-exclusion control (25 cells)
+  PASS  reproduces v8's 703-draw closure at seed 20260930
+  PASS  reproduces v10's 663-draw closure at seed 20260930
+  PASS  reproduces 10-02's single-witness cell counts (11 of 23, 4 of 16)
+  PASS  v10's Amendment 1 is RIGHT about cardinality: every g_first bin 1..7 keeps a legal witness
+  PASS  AND the 7/7 goal is EVIDENCE-UNSOUND: bin 7 has zero admissible witnesses
+  PASS  the conflict is on ONE BYTE but TWO coverpoints, not one cell
+  PASS  g_first bin 7 is unsound under NO exclusion
+  PASS  g_first bin 7 is unsound under v8's two-byte rule too
+  PASS  but it was NOT scarce under v8, which is why a scarcity scan missed it
+  PASS  both of v8's unsound cross cells appear in 10-02's single-witness list
+  PASS  three quadrants are populated, so neither predicate implies the other
+  PASS  the no-exclusion unsound set is {7, 8, 9}, and 8 and 9 are v8's own illegal_bins
+  PASS  W1 and W3 are NUMERICALLY IDENTICAL goals
+  PASS  both W1 and W3 remove every unsound bin
+  PASS  W1 also costs a g_first BIN, not just a cross cell
+  PASS  closure cost does NOT separate W1 from W3
+  PASS  and the single-seed 663 -> 151 speedup is seed noise, not a speedup
+  PASS  C1 the instrument responds to the EXCLUSION (three sizes, three answers)
+  PASS  C2 the instrument responds to the CLASSIFIER, positively: with every byte ADMISSIBLE no bin is unsound
+  PASS  C3 the instrument responds to the CLASSIFIER, negatively: with every byte BORDERLINE every bin is unsound
+  PASS  C4 the instrument responds to the BINNER: capping g_first at 6 merges exactly one bin
+  PASS  C5 scarcity and soundness are measured SEPARATELY, not aliased
+  PASS  C6 W3's merged cross really loses a cell rather than renaming one
+
+TOTAL: 45 passed, 0 failed
