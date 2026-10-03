@@ -465,7 +465,32 @@ measured rather than quietly dropped.
             2026-09-05); to be revisited/revised once Phase 4 RTL and
             testbench bring-up experience is available (see that plan's
             Section 7)
-      - [ ] Full UVM environment built
+      - [ ] **Full UVM environment built** -- *disambiguated 2026-10-03,
+            and the wording above is the root cause of a twelve-session
+            error.* Phase 4's milestone environment
+            (`examples/phase4_uvm_milestone/uart_uvm_tb.py`) is COMPLETE
+            as of 2026-09-18 and contains a register agent, an active
+            serial RX agent, a passive serial TX agent, a reference-model
+            scoreboard, a functional-coverage collector, a virtual
+            sequencer and five sequences. This box is NOT that, and said
+            nothing about how it differed, so `AUTOMATION_LOG.md` carried
+            "the UVM environment against the UART RTL ... untouched for
+            twelve consecutive sessions" as a top open item for twelve
+            entries describing work finished before the count started --
+            see `tools/open_item_adjudication.md`. What this box actually
+            still requires, stated so the next session inherits a
+            distinction rather than a contradiction:
+            **(a)** constrained-random rather than directed stimulus
+            inside the UVM environment (the CRV machinery exists in
+            `examples/phase6_crv_uart/` in plain Verilog and has never
+            been driven from a UVM sequence);
+            **(b)** the SVA protocol checkers of the next box, bound into
+            that environment rather than standing alone;
+            **(c)** `PayloadAdmissibilityCoverage` wired into the live
+            `UartCoverage` collector (its own open item since 09-30);
+            **(d)** the written methodology summary of the last box.
+            Each is separately unchecked, so this box is a ROLL-UP of
+            them and should be checked last, not first
       - [ ] SVA protocol checkers added
       - [x] Functional coverage report + closure target stated
             (**DONE 2026-09-24**, `examples/phase6_crv_uart/`, the top and
