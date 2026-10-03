@@ -4581,3 +4581,267 @@ and pushed in one batch per repository.
 **Commits this run:** 5 (the re-derivation with its log; the mutation harness
 with its report; vplan v10; progress.md). This AUTOMATION_LOG.md entry makes 6.
 The graphene repository took its own 9.
+
+---
+
+## 2026-10-03
+
+**Status:** Audit session on the repository's own planning artefacts. Live web
+search was not used: nothing below rests on a literature fetch. **The day's
+finding is that this log's own open-items list has been advertising a finished
+milestone as the clear next step for twelve consecutive entries.**
+
+### 1. The one artefact with no instrument pointed at it
+
+Every session here starts by reading this file's most recent *"Not yet covered
+(candidates for future runs)"* list and picking from it. **That list does not
+describe the work, it selects it** — which makes it the most load-bearing
+artefact in the repository. By now nearly everything else is checked by
+something: transcripts by the pristine audit, coverage bins by
+`reachable_cross_under_per_byte_rule.py`, properties by per-property mutation
+coverage, mutants by control A and (since 10-01) control B, observer windows by
+`payload_coverage_model.py`. **The list that decides which of those to run had
+nothing.** It now has `tools/open_item_staleness_audit.py` (12/12).
+
+### 2. It was wrong, and in the most expensive way available
+
+Rank 1, containment score **0.606**:
+
+> *"**The UVM environment against the UART RTL** — the register-bus agent, the
+> serial agent with its standalone RX bit-driver, the reference-model
+> scoreboard and the coverage collector. … **untouched for twelve consecutive
+> sessions** … Phase 4's stated milestone is this, and the sessions have been
+> doing Phase 6 measurement instead."*
+
+All four components exist, and have since **2026-09-18**: `UartRegAgent`,
+`UartSerialAgent` + `UartSerialDriver`, `UartScoreboard` and `UartCoverage`,
+all in `examples/phase4_uvm_milestone/uart_uvm_tb.py`. `progress.md` records
+the milestone **COMPLETE 2026-09-18** (69 scoreboard checks, 0 errors, 100.0 %
+bin coverage, 5 of 5 mutants killed) and then **PHASE 4 IS COMPLETE
+(2026-09-19)** in bold. Both halves of the item are false: the milestone was
+met, and the Phase 6 measurement work was the *correct* next thing rather than
+a substitution for it.
+
+**Worse than a false transcript.** 10-02 (graphene repo) found a transcript
+that agreed byte-for-byte with its code and was false; that misreports a
+**result**. A false open-items list misdirects **labour**. And the mechanism is
+specific: the item was carried forward **verbatim for twelve entries with only
+the session count incremented**, so the one part being actively maintained was
+the part that made it look increasingly urgent.
+
+### 3. Why a ranking plus a committed judgement, and not a threshold
+
+`S3` scores each open item by the fraction of its distinctive tokens that some
+`- [x]` block of `progress.md` also contains, and **emits no verdict**. Two
+magic-number burns are on record here already (09-24's steering policy,
+10-02's `NUMERIC_RTOL` control), and a containment score is worse than both: it
+is a text-similarity measurement with no physical meaning, so no cut on it is
+defensible as "stale".
+
+**Rank 2 settles it.** *"Control B for the FOUR OLDER mutation harnesses"*
+scores **0.600** — within 0.006 of rank 1 — and is wide open; `progress.md`
+carries it as an unchecked box, and only `mutation_test_reachable_cross.py` has
+control B. It ranks high because "mutation", "mutant", "harness" and "control"
+are dense in several *completed* checkboxes. **Any threshold that retired rank 1
+would have retired rank 2 with it.** `tools/open_item_adjudication.md` holds the
+judgement with reasons; S4's exact check is that it covers every item at or
+above the reporting cut and contains no orphans. **Verdicts: 1 STALE, 5 OPEN.**
+
+### 4. The audit nearly committed its own target fault
+
+The first adjudication said simply "retired today". Wrong, because of
+`progress.md` line 468, under the Phase 6 capstone: `- [ ] Full UVM environment
+built`. Five words, unchecked — and the log item being retired was **the only
+prose anywhere pointing at that box**. Deleting it would have removed the work's
+last mention while reporting a cleanup: *a repair built and then not connected*,
+one level up, **inside the instrument**. S4 now requires every `STALE` verdict
+to carry `REPLACED-BY:` or `NO-SUCCESSOR:`. **An audit of the list that chooses
+the work must not be able to quietly delete work.**
+
+### 5. And that box is the root cause, not a casualty of it
+
+`- [ ] Full UVM environment built` says nothing about how it differs from a
+Phase 4 milestone marked COMPLETE that *does* contain a full UVM environment.
+**What looked like a contradiction between two artefacts was really one
+underspecified checkbox**, and twelve entries of incrementing session count grew
+on top of the silence. `progress.md` now states the difference: the capstone box
+is a **roll-up** of four separately-unchecked items — (a) constrained-random
+rather than directed stimulus *inside* the UVM environment (the CRV machinery in
+`examples/phase6_crv_uart/` is plain Verilog and has never been driven from a
+UVM sequence), (b) the SVA protocol checkers *bound into* that environment
+rather than standing alone, (c) `PayloadAdmissibilityCoverage` wired into the
+live `UartCoverage`, (d) the written methodology summary — and so should be
+checked **last**. It was never the actionable item it appeared to be.
+
+### 6. Controls, and the one that matters
+
+```
+  C1  components all named in a COMPLETED checkbox -> ranks high   0.818
+  C2  an unrelated item -> ranks low                               0.143
+  C3  and C1's item ranks above C2's                               0.818 > 0.143
+  M1  MUTATION TEST: delete the completed checkbox C1's item
+      contradicts, and the same item must collapse        0.818 -> 0.000
+  E1  EXACT: an item verbatim equal to a completed block scores
+      exactly 1.0 (containment of a set in itself)                 1.0
+```
+
+`M1` is the load-bearing one: without it `C1` could be passing because the
+scorer returns a high number for everything — the 09-29/09-30 rule that a check
+must be *shown* to fail, applied to a text scorer instead of a simulation.
+
+### 7. Two faults of the audit itself, found by running it on its own output
+
+Both appeared only when this entry was appended, i.e. when the audit was first
+pointed at a list it had helped produce. Recorded rather than quietly
+corrected.
+
+**(a) A retired item left inside the list is still a candidate.** The first
+draft of this entry recorded the retirement as a bullet *inside* "Not yet
+covered". The audit parses that list as candidates, so it immediately demanded
+an adjudication for the thing it had just retired — and would have demanded one
+every session thereafter. The record now sits in its own paragraph outside the
+list, which is also simply what it is: **a retired item is a record, not a
+candidate.**
+
+**(b) The orphan check compared against the RANKING HEAD rather than against
+existence.** It reported "Control B for the four older mutation harnesses" — a
+correctly-adjudicated, genuinely open item — as an orphan the moment the list
+reordered and pushed it below the cut. **A check whose verdict depends on a
+ranking position rather than on whether the thing exists is measuring the wrong
+property.** It now matches every item in the list, and a *STALE* entry losing
+its item is explicitly not an orphan: that is the audit trail working, and
+deleting such an entry to keep a check green would destroy the only record of
+the judgement.
+
+**And one consequence worth stating as a design property, not a defect.** The
+adjudication is pinned to a ranking, the ranking moves when the list moves, so
+**a new list and a refreshed adjudication belong in the same commit.** This
+session re-adjudicated twice for that reason. Incidentally, the re-ranking is
+the cleanest evidence that the retired item was a real outlier: with it gone the
+highest score in the whole list fell from **0.606 to 0.375**.
+
+**Methodological note, continuing the series.** 09-28: a check that cannot fail
+is worse than no check. 09-29: a mutation that does not arrive is
+indistinguishable from a system that does not respond. 09-30: a control must sit
+where the failure enters. 10-01: and name what it compares against in a way that
+cannot drift. 10-02: and when it agrees, that is a fact about two artefacts, not
+about the world. **10-03: AND THE QUEUE IS AN ARTEFACT TOO.** Every prior entry
+is about an instrument or the claim it checks. A wrong result is wrong once; **a
+wrong queue is wrong every session until someone checks it**, and nothing was.
+The sharper half is §5: the failure presented as a contradiction between two
+artefacts and the first adjudication treated it as one. It was an
+**underspecified** artefact — a five-word checkbox readable as agreeing or
+disagreeing with a completed milestone depending on what the reader supplied.
+**A text too vague to be contradicted is also too vague to be audited.** Nobody
+wrote anything false; nobody could tell.
+
+**Validations:** `tools/open_item_staleness_audit.py` **12/12**, including the
+mutation test above and the exact 1.0 containment identity. S1: 2 backticked
+paths named by open items, both resolved. S2: 6 creation dates, all parse, none
+in the future. S4: 6 adjudicated, 0 missing, 0 orphans, and every STALE verdict
+carries a successor. No simulator was needed or run this session — the audit is
+pure `python3`, deliberately, following the 09-29 precedent that models
+checkable without a simulator run ahead of the simulator tests in a regression.
+
+**Not yet covered (candidates for future runs):**
+
+- **The F7 cross cannot be closed without drawing `0x40`, and `0x40` is
+  BORDERLINE** — created 10-02, adjudicated **OPEN** today, and **the top
+  item**. The first conflict between two sign-off criteria rather than between
+  a criterion and a number, and all three ways out change what a coverage
+  number means
+- **`payload_coverage_model.py`'s `classify()` still implements the TWO-byte
+  rule** — created 10-02, untouched again today for the same stated reason: the
+  file carries ~30 committed validations and several quote the superseded 0.78 %
+  figure, so the change is delicate rather than mechanical. **Two sessions
+  deferred now, which is worth naming**
+- **Audit every "what this does not change" paragraph in the vplan** — created
+  10-02, adjudicated OPEN. v10 contains one of its own and it has had no more
+  checking than v9's did
+- **Control B for the FOUR OLDER mutation harnesses** (`phase4_ral`,
+  `phase4_rtl_bringup`, `phase4_uvm_milestone`, `phase6_bfm_equivalence`) —
+  created 10-01, adjudicated OPEN, and today's rank-2 score of 0.600 is a
+  false-positive demonstration rather than progress on it
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** — created
+  09-29, adjudicated OPEN. `mutation_report_budget_law_2026-09-29.txt` mutates
+  the law under test, not the generator that feeds it
+- **Wire `PayloadAdmissibilityCoverage` into the live `UartCoverage`
+  collector** — created 09-30, adjudicated OPEN, and now also item (c) of the
+  capstone roll-up. After 10-02 it must adopt the 4-bin transition goal and the
+  16-cell cross, so the item has grown rather than aged
+- **Run the staleness audit against the GRAPHENE repository's open-items list**
+  — created today. That list is longer (roughly 25 items against 13), is
+  structured the same way, and has entries carrying "untouched for thirteen
+  consecutive sessions"; the audit needs a second artefact to rank against
+  there, since that repository has no `progress.md`, and the obvious candidate
+  is the committed validations line of each entry
+- **Does any open item here contradict a COMMITTED VALIDATION rather than a
+  progress.md checkbox?** — created today, the natural widening of S3. The
+  ranker reads one artefact. A session's own "Validations:" paragraph is a
+  second record of what was finished, and nothing cross-references it
+- **The four `- [ ]` capstone boxes as newly disambiguated** — (a)
+  constrained-random stimulus inside the UVM environment, (b) SVA checkers
+  bound into it, (c) the coverage wiring above, (d) the methodology summary.
+  **(a) is the substantive one**: the CRV machinery exists in plain Verilog and
+  has never been driven from a UVM sequence, which is a real integration task
+  rather than new study
+- **Compute the WITNESS COUNT of every coverage bin, not just the
+  reachable-cell count** — created 10-02, untouched
+- **Audit every containment claim for an AGGREGATE on the contained side** —
+  created 10-01, untouched. Silent, one-directional, undetectable from the
+  containing side
+- **Is `0x40` still contained at a receiver with more sampling lateness?** —
+  created 10-01; 10-02 made it sharper by making `0x40` load-bearing for a
+  coverage goal as well as for the exclusion's derivability
+- **Two redundant encodings of the sample cadence, only one load-bearing** —
+  created 10-01 by the M2/M6 pair, untouched
+- **Audit the other benches' observers for CONTAINMENT and for
+  stimulus-dependence** — open since 09-28, widened 09-29, 09-30 and 10-01
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses**
+  (09-26); **audit every remaining runner for the 09-27 "greps a file it did
+  not just write" pattern**; **per-property coverage of the Phase 4 UVM
+  environment** (09-23); a less greedy steering policy (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); widen the
+  coverage model (09-24); mutants not yet attempted (interrupt-enable
+  combinations, the loopback mux, reset asserted mid-frame); a property that
+  needs a strengthening invariant; the SVA sequence layer (runnable on neither
+  tool here, open since 09-20); code coverage measurement (Icarus has none,
+  open since 09-18); Phase 6 lint, regression infra, coverage merge, CDC
+  basics, interview prep
+**Retired this run, adjudicated STALE:** *"The UVM environment against the UART
+RTL"* — complete since 2026-09-18, carried in this list falsely for twelve
+entries. Replaced by the capstone roll-up above rather than deleted in favour
+of nothing, and recorded in `tools/open_item_adjudication.md` with the
+evidence. **Deliberately OUTSIDE the "Not yet covered" list above**, because a
+retired item is a record and not a candidate for a future run, and
+`tools/open_item_staleness_audit.py` parses that list as candidates — leaving
+the record inside it made the audit demand an adjudication for a thing it had
+just retired, which is how this paragraph came to be here.
+
+**Automation health.** Device reachable and folder connected at the 04:30
+firing. **The device network problem that dominated 10-01 and 10-02 was absent
+today:** both repositories cloned fully in **under 15 s** from inside
+`device_bash`, against 10-02's measured **9.3 KB/s** and a `git clone` that
+could not finish inside the 180 s shell limit at any depth. The 10-01/10-02
+workaround — clone in the cloud sandbox, `git bundle` the increment, ship it to
+the connected folder with `device_commit_files`, then push from a
+`--depth 1 --filter=blob:none` clone on the device — was therefore **neither
+needed nor used**, and `_to_push`/`_transfer` were not touched. All work ran in
+the device VM's own scratch space at `$HOME/work`, outside the connected
+folder, because git still cannot create its lock files inside a connected
+folder (a settled constraint, not retried). **The 09-25 push-as-you-go rule is
+back in force** after two sessions of deliberate deviation: with the network
+healthy a push costs seconds, so there was no reason to batch. No simulator was
+needed; `tools/setup_iverilog.sh` was not invoked. The `GIT_ASKPASS` recipe ran
+from the session VM's own temp space, the token copy was shredded, and the
+token was never written into `.git/config`, a remote URL, any repository file or
+the connected folder. **One deviation worth stating:** Step 0's "has today's
+work already run" question was answered from the freshly cloned
+`AUTOMATION_LOG.md` and `git log --since=midnight` alone, with no GitHub-API
+`pushed_at` cross-check, because the clones finished fast enough that 10-02's
+cheap pre-check had no latency to hide.
+
+**Commits this run:** 5 (the audit with its adjudication and transcript; the
+successor requirement; the `progress.md` disambiguation; the notes; the two
+self-corrections of §7 with the re-adjudication). This AUTOMATION_LOG.md entry
+makes 6. The graphene repository took its own 7.
