@@ -908,19 +908,74 @@ measured rather than quietly dropped.
             v8's 703 from seven FEWER legal bytes, because 7 of v8's 11
             single-witness cells were themselves among the newly excluded
             -- measured, not argued
-      - [ ] **The F7 cross cannot be closed without drawing `0x40`, and
-            `0x40` is BORDERLINE** -- created 2026-10-02 and **the new
-            top item**, because it is the first conflict between two
-            sign-off criteria rather than between a criterion and a
-            number. `0x40` is the sole witness of (`g_first` = 7,
-            transitions = 3), so closing F7's cross requires a frame
-            whose outcome is neither pass nor fail. Three ways out and
-            none is free: declare the cell excused (and say what the
-            coverage number then means), settle `0x40`'s status by
-            measuring `p` at more phases and divisors (it needs
-            `p <= 0.1429` against a worst measured 0.1233), or accept a
-            cross goal that is 15/16 by construction. The decision is a
-            vplan decision and has to be written down as one
+      - [x] **The F7 cross cannot be closed without drawing `0x40`, and
+            `0x40` is BORDERLINE** -- created 2026-10-02 as the top item,
+            **measured and closed 2026-10-03 (vplan v11)**, and two of
+            the three things it asserted were wrong.
+            `examples/phase4_uvm_milestone/witness_soundness.py` +
+            `witness_soundness_2026-10-03.txt`, 46 checks / 0 failed;
+            `mutation_report_witness_soundness_2026-10-03.txt`, 12 of 12
+            with control A, control B and the 10-02 compound form.
+            Anchored first against five committed numbers (v8's 23-of-35
+            and 703 draws, v10's 16-of-28 and 663, 10-02's 25-cell
+            control and its 11-of-23 and 4-of-16 single-witness counts),
+            all exact. **The generalisation: a bin needs an ADMISSIBLE
+            witness, not just a witness.** `scarce(bin)` governs the cost
+            of closing it; `evidence_unsound(bin)` -- no witness is
+            ADMISSIBLE -- governs whether closing it means anything, and
+            the two are independent (three of four quadrants populated;
+            transition bin 9 is scarce and perfectly sound). **(i) One
+            byte, but TWO coverpoints:** `0x40` is also the sole legal
+            witness of `g_first` bin 7, so v10's 7/7 goal -- the one
+            amendment of five it declared "correct as committed and needs
+            no change" -- cannot be closed by an interpretable frame
+            either. Its cardinality claim is reproduced as a PASS; the
+            sign-off conclusion does not follow from it. **(ii) The
+            defect dates from v8, not from v9's exclusion:** over all 256
+            bytes bin 7 is reached only by `0x40` and `0xC0`, and v7
+            recorded BOTH as borderline on 09-29, so the bin has never
+            had an admissible witness. The nine-byte rule removed `0xC0`
+            and made an old unsound bin newly *scarce*, which is the only
+            reason a scarcity scan now sees it. **(iii) Four ways out,
+            and two of them change nothing a reader can see:** excluding
+            `0x40` and merging `g_first` 7 into a `6+` bin give the same
+            6 bins / 4 bins / 15 of 24 / zero unsound, and a 40-seed
+            sweep does not separate their closure cost either (W1 faster
+            on 22 of 40, means 499 vs 421). No number in the vplan
+            distinguishes a plan that still drives `0x40` from one that
+            does not -- only the stimulus log does. **And the instrument
+            re-derives v8's hand-made `illegal_bins` as a corollary** (no
+            exclusion -> unsound bins `{7,8,9}`, where 8 and 9 are
+            unsound by *inadmissible* witness), so soundness is the
+            general rule of which the exclusion is the special case
+      - [ ] **DECIDE between W1, W3 and W4 for F7's goal** -- created
+            2026-10-03 and **the new top item**, and the one thing today
+            deliberately did not do: the derivation is committed but the
+            choice changes a committed sign-off criterion, so v11 flags
+            it for review rather than applying it. W3 (merge `g_first` 7
+            into `6+`) is recommended because it is numerically identical
+            to W1 while keeping `0x40` in the stimulus, so W1 pays for
+            the clean number with DUT exercise it did not have to give
+            up; W4 (exclude the one frame from F7's *timing* oracle while
+            keeping it under F1's) is the only option preserving a 7-bin
+            goal and needs an oracle change rather than a goal change.
+            **Until it is decided F7's goal is W0 as committed, with two
+            evidence-unsound bins** -- now recorded rather than implicit
+      - [ ] **Run the soundness audit on EVERY OTHER coverage model in
+            this repository** -- created 2026-10-03. Today's audit covers
+            F7's three coverpoints only. The fourth quadrant,
+            abundant-and-unsound, is empty in F7's data and is **not**
+            claimed impossible: it needs a bin all of whose many
+            witnesses are borderline, and F7's population has only two
+            borderline bytes. A model with a wider borderline band would
+            have one, **and no scarcity scan at any threshold would find
+            it** -- so this is not subsumed by the witness-count item
+      - [ ] **Give the BORDERLINE case a mechanism, as `illegal_bins`
+            gives the inadmissible case one** -- created 2026-10-03.
+            v8's `illegal_bins` raises on an inadmissible witness; there
+            is nothing that reports a bin whose only witnesses are
+            borderline, which is why bin 7 stayed invisible for four
+            revisions while the mechanism for its sibling bins worked
       - [ ] **`payload_coverage_model.py`'s `classify()` still implements
             the TWO-byte rule** -- created 2026-10-02, and the live half
             of the item just closed. The model raises `IllegalPayload` on
@@ -932,6 +987,13 @@ measured rather than quietly dropped.
             rewiring it means re-deriving those too. The exact set, the
             exact goals and the closure evidence it needs are now
             committed
+      - [ ] **A coverage model that reports SCARCITY as well as
+            cardinality** -- created 2026-10-02, **narrowed 2026-10-03**
+            rather than closed. Today's instrument computes witness
+            counts for F7's three coverpoints, so the question is
+            answered there; no live coverage model in this repository
+            *reports* either scarcity or soundness, which is the half
+            that remains
       - [ ] **Audit every containment claim in this repository for an
             AGGREGATE on the contained side** -- created 2026-10-01 by
             today's finding, and the general form of it. The error is
