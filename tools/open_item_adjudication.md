@@ -45,14 +45,37 @@ increasingly urgent, and the count was the only part of it that was being
 maintained. It held a position at or near the top of the list throughout, and
 the sessions it reproached had done the work before the count started.
 
-Retired today. The sub-items the entry parked behind it (RAL basics, virtual
-sequencers, active/passive agents, constrained-random UART stimulus) are
-likewise complete per `progress.md` — RAL on 09-19 with 8/8 and 5-of-5
-mutants, virtual sequencers and active/passive on 09-18 — **except**
-constrained-random stimulus, which `progress.md` itself carries forward
-honestly under "What Phase 4 did NOT cover": stimulus is still directed
-everywhere while the vplan assigns most features to constrained-random. That
-one survives as its own item and is not retired with its parent.
+The sub-items the entry parked behind it (RAL basics, virtual sequencers,
+active/passive agents, constrained-random UART stimulus) are likewise complete
+per `progress.md` — RAL on 09-19 with 8/8 and 5-of-5 mutants, virtual
+sequencers and active/passive on 09-18 — **except** constrained-random
+stimulus, which `progress.md` itself carries forward honestly under "What
+Phase 4 did NOT cover": stimulus is still directed everywhere while the vplan
+assigns most features to constrained-random. That one survives as its own item
+and is not retired with its parent.
+
+**But it is not retired to nothing, and this is the part that nearly went
+wrong.** `progress.md` line 468 carries, under the Phase 6 **capstone**, an
+unchecked box reading simply `- [ ] Full UVM environment built`. Deleting the
+log item outright would have retired the only text pointing at that box — the
+exact "repair built and then not connected" failure the graphene repository's
+10-02 session named. So:
+
+REPLACED-BY: the Phase 6 capstone's unchecked `Full UVM environment built`
+box (`progress.md` line 468), restated in the log with what actually
+distinguishes it from the Phase 4 milestone.
+
+**And the ambiguity between those two is the root cause of the twelve-session
+error.** `- [ ] Full UVM environment built` says nothing about how it differs
+from a Phase 4 milestone that is COMPLETE and contains a full UVM environment.
+A session reading only the log could reasonably believe the environment did
+not exist, because the capstone box says a full environment is not built and
+does not say in what sense. The two are genuinely different — the capstone
+also requires SVA protocol checkers, constrained-random rather than directed
+stimulus, and a written methodology summary, all of which are separately
+unchecked — but nothing said so. The replacement wording in today's log entry
+states the difference, so the next session inherits a distinction rather than
+a contradiction.
 
 ## OPEN: Control B for the FOUR OLDER mutation harnesses
 

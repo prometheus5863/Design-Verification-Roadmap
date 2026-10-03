@@ -411,6 +411,28 @@ def main():
                           'adjudicated on disk, with a reason')
     report(not extra, 'the adjudication file contains no entry that no longer '
                       'matches any top-ranked item')
+    # A STALE verdict retires the only text pointing at a piece of work, so
+    # it must say what inherits it.  Without this, an audit of the list that
+    # chooses the work can itself delete work -- which is the "repair built
+    # and then not connected" failure one level up.
+    adj_text = (open(ADJUDICATION, encoding='utf-8').read()
+                if os.path.exists(ADJUDICATION) else '')
+    stale_phrases = [p for v, p in entries if v == 'STALE']
+    unsuccessored = []
+    for phrase in stale_phrases:
+        i = adj_text.find(phrase)
+        if i < 0:
+            unsuccessored.append(phrase)
+            continue
+        nxt = adj_text.find('\n## ', i)
+        body = adj_text[i:nxt if nxt > 0 else len(adj_text)]
+        if 'REPLACED-BY:' not in body and 'NO-SUCCESSOR:' not in body:
+            unsuccessored.append(phrase)
+    for phrase in unsuccessored:
+        print('    NO SUCCESSOR NAMED  %s' % first_line(phrase, 66))
+    report(not unsuccessored, 'every STALE verdict names what inherits the '
+                              'work (REPLACED-BY) or states there is none '
+                              '(NO-SUCCESSOR)')
     n_stale = sum(1 for v, _p in entries if v == 'STALE')
     print('  verdicts: %d STALE, %d OPEN'
           % (n_stale, sum(1 for v, _p in entries if v == 'OPEN')))

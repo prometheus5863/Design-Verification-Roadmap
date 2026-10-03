@@ -54,6 +54,7 @@ S4 -- the committed adjudication of the top 6
     OPEN    - Audit every "what this does not change" paragraph in the v...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
   [PASS] the adjudication file contains no entry that no longer matches any top-ranked item
+  [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
   verdicts: 1 STALE, 5 OPEN
 
 ------------------------------------------------------------------------------
@@ -66,5 +67,5 @@ S5 -- controls on the ranker, and its mutation test
   [PASS] E1  EXACT: an open item that is verbatim a completed block scores exactly 1.0   [1.0]
 
 ==============================================================================
-RESULT: 11 passed, 0 failed
+RESULT: 12 passed, 0 failed
 ==============================================================================
