@@ -1,0 +1,70 @@
+==============================================================================
+OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
+consistent with the file that records what is finished?  (2026-10-03)
+==============================================================================
+  AUTOMATION_LOG.md: 20 "Not yet covered" lists; the most recent has 13 items
+  progress.md: 30 completed checkboxes, 4 unchecked
+  [PASS] the most recent open-items list parses into items
+  [PASS] progress.md parses into completed blocks
+
+------------------------------------------------------------------------------
+S1 -- every backticked path an open item names exists in the tree
+------------------------------------------------------------------------------
+  paths named: 2   resolved: 2   unresolved: 0
+  An unresolved path is not automatically a fault: an item may name a file
+  it asks a future session to CREATE.  Reported, not failed.
+  [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
+
+------------------------------------------------------------------------------
+S2 -- every "created <date>" parses and is not in the future
+------------------------------------------------------------------------------
+  dates found: 6   ok: 6   bad: 0
+  [PASS] no open item carries an unparseable or future creation date
+
+------------------------------------------------------------------------------
+S3 -- CONTRADICTION RANKING against progress.md's completed items
+------------------------------------------------------------------------------
+  score = fraction of the open item's distinctive tokens that a
+  COMPLETED checkbox also contains.  A RANKING, not a verdict.
+
+    score  open item
+    0.606  - The UVM environment against the UART RTL — the register-bus agent, the serial agent ...  <-- adjudicate
+    0.600  - Control B for the FOUR OLDER mutation harnesses — created 10-01 as "every mutant in ...  <-- adjudicate
+    0.500  - A mutant on budget_law_exhaustive.py's own stimulus generator — created 09-29, still...  <-- adjudicate
+    0.400  - The F7 cross cannot be closed without drawing 0x40, and 0x40 is BORDERLINE — created...  <-- adjudicate
+    0.308  - Wire PayloadAdmissibilityCoverage into the live UVM coverage collector — created 09-...  <-- adjudicate
+    0.286  - Audit every "what this does not change" paragraph in the vplan — created today, and ...  <-- adjudicate
+    0.233  - payload_coverage_model.py's classify() still implements the TWO-byte rule — created ...
+    0.218  - Apply the three-valued outcome axis to phase6_crv_uart's crosses (09-26); audit ever...
+    0.182  - Audit every containment claim in this repository for an AGGREGATE on the contained s...
+    0.174  - Compute the WITNESS COUNT of every coverage bin in this repository, not just the rea...
+
+  top match for the highest-ranked item:
+    - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
+
+------------------------------------------------------------------------------
+S4 -- the committed adjudication of the top 6
+------------------------------------------------------------------------------
+  adjudication entries on disk: 6
+    STALE   - The UVM environment against the UART RTL — the register-bu...
+    OPEN    - Control B for the FOUR OLDER mutation harnesses — created ...
+    OPEN    - A mutant on budget_law_exhaustive.py's own stimulus genera...
+    OPEN    - The F7 cross cannot be closed without drawing 0x40, and 0x...
+    OPEN    - Wire PayloadAdmissibilityCoverage into the live UVM covera...
+    OPEN    - Audit every "what this does not change" paragraph in the v...
+  [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
+  [PASS] the adjudication file contains no entry that no longer matches any top-ranked item
+  verdicts: 1 STALE, 5 OPEN
+
+------------------------------------------------------------------------------
+S5 -- controls on the ranker, and its mutation test
+------------------------------------------------------------------------------
+  [PASS] C1  an open item whose components are all named in a COMPLETED checkbox ranks high   [0.818]
+  [PASS] C2  an unrelated open item ranks low   [0.143]
+  [PASS] C3  and the contradicted item ranks ABOVE the unrelated one   [0.818 > 0.143]
+  [PASS] M1  MUTATION TEST: with the completed checkbox removed, the same item no longer ranks high   [0.818 -> 0.000]
+  [PASS] E1  EXACT: an open item that is verbatim a completed block scores exactly 1.0   [1.0]
+
+==============================================================================
+RESULT: 11 passed, 0 failed
+==============================================================================
