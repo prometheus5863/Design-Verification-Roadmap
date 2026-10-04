@@ -5516,4 +5516,7 @@ remain untested since then.
 **Commits this run:** 4 (the mechanism with its transcript; the mutation
 harness with its report and the suite hardening M1 prompted; vplan v12;
 progress.md). This AUTOMATION_LOG.md entry makes **5**. The graphene
-repository took **9** in the same session, for **14** across both.
+repository took ~~9~~ **10** in the same session, for ~~14~~ **15** across
+both — corrected in place after reading both counts back off the GitHub API
+instead of off the entries that claimed them, which also caught a
+corresponding off-by-one in the graphene entry's own count.
