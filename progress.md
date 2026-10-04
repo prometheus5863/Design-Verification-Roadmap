@@ -962,23 +962,73 @@ measured rather than quietly dropped.
             **Until it is decided F7's goal is W0 as committed, with two
             evidence-unsound bins** -- now recorded rather than implicit
       - [ ] **Run the soundness audit on EVERY OTHER coverage model in
-            this repository** -- created 2026-10-03. Today's audit covers
-            F7's three coverpoints only. The fourth quadrant,
-            abundant-and-unsound, is empty in F7's data and is **not**
-            claimed impossible: it needs a bin all of whose many
+            this repository** -- created 2026-10-03, **not done, and
+            2026-10-04 made it bigger rather than smaller**. F7's three
+            coverpoints are now audited on a *third* axis as well (run
+            soundness), so every other model here is unaudited on three
+            axes, not two: `examples/phase6_crv_uart/`'s Verilog
+            coverpoints and crosses, the live `UartCoverage` collector in
+            `uart_uvm_tb.py`, and `phase5_property_coverage`'s per-property
+            model. The Verilog ones are the harder half, because
+            `EvidenceSoundCoverage` is a python class and Icarus has no
+            coverage API -- the realistic route is an offline census over
+            the same stimulus log rather than a live collector. The fourth
+            quadrant, abundant-and-unsound, is empty in F7's data and is
+            **not** claimed impossible: it needs a bin all of whose many
             witnesses are borderline, and F7's population has only two
             borderline bytes. A model with a wider borderline band would
             have one, **and no scarcity scan at any threshold would find
             it** -- so this is not subsumed by the witness-count item
-      - [ ] **Give the BORDERLINE case a mechanism, as `illegal_bins`
-            gives the inadmissible case one** -- created 2026-10-03.
-            v8's `illegal_bins` raises on an inadmissible witness; there
-            is nothing that reports a bin whose only witnesses are
-            borderline, which is why bin 7 stayed invisible for four
-            revisions while the mechanism for its sibling bins worked
+      - [x] **Give the BORDERLINE case a mechanism, as `illegal_bins`
+            gives the inadmissible case one -- DONE 2026-10-04
+            (vplan v12).** `examples/phase4_uvm_milestone/evidence_soundness_coverage.py`,
+            **39 checks / 0 failed**, `evidence_soundness_2026-10-04.txt`;
+            `mutation_report_evidence_soundness_2026-10-04.txt`, **5 of 5**
+            with control A and control B. `EvidenceSoundCoverage` is a
+            SUBCLASS of `PayloadAdmissibilityCoverage`, so
+            `payload_coverage_model.py` is untouched and its 09-30
+            transcript stays valid -- `ctz_bins`, `tr_bins`, `cross`,
+            `coverage_pct()` and the class census are all checked
+            identical on a shared 500-sample run.
+            `raise_on_unsound_closure=True` raises `UnsoundClosure`, an
+            `AssertionError` like `IllegalPayload`, so one `except`
+            catches both kinds of bad evidence -- the symmetry the item
+            asked for. **And the item was smaller than what it found:**
+            POPULATION-unsound (structural, no admissible byte reaches
+            the bin, unfixable by stimulus) and RUN-unsound (the bin was
+            hit and nothing admissible hit it) are different properties,
+            and 10-03 measured only the first. `0x40` closes
+            `transitions` bin 3 -- which has **83 admissible witnesses it
+            did not use** -- and `g_first` bin 7, which has none: one
+            payload, two verdicts, **two different remedies**. On an
+            exhaustive legal run F7 now reports cardinality **100.00 %
+            (16/16)** against sound **93.75 % (15/16)**, and
+            `sign_off()` refuses while naming which of three grounds
+            applies. Two faults of the session recorded rather than
+            fixed quietly: the witness search was wrong in its first
+            form (ranged over the exclusion SET rather than the
+            admissibility CLASS, picked `0xE0`, failed on its own false
+            premise), and **mutant M1 survived the first run** because no
+            check anywhere closed a bin with an *inadmissible* payload --
+            the 10-03 asymmetry reintroduced on the run axis by the
+            session removing it from the population axis; two checks
+            added, 37/37 -> 39/39
       - [ ] **`payload_coverage_model.py`'s `classify()` still implements
-            the TWO-byte rule** -- created 2026-10-02, and the live half
-            of the item just closed. The model raises `IllegalPayload` on
+            the TWO-byte rule** -- created 2026-10-02, **still deferred on
+            2026-10-04 but no longer at unknown cost.** The rewiring's
+            effect is now measured
+            (`evidence_soundness_coverage.py` Section 6, which runs the
+            identical census under both rules): which `g_first` bin is
+            unsound does **not** change (bin 7 under both, so 10-03's
+            headline defect is not an artefact of the rule disagreement);
+            the cross drops from two unsound cells `{(7,1),(7,3)}` to one
+            `{(7,3)}`, and `(7,1)` leaves the goal because the nine-byte
+            rule excludes its only witnesses, **not because it became
+            sound**; and the transition coverpoint loses a *bin* (5 -> 4),
+            which no soundness verdict would ever have shown. A deferred
+            item with a measured cost is a different thing from a deferred
+            item with a reason. Original note follows: the live half of
+            the item just closed. The model raises `IllegalPayload` on
             `0x00` and `0x80` and silently admits the other seven, so the
             live coverage model and vplan v10 disagree about which
             payloads may carry F7 evidence. Deliberately not touched in
@@ -987,13 +1037,19 @@ measured rather than quietly dropped.
             rewiring it means re-deriving those too. The exact set, the
             exact goals and the closure evidence it needs are now
             committed
-      - [ ] **A coverage model that reports SCARCITY as well as
-            cardinality** -- created 2026-10-02, **narrowed 2026-10-03**
-            rather than closed. Today's instrument computes witness
-            counts for F7's three coverpoints, so the question is
-            answered there; no live coverage model in this repository
-            *reports* either scarcity or soundness, which is the half
-            that remains
+      - [x] **A coverage model that reports SCARCITY as well as
+            cardinality -- DONE 2026-10-04**, created 2026-10-02 and
+            narrowed 2026-10-03. `EvidenceSoundCoverage.scarce_bins()`
+            and `.population_unsound_bins()` are methods on a LIVE
+            coverage model, and `.cardinality_coverage_pct()` /
+            `.sound_coverage_pct()` report the two headline numbers side
+            by side so the gap between them is visible rather than
+            derivable. The four-quadrant table in Section 7 is now
+            computed from the live model instead of from an offline
+            instrument. **Narrower than it sounds, and said so:** this is
+            true of the F7 payload model only -- see the "every other
+            coverage model" item above, which is the same gap one level
+            out
       - [ ] **Audit every containment claim in this repository for an
             AGGREGATE on the contained side** -- created 2026-10-01 by
             today's finding, and the general form of it. The error is
