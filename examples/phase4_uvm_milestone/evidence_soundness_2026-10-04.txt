@@ -1,0 +1,92 @@
+============================================================================
+EVIDENCE-SOUNDNESS COVERAGE: THE MECHANISM THE BORDERLINE CASE
+DID NOT HAVE  (2026-10-04)
+============================================================================
+
+============================================================================
+SECTION 1 -- committed anchors reproduced before any new number
+============================================================================
+  [PASS] the live classifier's INADMISSIBLE set is v8's two bytes  -- 0x00 0x80
+  [PASS] the closed-form rule gives the vplan's nine bytes  -- 0x00 0x80 0xC0 0xE0 0xF0 0xF8 0xFC 0xFE 0xFF
+  [PASS] the classifier has exactly two BORDERLINE bytes  -- 0x40 0xC0
+  [PASS] anchor none  / g_first     bins/scarce/unsound  -- got (9, 2, [7, 8, 9]), committed (9, 2, [7, 8, 9])
+  [PASS] anchor none  / transitions bins/scarce/unsound  -- got (5, 1, []), committed (5, 1, [])
+  [PASS] anchor none  / cross       bins/scarce/unsound  -- got (25, 13, [(7, 1), (7, 3), (8, 1), (9, 1)]), committed (25, 13, [(7, 1), (7, 3), (8, 1), (9, 1)])
+  [PASS] anchor two   / g_first     bins/scarce/unsound  -- got (7, 0, [7]), committed (7, 0, [7])
+  [PASS] anchor two   / transitions bins/scarce/unsound  -- got (5, 1, []), committed (5, 1, [])
+  [PASS] anchor two   / cross       bins/scarce/unsound  -- got (23, 11, [(7, 1), (7, 3)]), committed (23, 11, [(7, 1), (7, 3)])
+  [PASS] anchor nine  / g_first     bins/scarce/unsound  -- got (7, 1, [7]), committed (7, 1, [7])
+  [PASS] anchor nine  / transitions bins/scarce/unsound  -- got (4, 1, []), committed (4, 1, [])
+  [PASS] anchor nine  / cross       bins/scarce/unsound  -- got (16, 4, [(7, 3)]), committed (16, 4, [(7, 3)])
+
+============================================================================
+SECTION 2 -- exactly-known values: every census is a PARTITION
+============================================================================
+  [PASS] partition: g_first class counts sum to the sample count exactly  -- 2000 == 2000
+  [PASS] partition: transitions class counts sum to the sample count exactly  -- 2000 == 2000
+  [PASS] partition: cross class counts sum to the sample count exactly  -- 2000 == 2000
+  [PASS] partition: the three coverpoints see the same sample count  -- [2000, 2000, 2000]
+  [PASS] partition: the cross marginalises onto g_first exactly
+
+============================================================================
+SECTION 3 -- the mechanism: run-unsound vs population-unsound are DIFFERENT
+============================================================================
+  [PASS] population-unsound under the vplan rule: g_first bin 7  -- witnesses [64], all non-admissible
+  [PASS] and cross cell (7, 3)
+  [PASS] a run that samples only 0x40 reports run-unsound bins  -- [('g_first', 7), ('transitions', 3), ('cross', (7, 3))]
+  [PASS] a population-SOUND bin can be closed run-unsound (the case no instrument here could report)  -- payload 0x40 (BORDERLINE) closes transitions bin 3, which has 83 admissible witness(es) [1, 2, 3, 4] it did not use -- so the bin is CLOSEABLE with interpretable evidence and this run did not do it, which a cardinality report calls covered and a population audit calls sound
+  [PASS] CONTROL: the two axes are therefore NOT aliased -- the same payload is run-unsound on a sound bin and on an unsound one  -- 0x40 makes transitions bin 3 run-unsound (population-sound) AND g_first bin 7 run-unsound (population-unsound): one payload, two different verdicts, two different remedies
+  [PASS] a bin closed only by an INADMISSIBLE payload is ALSO run-unsound (M1's hole, found by the harness)  -- 0x00 closes g_first bin 9 with 1 inadmissible and 0 borderline witnesses: [('cross', (9, 1)), ('g_first', 9), ('transitions', 1)]
+  [PASS] so the run verdict keys on ADMISSIBILITY, not on which kind of bad evidence: both the borderline-only and inadmissible-only closures are reported
+
+============================================================================
+SECTION 4 -- the gate: sign_off() refuses, and names which remedy applies
+============================================================================
+  exhaustive legal stimulus, cross coverpoint:
+    cardinality coverage 100.00 % (16/16)
+    sound       coverage 93.75 % (15/16)
+  [PASS] exhaustive stimulus reaches 100 % CARDINALITY coverage
+  [PASS] and does NOT reach 100 % SOUND coverage -- the gap is the population-unsound cell  -- overstatement = 1 bin(s)
+  [PASS] sign_off() REFUSES an exhaustive run that reads 100 %  -- 3 reason(s)
+      - goal contains 1 population-unsound bin(s) [(7, 3)]: no admissible payload reaches them under this exclusion rule, so no stimulus can close them meaningfully
+      - 1 bin(s) [(7, 3)] were closed in this run only by non-admissible payloads
+      - cardinality coverage reads 100.0 % (16/16) while sound coverage is 93.8 % (15/16): the headline number overstates closure by 1 bin(s)
+  [PASS] and it separates the GOAL remedy from the STIMULUS remedy
+  [PASS] raise_on_unsound_closure=True raises UnsoundClosure on 0x40, exactly as raise_on_illegal raises IllegalPayload on 0x00  -- coverpoint g_first bin 7 is closed in this run only by non-admissible payloads (1 borderline, 0 inadmissible, 0 admissible); closing it does not mean the DUT passed there
+  [PASS] UnsoundClosure is an AssertionError, like IllegalPayload, so one except clause catches both kinds of bad evidence
+  [PASS] CONTROL: an admissible-only run does NOT raise  -- 246 admissible payloads driven, 0 unsound closures
+
+============================================================================
+SECTION 5 -- v8's numbers are unchanged -- this subclass ADDS, it does not edit
+============================================================================
+  [PASS] ctz_bins identical to the base class on the same 500-sample run
+  [PASS] tr_bins and cross identical too
+  [PASS] coverage_pct() identical -- v8's headline number is untouched  -- 95.6522 % (22/23)
+  [PASS] classes census identical
+
+============================================================================
+SECTION 6 -- what the DEFERRED rewiring will cost, measured rather than deferred
+============================================================================
+  coverpoint   live 2-byte rule       vplan 9-byte rule     
+  g_first      bins=7  scarce=0  uns=1   bins=7  scarce=1  uns=1 
+  transitions  bins=5  scarce=1  uns=0   bins=4  scarce=1  uns=0 
+  cross        bins=23 scarce=11 uns=2   bins=16 scarce=4  uns=1 
+  unsound sets:
+    g_first      2-byte [7]   9-byte [7]
+    transitions  2-byte []   9-byte []
+    cross        2-byte [(7, 1), (7, 3)]   9-byte [(7, 3)]
+  [PASS] the rewiring does NOT change WHICH g_first bin is unsound  -- bin 7 under both rules -- so the headline defect 10-03 found is NOT an artefact of the rule disagreement
+  [PASS] but it DOES change the cross: 2 unsound cells become 1  -- [(7, 1), (7, 3)] -> [(7, 3)]; (7,1) leaves the goal because the nine-byte rule excludes its only witnesses, not because it became sound
+  [PASS] and it changes the transition coverpoint's CARDINALITY, which no soundness verdict would have shown  -- 5 bins -> 4 bins
+
+============================================================================
+SECTION 7 -- the four quadrants, now computable from the LIVE model
+============================================================================
+  g_first      abundant+sound  6  abundant+UNSOUND  0  scarce+sound  0  scarce+UNSOUND  1
+  transitions  abundant+sound  3  abundant+UNSOUND  0  scarce+sound  1  scarce+UNSOUND  0
+  cross        abundant+sound 12  abundant+UNSOUND  0  scarce+sound  3  scarce+UNSOUND  1
+  [PASS] the abundant+UNSOUND quadrant is still EMPTY in this population, and that is a fact about F7's two borderline bytes, not a theorem  -- g_first bin 7 has 1 witness under the nine-byte rule, so it is scarce+unsound; a model with a wider borderline band would put a bin in the empty quadrant, which NO scarcity scan at any threshold would find
+
+============================================================================
+SUMMARY: 39 passed, 0 failed
+============================================================================
