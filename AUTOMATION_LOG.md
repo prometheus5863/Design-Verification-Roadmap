@@ -5228,3 +5228,292 @@ This AUTOMATION_LOG.md entry makes 6, rebased onto the concurrent session's 6,
 so this repository takes **12** today across two firings that did disjoint work.
 **The graphene repository was not touched this session** — an earlier firing had
 already done its 9.
+
+---
+
+## 2026-10-04 — the mechanism the borderline case did not have, and the axis it turned out to be hiding
+
+**Status.** Two open items closed, one grown, one given a measured cost.
+New module `examples/phase4_uvm_milestone/evidence_soundness_coverage.py`
+(**39 checks / 0 failed**), new mutation harness (**5 of 5**, control A and
+control B), **vplan v12**, progress.md. The 10-03 structural item — *give the
+BORDERLINE case a mechanism, as `illegal_bins` gives the inadmissible case
+one* — is closed, and so is 10-02's *a coverage model that reports SCARCITY
+as well as cardinality*, narrowed on 10-03 and now closed for the F7 model.
+**W1/W3/W4 is still undecided and F7's goal is still W0**, per 10-03's own
+reasoning that a module does not change a committed sign-off criterion.
+
+### 1. The item, and why a subclass
+
+v8's `PayloadAdmissibilityCoverage.sample()` **raises** `IllegalPayload` the
+moment an INADMISSIBLE payload enters an F7 run. Nothing anywhere reported a
+bin whose only witnesses are BORDERLINE — which is why `g_first` bin 7 stayed
+invisible through four revisions while the mechanism for its sibling bins 8
+and 9 worked on the day it was written. `EvidenceSoundCoverage` is a
+**subclass**, not an edit: `payload_coverage_model.py` carries ~30 committed
+validations, several quoting a superseded 0.78 % figure, and its `classify()`
+still implements the two-byte rule where the vplan says nine — a separate
+item, deferred twice with reasons. Section 5 checks that nothing moved:
+`ctz_bins`, `tr_bins`, `cross`, `coverage_pct()` and the class census are all
+identical to the base class on a shared 500-sample run, so the 09-30
+transcript stays valid and the rewiring stays a decision rather than a side
+effect. `raise_on_unsound_closure=True` raises `UnsoundClosure`, an
+`AssertionError` like `IllegalPayload`, so **one `except` clause catches both
+kinds of bad evidence** — which is the symmetry the item asked for.
+
+### 2. The result that was not in the item
+
+10-03's audit answers a question about the **population**: is there any
+admissible byte that reaches this bin at all? That is structural — a property
+of the DUT, the classifier and the exclusion rule, computable before a frame
+is driven, and unfixable by stimulus. A collector answers a question about a
+**run**. Those are not the same question, and:
+
+```
+population_unsound(bin)  <=>  no witness of bin is ADMISSIBLE
+run_unsound(bin)         <=>  bin was HIT and no ADMISSIBLE sample hit it
+```
+
+**A population-SOUND bin can be closed run-unsound.** `0x40` does both at
+once: it closes `transitions` bin 3, which has **83 admissible witnesses it
+did not use**, and `g_first` bin 7, which has none. One payload, two
+verdicts, **two different remedies** — change the stimulus in the first case,
+change the goal in the second. A cardinality report calls both covered;
+10-03's audit calls the first sound; **neither distinguishes them**, and the
+first is the common case in practice: the bin is closeable with
+interpretable evidence and this run did not do it. No instrument in this
+repository could previously report it.
+
+So v11's sentence *"every other coverage model remains unaudited on both
+axes"* was already wrong when it was written. There are **three** axes —
+cardinality, scarcity, and soundness split into population and run — and
+v11 measured population soundness and read it as soundness. Annotated in
+place in v12. **No v11 number is withdrawn; what is withdrawn is the
+completeness of its axis list.**
+
+### 3. F7's sign-off now has two numbers, and they disagree
+
+Exhaustive legal stimulus under the nine-byte rule, cross coverpoint:
+
+| | |
+|---|---|
+| cardinality coverage | **100.00 % (16/16)** |
+| sound coverage | **93.75 % (15/16)** |
+
+`sign_off()` refuses, on three grounds kept **separate because their remedies
+differ**: a population-unsound bin is in the goal (change the goal); a bin
+was closed in this run only by bad evidence (change the stimulus); the
+headline number overstates closure by N bins. A gate that reported only the
+second would be telling a reviewer to fix the stimulus when the goal is what
+is wrong — a true statement that misdirects, which is mutant **M5**.
+Control: an admissible-only run of 246 payloads raises nothing, so the gate
+does not fail on everything.
+
+### 4. The deferred rewiring now has a cost, not a reason
+
+Rather than nudge at the `classify()` item for a third session, Section 6
+runs the **identical census** under the live two-byte rule and the vplan's
+nine-byte rule:
+
+| coverpoint | 2-byte (live) | 9-byte (vplan) |
+|---|---|---|
+| g_first | 7 bins, 0 scarce, 1 unsound `[7]` | 7 bins, 1 scarce, 1 unsound `[7]` |
+| transitions | 5 bins, 1 scarce, 0 unsound | **4 bins**, 1 scarce, 0 unsound |
+| cross | 23 bins, 11 scarce, **2 unsound** `{(7,1),(7,3)}` | 16 bins, 4 scarce, **1 unsound** `{(7,3)}` |
+
+**Which `g_first` bin is unsound does not change** — bin 7 under both — so
+10-03's headline defect is **not** an artefact of the rule disagreement, which
+was an open possibility and is now closed. The cross loses an unsound cell,
+and `(7,1)` leaves the goal **because the nine-byte rule excludes its only
+witnesses, not because it became sound** — a distinction a bare count of
+unsound cells would have hidden. And the transition coverpoint loses a *bin*,
+a cardinality change **no soundness verdict would ever have shown**.
+
+### 5. Two faults of my own, recorded rather than fixed quietly
+
+- **The witness search was wrong in its first form, and failed on its own
+  false premise.** Section 3's search for a population-sound/run-unsound bin
+  ranged over `nine | borderline` as "the bad bytes" — conflating the vplan's
+  **exclusion set** with the live classifier's admissibility **class**. It
+  picked `0xE0`, which the nine-byte rule excludes but `classify()` calls
+  ADMISSIBLE, so sampling it is *good* evidence and the check failed. The set
+  that matters is `{b : classify(b) != ADMISSIBLE}`, and it must be searched
+  over **every** coverpoint, because a byte can sit in a population-unsound
+  bin of one and a population-sound bin of another — which is exactly what
+  `0x40` does and exactly the finding the search existed to produce. Fixed,
+  and the first form is documented in the module rather than deleted.
+- **Mutant M1 survived the first run.** M1 loosens `run_unsound` to require a
+  BORDERLINE witness, so a bin closed only by an INADMISSIBLE payload reads as
+  sound — **the 10-03 asymmetry reintroduced on the run axis by the session
+  removing it from the population axis**. The suite as first written did not
+  kill it, because no check anywhere closed a bin with an inadmissible payload:
+  every bad-evidence case it exercised used `0x40`. Two checks added (`0x00`
+  with `raise_on_illegal=False` must make `g_first` bin 9 run-unsound with 1
+  inadmissible and 0 borderline witnesses, and both closure kinds must be
+  reported together), M1 now dies to both, suite **37/37 → 39/39**. **The
+  harness did not merely confirm the suite; it improved it** — the second time
+  in three sessions (cf. 10-03's M7, which turned a stack trace into seven
+  failing checks).
+
+### 6. Validations
+
+**39 checks / 0 failed.** **Four committed anchors reproduced before any new
+number** per 09-30 — the live classifier's two-byte INADMISSIBLE set, the
+closed-form nine, the two BORDERLINE bytes, and **all nine
+bins/scarce/unsound triples** from `witness_soundness_2026-10-03.txt`'s three
+exclusion rules, every one exact. **Exactly-known values: every census is a
+PARTITION.** Per-bin class counts sum to the sample count exactly for all
+three coverpoints over a 2000-sample run; the three coverpoints agree with
+each other, since each sample lands in exactly one bin of each; and the cross
+**marginalises onto `g_first` exactly**. These are integer identities, exact
+under addition of non-negative integers — no tolerance, no float, and nothing
+for a step size to hide in. **Controls:** the two axes are shown
+**not aliased** by a single payload producing different verdicts on two
+coverpoints; an admissible-only run raises nothing; and v8's own numbers are
+checked bit-identical so the subclass is additive. **Mutation report 5 of 5**,
+with **control B** — `scarce` loosened from `n == 1` to `n <= 1`, a genuinely
+different predicate that is numerically identical on this population because
+a bin appears in the census only if some byte witnesses it — **not** caught,
+so "5 of 5" is a claim about the mutants and not a property of a suite that
+fails on any perturbation. Regression: `payload_coverage_model.py`,
+`witness_soundness.py` and `reachable_cross_under_per_byte_rule.py` all still
+exit 0.
+
+**Methodological note, continuing the series.** 09-26: an illegal bin can
+fire against correct RTL. 09-27: a runner that greps a file it did not just
+write is not a gate. 09-28: width is not containment. 09-29: an oracle's
+competence can be a function of the stimulus. 09-30: two sign-off clauses can
+be individually true and jointly impossible. 10-01: an aggregate on the
+contained side errs only one way. 10-02: when a rule changes, every number
+derived from it is stale until re-derived. 10-03: a coverage bin's witness
+must be interpretable, and "the bin is non-empty" is a different claim from
+"the bin can be closed".
+**10-04: AND "THE BIN CAN BE CLOSED" IS A DIFFERENT CLAIM FROM "THIS RUN
+CLOSED IT WELL".** 10-03 split cardinality from soundness and then treated
+soundness as one thing. It is two, and the half it did not name is the half a
+real regression hits: not a bin that *cannot* be closed by good evidence, but
+a bin that *was not*, in a run whose report says 100 %. The structural half is
+rare and permanent; the run half is common and silent, and the instrument that
+found the rare one is blind to the common one by construction, because it
+never looks at a run.
+
+The corollary is about the shape of the correction rather than its content.
+**Each of the last three sessions found that the previous session's axis was
+incomplete, and found it the same way: by asking what the new predicate is a
+predicate *of*.** 10-02 asked that of cardinality and got soundness. 10-03
+asked it of soundness and got admissibility of witnesses. 10-04 asked it of
+admissibility and got population-versus-run. **That is not convergence, and
+pretending otherwise would be the error.** The honest statement is that the
+question has not stopped producing, so there is no reason to believe v12's
+axis list is complete either, and the thing to do with that is write it down
+rather than declare the taxonomy finished — which is what the "every other
+coverage model" item now says, with three axes named and the admission that
+the count has gone up twice.
+
+**Not yet covered (candidates for future runs):**
+- **DECIDE between W1, W3 and W4 for F7's goal** — created 10-03, **still the
+  top item and deliberately untouched for a second session**. The derivation
+  is committed; the choice changes a committed sign-off criterion, so it is a
+  reviewer's decision. W3 recommended. **Today adds one thing to it:** with
+  `sign_off()` now refusing W0 outright, the cost of leaving it undecided is
+  no longer rhetorical — the live model fails the run, so the goal cannot be
+  signed off at all until someone picks
+- **Run the soundness audit on EVERY OTHER coverage model here** — created
+  10-03, **and today made it bigger, not smaller**: every other model is now
+  unaudited on *three* axes. Named: `phase6_crv_uart`'s Verilog coverpoints
+  and crosses, the live `UartCoverage` collector, `phase5_property_coverage`'s
+  per-property model. The Verilog half is the harder one — `EvidenceSoundCoverage`
+  is a python class and Icarus has no coverage API, so the realistic route is
+  an **offline census over the same stimulus log**, not a live collector
+- **Is there a FOURTH soundness axis?** — created today, and the direct
+  successor to the methodological note. The question that produced
+  population-versus-run is "what is this predicate a predicate *of*", and it
+  has now produced a new axis three sessions running. Applied to run
+  soundness, the next candidate is **temporal**: a bin closed by an admissible
+  payload in a run whose *earlier* frames left the DUT in a state the
+  classifier's measurement did not cover. Not mechanised, and deliberately
+  filed as a question rather than an assertion
+- **`payload_coverage_model.py`'s `classify()` still implements the TWO-byte
+  rule** — created 10-02, **three sessions old, still deferred, but no longer
+  at unknown cost** (§4 above). The rewiring should now carry the soundness
+  check and the run axis too, so doing it piecemeal means touching the file
+  twice
+- **Wire `EvidenceSoundCoverage` into the live UVM coverage collector** —
+  created 09-30 as "wire `PayloadAdmissibilityCoverage` into the live
+  collector", **retargeted today** rather than restated: the class the
+  collector should hold is now the subclass, so the item points at something
+  that reports soundness instead of something that would have to be upgraded
+  afterwards
+- **Give the RUN axis a standing guard in the regression runner** — created
+  today. `raise_on_unsound_closure` exists and defaults to **False**, because
+  turning it on by default would fail every existing bench that drives `0x40`.
+  A default-off mechanism is the 09-29 write-only-knob shape in a new costume,
+  and the honest fix is a runner that turns it on for new benches and records
+  the exceptions for old ones, not a flag nobody sets
+- **Audit every "what this does not change" paragraph in the vplan** —
+  created 10-02, **and today is the third consecutive instance of its failure
+  mode**: v11's "unaudited on both axes" was a confident count, in the same
+  paragraph as its restraint. v12's own such paragraph states the axis count
+  has gone up twice and does not claim it has stopped
+- **Control B for the FOUR OLDER mutation harnesses** — created 10-01;
+  today's new harness has one and the four older ones still do not, so the
+  item is **narrowed rather than closed for the third session running**
+- **Audit every containment claim in this repository for an AGGREGATE on the
+  contained side** — created 10-01, untouched
+- **Is `0x40` still contained at a receiver with more sampling lateness?** —
+  created 10-01; `0x40` is now load-bearing for two coverage goals, the
+  exclusion's derivability, **and** both of today's non-aliasing controls
+- **Two redundant encodings of the sample cadence, and only one is
+  load-bearing** — created 10-01 by the M2/M6 pair, untouched
+- **Make Step 0 race-safe: re-check `origin/main` immediately before
+  pushing** — created 10-03 by that session's collision. Not mechanised; this
+  session performed the re-check by hand again (`git fetch` before each push,
+  both repositories, both clean fast-forwards)
+- **A mutant on `budget_law_exhaustive.py`'s own stimulus generator** —
+  created 09-29, still not done
+- **Audit the other benches' observers for CONTAINMENT and for
+  stimulus-dependence** — open since 09-28, widened 09-29, 09-30, 10-01
+- **Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses**
+  (09-26); **audit every remaining runner for the 09-27 "greps a file it did
+  not just write" pattern**; **per-property coverage of the Phase 4 UVM
+  environment** (09-23); a less greedy steering policy (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); widen
+  the coverage model (09-24); mutants not yet attempted (interrupt enable
+  combinations, the loopback mux, reset asserted mid-frame); a property that
+  needs a strengthening invariant; the SVA sequence layer (runnable on neither
+  tool here, open since 09-20); code coverage measurement (Icarus has none,
+  open since 09-18); Phase 6 lint, regression infra, coverage merge, CDC
+  basics, interview prep
+- **The capstone's "Full UVM environment built" box** remains a roll-up and
+  should be checked last. Per 10-03's withdrawn item and
+  `tools/open_item_adjudication.md`, what it genuinely still requires is
+  **(a)** constrained-random stimulus driven from a UVM sequence, **(b)** the
+  SVA protocol checkers bound into that environment, **(c)** the coverage model
+  wired into the live `UartCoverage` collector — **retargeted today to the
+  soundness-reporting subclass** — and **(d)** the written methodology summary
+
+**Automation health.** Device reachable and folder connected at the first
+firing checked today, and **Step 0 did its job in the other direction from
+10-03**: neither repository carried a 2026-10-04 entry and neither had commits
+since midnight, so this was a full two-repository session rather than 10-03's
+one-repo branch. Both repositories cloned fully in under 15 s, so the network
+problem of 10-01/10-02 remains absent for a second consecutive session — and
+two clean sessions do not establish it is gone, so the bundle-via-`_to_push`
+recipe stays documented in the 10-01 and 10-02 entries. The `GIT_ASKPASS`
+recipe ran from `$HOME/.sess/` per 09-28 and the 09-29 correction; the token
+was never written into `.git/config`, a remote URL, any repository file or the
+connected folder, and the temp copy is shredded at the end of the session.
+`user.name`/`user.email` were again absent in the fresh clone and set per
+09-24. **Push verified against the GitHub API rather than git's own output**,
+per 09-26. **The 09-25 push-as-you-go rule was followed in both
+repositories**, and `git fetch origin main` was run immediately before each
+push per the 10-03 race item — `origin/main` was unmoved both times, so no
+rebase was needed and no collision occurred. No toolchain was needed this
+session: the work is pure python and ran on the device VM's own interpreter,
+so `tools/setup_iverilog.sh` and its two 10-03 gotchas were not exercised and
+remain untested since then.
+
+**Commits this run:** 4 (the mechanism with its transcript; the mutation
+harness with its report and the suite hardening M1 prompted; vplan v12;
+progress.md). This AUTOMATION_LOG.md entry makes **5**. The graphene
+repository took **9** in the same session, for **14** across both.
