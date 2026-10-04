@@ -1,0 +1,17 @@
+============================================================================
+MUTATION HARNESS: evidence_soundness_coverage.py  (2026-10-04)
+============================================================================
+
+  [PASS] CONTROL A: the unmutated suite is fully green  -- failures = []
+  [PASS]   M1 run_unsound requires a BORDERLINE witness (inadmissible-only closure reads sound)  -- killed by 2 check(s): a bin closed only by an INADMISSIBLE payload is ALSO run-unsound (M1's; so the run verdict keys on ADMISSIBILITY, not on which kind of bad evi
+  [PASS]   M2 population_unsound accepts BORDERLINE as evidence (vplan v8-v10's own rule)  -- killed by 11 check(s): anchor none  / g_first     bins/scarce/unsound; anchor none  / cross       bins/scarce/unsound; anchor two   / g_first     bins/scarce/unsound
+  [PASS]   M3 sound coverage collapses onto cardinality coverage  -- killed by 1 check(s): and does NOT reach 100 % SOUND coverage -- the gap is the population-u
+  [PASS]   M4 _record writes only the cross, not the marginals  -- killed by 9 check(s): partition: g_first class counts sum to the sample count exactly; partition: transitions class counts sum to the sample count exactly; partition: the three coverpoints see the same sample count
+  [PASS]   M5 sign_off drops the structural reason, keeping only the run one  -- killed by 1 check(s): and it separates the GOAL remedy from the STIMULUS remedy
+  [PASS] CONTROL B: scarce as n<=1 instead of n==1 is NOT caught (identical on this population)  -- failures = []
+
+  Mutants killed: 5 of 5
+
+============================================================================
+SUMMARY: 7 passed, 0 failed; mutants killed 5/5
+============================================================================
