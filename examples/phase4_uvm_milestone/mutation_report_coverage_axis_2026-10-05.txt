@@ -1,0 +1,31 @@
+mutation report: coverage_axis_audit.py
+==============================================================================
+  group (a) mutates the AUDIT's machinery; group (b) mutates the
+  SUBJECT (uart_uvm_tb.py) to prove each finding is load-bearing on
+  the artefact its prose names -- the 2026-10-02 item, answered by
+  changing the artefact and watching the check move.
+
+  [PASS] CONTROL A  the unmutated audit is green  -- exit 0, 0 failed checks
+
+  tag  tgt  verdict    killed by                     description
+  ----------------------------------------------------------------------------------------------------
+  A1   cove KILLED     A2,C2                         metric model counts a bin ONCE PER HIT instead of once
+  A2   cove KILLED     A2,C1,C2                      metric model folds the cross in (so it stops matching the logged percentage)
+  A3   cove KILLED     A2,F1c                        log parser drops the last coverpoint of every report
+  A4   cove KILLED     F1b                           ast anchor reports attributes of the WRONG method
+  B1   uart KILLED     F1b                           SUBJECT: fold self.cross INTO coverage_percent -- F1 must stop firing
+  B2   uart KILLED     F4b                           SUBJECT: move the cfg update BEFORE the CTRL write -- F4's window closes and F4b must stop firing
+  B    cove SURVIVED   -                             CONTROL B: the metric's accumulator written as a sum over a comprehension (different code, identical arithmetic)
+
+==============================================================================
+  6 of 6 mutants killed; control A green; control B survived as required
+
+  WHAT GROUP (b) ESTABLISHES.  B1 adds the cross to the subject's
+  own coverage_percent(); if F1b still passed, F1 would have been
+  reading nothing and the ast anchor would be decoration.  B2 moves
+  the cfg update before the CTRL write, closing F4's window; if F4b
+  still passed, the temporal finding would be a story rather than a
+  measurement.  Both findings therefore rest on the committed
+  source and move when it moves, which is the property the
+  2026-10-02 item asks every check in this repository for and that
+  almost none of them has yet been shown to have.
