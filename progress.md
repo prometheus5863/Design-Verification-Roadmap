@@ -487,10 +487,55 @@ measured rather than quietly dropped.
             **(b)** the SVA protocol checkers of the next box, bound into
             that environment rather than standing alone;
             **(c)** `PayloadAdmissibilityCoverage` wired into the live
-            `UartCoverage` collector (its own open item since 09-30);
+            `UartCoverage` collector (its own open item since 09-30;
+            retargeted 2026-10-04 to the soundness-reporting subclass
+            `EvidenceSoundCoverage`, and **sharpened 2026-10-05**: the
+            audit below found the live collector's metric does not
+            measure its own cross at all, so (c) now has a prerequisite
+            -- the cross has to be gated, with its one unreachable cell
+            excluded in the same change, before there is a sound metric
+            to wire anything into);
             **(d)** the written methodology summary of the last box.
             Each is separately unchecked, so this box is a ROLL-UP of
             them and should be checked last, not first
+      - [x] **Three-axis coverage audit run on the live `UartCoverage`
+            collector (DONE 2026-10-05)** -- the first named target of the
+            2026-10-03 item *run the soundness audit on every other
+            coverage model here*, widened 2026-10-04 to three axes.
+            `examples/phase4_uvm_milestone/coverage_axis_audit.py`
+            (**17 checks, 0 failed**;
+            `mutation_report_coverage_axis_2026-10-05.txt`, **6 of 6**
+            with control A and control B). An OFFLINE CENSUS over the
+            three committed sim logs (12 coverage reports), which is the
+            route 2026-10-04 named and which audits a run already in the
+            repository rather than one it generated for itself. Both
+            anchors read real artefacts: the logged percentages are
+            recomputed from the logged bin counts and required to match
+            **exactly under the log's own one-decimal rounding** (0
+            mismatches), and the structural claim is parsed out of
+            `uart_uvm_tb.py` with `ast`. Findings:
+            **F1** `coverage_percent()` reads `self.bins` and never
+            `self.cross`, so the milestone's 100.0 % is 19 of 19 BINS and
+            the nine-cell cross printed three lines above it is gated by
+            nothing -- and vplan Section 5 names "coverpoints/**crosses**",
+            so this is a plan-vs-implementation discrepancy;
+            **F2** `(none, parity)` is unreachable by construction, so the
+            cross's achievable cardinality is 8/9 and the committed run is
+            AT that ceiling, not incomplete;
+            **F1+F2 interact** -- folding the cross in without excluding
+            that cell tops the metric out at 96.43 % against a target of
+            100 and makes the gate unsatisfiable, so the two must land
+            together and the choice is a reviewer's;
+            **F3** 5 of the 8 closed cross cells rest on a single witness
+            and all 5 are ERROR cells;
+            **F4** the TEMPORAL axis that 2026-10-04 filed as a question
+            has a concrete instance here, exhibited from the source
+            (CTRL write at line 1367, cfg update at line 1368) rather
+            than asserted. Nothing was changed: no coverpoint, no bin, no
+            goal, no sign-off criterion, no committed number. The RUN axis
+            is the honest gap and is reported as one -- the logs record
+            counts, not per-sample witnesses, so run soundness is not
+            decidable offline at all
       - [ ] SVA protocol checkers added
       - [x] Functional coverage report + closure target stated
             (**DONE 2026-09-24**, `examples/phase6_crv_uart/`, the top and
