@@ -1,0 +1,144 @@
+three-axis coverage audit of the LIVE UartCoverage collector
+(2026-10-03 item, widened 2026-10-04; see the module docstring)
+
+==============================================================================
+SECTION 1.  ANCHOR 1: the committed logs, and the metric recomputed from them
+==============================================================================
+  uart_uvm_sim_output_2026-09-27.txt       3 coverage report(s)
+  uart_uvm_sim_output_2026-09-28.txt       4 coverage report(s)
+  uart_uvm_sim_output_2026-09-29.txt       5 coverage report(s)
+  [PASS] A1   at least three committed coverage reports to audit  -- 12 reports across 3 logs
+  [PASS] A2   this module's model of the metric reproduces every logged percentage EXACTLY under the log's own 1-decimal rounding (so the findings below are about the collector, not my paraphrase)  -- 12 reports, 0 mismatches; largest raw difference 0.0316 pp, all within half a printed last place
+  [PASS] A3   a committed report reaching the 100 % target exists to audit  -- 3 report(s) at 100.0 %
+
+==============================================================================
+SECTION 2.  ANCHOR 2: what the metric actually reads, from the source tree
+==============================================================================
+  [PASS] A4   UartCoverage.coverage_percent located in uart_uvm_tb.py  -- line 1306
+  self.<attr> read by coverage_percent(): bins
+  coverpoints declared in __init__      : cp_parity_mode(3), cp_stop_bits(2), cp_tx_data(5), cp_rx_error(3), cp_reg_access(6)
+  total declared bins                   : 19
+
+==============================================================================
+SECTION 3.  F1  The cross is printed but not gated
+==============================================================================
+  [PASS] F1a  coverage_percent reads self.bins  -- as expected
+  [PASS] F1b  coverage_percent does NOT read self.cross -- the cross is outside the metric entirely  -- attrs read: ['bins']
+  [PASS] F1c  the 100.0 % report is 19/19 BINS, and the cross's 8 occupied cells are not among them  -- declared 19 bins, logged 19; cross cells logged: 8
+
+  So the number a reviewer reads under the words "functional
+  coverage" is computed over 19 bins while a 9-cell cross is
+  formatted three lines above it.  Every cross cell could be empty
+  and report_phase would still print 100.0 % and raise no
+  COV_TARGET error.  The cross is not wrong, it is UNGATED -- which
+  is the 2026-09-27 shape (a runner that greps a file it did not
+  just write is not a gate) applied to a number rather than a file.
+
+==============================================================================
+SECTION 4.  F2  (none, parity) is POPULATION-unsound by construction
+==============================================================================
+  Mechanism, traced through the committed source:
+    UartConfig.expected_parity() returns None when parity is
+    disabled; UartSerialMonitor then skips the parity-bit sample
+    entirely, so item.parity_ok keeps the True it is initialised
+    with; UartCoverage.write_rx classifies on `not item.parity_ok`
+    first, so the "parity" class is unreachable under PARITY_NONE.
+    No stimulus closes (none, parity).  It is not scarce; it is
+    EMPTY OF ADMISSIBLE WITNESSES.
+  [PASS] F2a  the committed 100 % run never closes (none, parity)  -- cross cells closed: 8 of 9
+  [PASS] F2b  and it is the ONLY cell the run misses, so the run is at the achievable ceiling rather than merely incomplete  -- missing = [('none', 'parity')]
+
+  achievable cross cardinality : 8/9 = 88.89 %
+  achieved                     : 8/9 = 88.89 %
+
+  F1 AND F2 INTERACT, AND THAT IS WHY NEITHER IS FIXED HERE.
+  Adding the cross to coverage_percent() in the obvious way -- fold
+  its 9 cells in beside the 19 bins -- makes the metric top out at
+  96.43 % against a TARGET of 100.0, so the gate becomes
+  UNSATISFIABLE and every milestone run starts failing COV_TARGET.
+  The remedy needs an exclusion (an illegal_bins equivalent) landed
+  in the SAME change, and choosing it changes a committed sign-off
+  criterion -- a reviewer's decision, per the standing treatment of
+  F7's goal.  Recorded as an open item, not taken.
+
+==============================================================================
+SECTION 5.  F3  Scarcity: which closures rest on a single witness
+==============================================================================
+  coverpoint        bins  scarce (n=1)  which
+  cp_parity_mode       3             3  even, none, odd
+  cp_stop_bits         2             1  two
+  cp_tx_data           5             0  -
+  cp_rx_error          3             0  -
+  cp_reg_access        6             0  -
+  cross                8             5  even/frame, even/parity, none/frame, odd/frame, odd/parity
+  [PASS] F3a  MAGNITUDE: the 100 % run closes cross cells on a single witness  -- 5 of 8 occupied cells have exactly one witness (62.5 %)
+  [PASS] F3b  and EVERY single-witness cross cell is an ERROR cell, not a clean one -- the scarcity is concentrated exactly where a regression would bite  -- 5 of 5 scarce cells are parity/frame
+
+==============================================================================
+SECTION 6.  F4  The TEMPORAL axis, exhibited rather than asserted
+==============================================================================
+  2026-10-04 filed "is there a FOURTH soundness axis?" as a
+  QUESTION and named temporal as the next candidate.  It is present
+  here, and the window is structural rather than probabilistic:
+
+    UartCoverage._parity_name() reads self.cfg.parity_mode
+    UartConfigSeq.body()        writes CTRL to the DUT, THEN
+                                assigns self.cfg.parity_mode
+
+  Between those two statements the DUT is operating under the new
+  parity mode and the shared cfg object still holds the old one, so
+  any RX frame sampled in the window is filed in the cross under a
+  parity mode that was not in force for it.  The frame is a
+  perfectly ADMISSIBLE witness of its own rx_error class; what is
+  wrong is the OTHER coordinate of the cross cell it closes.
+  [PASS] F4a  UartConfigSeq.body located in the committed source  -- line 1363
+  [PASS] F4b  the CTRL write to the DUT precedes the cfg update in program order, so the window is real and not an artefact of my reading  -- CTRL write at line 1367, cfg update at line 1368 -- window spans 1 statement line(s)
+
+  THE AXIS IS NOT THE BUG.  The window here is narrow and the
+  milestone sequence does not drive RX traffic across it, which is
+  why no committed number is wrong and none is withdrawn.  The
+  finding is that the FOURTH AXIS HAS A CONCRETE INSTANCE in the
+  first collector it was pointed at, so it should stop being filed
+  as a question.  A coverage sample has a TIMESTAMP, and a sample
+  whose coordinates are read from two sources that are updated at
+  different times is sound on each coordinate and unsound as a
+  pair.  No cardinality, scarcity, population or run check sees it:
+  all four ask about the SET of witnesses, and this is a question
+  about WHEN one was read.
+
+==============================================================================
+SECTION 7.  Controls
+==============================================================================
+  [PASS] C1   CONTROL: the metric model returns 0 % when nothing is hit (it is not a constant)
+  [PASS] C2   CONTROL: and 50 % when half is hit, counting a bin ONCE however many times it was hit  -- a=3 and b=0 gives 50.0, not 75.0
+  [PASS] C3   CONTROL: the logs contain reports BELOW target, so A2's agreement is not a fact about one lucky number  -- 9 report(s) below 100 %, lowest 47.4 %
+  [PASS] C4   CONTROL: (none, parity) is absent from EVERY committed report, not just the milestone one -- so F2 is a property of the DUT and the classifier, not of one run's stimulus  -- 8 distinct cross cells across all 12 reports
+
+==============================================================================
+SECTION 8.  Verdict
+==============================================================================
+  axis                          status for UartCoverage
+  --------------------------------------------------------------
+  cardinality                   measured, but over 19 of 28 bins
+                                (the cross is ungated)            F1
+  scarcity                      NOT measured; 5 of 8 closed cross
+                                cells rest on one witness         F3
+  soundness (population)        NOT measured; 1 cell is empty of
+                                admissible witnesses              F2
+  soundness (run)               NOT measured, and not measurable
+                                offline: the logs record COUNTS,
+                                not per-sample witnesses
+  soundness (temporal)          has a concrete instance here       F4
+
+  The run axis is the honest gap in this audit and is stated as
+  one.  A count of 2 in a cross cell does not say WHICH two frames
+  closed it, so an offline census over this log cannot decide
+  whether a cell was closed by good evidence.  Answering it needs
+  the collector to emit per-sample witnesses -- which is a change
+  to the bench, not to this audit, and is the open item that
+  follows.  Reported rather than approximated, per 2026-10-01: an
+  aggregate on the contained side errs only one way.
+
+==============================================================================
+RESULT: 17 passed, 0 failed
+==============================================================================
