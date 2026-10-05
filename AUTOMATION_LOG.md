@@ -5520,3 +5520,323 @@ repository took ~~9~~ **10** in the same session, for ~~14~~ **15** across
 both — corrected in place after reading both counts back off the GitHub API
 instead of off the entries that claimed them, which also caught a
 corresponding off-by-one in the graphene entry's own count.
+
+## 2026-10-05 — The plan said "coverpoints/crosses" and the collector never measured a cross
+
+**Status.** The 2026-10-03 item — *run the soundness audit on EVERY OTHER
+coverage model here*, widened on 2026-10-04 from two axes to three — reaches
+its **first named target**, the live `UartCoverage` collector. New module
+`examples/phase4_uvm_milestone/coverage_axis_audit.py` (**17 checks / 0
+failed**), new mutation harness (**6 of 6**, control A and control B),
+**vplan v13**, progress.md. **Nothing was changed by it**: no coverpoint, no
+bin, no goal, no sign-off criterion, no number in any committed transcript.
+Four findings, one of which is a discrepancy between this repository's
+verification plan and its own testbench that has stood since the collector was
+written.
+
+### 1. Why an offline census, and what it is anchored on
+
+2026-10-04 named the route: `EvidenceSoundCoverage` is a python class that
+must be *sampled into*, Icarus has no coverage API, and retrofitting the
+collector means re-running the whole bench under cocotb to learn anything. An
+offline census over the committed stimulus logs answers the same questions
+about the same run — and has a property the live route does not: **it audits a
+run that is already in the repository, so it cannot be accused of auditing a
+run it generated for itself.**
+
+Two anchors, both read off real artefacts, because 2026-10-02 recorded the
+fault of a check whose prose names one artefact while its arithmetic reads
+another:
+
+- **The run.** Per-bin counts parsed out of the three committed
+  `uart_uvm_sim_output_*.txt` logs — **12 coverage reports**. The collector's
+  own headline percentage is recomputed from those counts and required to
+  equal what the log prints, **exactly under the log's own one-decimal
+  rounding, 0 mismatches.** `report_phase` prints `%.1f`, so the committed
+  artefact carries one decimal and nothing more; demanding bitwise float
+  equality would demand information the log does not contain. **A2's first
+  form was `abs(diff) < 0.05`** — the same bound written as a tolerance, which
+  would have hidden *which operation it is exact under*. Recorded in the
+  module rather than silently improved, per 10-03.
+- **The code.** `UartCoverage.coverage_percent` is parsed out of
+  `uart_uvm_tb.py` with `ast` and interrogated directly, so "the cross is not
+  in the metric" is a fact about the committed source file rather than about
+  my reading of it.
+
+### 2. F1 — the cross is printed but not gated, and the plan says otherwise
+
+`coverage_percent()` reads `self.bins` and **never** `self.cross`; by `ast`,
+the only `self.<attr>` it touches is `bins`. So the **100.0 %** the milestone
+log reports is **19 of 19 BINS**, and the nine-cell `parity_mode × rx_error`
+cross — formatted three lines above that number, in the same message, under
+the words *functional coverage* — contributes nothing to it and nothing to the
+`COV_TARGET` error. **Every cross cell could be empty and the gate would still
+print 100.0 % and raise nothing.**
+
+**This is not a code smell, it is a plan-vs-implementation discrepancy.**
+Section 5 of the verification plan names the primary closure metric as *"100%
+of all defined bins across F1–F9's coverpoints/**crosses**"*. The target as
+written is not the target being enforced, and has not been since the collector
+was written. v13 annotates Section 5 in place and **does not amend the
+sentence to match the implementation**: the plan is right and the
+implementation is short of it.
+
+Same shape as 09-27 — *a runner that greps a file it did not just write is not
+a gate* — applied to a **number** instead of a file.
+
+### 3. F2 — one cross cell is population-unsound by construction
+
+`(none, parity)` has no admissible witness, and the mechanism runs through
+three files: `UartConfig.expected_parity()` returns `None` under
+`PARITY_NONE`; `UartSerialMonitor` therefore never samples a parity bit, so
+`item.parity_ok` keeps the `True` it was initialised with; `write_rx`
+classifies on `not item.parity_ok` first, so the `parity` class is unreachable
+under that configuration.
+
+| | |
+|---|---|
+| achievable cross cardinality | **8 / 9 = 88.89 %** |
+| achieved by the committed run | **8 / 9 = 88.89 %** |
+
+**The run is at the ceiling, not incomplete** — a distinction a bare "8 of 9"
+would not have made. And `(none, parity)` is absent from **all 12** committed
+reports, not just the milestone one, so this is a property of the DUT and the
+classifier rather than of one run's stimulus (control C4).
+
+**This reproduces v11/v12's headline finding independently** — a bin in the
+goal that no admissible witness can reach — in a different model, in a
+different language of bins, by a different mechanism. Two independent
+instances is evidence the pattern is general rather than a property of F7.
+
+### 4. F1 and F2 interact, which is why neither is fixed
+
+Folding the cross into the metric the obvious way — its 9 cells beside the 19
+bins — tops the metric out at **96.43 %** against a `TARGET` of 100.0. **The
+gate becomes unsatisfiable and every milestone run starts failing
+`COV_TARGET`.** The remedy needs an exclusion (an `illegal_bins` equivalent)
+landed in the *same* change, and choosing it changes a committed sign-off
+criterion. That is a reviewer's decision, treated here exactly as F7's
+W0/W1/W3/W4 choice has been treated for three sessions running. **The fix that
+looks like one line is two, and the second one is not mine to make.**
+
+### 5. F3 — scarcity sits exactly where a regression would bite
+
+| coverpoint | bins | scarce (n = 1) |
+|---|---|---|
+| cp_parity_mode | 3 | 3 |
+| cp_stop_bits | 2 | 1 |
+| cp_tx_data | 5 | 0 |
+| cp_rx_error | 3 | 0 |
+| cp_reg_access | 6 | 0 |
+| **cross** | **8** | **5** |
+
+**5 of the 8 closed cross cells rest on exactly one witness (62.5 %), and all
+five are ERROR cells** — `even/parity`, `even/frame`, `odd/parity`,
+`odd/frame`, `none/frame`. Not one clean cell is scarce. The closures that
+would catch a parity or framing regression are the ones held up by a single
+frame, and the 100.0 % headline says nothing about either fact.
+
+### 6. F4 — the fourth axis stops being a question
+
+2026-10-04 filed *"is there a FOURTH soundness axis?"* and named **temporal**
+as the candidate, deliberately as a question rather than an assertion. It has
+a concrete instance in the **first collector it was pointed at**, and the
+module exhibits it from the source rather than asserting it:
+
+```
+  UartCoverage._parity_name()  reads  self.cfg.parity_mode   (RX-sample time)
+  UartConfigSeq.body()         writes CTRL to the DUT        (line 1367)
+                               assigns self.cfg.parity_mode  (line 1368)
+```
+
+In that window the DUT is operating under the new parity mode while the shared
+`cfg` object still holds the old one, so any RX frame sampled there is filed
+in the cross under a mode that was not in force for it. **The frame is a
+perfectly admissible witness of its own `rx_error` class; what is wrong is the
+OTHER coordinate of the cell it closes.**
+
+**No committed number is wrong and none is withdrawn** — the milestone
+sequence drives no RX traffic across the window, which is why this is a
+finding about the instrument and not a bug report. The content is that **a
+sample whose coordinates are read from two sources updated at different times
+is sound on each coordinate and unsound as a pair**, and that none of the other
+four axes can see it: cardinality, scarcity, population soundness and run
+soundness all ask about the **set** of witnesses, and this asks **when** one
+was read.
+
+### 7. The run axis is the honest gap, and is reported as one
+
+A count of 2 in a cross cell does not record *which* two frames closed it. So
+an offline census over these logs **cannot decide run soundness at all** —
+not approximately, not conservatively. Answering it requires the collector to
+emit per-sample witnesses, which is a change to the bench rather than to this
+audit. Reported rather than approximated, per 10-01: an aggregate on the
+contained side errs only one way, and this one would not even do that.
+
+### 8. The mutation harness, and the shape its mutants had to take
+
+**6 of 6**, control A green, control B survived. The four earlier harnesses
+here mutate a **model** and require a suite to notice. This subject is an
+**audit**, whose failure mode is not a wrong number but a finding that is not
+there or one that is missed — so the mutants split:
+
+- **Group (a), the audit's own machinery.** Metric model counting a bin once
+  per *hit* instead of once; metric model folding the cross in; log parser
+  dropping a coverpoint; `ast` anchor reading the wrong method. All four
+  killed. **A4 is killed by F1b specifically**, which is the right killer:
+  pointing the anchor at `write_rx` makes the "the cross is not in the metric"
+  claim read a method that has nothing to do with the metric.
+- **Group (b), the SUBJECT.** B1 folds `self.cross` into
+  `uart_uvm_tb.py`'s own `coverage_percent()`; **F1b must stop firing, and it
+  does.** B2 moves the `cfg` update *before* the CTRL write, closing F4's
+  window; **F4b must stop firing, and it does.**
+
+**Group (b) is the direct answer to the 2026-10-02 item** — *audit every
+remaining check for the "reads the artefact its own prose names" fault* — for
+these two checks. **The only way to know a check reads its artefact is to
+change the artefact and watch the check move.** Had F1b still passed after B1,
+F1 would have been reading nothing and the `ast` anchor would have been
+decoration. That is now demonstrated for F1 and F4 and remains undemonstrated
+for almost every other check in this repository, which is what the item is for
+and why it is not closed.
+
+**Methodological note, continuing the series.** 09-26: an illegal bin can fire
+against correct RTL. 09-27: a runner that greps a file it did not just write is
+not a gate. 09-28: width is not containment. 09-29: an oracle's competence can
+be a function of the stimulus. 09-30: two sign-off clauses can be individually
+true and jointly impossible. 10-01: an aggregate on the contained side errs
+only one way. 10-02: when a rule changes, every number derived from it is stale
+until re-derived. 10-03: a coverage bin's witness must be interpretable.
+10-04: and "the bin can be closed" is a different claim from "this run closed
+it well". **10-05: AND A METRIC CAN BE PRINTED BESIDE THE THING IT DOES NOT
+MEASURE.** The cross is not hidden. It is in the same log message, three lines
+above the percentage, under the same heading, computed by the same component,
+in a report a reviewer reads top to bottom. **Proximity in a report reads as
+inclusion in a number, and nothing in the report distinguishes them.** Every
+instrument this repository has built asks whether a measurement is correct;
+none asks what the headline figure's denominator *contains*, and the answer
+here was "not the thing printed directly above it".
+
+The corollary is uncomfortable and is stated rather than softened. **The axis
+count has now gone up in four consecutive sessions** — cardinality →
+soundness → population/run → temporal — each time by asking what the new
+predicate is a predicate *of*. v12 refused to declare the taxonomy finished
+and v13 restates that refusal. But today's finding did not come from that
+question at all: it came from asking what the *denominator* was, which is a
+question about the metric's **scope** rather than about its predicate. So the
+honest statement is not merely that the axis list is unfinished — it is that
+**the question that has been generating axes is not the only question
+generating findings**, and nothing here has an inventory of the others.
+
+**Not yet covered (candidates for future runs):**
+
+- **GATE THE CROSS, AND EXCLUDE `(none, parity)` IN THE SAME CHANGE** —
+  created today and **the new top item**, with the ordering constraint stated:
+  either half alone is wrong, since the metric change without the exclusion
+  makes the gate unsatisfiable (96.43 % against a target of 100) and the
+  exclusion without the metric change gates nothing. It changes a committed
+  sign-off criterion, so it is a reviewer's decision in the same sense F7's
+  goal is. **Recommended: do both, with the exclusion carrying the F2
+  derivation as its justification**, since that derivation is now committed.
+- **DECIDE between W1, W3 and W4 for F7's goal** — created 10-03, **still a
+  reviewer's decision and deliberately untouched for a third session**. W3
+  recommended. The cost of leaving it undecided remains that `sign_off()`
+  refuses W0 outright, so the goal cannot be signed off at all.
+- **Make the collector emit PER-SAMPLE WITNESSES** — created today, and the
+  prerequisite for ever auditing the run axis of this or any other live
+  collector here. The logs record counts; counts cannot answer "which frames
+  closed this cell", so the run axis is not merely unmeasured but
+  **unmeasurable from the committed artefacts**. This is a small change to
+  `write_rx`/`write_reg` and it unblocks an axis for every coverage model in
+  the repository at once.
+- **Run the three-axis audit on the REMAINING models** — created 10-03,
+  narrowed today rather than closed: `UartCoverage` is done, and
+  `phase6_crv_uart`'s Verilog coverpoints and crosses and
+  `phase5_property_coverage`'s per-property model are not. The Verilog half is
+  still the harder one and the offline-census route is now demonstrated to
+  work, so it should be reused rather than redesigned.
+- **Is there a FIFTH soundness axis — and is "what is this predicate a
+  predicate of" even the right generator?** — created today, superseding
+  10-04's version of the question. Today's finding came from asking about the
+  metric's **denominator**, not its predicate, so the generator that has
+  produced four axes did not produce this one. Filed as a question.
+- **Audit the OTHER headline numbers in this repository for F1's fault** —
+  created today. F1 is "a figure printed beside the thing it does not
+  measure". `coverage_percent` is one headline; `sign_off()`, the budget-law
+  pass rate, the formal runner's depth report and the regression runner's
+  check count are others, and none has been asked what its denominator
+  contains.
+- **`payload_coverage_model.py`'s `classify()` still implements the TWO-byte
+  rule** — created 10-02, **four sessions old**, cost measured 10-04, still
+  deferred.
+- **Wire `EvidenceSoundCoverage` into the live collector** — created 09-30,
+  retargeted 10-04, **sharpened today and now explicitly blocked**: there is
+  no sound metric to wire anything into until the cross is gated, so the top
+  item above is this one's prerequisite.
+- **Give the RUN axis a standing guard in the regression runner** — created
+  10-04; `raise_on_unsound_closure` still defaults to False, which is the
+  09-29 write-only-knob shape in a new costume.
+- **Control B for the FOUR OLDER mutation harnesses** — created 10-01; today's
+  new harness has one and the four older ones still do not, so the item is
+  **narrowed rather than closed for the fourth session running**.
+- **Audit every "what this does not change" paragraph in the vplan** (10-02);
+  **audit every containment claim for an AGGREGATE on the contained side**
+  (10-01); **is `0x40` still contained at a receiver with more sampling
+  lateness?** (10-01); **two redundant encodings of the sample cadence, only
+  one load-bearing** (10-01); **make Step 0 race-safe by re-checking
+  `origin/main` immediately before pushing** (10-03, performed by hand again
+  today); **a mutant on `budget_law_exhaustive.py`'s own stimulus generator**
+  (09-29); **audit the other benches' observers for containment and
+  stimulus-dependence** (09-28, widened four times); apply the three-valued
+  outcome axis to `phase6_crv_uart`'s crosses (09-26); audit every remaining
+  runner for the 09-27 pattern; per-property coverage of the Phase 4 UVM
+  environment (09-23); a less greedy steering policy (09-24); two transmitters
+  at once (09-25); `abc pdr` as a second engine (09-23); widen the coverage
+  model (09-24); mutants not yet attempted (interrupt enable combinations, the
+  loopback mux, reset asserted mid-frame); a property needing a strengthening
+  invariant; the SVA sequence layer (runnable on neither tool here, open since
+  09-20); code coverage measurement (Icarus has none, open since 09-18);
+  Phase 6 lint, regression infra, coverage merge, CDC basics, interview prep
+- **The capstone's "Full UVM environment built" box** remains a roll-up:
+  **(a)** constrained-random stimulus from a UVM sequence, **(b)** the SVA
+  checkers bound into that environment, **(c)** the coverage class wired into
+  the live collector — **now blocked on the top item above**, which is a real
+  ordering constraint the roll-up did not previously carry — and **(d)** the
+  written methodology summary.
+
+**Automation health.** Device reachable and folder connected at the 04:30
+firing; Step 0 found neither repository carrying a 2026-10-05 entry and no
+commits since midnight, so this was a full two-repository session. **The
+network problem of 10-01/10-02 is back and worse than on either of those
+days**, and the graphene entry for today carries the full measurement and the
+route that worked; the short version is that sustained throughput from the
+device VM is **13.9–18.8 kB/s** against sub-second API latency, so no clone of
+any depth or filter fits in the 180 s `device_bash` ceiling and background
+processes do not survive between calls. The cloud container clones in ~2 s but
+its git proxy **refuses to push** to these repositories (HTTP 403, *not in this
+session's authorized repository set*) — a hard constraint, not a credential
+problem. **The working route is neither shell alone**: build the commits in the
+container, `git bundle create`, move the bundle to the connected folder with
+`device_commit_files` (the desktop bridge, not the proxy — effectively
+instant), then `git clone <bundle>` on the device VM and push, which takes
+seconds because only the new objects cross the slow link. `git clone` from a
+bundle leaves HEAD unresolved on an empty `master`;
+`git checkout -B main refs/remotes/origin/main` fixes it. The bundle leaves
+`_to_push/` populated, which is the documented fallback artefact anyway.
+
+The `GIT_ASKPASS` recipe ran from `$HOME/.sess/` on the device VM per 09-28 and
+the 09-29 correction; the token was never written into `.git/config`, a remote
+URL, any repository file or the connected folder, and every transient copy is
+shredded at the end of the session. `user.name`/`user.email` were again absent
+in the fresh clone and set per 09-24. **Push verified against the GitHub API
+rather than git's own output**, per 09-26, and `git fetch origin main` was run
+immediately before each push per the 10-03 race item. **No toolchain was needed
+this session**: the work is pure python over committed logs and committed
+source, so `tools/setup_iverilog.sh` and its two 10-03 gotchas were again not
+exercised and remain untested since then — which is now three sessions, and
+worth noting as a gap rather than as good news.
+
+**Commits this run:** 4 (the audit with its transcript; the mutation harness
+with its report; vplan v13; progress.md). This AUTOMATION_LOG.md entry makes
+**5**. The graphene repository took **5** in the same session, for **10**
+across both.
