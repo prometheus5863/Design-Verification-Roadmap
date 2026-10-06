@@ -1218,6 +1218,30 @@ class UartCoverage(UVMComponent):
 
     TARGET = 100.0
 
+    # ---- PER-SAMPLE WITNESSES, added 2026-10-06 -------------------------
+    # The 2026-10-05 three-axis audit of this collector could measure its
+    # axis coverage and its evidence soundness and could NOT measure its RUN
+    # axis, for a reason it stated precisely: the logs record COUNTS, and
+    # counts cannot answer "which frames closed this cell".  The run axis was
+    # therefore not merely unmeasured but UNMEASURABLE from the committed
+    # artefacts, and making it measurable was named the prerequisite for ever
+    # auditing the run axis of this or any other live collector here.
+    #
+    # A witness is the identity of one sample that hit one cell: a monotonic
+    # sample ordinal, the simulation time, which analysis port it arrived on,
+    # and the item's own convert2string().  The ordinal is what makes two
+    # otherwise-identical samples distinguishable and what lets a reader
+    # reconstruct ORDER, which is the part of the run axis that counts
+    # destroy.
+    #
+    # Only the first WITNESS_KEEP per cell are kept.  A cell hit 69 times
+    # does not need 69 witnesses to answer the run-axis question; it needs to
+    # name the sample that CLOSED it (the first) and enough neighbours to see
+    # whether the closers are all the same stimulus.  The bound is explicit
+    # because an unbounded witness log would make the regression output grow
+    # with simulation length, which is how witness logging usually dies.
+    WITNESS_KEEP = 4
+
     def __init__(self, name, parent):
         super().__init__(name, parent)
         self.reg_export = UVMAnalysisImpReg("cov_reg_export", self)
@@ -1241,6 +1265,15 @@ class UartCoverage(UVMComponent):
                               "wr_txdata": 0, "rd_status": 0, "rd_rxdata": 0},
         }
         self.cross = {}   # (parity_mode, rx_error) -> count
+        # cell -> list of witness strings (first WITNESS_KEEP only)
+        self.witnesses = {}
+        # cell -> how many samples hit it, counted by the witness path.
+        # This MIRRORS self.bins / self.cross deliberately: the audit in
+        # report_phase requires the two bookkeepings to agree, so a future
+        # edit that increments a bin without going through _hit() breaks the
+        # regression instead of silently producing a cell with no witness.
+        self.witness_total = {}
+        self.n_samples = 0
 
     def build_phase(self, phase):
         super().build_phase(phase)
@@ -1268,7 +1301,27 @@ class UartCoverage(UVMComponent):
         return {PARITY_NONE: "none", PARITY_EVEN: "even",
                 PARITY_ODD: "odd"}[self.cfg.parity_mode]
 
+    # ---- the witness path.  Every coverage increment goes through here. --
+    def _record(self, cell, src, item):
+        self.witness_total[cell] = self.witness_total.get(cell, 0) + 1
+        lst = self.witnesses.setdefault(cell, [])
+        if len(lst) < self.WITNESS_KEEP:
+            lst.append("#%d t=%dps %s %s"
+                       % (self.n_samples, get_sim_time("ps"), src,
+                          item.convert2string()))
+
+    def _hit(self, cpname, binname, src, item):
+        """Increment a coverpoint bin AND record a witness for it."""
+        self.bins[cpname][binname] += 1
+        self._record(("bin", cpname, binname), src, item)
+
+    def _hit_cross(self, a, b, src, item):
+        k = (a, b)
+        self.cross[k] = self.cross.get(k, 0) + 1
+        self._record(("cross", a, b), src, item)
+
     def write_reg(self, item):
+        self.n_samples += 1
         key = None
         if item.is_write:
             key = {ADDR_CTRL: "wr_ctrl", ADDR_BAUD: "wr_baud",
@@ -1277,28 +1330,29 @@ class UartCoverage(UVMComponent):
             key = {ADDR_STATUS: "rd_status",
                    ADDR_RX: "rd_rxdata"}.get(item.addr)
         if key:
-            self.bins["cp_reg_access"][key] += 1
+            self._hit("cp_reg_access", key, "reg", item)
         if item.is_write and item.addr == ADDR_CTRL:
             # Sample the configuration actually programmed into the DUT.
             pm = (item.data >> 1) & 0x3
             name = {0: "none", 1: "even", 2: "odd"}.get(pm)
             if name:
-                self.bins["cp_parity_mode"][name] += 1
-            self.bins["cp_stop_bits"]["two" if (item.data >> 3) & 1
-                                      else "one"] += 1
+                self._hit("cp_parity_mode", name, "reg", item)
+            self._hit("cp_stop_bits",
+                      "two" if (item.data >> 3) & 1 else "one", "reg", item)
         if item.is_write and item.addr == ADDR_TX:
-            self.bins["cp_tx_data"][self._data_bin(item.data & 0xFF)] += 1
+            self._hit("cp_tx_data", self._data_bin(item.data & 0xFF),
+                      "reg", item)
 
     def write_rx(self, item):
+        self.n_samples += 1
         if not item.parity_ok:
             kind = "parity"
         elif not item.stop_ok:
             kind = "frame"
         else:
             kind = "clean"
-        self.bins["cp_rx_error"][kind] += 1
-        k = (self._parity_name(), kind)
-        self.cross[k] = self.cross.get(k, 0) + 1
+        self._hit("cp_rx_error", kind, "rx", item)
+        self._hit_cross(self._parity_name(), kind, "rx", item)
 
     def write_tx(self, item):
         pass  # tx frames are checked, not covered; tx_data covers the stimulus
@@ -1310,6 +1364,88 @@ class UartCoverage(UVMComponent):
                 total += 1
                 hit += 1 if v else 0
         return 100.0 * hit / total if total else 0.0
+
+    def audit_witnesses(self):
+        """Require the witness bookkeeping and the count bookkeeping to agree.
+
+        This is a RUNTIME ASSERTION and not a comment, per the standing rule
+        in this repository, and it is the thing that makes a witness log
+        worth having.  A witness list that silently disagrees with the counts
+        beside it is worse than no witness log at all, because the run-axis
+        audit this unblocks would then be auditing a fiction.
+
+        Four claims, each reported with the cells that broke it:
+          W-a  every cell with a nonzero count has at least one witness;
+          W-b  every cell with a zero count has no witness (a witness for an
+               unhit cell would mean the cell is hit and the count is wrong);
+          W-c  the witness path's own per-cell total equals the count the
+               coverage report prints -- so an increment that bypasses
+               _hit() is a regression failure, not a missing witness;
+          W-d  witnesses within a cell are pairwise DISTINCT, which is what
+               "which frames closed this cell" requires.  The sample ordinal
+               guarantees this by construction, so W-d is really a check
+               that the ordinal is still being incremented.
+          W-e  no cell shows more than WITNESS_KEEP witnesses.  This is not
+               a correctness claim about the coverage, it is a claim about
+               the LOG: the reason witness logging is usually abandoned is
+               that it grows with simulation length, and the longest test
+               here takes 2315 coverage samples.  Without W-e the bound is
+               a comment.
+        """
+        counts = {}
+        for cpname, cp in self.bins.items():
+            for b, v in cp.items():
+                counts[("bin", cpname, b)] = v
+        for (a, b), v in self.cross.items():
+            counts[("cross", a, b)] = v
+
+        wa, wb, wc, wd, we = [], [], [], [], []
+        for cell, v in counts.items():
+            lst = self.witnesses.get(cell, [])
+            if v > 0 and not lst:
+                wa.append(cell)
+            if v == 0 and lst:
+                wb.append(cell)
+            if self.witness_total.get(cell, 0) != v:
+                wc.append((cell, v, self.witness_total.get(cell, 0)))
+            if len(set(lst)) != len(lst):
+                wd.append(cell)
+        for cell, lst in self.witnesses.items():
+            if cell not in counts:
+                wb.append(cell)
+            if len(lst) > self.WITNESS_KEEP:
+                we.append(cell)
+
+        def nm(c):
+            return ".".join(str(x) for x in c)
+
+        wc_txt = [nm(cell) + " count=%d witness_total=%d" % (v, w)
+                  for cell, v, w in wc]
+        for tag, bad, what in (
+                ("W-a", [nm(c) for c in wa], "nonzero cells with NO witness"),
+                ("W-b", [nm(c) for c in wb],
+                 "zero/unknown cells WITH a witness"),
+                ("W-c", wc_txt, "cells where witness_total != printed count"),
+                ("W-d", [nm(c) for c in wd],
+                 "cells with duplicate witnesses"),
+                ("W-e", [nm(c) for c in we],
+                 "cells exceeding WITNESS_KEEP witnesses")):
+            if bad:
+                self.uvm_report_error(
+                    "COV_WITNESS",
+                    "%s FAILED: %s -- %s" % (tag, what, ", ".join(bad)))
+        return not (wa or wb or wc or wd or we)
+
+    def witness_lines(self):
+        out = []
+        for cell in sorted(self.witnesses, key=lambda c: tuple(map(str, c))):
+            total = self.witness_total.get(cell, 0)
+            shown = len(self.witnesses[cell])
+            out.append("  %-34s %d sample(s), %d shown"
+                       % (".".join(str(x) for x in cell), total, shown))
+            for w in self.witnesses[cell]:
+                out.append("      " + w)
+        return out
 
     def report_phase(self, phase):
         super().report_phase(phase)
@@ -1326,6 +1462,20 @@ class UartCoverage(UVMComponent):
             "functional coverage\n" + "\n".join(lines)
             + f"\n  cross(parity_mode x rx_error): {crosses}"
             + f"\n  TOTAL bin coverage: {pct:.1f}% (target {self.TARGET:.0f}%)")
+        wit_ok = self.audit_witnesses()
+        self.uvm_report_info(
+            "COV_WITNESS",
+            # The verdict word is deliberately NOT preceded by a "W-x"
+            # token.  An earlier version of this line read "W-a..W-e FAILED",
+            # and the mutation harness's per-check regex matched "W-e FAILED"
+            # inside it, crediting W-e with four detections it never made --
+            # see mutation_report_witnesses_2026-10-06.txt.  A summary line
+            # must not be parseable as one of the things it summarises.
+            ("per-sample witnesses (%d coverage samples, keep=%d per cell; "
+             "audit verdict %s over checks W-a to W-e)\n"
+             % (self.n_samples, self.WITNESS_KEEP,
+                "PASS" if wit_ok else "FAILED"))
+            + "\n".join(self.witness_lines()))
         if pct < self.TARGET and self.enforce_target:
             missing = [f"{cpn}.{b}" for cpn, cp in self.bins.items()
                        for b, v in cp.items() if not v]
