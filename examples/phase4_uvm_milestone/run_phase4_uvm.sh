@@ -106,6 +106,44 @@ fi
 rm -f "${CLOG}"
 echo
 
+# ---------------------------------------------------------------------------
+# A THIRD MODEL CHECK, also simulator-free, added 2026-10-06.
+#
+# run_axis_audit.py reads the COMMITTED simulator transcript
+# uart_uvm_sim_output_2026-10-06.txt and measures the RUN axis of the live
+# UartCoverage collector: which samples closed each cell, and how much
+# stimulus diversity is behind each one.  2026-10-05 reported that axis as
+# UNMEASURABLE from the committed artefacts; the per-sample witnesses added
+# today make it measurable and this is the measurement.
+#
+# It is in the runner for the same reason the other two model checks are: it
+# derives its finding from a committed artefact, so if that artefact is ever
+# regenerated and the witness format or the stimulus diversity moves, the
+# regression breaks instead of the finding quietly going stale.  In
+# particular it re-asserts (R2) that every test's own W-a..W-e audit passed
+# in the committed transcript, which is the thing that makes the witness data
+# worth reading at all.
+#
+# Gated identically: private log, empty log counts as failure, exactly one
+# RESULT line.
+echo "################ run_axis_audit (model, no simulator) ################"
+RLOG="$(mktemp)"
+timeout 170 python3 run_axis_audit.py > "${RLOG}" 2>&1
+rrc=$?
+tail -22 "${RLOG}"
+rn="$(grep -cE '^RESULT: ' "${RLOG}")"
+if [ ! -s "${RLOG}" ]; then
+  echo "** RUNNER ERROR: run_axis_audit produced an empty log -- counting as FAILURE"
+  FAILED=1
+elif [ "${rn}" -ne 1 ]; then
+  echo "** RUNNER ERROR: run_axis_audit log has ${rn} RESULT lines, expected 1 -- counting as FAILURE"
+  FAILED=1
+elif [ "${rrc}" -ne 0 ] || ! grep -qE '^RESULT: ALL CHECKS PASS' "${RLOG}"; then
+  FAILED=1
+fi
+rm -f "${RLOG}"
+echo
+
 for t in "${TESTS[@]}"; do
   echo "################ ${t} ################"
   # Each invocation is a fresh process, so a fresh uvm_test_top.
@@ -134,7 +172,7 @@ for t in "${TESTS[@]}"; do
 done
 
 if [ "${FAILED}" -eq 0 ]; then
-  echo "ALL ${#TESTS[@]} PHASE 4 UVM TESTS PASS, PLUS THE 256-BYTE MODEL CHECK"
+  echo "ALL ${#TESTS[@]} PHASE 4 UVM TESTS PASS, PLUS THE THREE MODEL CHECKS"
 else
   echo "AT LEAST ONE PHASE 4 CHECK FAILED (model check or UVM test)"
 fi
