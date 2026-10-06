@@ -1,0 +1,60 @@
+mutation report: the per-sample witness mechanism in UartCoverage
+==============================================================================
+  target   : uart_uvm_tb.py (test_uart_uvm_milestone only)
+  RTL      : rtl/uart_controller.v, copied UNMODIFIED into every
+             scratch tree, so no verdict below can be a broken DUT.
+  date     : 2026-10-06
+  [PASS] CONTROL A  the unmutated environment passes  -- exit 0
+
+  tag  verdict    killed by                 description
+  ------------------------------------------------------------------------------------------------------
+  N1   KILLED     W-a,W-c,UVM_ERROR=2,cocot a bin is incremented WITHOUT going through _hit() (the accidental-edit fault)
+  N2   KILLED     W-d,UVM_ERROR=1,cocotb FA the witness string drops its ordinal and timestamp
+  N3   KILLED     W-c,UVM_ERROR=1,cocotb FA witness_total stops accumulating
+  N4   KILLED     W-a,W-b,W-c,UVM_ERROR=3   the witness is filed under the WRONG CELL (counts stay correct)
+  N5   KILLED     W-e,UVM_ERROR=1,cocotb FA the WITNESS_KEEP bound is removed (the log-growth fault)
+  B    SURVIVED   -                         CONTROL B: the witness string built with an f-string instead of %-formatting (identical output, different code)
+
+==============================================================================
+  5 of 5 mutants killed; control A passed; control B survived as required
+
+  WHAT TO READ IN THE KILLER COLUMN.  Each mutant should be killed
+  by the ONE check written for it, and if a mutant is killed by
+  UVM_ERROR alone -- with no W-x tag -- then the audit did not
+  detect it and something downstream did, which is a weaker
+  detection and is worth the same scepticism 2026-10-04 applied to
+  a crash as a detector.  N1 and N3 are both W-c, deliberately:
+  they are the same fault reached from the two sides of the
+  equality W-c asserts, and a harness in which only one of them
+  dies would mean W-c is comparing a quantity with itself.
+
+  A FALSE POSITIVE IN THIS HARNESS'S OWN DETECTOR, on its first
+  run, recorded because it is the more useful half of today's
+  result.  verdict() originally matched `(W-[a-e]) FAILED`, and the
+  audit's summary line read "W-a..W-e FAILED" -- so the regex
+  matched "W-e FAILED" inside the summary and EVERY mutant came
+  back with W-e in its killer column.  W-e detects a log-growth
+  fault and is blind to all four correctness faults, so it was
+  credited with four detections it did not make.  Nothing in the
+  pass/fail result was wrong -- 5 of 5 were genuinely killed -- and
+  the ATTRIBUTION was wrong for four of them, which is exactly the
+  quantity this harness exists to report.  What gave it away was an
+  arithmetic disagreement inside one row: N1 showed three W-tags
+  beside UVM_ERROR=2.  Fixed in two places: the regex is anchored
+  on the colon the error form always has, and the summary line no
+  longer contains a W-x token.  The rule, which is new: a summary
+  line must not be parseable as one of the things it summarises.
+
+  WHAT N2 IS REALLY MEASURING, and it is a property of this
+  environment rather than of the code.  N2 strips the ordinal and
+  the timestamp from the witness, leaving the item text.  It is
+  only caught because several cells here are closed by the SAME
+  payload every time -- cp_rx_error.frame by 0xc3 and
+  cp_rx_error.parity by 0x7e, three and two times respectively.
+  In an environment with constrained-random payloads the item text
+  would differ and N2 would SURVIVE, so W-d's strength depends on
+  the stimulus it is run against.  That is recorded here rather
+  than claimed away: W-d is sound (the ordinal makes duplicates
+  impossible by construction) but its mutation-detection power is
+  stimulus-dependent, which is the 2026-09-28 observer item in a
+  new place.
