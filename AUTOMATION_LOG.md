@@ -5840,3 +5840,267 @@ worth noting as a gap rather than as good news.
 with its report; vplan v13; progress.md). This AUTOMATION_LOG.md entry makes
 **5**. The graphene repository took **5** in the same session, for **10**
 across both.
+
+---
+
+## 2026-10-06 — The run axis is measurable, measured, and sitting under a 100 % coverage figure; and the harness that proved it misattributed four of its own five kills
+
+**Status.** The 2026-10-05 prerequisite — *make the collector emit per-sample
+witnesses* — is **closed, and the axis it unblocked was measured in the same
+session.** `UartCoverage` records per-sample witnesses with five runtime
+assertions; new mutation harness (**5 of 5**, control A passed, control B
+survived); new offline run-axis audit (**6/6**), now gated in the regression
+runner as a third model check; `progress.md` checked off; the toolchain
+exercised for the first time in three sessions. Full regression: **3 model
+checks (11 + 24 + 6) and 5 UVM tests, all pass.**
+
+### 1. What was blocked, and the repair
+
+10-05 did not say "we did not measure the run axis". It said the artefacts do
+not contain the information: *the logs record counts, and counts cannot answer
+"which frames closed this cell"*. `UartCoverage` now records, per cell, a
+monotonic sample ordinal, the simulation time in ps, the analysis port, and
+the item's own `convert2string()`.
+
+Four decisions, none aesthetic:
+
+- **One path.** Every increment goes through `_hit()`/`_hit_cross()`, and W-c
+  makes that a regression failure rather than a style rule.
+- **An ordinal**, because two identical payloads at the same time on the same
+  port are otherwise indistinguishable, and because order is the part of the
+  run axis counts destroy.
+- **Bounded at `WITNESS_KEEP = 4`.** The longest test takes 2315 coverage
+  samples; an unbounded witness log grows with simulation length, which is how
+  witness logging usually dies.
+- **Five runtime assertions** (W-a..W-e), because a witness log that silently
+  disagrees with the counts beside it is *worse* than none — the audit it
+  unblocks would be auditing a fiction. W-c is the load-bearing one: the
+  witness path's own per-cell total must **equal** the printed count.
+
+All five committed tests: 5 PASS / 0 FAIL, UVM_ERROR=0, `audit verdict PASS
+over checks W-a to W-e` at 54, 913, 913, 1283 and 2315 samples.
+
+### 2. The finding: 100.0 % coverage on a stimulus diversity of one
+
+`run_axis_audit.py`, offline over the committed transcript (the 10-02 pattern):
+**9 of 27 cells are hit more than once and closed by a single repeated
+stimulus every time.** The whole payload coverpoint is the clearest case:
+
+| cell | times closed | closing stimulus |
+|---|---|---|
+| `cp_tx_data.zero` | 3 | `WR addr=0x3 data=0x00` |
+| `cp_tx_data.low` | 3 | `WR addr=0x3 data=0x3c` |
+| `cp_tx_data.mid` | 3 | `WR addr=0x3 data=0xa5` |
+| `cp_tx_data.high` | 3 | `WR addr=0x3 data=0xd2` |
+| `cp_tx_data.ones` | 3 | `WR addr=0x3 data=0xff` |
+| `cp_rx_error.parity` | 2 | `frame data=0x7e parity_ok=False` |
+| `cp_reg_access.wr_baud` | 7 | `WR addr=0x2 data=0x00` |
+| `cp_reg_access.wr_int` | 7 | `WR addr=0x5 data=0x03` |
+| `cp_parity_mode.none` | 5 | `WR addr=0x0 data=0x01` |
+
+`cp_tx_data`'s bins are **ranges**, and each range is represented by exactly
+one value, three times over. **The milestone test reports 100.0 % functional
+coverage.**
+
+**This is 10-05's fault one axis over.** The collector is not wrong: 100 % is
+an accurate report of a directed suite. 10-05 found a figure printed beside the
+thing it does not measure (a denominator). Today's is a figure that measures
+exactly what it says — **bins touched** — sitting where a reader will read the
+answer to a different question: **bins exercised.**
+
+### 3. A methodological result from the same run: the run axis is a property of a SUITE
+
+The audit reads all five tests rather than the milestone alone, and that is
+load-bearing. In the milestone test `cp_rx_error.frame` is closed three times
+by `0xc3` and looks like a tenth monotonous cell; the baud-tolerance tests
+close it with `0x01` and `0x55`, so across the suite it has three distinct
+closers. **A per-test run-axis measurement would have produced a false
+finding, and nothing in the per-test artefact would have shown it.**
+
+### 4. The limit, stated in the transcript before the numbers
+
+Witnesses are bounded, so diversity is a **prefix** measurement: 7 of 27 cells
+are truncated in at least one test, and a measured diversity of 1 proves only
+that the closing sample and its first three successors were identical. Every
+number is a **lower bound**, and R6 asserts the truncation is real so the
+labelling is not decorative. **No diversity target is proposed** — that changes
+a sign-off criterion and is a reviewer's decision of the same kind as F7's goal
+and the cross-gating decision.
+
+### 5. THE MORE USEFUL HALF: the harness's own detector over-reported
+
+The mutation harness killed 5 of 5 on its first run and **misattributed four
+of them.** `verdict()` matched `(W-[a-e]) FAILED`; the audit's summary line
+read `W-a..W-e FAILED`; the regex matched `"W-e FAILED"` *inside the summary*,
+so every mutant came back with W-e in its killer column — crediting the one
+check that detects a log-growth fault with four detections of correctness
+faults it is structurally blind to.
+
+Nothing in the pass/fail result was wrong. All five were genuinely killed.
+**The attribution was wrong for four of five rows, and attribution is the
+whole value of a killer column** — a run-axis audit built on a misattributed
+detector inherits the error. What gave it away was an arithmetic disagreement
+*inside one row*: N1 showed three `W-` tags beside `UVM_ERROR=2`.
+
+Fixed in two places, both needed: the regex is anchored on the colon the error
+form always carries, and the summary no longer contains a `W-x` token.
+
+**THE NEW RULE, stated in both files: A SUMMARY LINE MUST NOT BE PARSEABLE AS
+ONE OF THE THINGS IT SUMMARISES.** It sits beside 10-01's item — name what a
+check compares against in a way that cannot drift — but it is a different
+failure. 10-01 was a reference that moved. This is a detector that
+**over-reported**, which is the harder direction to notice, because the
+headline number was right and only the explanation beneath it was false.
+
+### 6. The mutants, and one honest limit on W-d
+
+| mutant | fault | killed by | UVM_ERROR |
+|---|---|---|---|
+| N1 | a bin incremented without `_hit()` | W-a, W-c | 2 |
+| N2 | the witness string drops ordinal + time | W-d | 1 |
+| N3 | `witness_total` stops accumulating | W-c | 1 |
+| N4 | the witness filed under the **wrong cell**, counts correct | W-a, W-b, W-c | 3 |
+| N5 | the `WITNESS_KEEP` bound removed | W-e | 1 |
+| B | control: f-string instead of `%`-format | *survived* | 0 |
+
+Every row's `UVM_ERROR` count equals its number of `W-` tags, which is the
+arithmetic the first run failed. N1 and N3 are both W-c deliberately — the same
+fault from the two sides of the equality W-c asserts, so a harness in which
+only one died would mean W-c compares a quantity with itself. N4 is the fault a
+reader cannot catch by inspection: every count correct, only the witness
+misfiled.
+
+**W-d's power is stimulus-dependent.** N2 is caught only because several cells
+here are closed by the same payload every time; under constrained-random
+payloads the item text would differ and N2 would **survive**. W-d is sound (the
+ordinal makes duplicates impossible by construction); its detection power is
+not stimulus-independent, which is the 09-28 observer item in a new place.
+
+**Not yet covered (candidates for future runs):**
+
+- **A BOUNDED SET OF DISTINCT PAYLOAD SIGNATURES PER CELL** — created today
+  and **the new top item**, because it is the one change that turns today's
+  finding from a lower bound into a measurement. Diversity is currently a
+  prefix measurement over 4 samples and 7 of 27 cells are truncated. A
+  distinct-signature set costs the same in log size, because *the set stops
+  growing once the stimulus stops varying* — exactly the case being detected.
+  Small change to `_record`, and it makes the run axis exact.
+- **GATE THE CROSS, AND EXCLUDE `(none, parity)` IN THE SAME CHANGE** —
+  created 10-05 and still a **reviewer's decision**, deliberately untouched
+  for a second session with the ordering constraint intact: either half alone
+  is wrong, since the metric change without the exclusion makes the gate
+  unsatisfiable (96.43 % against a target of 100). Recommended: both, with the
+  exclusion carrying the F2 derivation. Today adds a reason to want it sooner:
+  the cross's cells are now the ones with witnesses, so a gated cross would be
+  the first gated metric in this repository with run-axis evidence behind it.
+- **DECIDE between W1, W3 and W4 for F7's goal** — created 10-03, **a
+  reviewer's decision and untouched for a fourth session**. W3 recommended. The
+  cost of leaving it undecided remains that `sign_off()` refuses W0 outright.
+- **Run the three-axis audit on the REMAINING models** — created 10-03,
+  narrowed again: `UartCoverage` is now done on **all three** axes, and
+  `phase6_crv_uart`'s Verilog coverpoints/crosses and
+  `phase5_property_coverage`'s per-property model are not. Today adds a
+  prerequisite to the Verilog half that it did not have: those collectors have
+  no witnesses either, so the run axis there is blocked the same way this one
+  was, and the fix is the same fix.
+- **Is there a FIFTH soundness axis — and is "what is this predicate a
+  predicate of" even the right generator?** — created 10-05. Today is evidence
+  *for* the question: the run axis turned out to have a sub-structure
+  (diversity, and closer-stability across tests) that the axis name did not
+  predict, which is the same shape as 10-05's denominator finding.
+- **Audit the OTHER headline numbers in this repository for F1's fault** —
+  created 10-05, and today **widens it**: `coverage_percent` has now been
+  found to carry a second reading problem (bins touched vs. bins exercised)
+  that is not the F1 denominator fault, so the census should ask of each
+  headline number BOTH what its denominator contains AND what question a
+  reader will read it as answering.
+- **Give the RUN axis a standing guard in the regression runner** — created
+  10-04, **partially closed today**: `run_axis_audit.py` is now gated in
+  `run_phase4_uvm.sh`, so a regenerated transcript whose witness audit fails
+  breaks the regression. What is still open is the live knob —
+  `raise_on_unsound_closure` still defaults to False, which is the 09-29
+  write-only-knob shape.
+- **`payload_coverage_model.py`'s `classify()` still implements the TWO-byte
+  rule** — created 10-02, **five sessions old**, cost measured 10-04, still
+  deferred.
+- **Wire `EvidenceSoundCoverage` into the live collector** — created 09-30,
+  still blocked on the cross-gating item above.
+- **Control B for the FOUR OLDER mutation harnesses** — created 10-01; today's
+  new harness has one and the four older ones still do not. **Narrowed rather
+  than closed for the fifth session running.**
+- **Apply the "summary line must not be parseable as its own contents" rule to
+  every other parsed artefact here** — created today. Five runners and four
+  mutation harnesses grep their own logs; this fault is a property of the
+  grep-your-own-output pattern and not of this one harness.
+- **Audit every "what this does not change" paragraph in the vplan** (10-02);
+  **audit every containment claim for an AGGREGATE on the contained side**
+  (10-01); **is `0x40` still contained at a receiver with more sampling
+  lateness?** (10-01); **two redundant encodings of the sample cadence, only
+  one load-bearing** (10-01); **make Step 0 race-safe by re-checking
+  `origin/main` immediately before pushing** (10-03, performed by hand again
+  today); **a mutant on `budget_law_exhaustive.py`'s own stimulus generator**
+  (09-29); **audit the other benches' observers for containment and
+  stimulus-dependence** (09-28, widened five times — today's W-d limit is a new
+  instance); apply the three-valued outcome axis to `phase6_crv_uart`'s crosses
+  (09-26); audit every remaining runner for the 09-27 pattern; per-property
+  coverage of the Phase 4 UVM environment (09-23); a less greedy steering
+  policy (09-24); two transmitters at once (09-25); `abc pdr` as a second
+  engine (09-23); widen the coverage model (09-24) — **today gives this one a
+  number: the model is 100 % closed and 9 of its 27 cells rest on one
+  stimulus**; mutants not yet attempted (interrupt enable combinations, the
+  loopback mux, reset asserted mid-frame); a property needing a strengthening
+  invariant; the SVA sequence layer (runnable on neither tool here, open since
+  09-20); code coverage measurement (Icarus has none, open since 09-18);
+  Phase 6 lint, regression infra, coverage merge, CDC basics, interview prep
+- **The capstone's "Full UVM environment built" box**: **(a)**
+  constrained-random stimulus from a UVM sequence — today's finding is the
+  strongest argument yet for it, since the run axis shows the current stimulus
+  closes most cells with one payload; **(b)** the SVA checkers bound into that
+  environment; **(c)** the coverage class wired into the live collector, still
+  blocked on the cross-gating decision; **(d)** the written methodology
+  summary. The run-axis sub-item is now **done**.
+
+**Automation health.** Device reachable and folder connected at the 04:30
+firing (05:16 UTC); Step 0 found neither repository carrying a 2026-10-06 entry
+and no commits since midnight, so this was a full two-repository session.
+
+**The 10-05 network collapse is gone.** The device VM cloned both repositories
+in a single `device_bash` call, `pip install scipy` took 7.4 s and the whole
+uvm-python stack (`python-constraint --use-pep517`, `cocotb<2.0` → 1.9.2,
+`uvm-python`) installed inside one call. So the problem is intermittent across
+days — 10-01, 10-02 and 10-05 bad; 10-03, 10-04 and 10-06 fine — and the
+documented bundle route stays as the thing to keep rather than retire.
+
+**THE TOOLCHAIN WAS ACTUALLY EXERCISED, which closes the gap 10-05 flagged.**
+The previous three sessions were pure python over committed logs, so
+`tools/setup_iverilog.sh` and the uvm-python stack had been untested since
+10-03. Both work. Both 10-03 gotchas held: source the setup script **without a
+pipe** (piping runs it in a subshell and the `iverilog`/`vvp` shell functions
+vanish), and wrap the real binary rather than the shell function when using
+`timeout`. Icarus 10.3, cocotb 1.9.2, Python 3.10.12.
+
+**A NEW cross-repository environment fact.** This repository runs on the device
+VM at Python 3.10.12, which is the correct target for `cocotb<2.0`. The
+graphene repository in the same automation **cannot run there at all** — its
+modules use PEP 701 nested-quote f-strings and need 3.12+ — so the two
+repositories now require **different interpreters**, and this is the only one
+of the two the device VM can execute. That is a standing constraint and it
+means the two repositories' sessions no longer share an execution environment:
+this one runs on the device VM, the graphene one in the cloud container with a
+bundle transfer to push.
+
+**One deviation from established practice, stated.** The authoring happened in
+the cloud container and the simulation on the device VM, so four files crossed
+the bridge mid-session. One of those transfers delivered a **stale copy** — the
+device's md5 did not match the container's — and it was caught only because a
+regenerated transcript still carried the old summary wording. Every subsequent
+transfer was md5-verified on arrival, and that verification should be the
+standing rule for this route rather than a reaction. Push verified against the
+GitHub API rather than git's own output per 09-26, and `git fetch origin main`
+run immediately before the push per the 10-03 race item.
+
+**Commits this run:** 6 (the witnesses with the five-test simulator log; the
+mutation harness with its report and the two false-positive fixes; the run-axis
+audit with its transcript; the runner gate; `progress.md`; the session note).
+This AUTOMATION_LOG.md entry makes **7**. The graphene repository took **6** in
+the same session, for **13** across both.
