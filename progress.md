@@ -536,6 +536,45 @@ measured rather than quietly dropped.
             is the honest gap and is reported as one -- the logs record
             counts, not per-sample witnesses, so run soundness is not
             decidable offline at all
+      - [x] **The RUN axis is measurable, and measured** (**DONE
+            2026-10-06**, closing the prerequisite the 10-05 three-axis
+            audit named). `UartCoverage` now records PER-SAMPLE WITNESSES
+            -- sample ordinal, simulation time, analysis port and the
+            item's own `convert2string()` -- for every cell, bounded at
+            `WITNESS_KEEP = 4`, with five runtime assertions (W-a..W-e)
+            requiring the witness bookkeeping and the printed counts to
+            agree. All five UVM tests re-run and committed
+            (`uart_uvm_sim_output_2026-10-06.txt`, 5 PASS / 0 FAIL,
+            "audit verdict PASS over checks W-a to W-e" at 54, 913, 913,
+            1283 and 2315 coverage samples); mutation harness
+            `mutation_test_witnesses.py` **5 of 5**, control A passed,
+            control B survived.
+            **THE MEASUREMENT** (`run_axis_audit.py`, offline over the
+            committed transcript, 6 checks / 0 failed, now gated in
+            `run_phase4_uvm.sh` as a third model check): 9 of 27 cells are
+            hit more than once and closed by a SINGLE repeated stimulus
+            every time. The whole payload coverpoint is the clearest case
+            -- `cp_tx_data` reports 5/5 bins hit and each of its five
+            RANGE bins was closed three times by one byte (0x00, 0x3c,
+            0xa5, 0xd2, 0xff). `cp_rx_error.parity` twice by 0x7e;
+            `wr_baud` and `wr_int` seven times each by one write. **The
+            milestone test reports 100.0 % functional coverage.** This is
+            the 10-05 fault one axis over: a figure that measures exactly
+            what it says (bins touched) printed beside the question a
+            reader reads it as answering (bins exercised).
+            **A METHODOLOGICAL RESULT FROM THE SAME RUN:** the audit reads
+            all five tests because a per-test view would have been wrong
+            -- in the milestone test `cp_rx_error.frame` is closed three
+            times by 0xc3 and looks monotonous, but the baud-tolerance
+            tests close it with 0x01 and 0x55.
+            **LIMIT, stated in the transcript before the numbers:**
+            diversity is a PREFIX measurement over the first 4 samples
+            (7 of 27 cells truncated), so every number is a lower bound.
+            The repair -- a bounded SET of distinct signatures per cell
+            alongside the first-N witnesses -- is this item's successor and
+            is listed in `AUTOMATION_LOG.md`. No diversity TARGET is
+            proposed; that changes a sign-off criterion and is a
+            reviewer's decision
       - [ ] SVA protocol checkers added
       - [x] Functional coverage report + closure target stated
             (**DONE 2026-09-24**, `examples/phase6_crv_uart/`, the top and
