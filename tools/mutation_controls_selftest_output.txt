@@ -1,0 +1,31 @@
+self-test: tools/mutation_controls.sh
+==============================================================================
+  Each case is the MINIMAL change from case 1 that forces its verdict.
+
+  [PASS] 1  clean single-site substitution  -> OK
+  [PASS] 2  anchor matches nothing (cmp catches this one too)  -> NOT_INJECTED
+  [PASS] 3  anchor twice on ONE line: sed replaces only the first  -> HALF_INJECTED
+         this is the row cmp -s passes: the mutant DOES differ, and half the defect is missing
+  [PASS] 4  anchor on TWO lines: all sites mutated, count reported  -> OK_MULTISITE:2
+         not an error -- but a mutant described as one defect that changes two sites is not the experiment the report claims
+  [PASS] 5  inserted text ALREADY in the original: control A cannot fail  -> OK_A_VACUOUS
+         an arrival control that cannot fail is not a control (2026-10-01)
+  [PASS] 6  anchor matches its own replacement: B is vacuous, not failing  -> B_SELF_MATCHING
+         told apart from case 3 by whether the occurrence count went DOWN
+  [PASS] 6b back-reference with a tight anchor: A abstains, B holds  -> A_SKIPPED:backref
+         a control that guesses is worse than one that abstains and says so
+  [PASS] 7  empty RHS (a deletion): A abstains, B still applies  -> A_SKIPPED:deletion
+  [PASS] 8  identity substitution s/x/x/: no change at all  -> NOT_INJECTED
+
+  the mc_controls_text route (multi-line injections done in python):
+  [PASS] 9  clean multi-line replacement -> OK
+  [PASS] 10 one of two copies replaced -> HALF_INJECTED
+
+  [PASS] 11 mc_verdict_usable partitions the verdict set as documented
+
+==============================================================================
+RESULT: 12 passed, 0 failed
+==============================================================================
+  Every verdict mc_controls_sed can return is forced by a case above, so
+  none of them is an untested branch.  Case 3 is the one that motivates
+  the file: the existing harnesses' cmp -s check passes it.
