@@ -1,0 +1,81 @@
+mutation-anchor audit -- every sed-injected mutant committed in this repository
+==============================================================================
+  DUT: rtl/uart_controller.v  (never modified; every mutant is a copy)
+  Controls applied: A (inserted text present in mutant, absent from
+  original), B (replaced pattern absent from mutant), C (site count
+  reported).  See tools/mutation_controls.sh and its self-test.
+
+  examples/phase4_ral/run_mutation_tests.sh
+  [ OK            ] phase4_ral  M1 CTRL reserved bit 5 reads back as 1 instead of 0
+  [ OK            ] phase4_ral  M2 BAUD_DIV comes out of reset as 0x01 instead of 0x00
+  [ OK            ] phase4_ral  M3 STATUS read-to-clear removed: the sticky error bits never clear
+  [ OK            ] phase4_ral  M4 STATUS tx_full and tx_empty swapped
+  [ OK            ] phase4_ral  M5 BAUD_DIV writes are dropped
+
+  examples/phase6_crv_uart/run_mutation_tests.sh
+  [ OK            ] phase6_crv_uart  M1 TX parity polarity swapped (even<->odd)
+  [ OK            ] phase6_crv_uart  M2 RX data bit inverted at the mid-bit sample
+  [ OK_A_VACUOUS ] phase6_crv_uart  M3 CTRL.stop_bits ignored by TX (always one stop bit)
+                   OK_A_VACUOUS: control B held (the replaced pattern is gone), so the mutant is COMPLETE -- but the inserted text was ALREADY present in the original on 1 line(s), so control A cannot fail on this row and certifies nothing. A harness with control A only could not have verified this mutant.
+  [ OK            ] phase6_crv_uart  M4 TX FIFO count never increments on a lone push
+  [ OK            ] phase6_crv_uart  M5 BAUD_DIV ignored by the baud generator (always divide-by-1)
+  [ skipped       ] phase6_crv_uart  M6 STATUS read no longer clears the sticky error bits
+                   real injection is done in python; the sed string is a
+                   placeholder or annotation marker, so auditing it as the
+                   mutation would be a category error
+
+  examples/phase6_rx_pin_driver/run_mutation_tests.sh
+  [ OK            ] phase6_rx_pin_driver  M1 BAUD_DIV ignored by the baud generator (the 2026-09-24 loopback ESCAPE)
+  [ OK            ] phase6_rx_pin_driver  M2 RX samples at oversample position 7 instead of 8
+  [ A_SKIPPED:unparsable ] phase6_rx_pin_driver  M3 stop-bit check removed from RX_STOP1
+                   could not parse the sed expression; controls not applied.
+  [ OK_MULTISITE:2 ] phase6_rx_pin_driver  M4 RX parity polarity swapped
+                   OK, but CONTROL C: the anchor matched 2 lines of the original, so this mutant changes 2 sites while being described as one defect.
+  [ OK            ] phase6_rx_pin_driver  M5 start-bit glitch filter removed
+  [ OK            ] phase6_rx_pin_driver  M6 overrun OVERWRITES the oldest byte instead of dropping the new one
+  [ skipped       ] phase6_rx_pin_driver  M7 rx_sync bypassed (receiver samples the pin asynchronously)
+                   real injection is done in python; the sed string is a
+                   placeholder or annotation marker, so auditing it as the
+                   mutation would be a category error
+
+==============================================================================
+RESULT: 16 sed-injected mutants audited
+        13 clean, 3 reported-not-failing, 0 failing a control, 2 skipped
+==============================================================================
+  NO COMMITTED MUTANT IS HALF-INJECTED.  Every row whose sed is the
+  real injection passes control B, so no committed verdict in this
+  repository is a verdict about a partial mutant.  Reported as the
+  negative result it is: the controls move the half-injection class
+  from undetectable to detected, and they do not retroactively find a
+  fault.
+
+  BUT THE AUDIT IS NOT EMPTY.  Three rows are usable and are NOT what
+  their harness's own control can certify:
+    phase6_crv_uart M3 -> OK_A_VACUOUS
+    phase6_rx_pin_driver M3 -> A_SKIPPED:unparsable
+    phase6_rx_pin_driver M4 -> OK_MULTISITE:2
+
+  Read in order of what they cost:
+   * OK_A_VACUOUS is the direct answer to 2026-10-01's item.  That
+     row's INSERTED text already exists elsewhere in the DUT, so the
+     arrival control 2026-09-30 asked for -- grep the mutant for the
+     inserted text -- CANNOT FAIL on it.  Only control B certifies
+     that mutant, and control B is what the harnesses did not have.
+     The item asked whether they need it; one of their own committed
+     rows is the answer.
+   * OK_MULTISITE:2 is a mutant described as one defect that changes
+     TWO sites.  Fully injected, so its kill is real -- but the kill
+     names the suite's response to a COMPOUND change, and the report
+     presents it as one.  Nothing was wrong; something was unstated.
+   * A_SKIPPED:unparsable is a sed written as 0,/re/s||repl| -- an
+     address-scoped substitution with an EMPTY pattern that reuses the
+     address regex.  No text-level control can be formed for it at
+     all, by either harness or audit.  Recorded rather than papered
+     over; the repair is to rewrite that one row with an explicit
+     pattern.
+
+  MULTI-SITE ROWS are not errors: sed mutates every matching line, so
+  the defect is fully injected.  They are reported because a mutant
+  DESCRIBED as one defect that changes several sites is not the
+  experiment its report claims, and a kill then names the suite's
+  response to a compound change.
