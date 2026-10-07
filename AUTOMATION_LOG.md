@@ -6104,3 +6104,263 @@ mutation harness with its report and the two false-positive fixes; the run-axis
 audit with its transcript; the runner gate; `progress.md`; the session note).
 This AUTOMATION_LOG.md entry makes **7**. The graphene repository took **6** in
 the same session, for **13** across both.
+
+---
+
+## 2026-10-07 — The injection guard was a `cmp`, and `cmp` cannot see half a defect
+
+**Status.** The 2026-10-01 item *every mutant in this repository needs control
+B* is **closed as a mechanism and as a measurement**, in that order.
+`tools/mutation_controls.sh` provides controls A, B and C with a **12-case
+self-test** that forces every verdict it can return;
+`tools/audit_mutation_anchors.sh` applies them to **all 16** sed-injected
+mutants committed in the repository; `examples/phase4_ral` is wired to them
+and **verified on the real toolchain** with a positive control that fires.
+**No committed mutant is half-injected** — reported as the negative result it
+is — and **three rows are not what their own harness can certify**, one of
+which is the item's own answer.
+
+### 1. What `cmp -s` cannot see, which is the whole point
+
+Four harnesses guarded injection with `cmp -s mutant original`. That is
+control A in its weakest form: it catches a `sed` that matched **nothing**,
+and nothing else. The failure that matters is a `sed` that matched
+**something and not everything**:
+
+```
+    sed 's|A|B|'    replaces the FIRST match ON EACH LINE
+```
+
+So an anchor occurring twice on one line leaves **half the defect** in place,
+`cmp` reports a difference, the harness scores the row, and whatever verdict
+comes back is a verdict about a half-mutant. That is the graphene
+repository's 2026-10-06 **coherence trap** in a different medium — there, a
+counterfactual arrived at one of the two places its quantity entered and
+answered with the **opposite sign**.
+
+The three controls:
+
+| | test | form |
+|---|---|---|
+| **A** | the inserted text is PRESENT in the mutant and ABSENT from the original | fixed-string |
+| **B** | the replaced pattern is ABSENT from the mutant | the BRE itself |
+| **C** | how many sites the anchor matched | reported, not enforced |
+
+Control B is applied with **the BRE itself** via `grep`, not with a recovered
+literal, because several anchors here use `.` as a wildcard for a quote
+character (`2.b10` for `2'b10`) and there is no literal to recover. Control A
+does need one, and when the replacement contains `&` or a back-reference there
+is none — the helper then reports `A_SKIPPED` rather than guessing. **A
+control that guesses is worse than one that abstains and says so.**
+
+### 2. The distinction that needed a count rather than a judgement
+
+Two different faults both leave the pattern matching the mutant, and they are
+told apart by **whether the occurrence count went DOWN**:
+
+- **fewer** occurrences → `sed` replaced one per line and the rest survived:
+  `HALF_INJECTED`.
+- **as many or more** → the pattern matches its own replacement, so control B
+  is **vacuous rather than failing**: `B_SELF_MATCHING`. The repair is a
+  tighter anchor, not a looser control. The helper additionally reports
+  whether that is so *by construction* — the replacement itself matching the
+  pattern, which is what an annotation marker looks like.
+
+**Writing the self-test produced the same confusion on the first attempt**,
+and the case carries the note in place: the first version of case 3 used the
+anchor `en ? ` with replacement `en ? ~`, which occurs twice on one line **and**
+matches its own replacement, so it came back `B_SELF_MATCHING` instead of
+`HALF_INJECTED`. The two faults are easy to write by accident in the same
+breath. That is the evidence that the distinction needs a count and not a
+judgement, and it is why the helper counts.
+
+A fourth verdict has teeth: **`OK_A_VACUOUS`** — control B held, so the mutant
+is complete, but the inserted text already existed in the original, so control
+A **cannot fail** on that row. A harness with control A only could not have
+verified such a mutant at all. That is 2026-10-01's lesson stated as a verdict
+rather than as advice, and §3 shows it is not hypothetical.
+
+### 3. The audit: a negative headline and three rows that are not empty
+
+16 sed-injected mutants across three harnesses; 2 python-injected rows named
+and skipped; no simulator, no network.
+
+**No committed mutant is half-injected.** Every row whose `sed` is the real
+injection passes control B, so **no committed verdict in this repository is a
+verdict about a partial mutant.** The controls move the half-injection class
+from undetectable to detected; they do **not** retroactively find a fault, and
+the audit is the evidence for that rather than an assumption about it.
+
+But three rows are usable and are **not what their own harness can certify**:
+
+- **`phase6_crv_uart` M3 → `OK_A_VACUOUS`.** It replaces
+  `tx_state <= cfg_two_stop ? TX_STOP2 : TX_IDLE;` with
+  `tx_state <= TX_IDLE;` — and that inserted text **already exists at
+  `rtl/uart_controller.v:204`**, in the TX_STOP2 branch. So the arrival
+  control 2026-09-30 asked for — grep the mutant for the inserted text —
+  **cannot fail on this row.** Only control B certifies that mutant, and
+  control B is precisely what the harnesses did not have. **The item asked
+  whether they need it; one of their own committed rows is the answer.**
+- **`phase6_rx_pin_driver` M4 → `OK_MULTISITE:2`.** A mutant described as one
+  defect ("RX parity polarity swapped") whose anchor matches **two** lines. It
+  carries `/g`, so the defect is fully injected and the kill is real — but the
+  kill names the suite's response to a **compound** change while the report
+  presents it as one. Nothing was wrong; something was **unstated**.
+- **`phase6_rx_pin_driver` M3 → `A_SKIPPED:unparsable`.** Written
+  `0,/re/s||repl|` — an address-scoped substitution with an **empty pattern**
+  that reuses the address regex. No text-level control can be formed for it by
+  either harness or audit. Recorded rather than papered over; the repair is an
+  explicit pattern.
+
+### 4. And the audit's own first run produced twelve false findings
+
+It read each harness's mutant table by sourcing its declarations. Those
+fragments set their **own** `RTL`, `WORK` and `HERE`, so the sourced
+`phase4_ral` fragment **overwrote the audit's `RTL`** with a path relative to
+`tools/` — and all twelve remaining rows came back `B_NO_ANCHOR`: a control
+reporting *"the anchor is not in the original"* about a file **that did not
+exist.** Twelve false findings, and they looked exactly like twelve real ones.
+
+**09-30's rule applies to the auditor.** *A control has to sit where the
+failure enters* — and this one was reading a variable the thing under audit
+could write. Every name is prefixed `AUDIT_` now and every table load runs in
+a **subshell** that only prints its rows. The header of the script carries the
+story, because the next person to add a harness will reach for the same
+convenient `source`.
+
+### 5. The guard is shown to fire, on the real toolchain
+
+`examples/phase4_ral/run_mutation_tests.sh` now sources the controls, and a
+row whose controls do not hold is **VOIDED** — counted separately, never as a
+kill and never as a survivor. Every scored row prints **why** its injection is
+clean rather than leaving it implicit.
+
+Run on **Icarus Verilog 10.3, cocotb 1.9.2, uvm-python 0.4.0, Python
+3.10.12**: baseline PASS, **5 of 5 killed, 0 survived, 0 no-verdict, 0
+voided**, 11.8 s. The five committed numbers are unchanged, which §3 predicted.
+
+**A guard that has never been seen to fire is not a guard**, and this
+repository has learned that three times (09-17, a suite passing 55/55 against
+broken RTL; 09-18, a regression printing PASS over UVM_ERRORs; 10-06, a kill
+detector misattributing four of five kills). So `MC_SELFTEST=1` adds row
+**MX**, whose anchor `err <= 1'b0;` occurs **three times on each of two lines**
+of the DUT:
+
+```
+MX  VOIDED  (HALF_INJECTED)
+    HALF_INJECTED: the replaced pattern still occurs 4 time(s) in the
+    mutant, down from 6 -- sed made 2 substitution(s), one per matching
+    line, and the rest of the occurrences survived.  cmp -s passes this row.
+```
+
+In selftest mode the run **requires exactly one voided row**, so the guard's
+failure path is exercised by the regression rather than argued for in a
+comment. The last sentence of MX's detail line is the point: **`cmp -s` passes
+this row**, because the mutant really does differ from the RTL. The old guard
+would have scored it.
+
+### 6. Methodological note
+
+09-17: a suite can pass against broken RTL. 09-18: and print PASS over its own
+errors. 09-19/09-20: the subsystem reporting the verdict is not the subsystem
+doing the checking. 09-26: a reachability pre-pass answers "did my attempts
+reach it", not "is it reachable". 09-30: a control has to sit where the failure
+enters. 10-01: and an arrival control that cannot fail is not a control. 10-05:
+a metric can be printed beside the thing it does not measure. 10-06: and the
+detector that measures a metric can misattribute what it measured.
+
+**10-07: AND AN INJECTION GUARD IS A MEASUREMENT, SO "DID THE FILE CHANGE" IS
+THE WRONG QUESTION. THE QUESTION IS WHETHER THE REPLACED TEXT WENT AWAY, AND
+THE TWO FAULTS THAT BOTH LEAVE IT PRESENT ARE SEPARATED BY A COUNT AND NOT BY
+A JUDGEMENT.**
+
+**Cross-repository note, and it is the first of its kind.** The graphene
+repository's session today adopted **this** repository's 2026-10-01 rule —
+*a constant that can be mutated with no observable effect is not a suite
+weakness* — when its own first mutation run produced a survivor whose measured
+effect was 6.6e-11 relative. The two methodological series have run separately
+since 08-21. That rule crossed because **the same reflex produced the same
+wrong filing in both**, which is the best available evidence that these rules
+are about verification rather than about either subject matter. Today's rule
+above is a candidate to cross the other way: the graphene repository's mutation
+harnesses inject by `src.replace(old, new)` after `src.count(old) != 1`, which
+is control B's **anchor** test and not control B.
+
+### 7. Toolchain, exercised
+
+`tools/setup_iverilog.sh` works; both 10-03 gotchas held (**source it without
+a pipe**; wrap the real binary, not the shell function, under `timeout`). The
+uvm-python stack installed cleanly in one call: `cocotb<2.0` → 1.9.2,
+`python-constraint --use-pep517` → 1.4.0, `uvm-python` → 0.4.0. **One new
+gotcha, worth a line:** `pip install` puts `cocotb-config` in
+`$HOME/.local/bin`, which is **not** on `PATH` in a fresh `device_bash` shell,
+and the phase4_ral `Makefile` resolves `$(shell cocotb-config --makefiles)` to
+an empty string and fails with `No rule to make target '/Makefile.sim'` — a
+message that names neither cocotb nor `PATH`. **Export
+`PATH="$HOME/.local/bin:$PATH"` before running any cocotb harness.**
+
+**Automation health.** Device reachable and folder connected at the **04:30**
+firing (04:57 UTC); Step 0 found neither repository carrying a 2026-10-07
+entry and no commits since midnight, so this was a full two-repository
+session. Push verified against the GitHub API rather than git's own output per
+09-26, and `git fetch origin main` run immediately before the push per the
+10-03 race item.
+
+**A cross-repository environment fact REVERSED.** 10-06 recorded that the two
+repositories now require different interpreters and different execution
+environments, because the graphene modules used PEP 701 nested-quote f-strings
+and needed 3.12+ while this one needs 3.10 for `cocotb<2.0`. The graphene
+session today **retired that** with a two-line portability fix, verified
+output-neutral byte-for-byte on 3.13. So **both repositories ran on the device
+VM in this session**, nothing crossed the bridge, and 10-06's stale-copy
+failure mode did not exist. The replacement constraint is narrower and was
+measured: one graphene module exceeds the 180 s `device_bash` ceiling, and
+background processes do **not** survive a `device_bash` call (`nohup` and
+`setsid` both tried, both killed).
+
+**Not yet covered (candidates for future runs):**
+
+- **WIRE THE CONTROLS INTO THE REMAINING HARNESSES, AND REPAIR THE THREE ROWS
+  THE AUDIT NAMED** — created today and the natural next step, because the
+  mechanism exists and is verified on one harness. `phase6_crv_uart`,
+  `phase6_rx_pin_driver`, `phase4_rtl_bringup`, `phase4_uvm_milestone` and
+  `phase6_bfm_equivalence` still guard with `cmp -s` or a python-side
+  `assert`. The three repairs: give `phase6_crv_uart` M3 an inserted text that
+  does not already exist in the DUT (or accept `OK_A_VACUOUS` explicitly in
+  its report), state `phase6_rx_pin_driver` M4's two sites in its description,
+  and rewrite that harness's M3 with an explicit pattern.
+- **A CONTROL FOR THE PYTHON-INJECTED MUTANTS** — created today. Two rows do
+  their real injection in python with `assert old in s`, which is control B's
+  **anchor** test and not control B: it checks the text was there *before*,
+  not that it is gone *after*. `mc_controls_text` exists for them and nothing
+  calls it yet. **The graphene repository has the same gap**, in
+  `graphene_*_mutation.py`'s `src.count(old) != 1`, which is why this is also
+  the rule most likely to cross repositories next.
+- **THE UVM ENVIRONMENT AGAINST THE UART RTL** — unchanged and still the
+  Phase 4 capstone's open box: register-bus agent, serial agent including a
+  standalone RX bit-driver, reference-model scoreboard, coverage collector.
+  Not touched today, which was a verification-infrastructure session rather
+  than a Phase 4 content session.
+- **CONSTRAINED-RANDOM STIMULUS FROM A UVM SEQUENCE** — created 10-06 and
+  still the strongest content item: the run-axis audit showed 100 % functional
+  coverage resting on a stimulus diversity of **one** behind 9 of 27 cells.
+  Untouched today.
+- **RAL basics against the UART's register map**; **virtual sequencers and
+  concurrent sequences**; **active/passive agent distinction**; **a vplan v2
+  revision** (the three STATUS error bits cannot be "live status" — they must
+  be sticky/read-to-clear to be observable through a register read).
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, the loopback mux, reset asserted mid-frame); a property
+  needing a strengthening invariant; the SVA sequence layer (runnable on
+  neither tool here, open since 09-20); code coverage measurement (Icarus has
+  none, open since 09-18); Phase 6 lint, regression infra, coverage merge, CDC
+  basics, interview prep.
+
+**Commits this run:** 4 (the controls helper with its 12-case self-test; the
+repository-wide anchor audit with its transcript; `phase4_ral` wired with its
+two committed runs; `progress.md`). This AUTOMATION_LOG.md entry makes **5**.
+The graphene repository took **6** in the same session, for **11** across both.
