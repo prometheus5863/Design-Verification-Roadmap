@@ -1,0 +1,114 @@
+Phase 4 RAL mutation test with injection controls A/B/C -- 2026-10-07
+Icarus Verilog 10.3, cocotb 1.9.2, uvm-python 0.4.0, Python 3.10.12 (device VM)
+
+=== NORMAL RUN (controls must void nothing) ===================================
+================================================================
+Phase 4 RAL mutation test -- 2026-10-07 05:45:36 UTC
+DUT: /sessions/rcw-01lq7eejzc72h1krxeyz3h5z/work/Design-Verification-Roadmap/examples/phase4_ral/../../rtl/uart_controller.v (never modified; every mutant is a copy)
+================================================================
+BASELINE: PASS on unmodified RTL  (required)
+
+M1  KILLED
+    defect : CTRL reserved bit 5 reads back as 1 instead of 0
+    target : UVMRegBitBashSeq / UVMRegHWResetSeq (RO field must not read 1)
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: UVMRegHWResetSeq completed with no new UVM_ERROR (1 raised)
+    killed by:   FAIL: UVMRegBitBashSeq completed with no new UVM_ERROR (1 raised)
+    killed by:                                                         AssertionError: 5 UVM_ERROR(s) -- see the log above
+
+M2  KILLED
+    defect : BAUD_DIV comes out of reset as 0x01 instead of 0x00
+    target : UVMRegHWResetSeq (reset value of a non-volatile RW register)
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: frame_err is set after a corrupted stop bit (STATUS=0x02)
+    killed by:   FAIL: UVMRegHWResetSeq completed with no new UVM_ERROR (1 raised)
+    killed by:                                                         AssertionError: 3 UVM_ERROR(s) -- see the log above
+
+M3  KILLED
+    defect : STATUS read-to-clear removed: the sticky error bits never clear
+    target : CHECK 6, the RC access policy (second STATUS read)
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: frame_err was CLEARED by the first STATUS read (second read 0x1a) -- the RC policy, and the reason the vplan's 'live status' wording is wrong
+    killed by:                                                         AssertionError: 1 UVM_ERROR(s) -- see the log above
+
+M4  KILLED
+    defect : STATUS tx_full and tx_empty swapped
+    target : CHECK 4, the explicit STATUS-at-reset value the hw_reset seq skips
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: STATUS reads 0x01 with the UART idle after reset (expected 0x02: tx_empty set, all error bits clear) -- a check the hw_reset sequence silently skips, because volatile fields are not compared
+    killed by:                                                         AssertionError: 1 UVM_ERROR(s) -- see the log above
+
+M5  KILLED
+    defect : BAUD_DIV writes are dropped
+    target : CHECK 3 (RAL write reaches the DUT) and UVMRegBitBashSeq
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: RAL BAUD_DIV.write(0x5A) reached the DUT: a raw read returns 0x00
+    killed by:   FAIL: UVMRegBitBashSeq completed with no new UVM_ERROR (16 raised)
+    killed by:                                                         AssertionError: 18 UVM_ERROR(s) -- see the log above
+
+================================================================
+RESULT: 5 killed, 0 survived, 0 no-verdict,
+        0 voided by the injection controls, out of 5
+================================================================
+
+=== SELFTEST RUN, MC_SELFTEST=1 (the guard must FIRE on a half-injected row) ==
+MX's anchor `err <= 1'b0;` occurs 3x on each of rtl/uart_controller.v:243 and
+:249, so sed without /g replaces one per line and leaves four behind.  The
+pre-2026-10-07 guard for this script was `cmp -s mutant RTL`, which PASSES
+this row because the mutant does differ from the RTL.
+
+================================================================
+Phase 4 RAL mutation test -- 2026-10-07 05:46:22 UTC
+DUT: /sessions/rcw-01lq7eejzc72h1krxeyz3h5z/work/Design-Verification-Roadmap/examples/phase4_ral/../../rtl/uart_controller.v (never modified; every mutant is a copy)
+================================================================
+BASELINE: PASS on unmodified RTL  (required)
+
+M1  KILLED
+    defect : CTRL reserved bit 5 reads back as 1 instead of 0
+    target : UVMRegBitBashSeq / UVMRegHWResetSeq (RO field must not read 1)
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: UVMRegHWResetSeq completed with no new UVM_ERROR (1 raised)
+    killed by:   FAIL: UVMRegBitBashSeq completed with no new UVM_ERROR (1 raised)
+    killed by:                                                         AssertionError: 5 UVM_ERROR(s) -- see the log above
+
+M2  KILLED
+    defect : BAUD_DIV comes out of reset as 0x01 instead of 0x00
+    target : UVMRegHWResetSeq (reset value of a non-volatile RW register)
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: frame_err is set after a corrupted stop bit (STATUS=0x02)
+    killed by:   FAIL: UVMRegHWResetSeq completed with no new UVM_ERROR (1 raised)
+    killed by:                                                         AssertionError: 3 UVM_ERROR(s) -- see the log above
+
+M3  KILLED
+    defect : STATUS read-to-clear removed: the sticky error bits never clear
+    target : CHECK 6, the RC access policy (second STATUS read)
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: frame_err was CLEARED by the first STATUS read (second read 0x1a) -- the RC policy, and the reason the vplan's 'live status' wording is wrong
+    killed by:                                                         AssertionError: 1 UVM_ERROR(s) -- see the log above
+
+M4  KILLED
+    defect : STATUS tx_full and tx_empty swapped
+    target : CHECK 4, the explicit STATUS-at-reset value the hw_reset seq skips
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: STATUS reads 0x01 with the UART idle after reset (expected 0x02: tx_empty set, all error bits clear) -- a check the hw_reset sequence silently skips, because volatile fields are not compared
+    killed by:                                                         AssertionError: 1 UVM_ERROR(s) -- see the log above
+
+M5  KILLED
+    defect : BAUD_DIV writes are dropped
+    target : CHECK 3 (RAL write reaches the DUT) and UVMRegBitBashSeq
+    inject : OK -- OK: inserted text present in mutant and absent from original; replaced pattern absent from mutant; one site.
+    killed by:   FAIL: RAL BAUD_DIV.write(0x5A) reached the DUT: a raw read returns 0x00
+    killed by:   FAIL: UVMRegBitBashSeq completed with no new UVM_ERROR (16 raised)
+    killed by:                                                         AssertionError: 18 UVM_ERROR(s) -- see the log above
+
+MX  VOIDED  (HALF_INJECTED)
+    defect : SELFTEST: a deliberately HALF-INJECTED mutant (anchor occurs 3x on each of 2 lines)
+    HALF_INJECTED: the replaced pattern still occurs 4 time(s) in the mutant, down from 6 -- sed made 2 substitution(s), one per matching line, and the rest of the occurrences survived. The mutant carries PART of the defect. cmp -s passes this row.
+    *** NOT a surviving mutant and NOT a kill: any verdict from
+    *** this row would be a verdict about a partial mutant.
+
+================================================================
+RESULT: 5 killed, 0 survived, 0 no-verdict,
+        1 voided by the injection controls, out of 6
+================================================================
+  SELFTEST MODE: requiring exactly 1 voided row (MX).

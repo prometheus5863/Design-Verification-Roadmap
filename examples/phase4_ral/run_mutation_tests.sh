@@ -31,6 +31,23 @@
 # The verdict therefore comes from parsing cocotb's own results line, and
 # `assert_verdict` refuses to guess when it cannot find one.
 #
+# INJECTION CONTROLS, ADDED 2026-10-07.  This script's only injection guard
+# was `cmp -s mutant RTL`, which catches a sed that matched NOTHING and
+# nothing else.  It cannot see a sed that matched SOMETHING AND NOT
+# EVERYTHING: `sed 's|A|B|'` replaces the first match on each line, so an
+# anchor occurring twice on one line leaves HALF the defect in place while
+# cmp reports a difference and the row below gets scored anyway.  The three
+# controls now come from tools/mutation_controls.sh, which has its own
+# self-test (tools/test_mutation_controls.sh, 12 cases).  A row whose
+# controls do not hold is VOIDED and counted separately -- never as a kill
+# and never as a survivor, because it is a verdict about a partial mutant.
+#
+# The audit that preceded this change (tools/audit_mutation_anchors.sh) found
+# that none of this script's five mutants is half-injected, so no committed
+# number here changes.  The controls are here for the mutants nobody has
+# written yet, and for one property this script could not previously state:
+# that each of its rows is about a WHOLE mutant.
+#
 # Usage:  source ../../tools/setup_iverilog.sh   # SOURCE it, do not pipe
 #         ./run_mutation_tests.sh
 set -u
@@ -49,6 +66,8 @@ verdict_of() {
 }
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck disable=SC1091
+. "$HERE/../../tools/mutation_controls.sh"
 RTL="$HERE/../../rtl/uart_controller.v"
 WORK="${TMPDIR:-/tmp}/ral_mutants"
 mkdir -p "$WORK"
@@ -81,6 +100,21 @@ add "M5" \
     "CHECK 3 (RAL write reaches the DUT) and UVMRegBitBashSeq" \
     "s|ADDR_BAUD_DIV: baud_div <= pwdata;|ADDR_BAUD_DIV: baud_div <= baud_div;|"
 
+# POSITIVE CONTROL FOR THE CONTROLS THEMSELVES, run with MC_SELFTEST=1.
+# A guard that has never been seen to fire is not a guard -- this repository
+# has found that three times (09-17, 09-18, 10-06).  MX's anchor
+# `err <= 1'b0;` occurs THREE times on each of two lines of the DUT, so sed
+# without /g replaces one per line and leaves four behind: the mutant carries
+# part of the defect, and `cmp -s` -- the guard this script used until today
+# -- passes it.  Control B must VOID it.  With MC_SELFTEST=1 the run requires
+# exactly one voided row; without it, zero.
+if [ "${MC_SELFTEST:-0}" = "1" ]; then
+    add "MX" \
+        "SELFTEST: a deliberately HALF-INJECTED mutant (anchor occurs 3x on each of 2 lines)" \
+        "the injection controls themselves -- must be VOIDED, never scored" \
+        "s|err <= 1'b0;|err <= 1'b1;|"
+fi
+
 echo "================================================================"
 echo "Phase 4 RAL mutation test -- $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 echo "DUT: $RTL (never modified; every mutant is a copy)"
@@ -99,16 +133,24 @@ else
     exit 1
 fi
 
-killed=0; survived=0; noresult=0
+killed=0; survived=0; noresult=0; voided=0
 for i in "${!NAMES[@]}"; do
     n="${NAMES[$i]}"
     mut="$WORK/uart_controller_$n.v"
     sed "${SEDS[$i]}" "$RTL" > "$mut"
-    if cmp -s "$mut" "$RTL"; then
+    # Controls A, B and C.  Replaces the old `cmp -s` guard, which was
+    # control A in its weakest form; the detail line is kept whatever the
+    # verdict, so a clean row still says WHY it is clean.
+    mc_detail="$(mc_controls_sed "$RTL" "$mut" "${SEDS[$i]}" 2>&1 >/dev/null)"
+    mc_verdict="$(mc_controls_sed "$RTL" "$mut" "${SEDS[$i]}" 2>/dev/null)"
+    if ! mc_verdict_usable "$mc_verdict"; then
         echo ""
-        echo "$n  *** SED DID NOT MATCH -- the mutant is identical to the RTL."
-        echo "    This is a broken mutation script, not a surviving mutant."
-        survived=$((survived+1))
+        echo "$n  VOIDED  ($mc_verdict)"
+        echo "    defect : ${DESCS[$i]}"
+        echo "    $mc_detail"
+        echo "    *** NOT a surviving mutant and NOT a kill: any verdict from"
+        echo "    *** this row would be a verdict about a partial mutant."
+        voided=$((voided+1))
         continue
     fi
     rm -rf "$HERE/sim_build"
@@ -123,6 +165,7 @@ for i in "${!NAMES[@]}"; do
     echo "$n  $res"
     echo "    defect : ${DESCS[$i]}"
     echo "    target : ${TARGETS[$i]}"
+    echo "    inject : $mc_verdict -- $mc_detail"
     case "$res" in
         KILLED)
             grep -E "^  FAIL:|AssertionError: " "$WORK/$n.log" \
@@ -140,6 +183,11 @@ rm -rf "$HERE/sim_build"
 echo ""
 echo "================================================================"
 echo "RESULT: $killed killed, $survived survived, $noresult no-verdict,"
-echo "        out of ${#NAMES[@]}"
+echo "        $voided voided by the injection controls, out of ${#NAMES[@]}"
 echo "================================================================"
-[ "$survived" -eq 0 ] && [ "$noresult" -eq 0 ]
+if [ "${MC_SELFTEST:-0}" = "1" ]; then
+    echo "  SELFTEST MODE: requiring exactly 1 voided row (MX)."
+    [ "$survived" -eq 0 ] && [ "$noresult" -eq 0 ] && [ "$voided" -eq 1 ]
+else
+    [ "$survived" -eq 0 ] && [ "$noresult" -eq 0 ] && [ "$voided" -eq 0 ]
+fi
