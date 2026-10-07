@@ -1160,17 +1160,53 @@ measured rather than quietly dropped.
             or asserted as an invariant is open -- but a constant that
             can be mutated with no observable effect is a constant no
             test can be said to cover
-      - [ ] **Every mutant in this repository needs control B** -- created
-            2026-10-01, and it is a correction to the 09-30 rule rather
-            than an addition. 09-30 required a positive control that the
-            mutation ARRIVED, implemented as a grep for the INSERTED
-            text. This file's own first M3 passed that control while
-            being semantically inert, and was wrongly filed as a suite
-            weakness. Control B -- the REPLACED text must be ABSENT from
-            the mutant -- catches it instantly and is a property of the
-            diff rather than of the run. The existing mutation harnesses
-            (`phase4_ral`, `phase4_rtl_bringup`, `phase4_uvm_milestone`,
-            `phase6_bfm_equivalence`) have control A only
+      - [x] **Every mutant in this repository needs control B** -- created
+            2026-10-01, **mechanism and audit done 2026-10-07**, and it is a
+            correction to the 09-30 rule rather than an addition. 09-30
+            required a positive control that the mutation ARRIVED,
+            implemented as a grep for the INSERTED text. This file's own
+            first M3 passed that control while being semantically inert, and
+            was wrongly filed as a suite weakness. Control B -- the REPLACED
+            text must be ABSENT from the mutant -- catches it instantly and
+            is a property of the diff rather than of the run.
+            `tools/mutation_controls.sh` now provides controls A, B and C
+            (site count, reported not enforced) with a 12-case self-test that
+            forces every verdict it can return, and
+            `tools/audit_mutation_anchors.sh` applied them to all 16
+            sed-injected mutants in the repository: **none is
+            half-injected**, reported as the negative result it is.
+            **Three rows are not what their own harness can certify**, and
+            the first is the item's own answer: `phase6_crv_uart` M3 inserts
+            `tx_state <= TX_IDLE;`, text that ALREADY EXISTS at
+            `rtl/uart_controller.v:204`, so control A **cannot fail** on it
+            and only control B certifies that mutant.
+            `phase6_rx_pin_driver` M4 changes **two** sites while being
+            described as one defect, and its M3 uses `0,/re/s||repl|`, an
+            address-scoped substitution with an empty pattern for which no
+            text-level control can be formed at all.
+            `phase4_ral` is wired to the controls and verified on the real
+            toolchain (5/5 killed, 0 voided), **with a positive control
+            (`MC_SELFTEST=1`) that voids a deliberately half-injected row**,
+            so the guard's failure path is exercised by the regression
+            rather than argued for
+      - [ ] **Wire the controls into the remaining harnesses, and repair the
+            three rows the audit named** -- created 2026-10-07.
+            `phase6_crv_uart`, `phase6_rx_pin_driver`,
+            `phase4_rtl_bringup`, `phase4_uvm_milestone` and
+            `phase6_bfm_equivalence` still guard with `cmp -s` or with a
+            python-side `assert old in s`. The three repairs are: give
+            `phase6_crv_uart` M3 an inserted text that does not already
+            exist in the DUT (or accept it as OK_A_VACUOUS explicitly in its
+            report), state `phase6_rx_pin_driver` M4's two sites in its
+            description, and rewrite that harness's M3 with an explicit
+            pattern instead of the empty-pattern form
+      - [ ] **A control for the PYTHON-injected mutants** -- created
+            2026-10-07. Two rows (`phase6_crv_uart` M6,
+            `phase6_rx_pin_driver` M7) do their real injection in python with
+            `assert old in s`, which is control B's anchor test and NOT
+            control B: it checks the text was there before, not that it is
+            gone after. `mc_controls_text` exists for them and nothing calls
+            it yet
       - [ ] Apply the three-valued outcome axis to `phase6_crv_uart`'s
             crosses -- created 2026-09-26. Those 30 bins are all
             stimulus-side; today's cross shows the reachability structure
@@ -1217,3 +1253,24 @@ Fifth occurrence of the verdict-vs-checking class (09-17, 09-18, 09-19,
 **a PASS whose step number is implausible is a finding.** The tool was
 truthful -- the cover really was reachable -- and the conclusion drawn from
 it was wrong anyway.
+
+**An injection guard is a measurement, and `cmp` is the wrong one
+(2026-10-07).** `sed 's|A|B|'` replaces the first match on each line, so an
+anchor occurring twice on one line yields a mutant carrying HALF the defect --
+and `cmp -s mutant original` passes it, because the mutant does differ. The
+distinction that matters is not *did the file change* but *did the replaced
+text go away*, and the two faults that both leave the pattern matching the
+mutant are told apart by whether the OCCURRENCE COUNT WENT DOWN: fewer means a
+half-injection, the same or more means the pattern matches its own
+replacement and control B is vacuous rather than failing. Writing the
+self-test produced the same confusion on the first attempt, which is the
+evidence that the distinction needs a count and not a judgement.
+
+**And the audit's own first run produced twelve false findings
+(2026-10-07).** It read each harness's mutant table by sourcing its
+declarations; those fragments set their own `RTL`, so the sourced phase4_ral
+fragment overwrote the audit's path and every subsequent row came back "the
+anchor is not in the original" -- about a file that did not exist. Twelve
+false findings that looked exactly like twelve real ones. 09-30's rule applies
+to the auditor too: *the control has to sit where the failure enters*, and
+this one was reading a variable the thing under audit could write.
