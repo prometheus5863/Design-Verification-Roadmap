@@ -6360,7 +6360,8 @@ background processes do **not** survive a `device_bash` call (`nohup` and
   none, open since 09-18); Phase 6 lint, regression infra, coverage merge, CDC
   basics, interview prep.
 
-**Commits this run:** 4 (the controls helper with its 12-case self-test; the
+**Commits this run:** 5 (the controls helper with its 12-case self-test; the
 repository-wide anchor audit with its transcript; `phase4_ral` wired with its
-two committed runs; `progress.md`). This AUTOMATION_LOG.md entry makes **5**.
-The graphene repository took **6** in the same session, for **11** across both.
+two committed runs; `progress.md`; the session note). This AUTOMATION_LOG.md
+entry makes **6**.
+The graphene repository took **6** in the same session, for **12** across both.
