@@ -6365,3 +6365,269 @@ repository-wide anchor audit with its transcript; `phase4_ral` wired with its
 two committed runs; `progress.md`; the session note). This AUTOMATION_LOG.md
 entry makes **6**.
 The graphene repository took **6** in the same session, for **12** across both.
+
+---
+
+## 2026-10-08 — The mutation harness said the mechanism was broken, and the mechanism was fine
+
+The 2026-10-06 run-axis audit named its own successor; this session built it.
+The build went as specified. The **mutation harness** did not, and what it got
+wrong is the session's real finding.
+
+### 1. The repair 10-06 specified for itself
+
+`UartCoverage` now keeps, per cell, a **bounded list of distinct stimulus
+signatures** beside its first-`WITNESS_KEEP` witnesses. A signature is a
+witness with the ordinal and the simulation time removed — only the analysis
+port and the item's own `convert2string()` — so two samples carrying identical
+stimulus collapse, and the size of the set *is* the cell's diversity.
+
+**Not just a larger `WITNESS_KEEP`.** A witness list answers *which sample
+closed this cell, and in what order*; order is what counts destroy and is why
+witnesses carry an ordinal. A signature set answers *how many different things
+hit it*, and for that the ordinal is noise that would make every entry
+distinct. Two bookkeepings, two questions, same samples — so **S-d** requires
+every retained witness's stimulus to appear in its cell's set.
+
+`SIGNATURE_KEEP = 16`, and **the bound reports hitting itself**:
+`sig_overflow` counts the distinct signatures it refused, per cell, so a cell
+prints `EXACT` or `BOUNDED (+n refused)`. 10-03's rule at its sharpest — a
+bound that cannot report hitting itself is not a bound, it is a silent
+truncation, and one that prints `EXACT` is worse than no set at all.
+
+### 2. The measurement, and the finding survives it
+
+`run_axis_audit.py` Section 2b, 11 checks, 0 failed:
+
+- **all 9 prefix-diversity-1 cells are CONFIRMED exactly 1** — 10-06's finding
+  survives becoming a measurement;
+- **7 of 27 cells had their diversity UNDERSTATED by the prefix**, largest gap
+  `cp_rx_error.frame` **7 → 19**;
+- **5 of 27 remain BOUNDED**, with refused counts printed.
+
+The first result was **not guaranteed, and the second is why.** The prefix was
+not merely conservative in principle — it was wrong about a quarter of the
+cells. It happened not to be wrong about the nine the finding rested on, and
+the only way to know which of those two worlds we were in was to build it.
+
+Nothing about the suite changed. Only the measurement did.
+
+### 3. S-f, and five checks blind to the same fault
+
+S-a..S-e are **all computed from `self.signatures`**, so all five are blind to
+one fault: a cell whose `sig_overflow` stops incrementing prints `EXACT` while
+truncating — the precise failure the mechanism exists to prevent.
+
+**S-f** requires `popcount(sig_mask[cell]) <= len(signatures) + sig_overflow`,
+where `sig_mask` is 64 bits per cell with one bit per `crc32` residue of every
+distinct signature ever seen, stored or refused. `popcount` is a **one-sided**
+lower bound — collisions lose bits, never invent them — so S-f can only fire
+on a real accounting error, and it reads a code path that never touches the
+stored list. `crc32` and not `hash()`, because `hash()` of a `str` is salted
+per process and **a check whose verdict depends on the process is not a
+check.**
+
+### 4. THE FINDING: the harness's first run was a false negative about working code
+
+Seven mutants. First run:
+
+```
+  S4   SURVIVED    sig_overflow stops incrementing
+  S5   SURVIVED    the SIGNATURE_KEEP bound is removed
+```
+
+At face value: the mechanism fails to detect its two most important faults,
+including the one S-f had just been added for.
+
+It fails to detect nothing. Both rows ran against `test_uart_uvm_milestone`,
+where **27 of 27 cells are EXACT**. The bound never bites there; `sig_overflow`
+never increments; the cap is never reached. **Those mutants never arrived.**
+
+2026-09-29's rule in the one place this repository had not yet put a control
+for it — and **one commit away from publishing a false finding about working
+code, with a transcript to back it up.**
+
+Two repairs, the second independent of anyone noticing the first:
+
+1. **Each row names its testcase.** S4/S5/S6 run against
+   `test_uart_adaptive_observer` (5 of 11 cells BOUNDED), and control A is
+   re-run for **every distinct testcase**, because a baseline from a different
+   stimulus is not a baseline.
+2. **An arrival control.** Each mutant's own `COV_SIGNATURE` block is compared
+   against control A's for the same testcase; byte-identical scores the row
+   **INERT**, neither killed nor survived. A row can only be called SURVIVED
+   after it has been shown to have done something.
+
+Second run: **5 of 5 fault mutants killed**, and **S4's killer column is
+`S-f` and nothing else** — which turns §3's claim from an argument about code
+paths into a result.
+
+### 5. The two INERT rows are the most informative lines in the table
+
+**Control B is INERT, which is STRONGER than SURVIVED.** Its claim is that a
+different implementation produces the same output; `SURVIVED` only says nobody
+complained, while `INERT` asserts byte-identity of the printed block. The
+arrival control was built for S4/S5 and sharpened control B for free.
+
+**S6 is INERT, which measures a limitation of S-f: it is ONE-SIDED.**
+Disabling the `crc32` mask entirely changes nothing — with an empty mask
+`popcount` is 0, which is `<=` any accounting, so S-f passes. It detects an
+accounting that is too small; it cannot detect its own evidence going missing.
+That is **a control with no control**, exactly what 10-07's `phase4_ral` work
+built a positive control for *in this repository one session ago*. Recorded as
+an open item, and it is why S6 is in the table at all: a mutant whose job is to
+find out which of two things is true has to be run even when its outcome is
+not required.
+
+### 6. A python post-injection control, closing a standing item
+
+10-07 recorded that this repository's python-injected mutants are guarded by
+`assert old in s`, which is control B's **anchor** test and not control B.
+`mc_controls_text` existed for this and nothing called it. `controls_text()`
+in the new harness is its python equivalent, runs on all seven rows, and voids
+any unusable verdict. Its failure path is **exercised, not argued**:
+`--selftest` injects a `B_SELF_MATCHING` row and a `NOT_INJECTED` row and
+requires both VOIDED. Both are, and that transcript is committed.
+
+### 7. A ZeroDivisionError is not a verdict
+
+`run_axis_audit.py` crashed when pointed at a transcript still being written:
+"0 of 0" cells, a traceback inside R4's percentage, and **no `RESULT` line**,
+which the runner could only read as "0 RESULT lines, expected 1" — a message
+about output format rather than about the artefact. New check **R0** reports
+"this artefact does not contain what I audit" as a **failed check**, and its
+failure path was exercised against a witness-free log before commit. The crash
+was self-inflicted, but any truncated or partially-copied transcript reached
+this audit the same way.
+
+### 8. Methodological note
+
+09-17: a suite can pass against broken RTL. 09-18: and print PASS over its own
+errors. 09-19/09-20: the subsystem reporting the verdict is not the one doing
+the checking. 09-26: a reachability pre-pass answers "did my attempts reach
+it". 09-30: a control has to sit where the failure enters. 10-01: an arrival
+control that cannot fail is not a control. 10-05: a metric can be printed
+beside the thing it does not measure. 10-06: and the detector can misattribute
+what it measured. 10-07: an injection guard is a measurement, so "did the file
+change" is the wrong question.
+
+**10-08: AND A MUTANT THAT REPORTS SURVIVED UNDER A STIMULUS THAT CANNOT REACH
+IT IS A FALSE FINDING ABOUT WORKING CODE — STRICTLY WORSE THAN A MISSED
+DEFECT, BECAUSE IT ARRIVES WITH A TRANSCRIPT.**
+
+The checkable rule: **a mutant may be scored SURVIVED only after it has been
+shown to have changed something the mechanism prints.** Mechanised as the
+arrival control, which needs no judgement. The repair that *does* need
+judgement — picking a testcase where the fault is reachable — then becomes a
+visible gap rather than a silent pass.
+
+**Cross-repository note.** The graphene repository's session today built a
+mutation harness for its potential census that includes an **inert control**:
+the same injection placed in a comment, required *not* to flip the verdict.
+That is the **textual** half of this class. What this session found is the
+other half — a mutant that arrives textually, compiles, runs, and is
+unreachable under the chosen **stimulus**. Both halves are 09-29 and neither
+harness had both. The arrival control is the candidate to cross back: the
+graphene harnesses compare verdicts, not output blocks, so an inert mutant
+there would still read as a pass.
+
+### 9. Toolchain and automation health
+
+`tools/setup_iverilog.sh` works; both 10-03 gotchas held (**source it without
+a pipe**; wrap the real binary under `timeout`, not the shell function). The
+10-07 gotcha held too and is now load-bearing twice a session: **export
+`PATH="$HOME/.local/bin:$PATH"`** or `cocotb-config` is missing and the
+Makefile fails with `No rule to make target '/Makefile.sim'`, naming neither
+cocotb nor `PATH`. The uvm-python stack installed in **14 s** in one call
+(`cocotb<2.0` → 1.9.2, `python-constraint --use-pep517` → 1.4.0, `uvm-python`
+→ 0.4.0); it is **not** preinstalled in the device VM and must be installed
+every session, same as `scipy` in the graphene repository.
+
+**AUTOMATION HEALTH — AND A REAL INTERRUPTION, recorded because the schedule's
+redundancy design is what saved it.** Device reachable and folder connected at
+the **04:30** firing (04:50 UTC); Step 0 found neither repository carrying a
+2026-10-08 entry and no commits since midnight, so this was a full
+two-repository session.
+
+**The device then dropped off the bridge mid-session, at roughly 05:25 UTC**,
+with the graphene repository's five commits and this repository's first commit
+**committed locally and unpushed**. Three retries failed; the session sent one
+notification saying so and stopped, on the correct assumption that the work
+was lost and a later firing would redo it from a fresh clone. **The
+connection came back**, the scratch clones in the session VM's `$HOME/work`
+had survived intact, and the first action on reconnect was to **push
+everything already committed and verify it against the GitHub API** before
+resuming any work.
+
+Two things worth keeping from that:
+
+- **The 10:30 / 17:30 redundancy would have worked.** Nothing had been pushed,
+  so both repositories on GitHub were untouched — no half-pushed state, and a
+  later firing's Step 0 would correctly have seen no 2026-10-08 entry and run
+  a full session. The design the prompt describes held under its first real
+  test.
+- **Push earlier.** This session committed five graphene commits and one here
+  before pushing anything, which put about forty minutes of work in a place
+  only the live bridge could reach. The remaining commits were pushed in two
+  batches instead, and that is the right habit: a commit that exists only in
+  the session VM is not preserved work.
+
+Push verified against the GitHub API rather than git's own output per 09-26,
+with `git fetch origin main` immediately before each push per the 10-03 race
+item.
+
+**Not yet covered (candidates for future runs):**
+
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created today and the natural
+  next step, because S6 **measured** S-f to be one-sided: with an empty mask
+  `popcount` is 0 and S-f passes, so the check cannot detect its own evidence
+  going missing. 10-07's `phase4_ral` work built exactly this kind of control
+  one session ago, in this repository, so the pattern exists and does not need
+  inventing. Until it exists, S-f is a control with no control.
+- **THE ARRIVAL CONTROL, WIRED INTO THE OTHER HARNESSES** — created today.
+  `mutation_test_witnesses.py`, `mutation_test_coverage_axis.py`,
+  `mutation_test_evidence_soundness.py`, `mutation_test_witness_soundness.py`
+  and `mutation_test_reachable_cross.py` all score SURVIVED without first
+  showing the mutant changed anything. **Today's first run proves that is not
+  hypothetical**: it produced two false SURVIVED rows in the first harness
+  that was asked. Any of those five could be carrying the same thing now.
+- **CONSTRAINED-RANDOM STIMULUS FROM A UVM SEQUENCE** — created 10-06 and
+  **now the strongest content item, and better-posed than it was**: the nine
+  diversity-1 cells are no longer a lower-bound observation but a measurement,
+  so an improvement in diversity is now something that can be demonstrated
+  rather than argued. The CRV machinery exists in `examples/phase6_crv_uart/`
+  in plain Verilog and has never been driven from a UVM sequence. This is
+  capstone box **(a)**.
+- **WIRE THE TEXT CONTROLS INTO THE REMAINING HARNESSES, AND REPAIR THE THREE
+  ROWS THE 10-07 AUDIT NAMED** — created 10-07, **partly advanced today**:
+  `controls_text()` now exists in python and runs on seven rows, which closes
+  the "nothing calls `mc_controls_text`" half of the item. The three named
+  repairs (`phase6_crv_uart` M3's inserted text, `phase6_rx_pin_driver` M4's
+  two sites and M3's implicit pattern) are untouched, and
+  `phase6_bfm_equivalence` and `phase4_rtl_bringup` still guard with `cmp -s`.
+- **RAL basics against the UART's register map**; **virtual sequencers and
+  concurrent sequences**; **active/passive agent distinction** — all three
+  are marked done in `progress.md`; they remain in this list only until
+  someone checks the 10-03 adjudication covers them, which is itself a small
+  item and cheaper than leaving the ambiguity.
+- **A diversity TARGET** — still deliberately open. It changes a sign-off
+  criterion and is a reviewer's decision of the same kind as F7's goal.
+  **Today makes it decidable for the first time**, since there is now an exact
+  number to set a threshold against; that is a reason it is now a real choice
+  rather than a reason to make it.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, the loopback mux, reset asserted mid-frame); a property
+  needing a strengthening invariant; the SVA sequence layer (runnable on
+  neither tool here, open since 09-20); code coverage measurement (Icarus has
+  none, open since 09-18); Phase 6 lint, regression infra, coverage merge, CDC
+  basics, interview prep.
+
+**Commits this run:** 5 (the distinct-signature mechanism with its audit
+section and transcripts; S-f and the R0 guard; the mutation harness with its
+two reports; `progress.md`; the session note). This AUTOMATION_LOG.md entry
+makes **6**.
+The graphene repository took **5** in the same session, for **11** across both.
