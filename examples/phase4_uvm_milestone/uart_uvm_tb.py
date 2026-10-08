@@ -1242,6 +1242,45 @@ class UartCoverage(UVMComponent):
     # with simulation length, which is how witness logging usually dies.
     WITNESS_KEEP = 4
 
+    # ---- BOUNDED DISTINCT-SIGNATURE SETS, added 2026-10-08 --------------
+    # run_axis_audit.py (2026-10-06) measured the run axis and ended by
+    # naming its OWN top open item: every diversity number it reports is a
+    # LOWER BOUND, because it is computed over the first WITNESS_KEEP
+    # witnesses of each cell and 7 of 27 cells were truncated.  Its stated
+    # repair, implemented here:
+    #
+    #   "the collector should keep a BOUNDED SET OF DISTINCT payload
+    #    signatures per cell alongside its first-N witnesses.  That makes
+    #    diversity exact at the same log cost, because the set stops growing
+    #    once the stimulus stops varying -- which is precisely the case this
+    #    audit is trying to detect."
+    #
+    # A SIGNATURE is a witness with the two per-sample fields removed: no
+    # ordinal, no simulation time, only the analysis port and the item's own
+    # convert2string().  Two samples carrying identical stimulus therefore
+    # collapse to one signature, and the size of the set IS the stimulus
+    # diversity of the cell.
+    #
+    # Why this is not just a bigger WITNESS_KEEP.  A witness list answers
+    # "which sample closed this cell, and in what order"; order is exactly
+    # what counts destroy and is why witnesses carry an ordinal.  A signature
+    # set answers "how many DIFFERENT things hit this cell", and for that the
+    # ordinal is noise that would make every entry distinct and the count
+    # meaningless.  The two bookkeepings answer different questions over the
+    # same samples, which is why both are kept and why the audit below
+    # requires them to AGREE where they overlap (check S-d).
+    #
+    # The bound is what keeps the log from growing with simulation length,
+    # and it is honest about itself: SIG_OVERFLOW counts distinct signatures
+    # the bound REFUSED, per cell.  A cell with overflow 0 has an EXACT
+    # diversity; a cell with overflow > 0 is a lower bound and is printed as
+    # one.  The audit's own argument is that this almost never bites for the
+    # case it cares about -- a cell closed by one repeated stimulus has a set
+    # of size 1 no matter how many times it is hit -- and 2026-10-03's rule
+    # applies to the exception: a bound that cannot report hitting itself is
+    # not a bound, it is a silent truncation.
+    SIGNATURE_KEEP = 16
+
     def __init__(self, name, parent):
         super().__init__(name, parent)
         self.reg_export = UVMAnalysisImpReg("cov_reg_export", self)
@@ -1273,6 +1312,13 @@ class UartCoverage(UVMComponent):
         # edit that increments a bin without going through _hit() breaks the
         # regression instead of silently producing a cell with no witness.
         self.witness_total = {}
+        # cell -> list of DISTINCT signature strings, in order of first
+        # appearance, at most SIGNATURE_KEEP of them.
+        self.signatures = {}
+        # cell -> how many DISTINCT signatures the bound refused.  0 means
+        # the signature set for that cell is complete and its diversity is
+        # EXACT rather than a lower bound.
+        self.sig_overflow = {}
         self.n_samples = 0
 
     def build_phase(self, phase):
@@ -1302,6 +1348,13 @@ class UartCoverage(UVMComponent):
                 PARITY_ODD: "odd"}[self.cfg.parity_mode]
 
     # ---- the witness path.  Every coverage increment goes through here. --
+    @staticmethod
+    def _signature_of(src, item):
+        """The stimulus identity of a sample: the analysis port and the
+        item, with the ordinal and the simulation time deliberately absent so
+        that two samples carrying the same stimulus collapse to one entry."""
+        return "%s %s" % (src, item.convert2string())
+
     def _record(self, cell, src, item):
         self.witness_total[cell] = self.witness_total.get(cell, 0) + 1
         lst = self.witnesses.setdefault(cell, [])
@@ -1309,6 +1362,18 @@ class UartCoverage(UVMComponent):
             lst.append("#%d t=%dps %s %s"
                        % (self.n_samples, get_sim_time("ps"), src,
                           item.convert2string()))
+        sig = self._signature_of(src, item)
+        sigs = self.signatures.setdefault(cell, [])
+        self.sig_overflow.setdefault(cell, 0)
+        if sig not in sigs:
+            if len(sigs) < self.SIGNATURE_KEEP:
+                sigs.append(sig)
+            else:
+                # The bound refused a signature it had not seen before.  This
+                # is the ONLY condition under which a diversity number from
+                # this collector is a lower bound, and it is counted rather
+                # than dropped.
+                self.sig_overflow[cell] += 1
 
     def _hit(self, cpname, binname, src, item):
         """Increment a coverpoint bin AND record a witness for it."""
@@ -1447,6 +1512,102 @@ class UartCoverage(UVMComponent):
                 out.append("      " + w)
         return out
 
+    def cell_counts(self):
+        """cell -> sample count, from the bins/cross bookkeeping."""
+        out = {}
+        for cpname, cp in self.bins.items():
+            for b, v in cp.items():
+                out[("bin", cpname, b)] = v
+        for (a, b), n in self.cross.items():
+            out[("cross", a, b)] = n
+        return out
+
+    def audit_signatures(self):
+        """Require the signature bookkeeping to be self-consistent AND to
+        agree with the witness bookkeeping where the two overlap.
+
+        The witness audit (W-a..W-e) exists because a witness list that
+        silently disagrees with the counts beside it is worse than no witness
+        list at all.  The same argument applies one level up: a signature set
+        that silently disagrees with the WITNESSES beside it is worse than no
+        signature set, because the entire point of it is to let a reader stop
+        treating the witness-prefix diversity as a lower bound.  S-d is that
+        check, and it is the load-bearing one.
+
+          S-a  every cell with a nonzero count has at least one signature;
+          S-b  signatures within a cell are pairwise DISTINCT.  True by
+               construction -- which is exactly why it is checked, since an
+               edit to _record that appended without the membership test
+               would make every diversity number wrong and nothing else
+               here would notice;
+          S-c  no cell exceeds SIGNATURE_KEEP signatures;
+          S-d  EVERY retained witness's signature is present in its cell's
+               signature set.  Both paths see the same samples, so a witness
+               whose stimulus is absent from the set means the signature path
+               missed a sample.  A regression failure, not a gap;
+          S-e  a cell's distinct-signature count never exceeds its sample
+               count.
+        """
+        sa, sb, sc, sd, se = [], [], [], [], []
+        counts = self.cell_counts()
+        for cell, v in counts.items():
+            sigs = self.signatures.get(cell, [])
+            if v and not sigs:
+                sa.append(cell)
+            if len(set(sigs)) != len(sigs):
+                sb.append(cell)
+            if len(sigs) > self.SIGNATURE_KEEP:
+                sc.append(cell)
+            if len(sigs) > v:
+                se.append((cell, len(sigs), v))
+        for cell, lst in self.witnesses.items():
+            sigs = set(self.signatures.get(cell, []))
+            for w in lst:
+                # strip the per-sample prefix "#<ordinal> t=<n>ps " to recover
+                # the signature this witness would have produced
+                tail = w.split("ps ", 1)[-1]
+                if tail not in sigs:
+                    sd.append((cell, tail))
+
+        def nm(c):
+            return ".".join(str(x) for x in c)
+
+        se_txt = [nm(c) + " signatures=%d samples=%d" % (n, v)
+                  for c, n, v in se]
+        sd_txt = [nm(c) + " witness stimulus absent from set: " + t
+                  for c, t in sd[:4]]
+        for tag, bad, what in (
+                ("S-a", [nm(c) for c in sa], "nonzero cells with NO signature"),
+                ("S-b", [nm(c) for c in sb], "cells with duplicate signatures"),
+                ("S-c", [nm(c) for c in sc],
+                 "cells exceeding SIGNATURE_KEEP signatures"),
+                ("S-d", sd_txt,
+                 "cells whose witness stimulus is missing from the set"),
+                ("S-e", se_txt, "cells with more signatures than samples")):
+            if bad:
+                self.uvm_report_error(
+                    "COV_SIGNATURE",
+                    "%s FAILED: %s -- %s" % (tag, what, ", ".join(bad)))
+        return not (sa or sb or sc or sd or se)
+
+    def signature_lines(self):
+        """The distinct-signature block.  The EXACT / BOUNDED word is what a
+        reader -- and run_axis_audit.py -- uses to decide whether the
+        diversity number beside it is a measurement or a lower bound."""
+        out = []
+        counts = self.cell_counts()
+        for cell in sorted(self.signatures, key=lambda c: tuple(map(str, c))):
+            sigs = self.signatures[cell]
+            over = self.sig_overflow.get(cell, 0)
+            out.append("  %-34s %d distinct, %d sample(s), %s"
+                       % (".".join(str(x) for x in cell), len(sigs),
+                          counts.get(cell, 0),
+                          "EXACT" if over == 0
+                          else "BOUNDED (+%d refused)" % over))
+            for sg in sigs:
+                out.append("      = " + sg)
+        return out
+
     def report_phase(self, phase):
         super().report_phase(phase)
         lines = []
@@ -1476,6 +1637,19 @@ class UartCoverage(UVMComponent):
              % (self.n_samples, self.WITNESS_KEEP,
                 "PASS" if wit_ok else "FAILED"))
             + "\n".join(self.witness_lines()))
+        sig_ok = self.audit_signatures()
+        n_exact = sum(1 for c in self.signatures
+                      if self.sig_overflow.get(c, 0) == 0)
+        self.uvm_report_info(
+            "COV_SIGNATURE",
+            # Same rule as the witness summary above: the verdict word is not
+            # preceded by an "S-x" token, so this line cannot be parsed as
+            # one of the checks it summarises (2026-10-06).
+            ("distinct stimulus signatures (keep=%d per cell; %d of %d cells "
+             "EXACT; audit verdict %s over checks S-a to S-e)\n"
+             % (self.SIGNATURE_KEEP, n_exact, len(self.signatures),
+                "PASS" if sig_ok else "FAILED"))
+            + "\n".join(self.signature_lines()))
         if pct < self.TARGET and self.enforce_target:
             missing = [f"{cpn}.{b}" for cpn, cp in self.bins.items()
                        for b, v in cp.items() if not v]
