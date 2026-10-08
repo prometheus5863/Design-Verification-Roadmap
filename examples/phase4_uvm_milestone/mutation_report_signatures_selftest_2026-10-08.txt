@@ -1,0 +1,27 @@
+==============================================================================
+MUTATION TEST -- the bounded distinct-signature mechanism (S-a..S-f)
+date: 2026-10-08   MODE: SELFTEST
+==============================================================================
+
+CONTROL A -- the UNMUTATED environment, once per testcase
+  test_uart_uvm_milestone                PASS  rc=0  27 of 27 EXACT  killers=none
+
+  tag  outcome   control          testcase                     killers
+  MX   VOIDED    B_SELF_MATCHING  test_uart_uvm_milestone      -
+  MY   VOIDED    NOT_INJECTED     test_uart_uvm_milestone      -
+
+  MX  SELFTEST: an anchor whose replacement still CONTAINS it, so the replaced text survives in the mutant
+      testcase: test_uart_uvm_milestone
+      control:  B_SELF_MATCHING -- the anchor still matches the mutant 1 time(s), as often as it matched the original (1): it matches its own replacement
+  MY  SELFTEST: a replacement identical to the anchor, so the mutant is byte-identical to the original
+      testcase: test_uart_uvm_milestone
+      control:  NOT_INJECTED -- the mutant is byte-identical to the original
+
+SELFTEST requires EVERY row to be VOIDED, because both rows are
+deliberately broken injections.  A harness that scored them would
+be scoring mutants that never arrived (2026-09-29).
+  voided=2 of 2, killed=0, survived=0  -> PASS
+
+==============================================================================
+RESULT: PASS -- 0 killed, 0 survived, 0 inert, 2 voided
+==============================================================================

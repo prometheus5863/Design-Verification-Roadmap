@@ -1,0 +1,93 @@
+==============================================================================
+MUTATION TEST -- the bounded distinct-signature mechanism (S-a..S-f)
+date: 2026-10-08
+==============================================================================
+
+CONTROL A -- the UNMUTATED environment, once per testcase
+  test_uart_adaptive_observer            PASS  rc=0  6 of 11 EXACT  killers=none
+  test_uart_uvm_milestone                PASS  rc=0  27 of 27 EXACT  killers=none
+
+  tag  outcome   control          testcase                     killers
+  S1   KILLED    OK               test_uart_uvm_milestone      S-b, UVM_ERROR=1, cocotb FAIL, python traceback
+  S2   KILLED    OK               test_uart_uvm_milestone      S-d, UVM_ERROR=1, cocotb FAIL, python traceback
+  S3   KILLED    OK               test_uart_uvm_milestone      S-a, S-d, S-e, S-f, UVM_ERROR=4, cocotb FAIL, python traceback
+  S4   KILLED    OK               test_uart_adaptive_observer  S-f, UVM_ERROR=1, cocotb FAIL, python traceback
+  S5   KILLED    OK               test_uart_adaptive_observer  S-c, UVM_ERROR=1, cocotb FAIL, python traceback
+  S6   INERT     OK               test_uart_adaptive_observer  -
+  B    INERT     OK               test_uart_uvm_milestone      -
+
+  S1  the membership test is dropped: the distinct list collects duplicates
+      testcase: test_uart_uvm_milestone
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block DIFFERS from control A's, so the mutant reached the mechanism
+      killers:  S-b, UVM_ERROR=1, cocotb FAIL, python traceback
+  S2  the signature keeps a per-sample field, so every sample is distinct
+      testcase: test_uart_uvm_milestone
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block DIFFERS from control A's, so the mutant reached the mechanism
+      killers:  S-d, UVM_ERROR=1, cocotb FAIL, python traceback
+  S3  the signature is filed under the WRONG CELL (counts stay correct)
+      testcase: test_uart_uvm_milestone
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block DIFFERS from control A's, so the mutant reached the mechanism
+      killers:  S-a, S-d, S-e, S-f, UVM_ERROR=4, cocotb FAIL, python traceback
+  S4  sig_overflow stops incrementing: a truncating cell prints EXACT. S-a..S-e are ALL blind to this; S-f exists for it
+      testcase: test_uart_adaptive_observer
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block DIFFERS from control A's, so the mutant reached the mechanism
+      killers:  S-f, UVM_ERROR=1, cocotb FAIL, python traceback
+  S5  the SIGNATURE_KEEP bound is removed (the log-growth fault)
+      testcase: test_uart_adaptive_observer
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block DIFFERS from control A's, so the mutant reached the mechanism
+      killers:  S-c, UVM_ERROR=1, cocotb FAIL, python traceback
+  S6  the crc32 mask stops being updated, so S-f's own evidence disappears
+      testcase: test_uart_adaptive_observer
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism prints and is scored as neither killed nor survived
+      killers:  none
+  B  CONTROL B: the signature built with an f-string instead of %-formatting (identical output, different code)
+      testcase: test_uart_uvm_milestone
+      control:  OK -- controls A and B both hold; one site
+      arrival:  the COV_SIGNATURE block is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism prints and is scored as neither killed nor survived
+      killers:  none
+
+EXPECTED: S1/S2/S3/S4/S5 killed, B survive, S6 REPORTED either way
+GOT:      S1/S2/S3/S4/S5 killed, none survived, S6/B INERT
+  NOTE: 2 row(s) INERT -- they reached the simulator but left the mechanism's own output byte-identical
+
+  CONTROL B IS INERT, AND THAT IS STRONGER THAN SURVIVED.
+  Control B's entire claim is that a different implementation
+  produces the SAME output.  'SURVIVED' only says the suite
+  did not complain; INERT says the printed signature block is
+  byte-identical to the baseline's, which is the claim itself
+  rather than a weaker proxy for it.  The arrival control was
+  added for S4/S5 and it sharpened control B for free.
+
+  S6 IS INERT, AND THAT IS A LIMITATION OF S-f, MEASURED.
+  Disabling the crc32 mask entirely changes nothing anyone
+  can see: with an empty mask popcount is 0, which is <= any
+  accounting, so S-f passes.  **S-f is ONE-SIDED.**  It can
+  detect an accounting that is too small; it cannot detect
+  its own evidence going missing.  A control with no control
+  is exactly what 2026-10-07's phase4_ral work gave a POSITIVE
+  CONTROL for, and S-f does not have one yet: nothing here
+  requires S-f to FIRE on a case where it should.  Recorded as
+  an open item rather than papered over, and it is the reason
+  this row is in the table at all -- a mutant whose job is to
+  find out which of two things is true has to be run even
+  when its outcome is not required.
+
+  S4 IS THE ROW THAT JUSTIFIES S-f.  Every check from S-a to S-e
+  reads the stored signature list, so none of them can see an
+  overflow counter that stopped incrementing: the cell prints
+  EXACT and truncates.  If S4 is killed by S-f and by nothing
+  else, that is the independent 64-bit mask doing the one job it
+  was added for, and the claim is a measurement rather than an
+  argument about code paths.
+  S4 killers: S-f, UVM_ERROR=1, cocotb FAIL, python traceback
+  S6 killers: none  -- REPORTED, not required either way: whether disabling the mask is itself detectable is a fact about this mechanism that nothing here had measured.
+
+==============================================================================
+RESULT: PASS -- 5 killed, 0 survived, 2 inert, 0 voided
+==============================================================================
