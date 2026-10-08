@@ -69,27 +69,27 @@ RESULT: ALL CHECKS PASS   (24 checks, 0 failed)
 ==============================================================================
 
 ################ run_axis_audit (model, no simulator) ################
-  growing once the stimulus stops varying -- which is precisely the
-  case this audit is trying to detect.  Until then every diversity
-  number here is a lower bound and is labelled as one.
-
-  Two things this audit also does NOT claim:
-    - it does not claim the collector is wrong.  Reporting 100.0 %
-      bin coverage for a directed suite that closes each bin with
-      one payload is an ACCURATE report of what was run.  The
       finding is about what the number licenses a reader to
       believe, which is the 2026-10-05 fault (a figure printed
       beside the thing it does not measure) one axis over.
     - it does not claim a diversity TARGET.  Choosing one is a
       reviewer's decision of the same kind as F7's goal and the
       cross-gating decision, and is left open deliberately.
+    - and it does not claim the stimulus is now diverse.  Nothing
+      about the suite changed today; only the measurement did.  The
+      diversity-1 cells are still diversity-1 and are now known to
+      be, which makes constrained-random stimulus from a UVM
+      sequence a better-posed item than it was yesterday rather
+      than a closed one.
 
 ==============================================================================
   cells audited              : 27
   samples behind them        : 6645
   prefix-diversity-1 cells   : 9 (36 samples)
   truncated cells            : 7
-RESULT: ALL CHECKS PASS -- 6 checks passed, 0 failed
+  cells with EXACT diversity : 22 of 27
+  prefix understated         : 7 cell(s)
+RESULT: ALL CHECKS PASS -- 11 checks passed, 0 failed
 ==============================================================================
 
 ################ test_uart_uvm_milestone ################
@@ -97,7 +97,7 @@ RESULT: ALL CHECKS PASS -- 6 checks passed, 0 failed
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
      0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01p1uw2bmjgdtv21avf2lfmc/.local/lib/python3.10/site-packages/cocotb
-     0.00ns INFO     cocotb                             Seeding Python random module with 1791436746
+     0.00ns INFO     cocotb                             Seeding Python random module with 1791437189
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
 UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
 ----------------------------------------------------------------
@@ -307,7 +307,7 @@ UVM_INFO @ 61070.0NS: uvm_test_top.env.coverage [COV_WITNESS] per-sample witness
       #48 t=47220000ps rx frame data=0xc3 corrupt=None parity_ok=True stop_ok=False
   cross.odd.parity                   1 sample(s), 1 shown
       #47 t=45120000ps rx frame data=0x7e corrupt=None parity_ok=False stop_ok=True
-UVM_INFO @ 61070.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 27 of 27 cells EXACT; audit verdict PASS over checks S-a to S-e)
+UVM_INFO @ 61070.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 27 of 27 cells EXACT; audit verdict PASS over checks S-a to S-f)
   bin.cp_parity_mode.even            1 distinct, 1 sample(s), EXACT
       = reg WR addr=0x0 data=0x03
   bin.cp_parity_mode.none            1 distinct, 1 sample(s), EXACT
@@ -417,9 +417,9 @@ UVM_INFO @ 61070.0NS: reporter [FINISH] $finish was reached in run_test()
  61070.00ns INFO     cocotb.regression                  *********************************************************************************************
                                                         ** TEST                                 STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         *********************************************************************************************
-                                                        ** uart_uvm_tb.test_uart_uvm_milestone   PASS       61070.00           0.58     105304.03  **
+                                                        ** uart_uvm_tb.test_uart_uvm_milestone   PASS       61070.00           0.64      95702.33  **
                                                         *********************************************************************************************
-                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     61070.00           0.62      97961.74  **
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     61070.00           0.67      90533.82  **
                                                         *********************************************************************************************
                                                         
 
@@ -428,7 +428,7 @@ UVM_INFO @ 61070.0NS: reporter [FINISH] $finish was reached in run_test()
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
      0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01p1uw2bmjgdtv21avf2lfmc/.local/lib/python3.10/site-packages/cocotb
-     0.00ns INFO     cocotb                             Seeding Python random module with 1791436748
+     0.00ns INFO     cocotb                             Seeding Python random module with 1791437191
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
 UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
 ----------------------------------------------------------------
@@ -520,7 +520,7 @@ UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COV_WITNESS] per-sample witnes
       #534 t=451840000ps rx frame data=0x3c corrupt=None parity_ok=True stop_ok=False
       #544 t=460580000ps rx frame data=0x01 corrupt=None parity_ok=True stop_ok=False
       #554 t=469340000ps rx frame data=0x3c corrupt=None parity_ok=True stop_ok=False
-UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 11 of 11 cells EXACT; audit verdict PASS over checks S-a to S-e)
+UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 11 of 11 cells EXACT; audit verdict PASS over checks S-a to S-f)
   bin.cp_parity_mode.none            1 distinct, 1 sample(s), EXACT
       = reg WR addr=0x0 data=0x01
   bin.cp_reg_access.rd_rxdata        4 distinct, 182 sample(s), EXACT
@@ -590,9 +590,9 @@ UVM_INFO @ 766585.0NS: reporter [FINISH] $finish was reached in run_test()
 766585.00ns INFO     cocotb.regression                  **********************************************************************************************
                                                         ** TEST                                  STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         **********************************************************************************************
-                                                        ** uart_uvm_tb.test_uart_baud_tolerance   PASS      766585.00           6.80     112811.65  **
+                                                        ** uart_uvm_tb.test_uart_baud_tolerance   PASS      766585.00           7.30     105063.10  **
                                                         **********************************************************************************************
-                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     766585.00           6.83     112224.04  **
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                     766585.00           7.33     104544.22  **
                                                         **********************************************************************************************
                                                         
 
@@ -601,7 +601,7 @@ UVM_INFO @ 766585.0NS: reporter [FINISH] $finish was reached in run_test()
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
      0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01p1uw2bmjgdtv21avf2lfmc/.local/lib/python3.10/site-packages/cocotb
-     0.00ns INFO     cocotb                             Seeding Python random module with 1791436756
+     0.00ns INFO     cocotb                             Seeding Python random module with 1791437200
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
 UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
 ----------------------------------------------------------------
@@ -1965,7 +1965,7 @@ UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COV_WITNESS] per-sample witnes
       #534 t=451840000ps rx frame data=0x3c corrupt=None parity_ok=True stop_ok=False
       #544 t=460580000ps rx frame data=0x01 corrupt=None parity_ok=True stop_ok=False
       #554 t=469340000ps rx frame data=0x3c corrupt=None parity_ok=True stop_ok=False
-UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 11 of 11 cells EXACT; audit verdict PASS over checks S-a to S-e)
+UVM_INFO @ 766585.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 11 of 11 cells EXACT; audit verdict PASS over checks S-a to S-f)
   bin.cp_parity_mode.none            1 distinct, 1 sample(s), EXACT
       = reg WR addr=0x0 data=0x01
   bin.cp_reg_access.rd_rxdata        4 distinct, 182 sample(s), EXACT
@@ -2034,9 +2034,9 @@ UVM_INFO @ 766585.0NS: reporter [FINISH] $finish was reached in run_test()
 766585.00ns INFO     cocotb.regression                  **************************************************************************************************************
                                                         ** TEST                                                  STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                         **************************************************************************************************************
-                                                        ** uart_uvm_tb.test_uart_scoreboard_timebase_assumption   PASS      766585.00           7.13     107487.09  **
+                                                        ** uart_uvm_tb.test_uart_scoreboard_timebase_assumption   PASS      766585.00           7.35     104318.09  **
                                                         **************************************************************************************************************
-                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                     766585.00           7.17     106975.25  **
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                                     766585.00           7.39     103747.72  **
                                                         **************************************************************************************************************
                                                         
 
@@ -2045,7 +2045,7 @@ UVM_INFO @ 766585.0NS: reporter [FINISH] $finish was reached in run_test()
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
      0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01p1uw2bmjgdtv21avf2lfmc/.local/lib/python3.10/site-packages/cocotb
-     0.00ns INFO     cocotb                             Seeding Python random module with 1791436765
+     0.00ns INFO     cocotb                             Seeding Python random module with 1791437209
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
 UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
 ----------------------------------------------------------------
@@ -2136,7 +2136,7 @@ UVM_INFO @ 1080465.0NS: uvm_test_top.env.coverage [COV_WITNESS] per-sample witne
       #554 t=463220000ps rx frame data=0x01 corrupt=None parity_ok=True stop_ok=False
       #574 t=480320000ps rx frame data=0x01 corrupt=None parity_ok=True stop_ok=False
       #594 t=497420000ps rx frame data=0x01 corrupt=None parity_ok=True stop_ok=False
-UVM_INFO @ 1080465.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 11 of 11 cells EXACT; audit verdict PASS over checks S-a to S-e)
+UVM_INFO @ 1080465.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 11 of 11 cells EXACT; audit verdict PASS over checks S-a to S-f)
   bin.cp_parity_mode.none            1 distinct, 1 sample(s), EXACT
       = reg WR addr=0x0 data=0x01
   bin.cp_reg_access.rd_rxdata        6 distinct, 256 sample(s), EXACT
@@ -2273,9 +2273,9 @@ UVM_INFO @ 1080465.0NS: reporter [FINISH] $finish was reached in run_test()
 1080465.00ns INFO     cocotb.regression                  ****************************************************************************************************
                                                          ** TEST                                        STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                          ****************************************************************************************************
-                                                         ** uart_uvm_tb.test_uart_independent_observer   PASS     1080465.00           9.75     110844.14  **
+                                                         ** uart_uvm_tb.test_uart_independent_observer   PASS     1080465.00          10.23     105658.43  **
                                                          ****************************************************************************************************
-                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                          1080465.00           9.78     110471.08  **
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                          1080465.00          10.26     105330.50  **
                                                          ****************************************************************************************************
                                                          
 
@@ -2284,7 +2284,7 @@ UVM_INFO @ 1080465.0NS: reporter [FINISH] $finish was reached in run_test()
      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
      0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
      0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /sessions/rcw-01p1uw2bmjgdtv21avf2lfmc/.local/lib/python3.10/site-packages/cocotb
-     0.00ns INFO     cocotb                             Seeding Python random module with 1791436776
+     0.00ns INFO     cocotb                             Seeding Python random module with 1791437221
      0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
 UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
 ----------------------------------------------------------------
@@ -2376,7 +2376,7 @@ UVM_INFO @ 1895815.0NS: uvm_test_top.env.coverage [COV_WITNESS] per-sample witne
       #89 t=72950000ps rx frame data=0xd5 corrupt=None parity_ok=True stop_ok=False
       #94 t=77370000ps rx frame data=0x95 corrupt=None parity_ok=True stop_ok=False
       #99 t=81830000ps rx frame data=0xb5 corrupt=None parity_ok=True stop_ok=False
-UVM_INFO @ 1895815.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 6 of 11 cells EXACT; audit verdict PASS over checks S-a to S-e)
+UVM_INFO @ 1895815.0NS: uvm_test_top.env.coverage [COV_SIGNATURE] distinct stimulus signatures (keep=16 per cell; 6 of 11 cells EXACT; audit verdict PASS over checks S-a to S-f)
   bin.cp_parity_mode.none            1 distinct, 1 sample(s), EXACT
       = reg WR addr=0x0 data=0x01
   bin.cp_reg_access.rd_rxdata        16 distinct, 468 sample(s), BOUNDED (+194 refused)
@@ -2667,9 +2667,9 @@ UVM_INFO @ 1895815.0NS: reporter [FINISH] $finish was reached in run_test()
 1895815.00ns INFO     cocotb.regression                  *************************************************************************************************
                                                          ** TEST                                     STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
                                                          *************************************************************************************************
-                                                         ** uart_uvm_tb.test_uart_adaptive_observer   PASS     1895815.00          20.06      94494.57  **
+                                                         ** uart_uvm_tb.test_uart_adaptive_observer   PASS     1895815.00          20.49      92517.90  **
                                                          *************************************************************************************************
-                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                       1895815.00          20.10      94329.03  **
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                       1895815.00          20.53      92338.19  **
                                                          *************************************************************************************************
                                                          
 

@@ -120,7 +120,7 @@ SIG_HDR_RE = re.compile(
     r"^\s{2}(\S+)\s+(\d+) distinct, (\d+) sample\(s\), "
     r"(EXACT|BOUNDED \(\+(\d+) refused\))\s*$")
 SIG_RE = re.compile(r"^\s{6}= (.*)$")
-SIGSUM_RE = re.compile(r"audit verdict (\w+) over checks S-a to S-e")
+SIGSUM_RE = re.compile(r"audit verdict (\w+) over checks S-a to S-f")
 COVPCT_RE = re.compile(r"TOTAL bin coverage: ([\d.]+)%")
 
 
@@ -269,6 +269,31 @@ def main():
                closers[0] if len(closers) == 1
                else "%d distinct: %s" % (len(closers), "; ".join(closers))))
     say()
+    # A ZeroDivisionError is not a verdict.  This audit crashed here on
+    # 2026-10-08 when it was pointed at a transcript that was still being
+    # written, reporting "0 of 0" cells and then dying inside R4's percentage
+    # -- so a log with NO witness blocks produced a traceback and no RESULT
+    # line, which the runner could only classify as "0 RESULT lines".  An
+    # offline audit of a committed artefact has to be able to say "this
+    # artefact does not contain what I audit" as a FAILED CHECK, because that
+    # is a fact about the artefact and is exactly what a reviewer needs told.
+    if not agg:
+        check("R0", False,
+              "the transcript contains at least one witness block, so there "
+              "is something here to audit at all",
+              "NONE FOUND in %s.  A run-axis audit of a log with no witness "
+              "blocks has no subject; this is reported as a failed check "
+              "rather than raised as an exception, because a traceback is "
+              "not a verdict and the runner can only read it as a missing "
+              "RESULT line." % LOG)
+        say()
+        say("=" * 78)
+        say("RESULT: FAILURES: R0 -- 0 checks passed, 1 failed")
+        say("=" * 78)
+        with open(os.path.join(here, "run_axis_audit_%s.txt" % today),
+                  "w") as fh:
+            fh.write("\n".join(_LINES) + "\n")
+        return 1
     say("  cells with total > 1 and PREFIX diversity 1: %d of %d"
         % (len(mono), len(agg)))
     for c in mono:

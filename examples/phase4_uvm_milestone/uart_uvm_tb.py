@@ -64,6 +64,8 @@ Run with:  make          (see the Makefile beside this file)
 import random
 from collections import deque
 
+import zlib
+
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, Edge, Timer
@@ -1319,6 +1321,20 @@ class UartCoverage(UVMComponent):
         # the signature set for that cell is complete and its diversity is
         # EXACT rather than a lower bound.
         self.sig_overflow = {}
+        # cell -> a 64-bit mask with one bit set per crc32 residue of every
+        # distinct signature EVER seen, stored or refused.  This is the
+        # independent witness that makes check S-f possible: popcount(mask) is
+        # a one-sided LOWER bound on the number of distinct signatures (hash
+        # collisions can only lose bits, never invent them), and it is
+        # computed on a code path that does not read self.signatures at all.
+        # Without it, a cell whose overflow counter stopped incrementing would
+        # print EXACT while truncating -- the precise fault this whole
+        # mechanism exists to prevent -- and nothing in S-a..S-e could see it,
+        # because every one of those checks is computed FROM the stored list.
+        # 64 bits per cell, so the bound on the log still holds.
+        # crc32 rather than hash(): hash() of a str is salted per process, so
+        # a check built on it would not be reproducible across runs.
+        self.sig_mask = {}
         self.n_samples = 0
 
     def build_phase(self, phase):
@@ -1363,6 +1379,8 @@ class UartCoverage(UVMComponent):
                        % (self.n_samples, get_sim_time("ps"), src,
                           item.convert2string()))
         sig = self._signature_of(src, item)
+        self.sig_mask[cell] = (self.sig_mask.get(cell, 0)
+                               | (1 << (zlib.crc32(sig.encode()) & 63)))
         sigs = self.signatures.setdefault(cell, [])
         self.sig_overflow.setdefault(cell, 0)
         if sig not in sigs:
@@ -1546,9 +1564,18 @@ class UartCoverage(UVMComponent):
                whose stimulus is absent from the set means the signature path
                missed a sample.  A regression failure, not a gap;
           S-e  a cell's distinct-signature count never exceeds its sample
-               count.
+               count;
+          S-f  the stored accounting -- len(signatures) + sig_overflow --
+               accounts for at least as many distinct signatures as the
+               INDEPENDENT crc32 mask can prove existed.  Every other check
+               here is computed from the stored list, so every other check is
+               blind to a cell whose overflow counter stopped incrementing:
+               it would print EXACT while silently truncating, which is the
+               one fault this mechanism exists to prevent.  The mask is a
+               one-sided lower bound -- collisions lose bits, never invent
+               them -- so S-f can only fire on a real accounting error.
         """
-        sa, sb, sc, sd, se = [], [], [], [], []
+        sa, sb, sc, sd, se, sf = [], [], [], [], [], []
         counts = self.cell_counts()
         for cell, v in counts.items():
             sigs = self.signatures.get(cell, [])
@@ -1560,6 +1587,10 @@ class UartCoverage(UVMComponent):
                 sc.append(cell)
             if len(sigs) > v:
                 se.append((cell, len(sigs), v))
+            proved = bin(self.sig_mask.get(cell, 0)).count("1")
+            accounted = len(sigs) + self.sig_overflow.get(cell, 0)
+            if proved > accounted:
+                sf.append((cell, proved, accounted))
         for cell, lst in self.witnesses.items():
             sigs = set(self.signatures.get(cell, []))
             for w in lst:
@@ -1576,6 +1607,8 @@ class UartCoverage(UVMComponent):
                   for c, n, v in se]
         sd_txt = [nm(c) + " witness stimulus absent from set: " + t
                   for c, t in sd[:4]]
+        sf_txt = [nm(c) + " mask proves >=%d distinct, accounting says %d"
+                  % (p, a) for c, p, a in sf]
         for tag, bad, what in (
                 ("S-a", [nm(c) for c in sa], "nonzero cells with NO signature"),
                 ("S-b", [nm(c) for c in sb], "cells with duplicate signatures"),
@@ -1583,12 +1616,15 @@ class UartCoverage(UVMComponent):
                  "cells exceeding SIGNATURE_KEEP signatures"),
                 ("S-d", sd_txt,
                  "cells whose witness stimulus is missing from the set"),
-                ("S-e", se_txt, "cells with more signatures than samples")):
+                ("S-e", se_txt, "cells with more signatures than samples"),
+                ("S-f", sf_txt,
+                 "cells whose accounting is below what the independent mask "
+                 "proves")):
             if bad:
                 self.uvm_report_error(
                     "COV_SIGNATURE",
                     "%s FAILED: %s -- %s" % (tag, what, ", ".join(bad)))
-        return not (sa or sb or sc or sd or se)
+        return not (sa or sb or sc or sd or se or sf)
 
     def signature_lines(self):
         """The distinct-signature block.  The EXACT / BOUNDED word is what a
@@ -1646,7 +1682,7 @@ class UartCoverage(UVMComponent):
             # preceded by an "S-x" token, so this line cannot be parsed as
             # one of the checks it summarises (2026-10-06).
             ("distinct stimulus signatures (keep=%d per cell; %d of %d cells "
-             "EXACT; audit verdict %s over checks S-a to S-e)\n"
+             "EXACT; audit verdict %s over checks S-a to S-f)\n"
              % (self.SIGNATURE_KEEP, n_exact, len(self.signatures),
                 "PASS" if sig_ok else "FAILED"))
             + "\n".join(self.signature_lines()))
