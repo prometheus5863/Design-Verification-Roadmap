@@ -575,6 +575,91 @@ measured rather than quietly dropped.
             is listed in `AUTOMATION_LOG.md`. No diversity TARGET is
             proposed; that changes a sign-off criterion and is a
             reviewer's decision
+      - [x] **Diversity is EXACT, and the diversity-1 finding survives it**
+            (**DONE 2026-10-08**, closing the successor the 10-06 run-axis
+            item named for itself). `UartCoverage` now keeps, per cell, a
+            bounded list of DISTINCT stimulus signatures beside its
+            first-`WITNESS_KEEP` witnesses -- a signature being a witness
+            with the ordinal and the simulation time removed, so two
+            samples carrying the same stimulus collapse and the size of
+            the set IS the cell's diversity. `SIGNATURE_KEEP = 16`, and
+            the bound REPORTS hitting itself: `sig_overflow` counts the
+            distinct signatures it refused, per cell, so a cell prints
+            EXACT or `BOUNDED (+n refused)` and is never read as a
+            measurement when it is a lower bound.
+            **Not merely a larger `WITNESS_KEEP`:** a witness list answers
+            which sample closed a cell and in what order, which is why
+            witnesses carry an ordinal; a signature set answers how many
+            DIFFERENT things hit it, for which the ordinal is noise that
+            would make every entry distinct. Two bookkeepings, two
+            questions, same samples -- so check S-d requires them to agree.
+            **Six runtime assertions, S-a..S-f**, and S-f is the one that
+            earns its keep: S-a..S-e are ALL computed from the stored
+            list, so all five are blind to a cell whose `sig_overflow`
+            stopped incrementing -- it would print EXACT while silently
+            truncating, the exact fault the mechanism exists to prevent.
+            S-f compares the stored accounting against an INDEPENDENT
+            64-bit crc32 mask (popcount is a one-sided lower bound;
+            collisions lose bits, never invent them) on a code path that
+            never reads the stored list. `crc32` and not `hash()`, because
+            `hash()` of a `str` is salted per process and a check whose
+            verdict depends on the process is not a check.
+            **THE MEASUREMENT** (`run_axis_audit.py` Section 2b, 11 checks
+            / 0 failed): **all 9 prefix-diversity-1 cells are CONFIRMED
+            exactly 1** -- the 10-06 finding survives becoming a
+            measurement, which was not guaranteed; **7 of 27 cells had
+            their diversity UNDERSTATED by the prefix**, largest gap
+            `cp_rx_error.frame` 7 -> 19, so the prefix was not merely
+            conservative in principle but wrong about a quarter of the
+            cells, and none of those were the cells the finding rested on;
+            **5 of 27 remain BOUNDED** with their refused counts printed.
+            All five UVM tests re-run and committed
+            (`uart_uvm_sim_output_2026-10-08.txt`, 5 PASS / 0 FAIL,
+            "audit verdict PASS over checks S-a to S-f").
+            **Mutation harness `mutation_test_signatures.py`: 5 of 5 fault
+            mutants killed, and S4 (`sig_overflow` stops incrementing) is
+            killed by S-f ALONE** -- which turns the claim that S-a..S-e
+            are blind to it from an argument about code paths into a
+            result. Its `--selftest` mode is committed too.
+            **AN ARRIVAL CONTROL, forced by that harness's first run.** It
+            reported S4 and S5 as SURVIVED, i.e. that the mechanism misses
+            its two most important faults. It misses nothing: both ran
+            against the milestone test, where 27 of 27 cells are EXACT, so
+            the bound never bites, `sig_overflow` never increments and the
+            cap is never reached. **Those mutants never arrived.** Each
+            row now names its testcase (S4/S5/S6 run against
+            `test_uart_adaptive_observer`, 5 of 11 cells BOUNDED), control
+            A is re-run per distinct testcase because a baseline from a
+            different stimulus is not a baseline, and every mutant's own
+            `COV_SIGNATURE` block is compared against that baseline --
+            byte-identical scores the row **INERT**, neither killed nor
+            survived. A row can only be called SURVIVED once it has been
+            shown to have done something. This is 2026-09-29's rule in the
+            one place this repository had not yet put a control for it, and
+            it was one commit away from being recorded as a real gap.
+            **TWO INERT ROWS, both informative.** Control B is INERT rather
+            than SURVIVED, which is STRONGER: its claim is that a different
+            implementation produces the same output, and INERT asserts the
+            printed block is byte-identical rather than merely that nothing
+            complained. **S6 (the crc32 mask stops being updated) is INERT,
+            which measures a limitation of S-f: it is ONE-SIDED.** With an
+            empty mask popcount is 0, which is <= any accounting, so S-f
+            passes -- it detects an accounting that is too small and cannot
+            detect its own evidence going missing. A positive control that
+            requires S-f to FIRE does not exist yet and is a new open item,
+            of exactly the kind 2026-10-07's `phase4_ral` work built.
+            **A SECOND, SMALLER DEFECT FIXED: a `ZeroDivisionError` is not
+            a verdict.** `run_axis_audit.py` crashed when pointed at a
+            transcript that was still being written -- "0 of 0" cells, then
+            a traceback inside R4's percentage and NO `RESULT` line, which
+            the runner could only read as "0 RESULT lines, expected 1". New
+            check R0 reports "this artefact does not contain what I audit"
+            as a FAILED CHECK, because that is a fact about the artefact and
+            is what a reviewer needs told; its failure path was exercised
+            against a witness-free log before being committed. Any
+            truncated, rotated or partially-copied transcript reached this
+            audit the same way, and before today every one produced a
+            traceback instead of a verdict
       - [ ] SVA protocol checkers added
       - [x] Functional coverage report + closure target stated
             (**DONE 2026-09-24**, `examples/phase6_crv_uart/`, the top and
