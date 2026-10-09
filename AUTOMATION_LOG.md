@@ -6631,3 +6631,253 @@ section and transcripts; S-f and the R0 guard; the mutation harness with its
 two reports; `progress.md`; the session note). This AUTOMATION_LOG.md entry
 makes **6**.
 The graphene repository took **5** in the same session, for **11** across both.
+
+---
+
+## 2026-10-09 — The arrival control was two-valued, and half the detections were crashes
+
+**Session type:** full session. Step 0 at the **04:30** firing (04:35 UTC)
+found the device reachable, the "scheduled harsh" folder connected, **neither**
+repository carrying a 2026-10-09 entry and no commits since midnight.
+
+**Item worked:** 10-08's *"the arrival control, wired into the other
+harnesses"*. Taken over the S-f positive control for a reason that decided the
+session's shape: **four of the five named harnesses need a uvm-python
+simulation per mutant row**, which no single session has re-run, and one does
+not. The choice was wiring five and running none, or wiring one and measuring
+the rest. Wiring without running produces a committed instrument nobody has
+seen work — 09-19's class exactly.
+
+### 1. The 10-08 arrival control is two-valued, and the unguarded half is the mutant's
+
+```python
+blk     = signature_block(out)      # "" when the block is absent
+arrived = (blk != baselines[tc])
+```
+
+The **baseline** side is guarded: control A with no block ABORTS the harness,
+which is 10-02's check R0 — *this artefact does not contain what I audit* is a
+failed check. **The mutant side is not.** A mutant run emitting no signature
+block leaves `blk = ""`, `"" != baseline` is True, `arrived` is True, and absent
+a killer the row is scored **SURVIVED on the strength of a block that does not
+exist**.
+
+| observation | what it means | two-valued verdict |
+|---|---|---|
+| the block differs | the mutant reached the mechanism | ARRIVED → SURVIVED |
+| **there is no block** | the mechanism was **not observed** | ARRIVED → SURVIVED |
+
+The stronger evidence of something being wrong, scored as the weaker verdict.
+10-06's misattribution, and 10-02's `ZeroDivisionError` again: the absence of
+the artefact read as a value of it.
+
+`arrival_control.py` is three-valued — ARRIVED / INERT / NO_OBSERVATION —
+voiding the row on NO_OBSERVATION the way `controls_text()`'s unusable tokens
+do, with a killer outranking arrival and only ARRIVED admitted to SURVIVED. The
+retired rule is kept as `two_valued_legacy()` **so the disagreement is measured
+rather than asserted**: 5 of 7 selftest cases disagree, 4 of which the old rule
+scored SURVIVED (absent mutant block, whitespace-only, `None`, and an absent
+*baseline*). Every branch is exercised, both NO_OBSERVATION sides included —
+10-01: a control that cannot fail is not a control, and that applies to this
+one.
+
+**The selftest's own count check failed**, at 5 against a typed literal 4: the
+draft counted the legacy-SURVIVED cases and forgot the both-absent case.
+Repaired by **deriving** the count from the property that holds — the legacy
+rule has no NO_OBSERVATION value, so every NO_OBSERVATION case disagrees by
+construction and nothing else can — not by editing the literal.
+
+### 2. What wiring it found, which is not what it was pointed at
+
+`mutation_test_reachable_cross.py`: 9 rows, 9 still behaving as required.
+
+**Expected.** Its three required-to-survive rows — CONTROL B's
+semantics-preserving rename, and M6a/M6b whose prose has argued since 10-02
+that "a weakened assertion still holds on correct input, so no self-run can
+catch it" — all come back **INERT**. That is the harness's own argument turned
+from prose into a byte comparison: the suite did not fail to notice the mutant,
+the mutant produced nothing for it to notice. The report states that an INERT
+count is the *specification* here and bad news in every other harness, because
+otherwise the next reader subtracts three from a detection score.
+
+**Unexpected.** M1, M4 and M5 come back **NO_OBSERVATION** — they make the
+suite raise (`ZeroDivisionError`, `TypeError`) so it prints no verdict block.
+The harness scored all three **"DETECTED (correct)"**, because its rule was
+`detected = (f_ is None) or (f_ > 0)` and `f_ is None` means the `TOTAL:` line
+is missing, i.e. **the suite died**.
+
+| detected by | count | mutants |
+|---|---|---|
+| a failing check | **3** | M2, M3, M6c |
+| an unhandled exception | **3** | M1, M4, M5 |
+
+**Three of six detections were the python interpreter catching the mutant**,
+reported in the same column and the same words as the three a check caught.
+10-06's misattribution, and the **mirror image of 10-08's false SURVIVED: a
+false DETECTED**, a true-positive outcome reached by a mechanism other than the
+one being measured.
+
+**Scored honestly in both directions.** Re-scoring these as escapes would be
+the opposite error: a crash means the mutant was **not silently accepted**, so
+none is a hole today. What is true is that the exposure is **conditional**, and
+that is why it deserves a number: *if the suite is ever made to degrade
+gracefully, or wrapped in a `try/except`, 3 of 6 detections become silent
+passes and no row of this harness changes.* One defensive
+`except Exception: print("TOTAL: 0 passed, 0 failed")` would halve its measured
+detection power without failing anything. Counts split DETECTED_BY_CHECK
+against DETECTED_BY_CRASH, and the harness now exits non-zero on an
+ARRIVED-and-uncaught row, an unexplained NO_OBSERVATION, or a detection count
+with no check in it.
+
+### 3. A census, because the backlog entry could not notice its own staleness
+
+10-08's item is a sentence listing five files, and a sentence cannot notice a
+harness being added, one being wired, or a registry row claiming more than its
+source does. `arrival_control_census.py` is that item as a measurement, with
+the graphene repository's 10-08 staleness-guard pattern: **a harness on disk and
+absent from the registry is a FAULT, not a blank.** Five failure paths; F1
+(unregistered harness), F2 (registry row with no file) and F3 (adjudication
+disagrees with source) are exercised by `--selftest`. F3 is what stops the
+census becoming a list of intentions.
+
+| harness | arrival control |
+|---|---|
+| `mutation_test_reachable_cross.py` | **THREE_VALUED** (today) |
+| `mutation_test_signatures.py` | TWO_VALUED (10-08; mutant side unguarded) |
+| `mutation_test_witnesses.py` | NONE |
+| `mutation_test_coverage_axis.py` | NONE |
+| `mutation_test_evidence_soundness.py` | NONE |
+| `mutation_test_witness_soundness.py` | NONE — **cheapest remaining** |
+
+**OPEN: 5 of 6, 0 faults.** `mutation_test_signatures.py` is deliberately not
+rewired: one sim per row, no session has re-run it, and an unverified edit to a
+committed instrument is worse than a gap that is measured and reported. That
+reasoning lives in the registry row, not only in the notes.
+
+**And the census flagged the one harness it had just wired.** The first draft
+classified on the raw file and raised F4 — "still contains a two-valued
+comparison" — against `mutation_test_reachable_cross.py`, because **that
+harness's docstring explains the retired rule and so contains the literal text
+`mutant != baseline`**. The detector could not tell a rule from a description of
+a rule. That is 10-06 exactly, where an un-anchored `S-[a-f] FAILED` also
+matched the summary sentence that merely *named* the checks, and the inverse of
+09-28: prose being detected **as** code. In a repository whose house style is
+long explanatory docstrings this is the default, not a corner. Fixed
+structurally rather than with a cleverer regex — classification runs on a
+`tokenize` stream with COMMENT and STRING dropped, an un-tokenisable file raises
+F5, and `--selftest` asserts F4 does *not* fire against `reachable_cross` on the
+live registry, so the prose path is a standing regression check.
+
+### 4. Methodological note
+
+09-17: a suite can pass against broken RTL. 09-18: and print PASS over its own
+errors. 09-19/09-20: the subsystem reporting the verdict is not the one doing
+the checking. 09-26: a reachability pre-pass answers "did my attempts reach
+it". 09-30: a control has to sit where the failure enters. 10-01: an arrival
+control that cannot fail is not a control. 10-05: a metric can be printed
+beside the thing it does not measure. 10-06: and the detector can misattribute
+what it measured. 10-07: an injection guard is a measurement, so "did the file
+change" is the wrong question. 10-08: and a mutant reporting SURVIVED under a
+stimulus that cannot reach it is a false finding about working code, strictly
+worse than a missed defect because it arrives with a transcript.
+
+**10-09: AND THE SAME IS TRUE OF A DETECTION. A MUTANT SCORED DETECTED BECAUSE
+THE SUITE CRASHED IS A CLAIM ABOUT THE SUITE'S CHECKS THAT THE SUITE'S CHECKS
+DID NOT MAKE.**
+
+The checkable rule: **a verdict must name the mechanism that produced it.**
+"DETECTED" is not a verdict; "detected by a failing check" and "detected by an
+unhandled exception" are, and they have different futures. 10-08 mechanised
+provenance for the SURVIVED column; today is the observation that the positive
+column needed the same treatment and nobody had looked, **because a true
+positive feels like it needs no provenance.**
+
+Second rule: **a pattern that matches a rule also matches prose about the rule,
+and here prose about rules is most of the text.** Two detectors bitten three
+days apart, both repaired by making the matcher structural — anchor on a colon,
+tokenise and drop strings — rather than the pattern more specific. A textual
+detector over this repository's own source must be told where the code ends.
+
+**Cross-repository note.** The graphene repository's session today produced the
+same methodological result from the opposite direction: three exactness checks
+failed as first written and none measured what it was aimed at. Both sessions
+reached the rule that **the repair chosen at the moment a check misbehaves
+decides whether the finding exists**: there, loosening the tolerance would have
+discarded three findings; here, editing F4's regex or the selftest's literal
+would have discarded two. Neither repository's harnesses had a provenance field
+on a positive verdict, and the graphene mutation harnesses still compare
+verdicts rather than output blocks — that remains the candidate to cross over.
+
+### 5. Toolchain and automation health
+
+`arrival_control.py` and the census are pure python; no simulator was needed
+and **uvm-python was not installed this session**, which is the direct
+consequence of picking the one harness that does not need it. The 10-03 and
+10-07 gotchas therefore went unexercised today and are unchanged: source
+`tools/setup_iverilog.sh` **without a pipe**; wrap the real binary under
+`timeout`, not the shell function; and `export PATH="$HOME/.local/bin:$PATH"`
+or `cocotb-config` is missing and the Makefile fails with
+`No rule to make target '/Makefile.sim'`.
+
+Device reachable and folder connected at the **04:30** firing; nothing crossed
+the bridge. **10-08's push-earlier correction was followed in full**: every
+commit was pushed and verified against the GitHub API before the next was
+written, with `git fetch origin main` immediately before each push per the
+10-03 race item, so at no point did more than one commit exist only in the
+session VM.
+
+**Not yet covered (candidates for future runs):**
+
+- **WIRE `mutation_test_witness_soundness.py`** — created today and the
+  **cheapest remaining row by a wide margin**: its target is
+  `witness_soundness.py`, a python mechanism, so it is the only other harness
+  re-runnable inside a session. The census names it, and `arrival_control.py`
+  now exists, so this is an import and a block extractor.
+- **A PROVENANCE FIELD ON EVERY POSITIVE VERDICT** — created today, and the
+  generalisation of §2. Only `mutation_test_reachable_cross.py` distinguishes
+  detection-by-check from detection-by-crash. The other five report
+  "KILLED"/"DETECTED" with no record of what did the killing, and four of them
+  run a simulation where a timeout, an import error and a failing check are all
+  one column today.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created today.
+  Three detections currently rest on the interpreter, and a single defensive
+  `except` would turn them into silent passes with no harness row changing.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **unchanged and
+  untouched**: with an empty mask `popcount` is 0 and S-f passes, so the check
+  cannot detect its own evidence going missing. Needs the same sim loop as the
+  four unwired harnesses. Still a control with no control.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  created today; it is the census's TWO_VALUED row. Needs one uvm-python sim per
+  row, and the whole point of today's deferral is that it should be wired by a
+  session that can re-run it.
+- **THE ARRIVAL CONTROL IN THE FOUR SIM-BASED HARNESSES** — created 10-08, now
+  a measured 4 of 6 rather than a prose list.
+- **CONSTRAINED-RANDOM STIMULUS FROM A UVM SEQUENCE** — created 10-06 and still
+  **the strongest content item**, now two sessions deferred in favour of
+  harness integrity. The CRV machinery exists in `examples/phase6_crv_uart/` in
+  plain Verilog and has never been driven from a UVM sequence; capstone box
+  **(a)**. Worth noting that two consecutive sessions have chosen measurement
+  infrastructure over new DV content, which is defensible once and is becoming
+  a pattern.
+- **REPAIR THE THREE ROWS THE 10-07 AUDIT NAMED** — `phase6_crv_uart` M3's
+  inserted text, `phase6_rx_pin_driver` M4's two sites and M3's implicit
+  pattern; `phase6_bfm_equivalence` and `phase4_rtl_bringup` still guard with
+  `cmp -s`. Untouched.
+- **A diversity TARGET** — still deliberately open; it changes a sign-off
+  criterion and is a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt enable
+  combinations, the loopback mux, reset asserted mid-frame); a property needing
+  a strengthening invariant; the SVA sequence layer (runnable on neither tool
+  here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+**Commits this run:** 5 (`arrival_control.py` with its selftest transcript; the
+arrival control wired into `mutation_test_reachable_cross.py` with its report;
+the census with its selftest and live output; `progress.md`; the session note).
+This AUTOMATION_LOG.md entry makes **6**.
+The graphene repository took **5** in the same session, for **11** across both.
