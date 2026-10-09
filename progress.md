@@ -1359,3 +1359,66 @@ anchor is not in the original" -- about a file that did not exist. Twelve
 false findings that looked exactly like twelve real ones. 09-30's rule applies
 to the auditor too: *the control has to sit where the failure enters*, and
 this one was reading a variable the thing under audit could write.
+
+**An arrival control can be two-valued, and the unguarded half scores a
+missing block as SURVIVED (2026-10-09).** 10-08's arrival control was
+`arrived = (blk != baselines[tc])`, where the block extractor returns `""`
+when the block is absent. The BASELINE side is guarded — control A with no
+block aborts the harness, which is 10-02's R0 rule. The MUTANT side is not: an
+absent block differs from a present baseline, so `arrived` is True, and absent
+a killer the row is scored SURVIVED **on the strength of a block that does not
+exist**. The two cases conflated are *the block differs* and *there is no
+block*, and the second — the stronger evidence of something being wrong — is
+scored as the weaker verdict. `arrival_control.py` is three-valued (ARRIVED /
+INERT / NO_OBSERVATION), keeps the retired rule as `two_valued_legacy()` so
+the disagreement is **measured** (5 of 7 selftest cases, 4 of which the old
+rule scored SURVIVED), and exercises every branch including both
+NO_OBSERVATION sides.
+
+**Half of a harness's detections were the suite crashing (2026-10-09).** With
+the arrival control wired into `mutation_test_reachable_cross.py`, three of its
+nine rows came back NO_OBSERVATION — M1, M4 and M5 make the suite raise
+(`ZeroDivisionError`, `TypeError`) so it prints no verdict block at all. The
+harness scored all three "DETECTED (correct)", because its rule was
+`detected = (f_ is None) or (f_ > 0)` and `f_ is None` means the TOTAL line is
+missing, i.e. **the suite died**. Three of six detections were the python
+interpreter catching the mutant, in the same column and the same words as the
+three a check caught — 10-06's misattribution, and the mirror image of 10-08's
+false SURVIVED: a **false DETECTED**, reached by a mechanism other than the one
+being measured. Scored honestly in both directions: a crash does mean the
+mutant was not silently accepted, so these are not holes today, and the
+exposure is **conditional** — if the suite is ever made to degrade gracefully
+or wrapped in a `try/except`, 3 of 6 detections become silent passes and *no
+row of the harness changes*. Counts are now split DETECTED_BY_CHECK against
+DETECTED_BY_CRASH.
+
+**A pattern that matches prose about a rule matches prose about a rule
+(2026-10-09).** `arrival_control_census.py`'s first draft classified harnesses
+on their raw source and raised F4 — "still contains a two-valued comparison" —
+against the one harness that had just been wired three-valued, because that
+harness's **docstring quotes the retired rule it replaced**. Same fault as
+10-06's un-anchored `S-[a-f] FAILED` regex matching inside the sentence that
+merely named the checks, and the inverse of 09-28: prose being detected *as*
+code. In a repository whose house style is long explanatory docstrings this is
+the default case. Fixed structurally — classification runs on a tokenised
+stream with COMMENT and STRING dropped, an un-tokenisable file raises F5
+instead of being classified on prose, and `--selftest` asserts F4 does *not*
+fire on the live registry, so the prose path is a standing regression check.
+
+### Arrival-control coverage across the mutation harnesses (2026-10-09)
+
+Measured by `examples/phase4_uvm_milestone/arrival_control_census.py`, with a
+staleness guard: a harness on disk and absent from its registry is a FAULT.
+
+| harness | arrival control |
+|---|---|
+| `mutation_test_reachable_cross.py` | **THREE_VALUED** (wired 2026-10-09) |
+| `mutation_test_signatures.py` | TWO_VALUED (10-08; mutant side unguarded) |
+| `mutation_test_witnesses.py` | NONE |
+| `mutation_test_coverage_axis.py` | NONE |
+| `mutation_test_evidence_soundness.py` | NONE |
+| `mutation_test_witness_soundness.py` | NONE — **cheapest remaining**, its target is a python mechanism |
+
+**OPEN: 5 of 6**, 0 faults. The four harnesses needing a uvm-python simulation
+per row are a different size of job from the two python-target ones, and the
+census says so rather than implying they are interchangeable.
