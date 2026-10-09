@@ -1,0 +1,106 @@
+============================================================================
+MUTATION TEST -- reachable_cross_under_per_byte_rule.py  2026-10-02
+============================================================================
+
+CONTROL A -- the unmutated suite
+  21 passed, 0 failed   
+  [PASS] control A: a detection below means something only if this passes
+  [PASS] control A printed a 22-line mechanism block for the arrival control to compare against
+
+MUTANTS
+----------------------------------------------------------------------------
+  M1 span_of returns g_first, collapsing the nine to all 256 DETECTED-BY-CRASH (see below)
+        arrival: NO_OBSERVATION
+        ZeroDivisionError: float division by zero
+  M2 closed form uses 2^k instead of 256 - 2^k               DETECTED-BY-CHECK (correct)
+        tally: 20 passed, 1 failed
+        arrival: ARRIVED
+  M3 the single-transition test becomes == 3                 DETECTED-BY-CHECK (correct)
+        tally: 20 passed, 1 failed
+        arrival: ARRIVED
+  M4 reachable_cross ignores the exclusion it is given       DETECTED-BY-CRASH (see below)
+        arrival: NO_OBSERVATION
+        TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+  M5 closure gives up after one draw                         DETECTED-BY-CRASH (see below)
+        arrival: NO_OBSERVATION
+        TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+  M6a weaken the 703 anchor alone -- must SURVIVE, because a SURVIVED (correct -- control B)
+        tally: 21 passed, 0 failed
+        arrival: INERT
+  M6b weaken the anchor AND perturb the measurement -- must  SURVIVED (correct -- control B)
+        tally: 21 passed, 0 failed
+        arrival: INERT
+  M6c perturb the measurement with the anchor INTACT -- must DETECTED-BY-CHECK (correct)
+        tally: 20 passed, 1 failed
+        arrival: ARRIVED
+  CONTROL B -- semantics-preserving: rename a local loop var SURVIVED (correct -- control B)
+        tally: 21 passed, 0 failed
+        arrival: INERT
+----------------------------------------------------------------------------
+  9 of 9 mutants behaved as required
+  Six mutants must be DETECTED, three must SURVIVE: the
+  semantics-preserving rename (the 10-01 control-B requirement) and
+  M6a/M6b, which together with M6c show that the 703 anchor's
+  strictness is load-bearing and cannot be tested by a self-run
+  that only weakens it.
+
+ARRIVAL CONTROL (arrival_control.py, three-valued)
+----------------------------------------------------------------------------
+  mutant                                                     arrival
+  M1 span_of returns g_first, collapsing the nine to all 256 NO_OBSERVATION  (suite crashed)
+  M2 closed form uses 2^k instead of 256 - 2^k               ARRIVED         
+  M3 the single-transition test becomes == 3                 ARRIVED         
+  M4 reachable_cross ignores the exclusion it is given       NO_OBSERVATION  (suite crashed)
+  M5 closure gives up after one draw                         NO_OBSERVATION  (suite crashed)
+  M6a weaken the 703 anchor alone -- must SURVIVE, because a INERT           
+  M6b weaken the anchor AND perturb the measurement -- must  INERT           
+  M6c perturb the measurement with the anchor INTACT -- must ARRIVED         
+  CONTROL B -- semantics-preserving: rename a local loop var INERT           
+
+  INERT: 3   ARRIVED: 3   NO_OBSERVATION: 3
+
+  Every row this harness REQUIRES to survive is expected to be
+  INERT, and that is the point rather than a problem:
+    CONTROL B is a semantics-preserving rename, so a byte-identical
+      verdict block is its specification, not a weakness.
+    M6a and M6b weaken an assertion that still holds on correct
+      input.  The harness has argued since 10-02 that no self-run
+      can catch that.  INERT is that argument MEASURED: the suite
+      did not fail to notice the mutant, the mutant produced
+      nothing for it to notice.
+  So an INERT count here is not the bad news it is in the other
+  harnesses.  What would be bad news is an ARRIVED row scored
+  SURVIVED -- a mutant that changed the verdict block and went
+  uncaught -- and there are none.
+  [PASS] no row is both ARRIVED and uncaught
+  [PASS] every NO_OBSERVATION row is explained by the suite crashing
+
+DETECTION SPLIT -- what actually caught each detected mutant
+----------------------------------------------------------------------------
+  DETECTED BY A FAILING CHECK : 3
+      M2 closed form uses 2^k instead of 256 - 2^k
+      M3 the single-transition test becomes == 3
+      M6c perturb the measurement with the anchor INTACT -- must be DETE
+  DETECTED BY AN UNHANDLED EXCEPTION : 3
+      M1 span_of returns g_first, collapsing the nine to all 256
+      M4 reachable_cross ignores the exclusion it is given
+      M5 closure gives up after one draw
+
+  Before today both columns read 'DETECTED (correct)'.  The
+  detection rule is `detected = (f_ is None) or (f_ > 0)`, and
+  `f_ is None` means the TOTAL line is absent -- the suite did not
+  finish.  A crash is not this suite's checks catching anything;
+  it is the python interpreter catching it, in the same column and
+  the same words.  2026-10-06: credit assigned to a mechanism that
+  did not earn it.
+
+  Why this is NOT simply a bug to be scored as an escape: a crash
+  does mean the mutant was not silently accepted, so the mutant
+  is genuinely not a hole in the suite today.  The exposure is
+  CONDITIONAL and that is what makes it worth a number -- if the
+  suite is ever made to degrade gracefully, or wrapped in a
+  try/except, 3 of 6 detections become silent passes and NO ROW
+  OF THIS HARNESS CHANGES.  A check that would catch each of the
+  three on its own terms is a named follow-on item, not a repair
+  attempted in the same session that found the need for it.
+  [PASS] at least one detection is by a failing check, so the suite is not detecting purely by crashing
