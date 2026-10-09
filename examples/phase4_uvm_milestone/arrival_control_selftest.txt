@@ -1,0 +1,48 @@
+============================================================================
+arrival_control.py SELFTEST
+============================================================================
+
+  case                                           arrival         outcome (no killers)
+  ------------------------------------------------------------------------
+  baseline present, mutant differs               ARRIVED         SURVIVED   [PASS]
+  baseline present, mutant identical             INERT           INERT      [PASS]
+  mutant block ABSENT (the 10-08 gap)            NO_OBSERVATION  VOIDED     [PASS]
+  mutant block is whitespace only                NO_OBSERVATION  VOIDED     [PASS]
+  mutant block is None                           NO_OBSERVATION  VOIDED     [PASS]
+  baseline ABSENT (R0, guarded upstream too)     NO_OBSERVATION  VOIDED     [PASS]
+  BOTH absent -- compare EQUAL, so a two-valued  NO_OBSERVATION  VOIDED     [PASS]
+
+  A killer outranks arrival, including an INERT row:
+    arrival=INERT with a killer -> KILLED   [PASS]
+
+  WHERE THE RETIRED TWO-VALUED RULE DISAGREES, measured:
+  case                                           two-valued   three-valued verdict it produced
+  ------------------------------------------------------------------------
+  mutant block ABSENT (the 10-08 gap)            ARRIVED      NO_OBSERVATION SURVIVED -> VOIDED
+  mutant block is whitespace only                ARRIVED      NO_OBSERVATION SURVIVED -> VOIDED
+  mutant block is None                           ARRIVED      NO_OBSERVATION SURVIVED -> VOIDED
+  baseline ABSENT (R0, guarded upstream too)     ARRIVED      NO_OBSERVATION SURVIVED -> VOIDED
+  BOTH absent -- compare EQUAL, so a two-valued  INERT        NO_OBSERVATION INERT -> VOIDED
+
+  5 of 7 cases disagree, and that is exactly the number of
+  NO_OBSERVATION cases: the legacy rule has no such value, so every
+  one of them disagrees by construction and nothing else can.
+  Of those 5, the legacy rule scored 4 SURVIVED and 1 INERT.
+  THE 4 SURVIVED ONES ARE THE DANGEROUS HALF: an absent mutant
+  block, a whitespace-only one, a None, and an absent BASELINE.  In
+  each the mechanism was not observed at all, and 'SURVIVED' is a
+  claim that it WAS observed and said nothing -- a false finding
+  about working code, which 2026-10-08 ranked strictly worse than a
+  missed defect because it arrives with a transcript.
+  [PASS] every NO_OBSERVATION case disagrees with the legacy rule, and no other case does
+
+  usable() admits only rows that carry detection information:
+    KILLED    -> True
+    SURVIVED  -> True
+    INERT     -> False
+    VOIDED    -> False
+  [PASS] INERT and VOIDED are not usable
+
+============================================================================
+SELFTEST: PASS
+============================================================================
