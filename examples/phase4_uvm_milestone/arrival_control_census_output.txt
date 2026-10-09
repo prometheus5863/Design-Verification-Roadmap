@@ -1,0 +1,62 @@
+==============================================================================
+ARRIVAL-CONTROL CENSUS over every mutation harness in this repository
+2026-10-09
+==============================================================================
+
+  harness                                                  registry      source shows
+  --------------------------------------------------------------------------
+  mutation_test_reachable_cross.py                         THREE_VALUED  THREE_VALUED
+  mutation_test_signatures.py                              TWO_VALUED    TWO_VALUED
+  mutation_test_witnesses.py                               NONE          NONE
+  mutation_test_coverage_axis.py                           NONE          NONE
+  mutation_test_evidence_soundness.py                      NONE          NONE
+  mutation_test_witness_soundness.py                       NONE          NONE
+
+  THREE_VALUED: 1   TWO_VALUED: 1   NONE: 4   total: 6
+
+  PER-HARNESS ADJUDICATION
+  --------------------------------------------------------------------------
+  mutation_test_reachable_cross.py  [THREE_VALUED]
+      wired 2026-10-09. Target is a python suite, so it can be re-run in a
+      session; that is why it went first. Its three required-to-survive
+      rows come back INERT, which is the harness's own 10-02 argument
+      measured, and it found that 3 of its 6 detections were the suite
+      CRASHING.
+  mutation_test_signatures.py  [TWO_VALUED]
+      10-08's original arrival control, `arrived = (blk !=
+      baselines[tc])`. BASELINE side guarded (no block -> ABORT, 10-02's
+      R0); MUTANT side NOT: a mutant run emitting no signature block gives
+      blk = '', which differs from the baseline, so the row is scored
+      SURVIVED on a block that does not exist. NOT rewired yet: one
+      uvm-python sim per row, which no single session has re-run, and an
+      unverified edit to a committed instrument is worse than a measured
+      gap.
+  mutation_test_witnesses.py  [NONE]
+      scores KILLED/SURVIVED from `caught` alone. Needs a uvm-python sim
+      per row.
+  mutation_test_coverage_axis.py  [NONE]
+      scores KILLED/SURVIVED from `caught` alone. Needs a uvm-python sim
+      per row.
+  mutation_test_evidence_soundness.py  [NONE]
+      runs the suite via run_suite(); no arrival evidence. Needs a
+      uvm-python sim per row.
+  mutation_test_witness_soundness.py  [NONE]
+      target is witness_soundness.py, a python mechanism, so this is the
+      CHEAPEST remaining row and the next one to wire.
+
+  No faults: every harness on disk is registered, every registry row
+  exists, and every adjudication agrees with its source.
+
+  OPEN: 5 of 6 harnesses still score SURVIVED without a three-valued
+  arrival control.  That is a measured number with a staleness
+  guard, which is what this file is for -- the 10-08 backlog
+  sentence it replaces could not notice a harness being added.
+
+  The cheapest remaining row is mutation_test_witness_soundness.py,
+  whose target is a python mechanism rather than a simulation.  The
+  four that need a uvm-python sim per row are a different size of
+  job and are not pretended otherwise.
+
+==============================================================================
+RESULT: PASS   (0 fault(s), 5 harness(es) open)
+==============================================================================
