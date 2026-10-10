@@ -6881,3 +6881,253 @@ arrival control wired into `mutation_test_reachable_cross.py` with its report;
 the census with its selftest and live output; `progress.md`; the session note).
 This AUTOMATION_LOG.md entry makes **6**.
 The graphene repository took **5** in the same session, for **11** across both.
+
+## 2026-10-10 — A control that reads the verdict is the killer wearing a control's name
+
+**Session type:** full session. Step 0 at the **first firing of the day**
+(06:19 UTC) found the device reachable, the "scheduled harsh" folder
+connected, **neither** repository carrying a 2026-10-10 entry and no commits
+since midnight.
+
+**Item worked:** 10-09's *"wire `mutation_test_witness_soundness.py`"*, the
+cheapest unwired row of `arrival_control_census.py`. Taken together with
+10-09's *"a provenance field on every positive verdict"*, because this harness
+carried both defects and wiring one without the other would have left a
+measured arrival control feeding an unmeasured detection column. **Both
+closed** for this harness. 13/13 rows as required, extractor selftest 14/14,
+census 0 faults.
+
+### 1. Provenance, and the answer is the opposite of 10-09's
+
+**9 of 9 detections here are a failing check. None is the interpreter.**
+`mutation_test_reachable_cross.py` was 3 of 6 the other way. That difference
+is the argument for the field: an assumption either way — healthy by analogy,
+or sick by analogy — would have been wrong, and only a measurement could say.
+
+`provenance()` carries a third branch that is a **FAULT**, not a tidy-up:
+
+| observation | tag |
+|---|---|
+| non-zero exit, `TOTAL:` reports failures | `DETECTED_BY_CHECK` |
+| non-zero exit, no `TOTAL:` line | `DETECTED_BY_CRASH` |
+| non-zero exit, `TOTAL:` reports **0** failures | **FAULT** |
+| exit 0, `TOTAL:` reports failures | **FAULT** |
+
+The last two are the 09-19/09-20 decoupling, found live twice in this
+repository. A harness that reads only the exit code, or only the text, cannot
+see it.
+
+### 2. The session's finding: an arrival control must not read the verdict
+
+`witness_soundness.py` prints its computed report in SECTIONS 1–8 and its
+PASS/FAIL list after SUMMARY — **except** that SECTION 8's six controls print
+`[PASS]`/`[FAIL]` **inline**, interleaved with the numbers they computed. A
+block cut straight out of SECTIONS 1–8 therefore contains verdict tokens, and
+**an arrival control that reads a verdict token is reading the killer**: it
+stops being independent of exactly the thing it exists to be independent of,
+and a mutant that flips one verdict while computing nothing new scores
+ARRIVED.
+
+`mechanism_block()` normalises them to `[VERDICT]`, and the harness computes
+arrival **both ways and reports the disagreement** rather than asserting there
+is none:
+
+    M8c  stripped INERT   raw ARRIVED   outcome KILLED
+    M9   stripped INERT   raw ARRIVED   outcome KILLED
+
+**Two rows disagree, no outcome changes**, because a killer outranks arrival
+in both. The strip is kept anyway, for two reasons that are not "it might
+matter later": it makes the independence structural rather than coincidental,
+and the verdict text is precisely the artefact this repository has twice found
+decoupled from its checks. Reading it means reading a value already known here
+to be unreliable.
+
+**M9 is new** and exists to produce that disagreement: it changes C1's expected
+tuple `(25, 23, 16)` → `(25, 23, 15)`, so the suite fails and nothing computed
+changes, because C1's detail line is a **typed literal** rather than a format
+of the three lengths it checks.
+
+### 3. Control A stopped being a tautology and became the control under the control
+
+Control A expected SURVIVE and, under a three-valued rule, came back INERT — a
+run compared against itself always will. It is not useless: the harness runs
+the suite **twice** and compares the two reports, and `witness_soundness.py`
+sweeps 40 seeds. If any of that were nondeterministic the two runs would
+differ, control A would report ARRIVED, and **every INERT in the table would be
+unreliable.** Control A is now the **determinism control** the rest of the
+instrument rests on. Its other half — the unmutated suite must pass — moved
+into a pre-flight abort where a missing baseline block prints no rows at all
+(10-02's check R0). **An arrival control needs a determinism control under it,
+and nobody had written one.**
+
+### 4. Two rows are not uncaught but UNOBSERVABLE
+
+M8b — 10-03's compound form, *weaken C3's threshold and perturb what it
+guards* — was specified **SURVIVE** and measures **INERT**. C3's detail is the
+typed literal `"7 of 7 -- so the instrument is not hard-coded to find exactly
+one"`, so the quantity M8b perturbs is **never printed**. The mutant reaches
+nothing observable: not merely uncaught, **unobservable**, and the threshold
+M8a weakens was its **sole observer**.
+
+**That sharpens 10-02 rather than loosening it.** 10-02 concluded the threshold
+is load-bearing; today's version is that it is *the only load-bearing thing
+there is*, because the report carries no independent trace of the quantity it
+guards. Weaken it and the quantity is not just unchecked but invisible.
+
+The census that explains it, written as a check rather than a note:
+
+| `check()` detail in `witness_soundness.py` | count |
+|---|---|
+| derived from the quantity checked | 13 |
+| **typed literal** | **18 (58 %)** |
+| of the six C-controls | **five** typed-literal (C6 derives) |
+
+Eighteen places where a mutant moves a verdict and moves nothing in the
+report — eighteen places no arrival control can see. 10-01's naming fault in
+detail-string form, **measured** rather than noticed once. The guard **fails if
+the file improves**: derive C1's or C3's detail and M8b/M9 become observable,
+so their INERT expectations go stale and the harness says so. Reported, not
+fixed — `witness_soundness.py` owns a committed transcript.
+
+One more row kept: **M8c is KILLED while being INERT.** An assertion can
+observe what the report does not.
+
+### 5. The census caught the session using it, and it was the mirror of its own 10-09 defect
+
+With the registry row moved to THREE_VALUED, `arrival_control_census.py` raised
+**F3 — the registry adjudicates THREE_VALUED and the source shows NONE.** The
+registry was right; the classifier was wrong:
+
+```python
+uses_ac = re.search(r"\bAC\s*\.\s*arrival\s*\(|"
+                    r"\barrival_control\s*\.\s*arrival\s*\(", code)
+```
+
+`mutation_test_reachable_cross.py` writes `import arrival_control as AC`; the
+new harness writes `as ac`.
+
+**This is the mirror of the defect found in this same function on 10-09.** That
+one was a **false positive from matching prose**; this is a **false negative
+from matching one alias.** Same root cause three days apart: *a textual pattern
+standing in for a structural fact.*
+
+**And the cheap repair was sitting right there**: rename the new harness's alias
+to `AC`. The census goes green and stays unable to read the next harness anyone
+writes — the testing equivalent of widening a tolerance until it passes, which
+the graphene repository's session today named as exactly what its tolerance
+item exists to catch. Repaired structurally, as 10-09's was: the binding is
+read out of the import statement with `ast`. Eight alias cases in
+`--selftest`, including the comment and string paths that must **not** count
+(10-09's prose path, still closed) and one alias nobody has used yet; a
+misclassification raises a new **F6**.
+
+Census now: `mutation_test_witness_soundness.py` **THREE_VALUED**, **OPEN 4 of
+6, 0 faults.** Both python-target harnesses are wired, so the cheap half of
+this item is done and every remaining row needs a uvm-python simulation per
+mutant. The closing text no longer calls any of them "cheapest", and names
+`mutation_test_signatures.py` as the worst remaining row — TWO_VALUED is not a
+gap but a control that **misreports**.
+
+### 6. Methodological note
+
+09-17 a suite can pass against broken RTL. 09-18 and print PASS over its own
+errors. 09-19/09-20 the subsystem reporting the verdict is not the one doing
+the checking. 09-26 a reachability pre-pass answers "did my attempts reach it".
+09-30 a control has to sit where the failure enters. 10-01 an arrival control
+that cannot fail is not a control. 10-05 a metric can be printed beside the
+thing it does not measure. 10-06 and the detector can misattribute what it
+measured. 10-07 an injection guard is a measurement. 10-08 a false SURVIVED is
+worse than a missed defect. 10-09 and so is a false DETECTED — a verdict must
+name the mechanism that produced it.
+
+**10-10: AND A CONTROL MUST NOT READ THE THING IT CONTROLS FOR. AN ARRIVAL
+CONTROL THAT READS THE SUITE'S VERDICT IS THE KILLER WEARING AN ARRIVAL
+CONTROL'S NAME.**
+
+Checkable rule: **an arrival block is cut from what the mechanism COMPUTED,
+never from what the suite CONCLUDED** — and where a report interleaves the two,
+as this repository's house style does, the cut is made structurally and the two
+readings are compared rather than one of them trusted.
+
+Second rule, from §4: **a quantity whose only observer is the assertion that
+checks it cannot be verified by anything downstream of that assertion.**
+Mutation testing can find a weakened assertion only if something else prints
+the quantity. The remedy is not a cleverer mutant; it is a derived detail
+string. Mechanisable: a repository-wide census of every
+`check(label, cond, detail)`, flagging a typed-literal detail as a place where
+a verdict can move without the report moving. 18 of 31 in one file is the
+first data point.
+
+Third, from §5: **a detector that failed twice in opposite directions failed
+once, in the same place.**
+
+### 7. Toolchain and automation health
+
+Both target mechanisms are pure python, so **no simulator was needed and
+uvm-python was not installed this session** — the second session in a row where
+that is true, and the direct consequence of the census ordering the cheap rows
+first. The 10-03 and 10-07 gotchas therefore went unexercised again and are
+unchanged: source `tools/setup_iverilog.sh` **without a pipe**; wrap the real
+binary under `timeout`, not the shell function; and
+`export PATH="$HOME/.local/bin:$PATH"` or `cocotb-config` is missing and the
+Makefile fails with `No rule to make target '/Makefile.sim'`. **Two sessions
+without exercising them is the point at which they stop being verified
+knowledge**, and the next simulator session should treat them as unconfirmed.
+
+Device reachable and folder connected at the first firing; nothing crossed the
+bridge. **Every commit was pushed and verified against the GitHub API before
+the next was written**, with `git fetch origin main` immediately before each
+push per the 10-03 race item.
+
+**Not yet covered (candidates for future runs):**
+
+- **CONSTRAINED-RANDOM STIMULUS FROM A UVM SEQUENCE** — created 10-06 and now
+  **three sessions deferred**, which 10-09 predicted would stop being
+  defensible. It is the strongest *content* item: the CRV machinery in
+  `examples/phase6_crv_uart/` is plain Verilog and has never been driven from
+  a UVM sequence; capstone box **(a)**. **Three consecutive sessions have
+  chosen measurement infrastructure over new DV content.** The infrastructure
+  work was not padding — each session closed a named item and found a real
+  defect — but the honest record is that the roadmap's own next milestone has
+  not moved in three sessions, and the next session should do this one unless
+  a defect forces otherwise.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — now
+  the **worst remaining census row**, because TWO_VALUED is a control that
+  misreports rather than a gap. Needs one uvm-python sim per row, which is
+  also what the item above needs, so the two belong in the same session.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created today out of §4. Flag
+  every `check(label, cond, detail)` whose detail is a typed literal, i.e.
+  every place a verdict can move without the report moving. 18 of 31 in
+  `witness_soundness.py`; no other file measured. The natural instrument for
+  the arrival-control work, because an arrival control is only as good as the
+  report it reads.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09,
+  untouched; those are `mutation_test_reachable_cross.py`'s crash-detections.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the second session**. Still a control with no control; needs the sim loop.
+- **THE ARRIVAL CONTROL IN THE FOUR SIM-BASED HARNESSES** — 4 of 6, measured,
+  with a staleness guard and now an alias-proof classifier.
+- **REPAIR THE THREE ROWS THE 10-07 AUDIT NAMED** — `phase6_crv_uart` M3's
+  inserted text, `phase6_rx_pin_driver` M4's two sites and M3's implicit
+  pattern; `phase6_bfm_equivalence` and `phase4_rtl_bringup` still guard with
+  `cmp -s`. Untouched for the third session.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  today, deliberately not done: that file owns a committed transcript, and the
+  change would move two of this harness's expectations, so it needs its own
+  output-neutrality pass. The harness's census will keep reporting it.
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, the loopback mux, reset asserted mid-frame); a property
+  needing a strengthening invariant; the SVA sequence layer (runnable on
+  neither tool here, open since 09-20); code coverage measurement (Icarus has
+  none, open since 09-18); Phase 6 lint, regression infra, coverage merge, CDC
+  basics, interview prep.
+
+**Commits this run:** 4 (the wired harness with its report and extractor
+selftest; the census's alias fix with its registry row and both outputs;
+`progress.md`; the session note). This AUTOMATION_LOG.md entry makes **5**.
+The graphene repository took **5** in the same session, for **10** across both.
