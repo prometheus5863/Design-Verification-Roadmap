@@ -10,9 +10,9 @@ ARRIVAL-CONTROL CENSUS over every mutation harness in this repository
   mutation_test_witnesses.py                               NONE          NONE
   mutation_test_coverage_axis.py                           NONE          NONE
   mutation_test_evidence_soundness.py                      NONE          NONE
-  mutation_test_witness_soundness.py                       NONE          NONE
+  mutation_test_witness_soundness.py                       THREE_VALUED  THREE_VALUED
 
-  THREE_VALUED: 1   TWO_VALUED: 1   NONE: 4   total: 6
+  THREE_VALUED: 2   TWO_VALUED: 1   NONE: 3   total: 6
 
   PER-HARNESS ADJUDICATION
   --------------------------------------------------------------------------
@@ -40,23 +40,41 @@ ARRIVAL-CONTROL CENSUS over every mutation harness in this repository
   mutation_test_evidence_soundness.py  [NONE]
       runs the suite via run_suite(); no arrival evidence. Needs a
       uvm-python sim per row.
-  mutation_test_witness_soundness.py  [NONE]
-      target is witness_soundness.py, a python mechanism, so this is the
-      CHEAPEST remaining row and the next one to wire.
+  mutation_test_witness_soundness.py  [THREE_VALUED]
+      wired 2026-10-10, the second python-target harness and the cheapest
+      row this census named. It also closed 10-09's provenance item for
+      its own positive column: 9 of 9 detections are a failing check and
+      none is the interpreter, measured rather than assumed. Two findings
+      came out of wiring it. (1) An arrival block cut out of a report that
+      prints verdicts INLINE contains those verdicts, so the arrival
+      control stops being independent of the killer; the block extractor
+      normalises [PASS]/[FAIL] to [VERDICT] and the harness measures the
+      disagreement (2 rows, no outcome change). (2) 18 of 31 of the
+      audited suite's own check() detail strings are TYPED LITERALS, five
+      of the six C-controls among them, so a mutant perturbing those
+      quantities changes a verdict and changes nothing in the report --
+      which is why M8b moved from SURVIVE to INERT: it is not merely
+      uncaught, it is unobservable.
 
   No faults: every harness on disk is registered, every registry row
   exists, and every adjudication agrees with its source.
 
-  OPEN: 5 of 6 harnesses still score SURVIVED without a three-valued
+  OPEN: 4 of 6 harnesses still score SURVIVED without a three-valued
   arrival control.  That is a measured number with a staleness
   guard, which is what this file is for -- the 10-08 backlog
   sentence it replaces could not notice a harness being added.
 
-  The cheapest remaining row is mutation_test_witness_soundness.py,
-  whose target is a python mechanism rather than a simulation.  The
-  four that need a uvm-python sim per row are a different size of
-  job and are not pretended otherwise.
+  Both python-target harnesses are now wired (10-09, 10-10).  Every
+  remaining open row needs a uvm-python SIMULATION PER MUTANT, which
+  is a different size of job and is not pretended otherwise:
+    mutation_test_signatures.py       TWO_VALUED, mutant side
+                                      unguarded -- the worst of the
+                                      remaining rows, because it has
+                                      a control that misreports
+    the other three                   NONE at all
+  So the cheap half of this item is DONE and what is left is one
+  session's worth of simulator work, not four sentences of backlog.
 
 ==============================================================================
-RESULT: PASS   (0 fault(s), 5 harness(es) open)
+RESULT: PASS   (0 fault(s), 4 harness(es) open)
 ==============================================================================

@@ -41,6 +41,7 @@ Run: python3 arrival_control_census.py
      python3 arrival_control_census.py --selftest   (exercises F1 and F3)
 """
 import io
+import ast
 import os
 import re
 import sys
@@ -90,9 +91,20 @@ REGISTRY = [
      "uvm-python sim per row."),
 
     ("examples/phase4_uvm_milestone/mutation_test_witness_soundness.py",
-     NONE,
-     "target is witness_soundness.py, a python mechanism, so this is the "
-     "CHEAPEST remaining row and the next one to wire."),
+     THREE_VALUED,
+     "wired 2026-10-10, the second python-target harness and the cheapest row "
+     "this census named.  It also closed 10-09's provenance item for its own "
+     "positive column: 9 of 9 detections are a failing check and none is the "
+     "interpreter, measured rather than assumed.  Two findings came out of "
+     "wiring it.  (1) An arrival block cut out of a report that prints "
+     "verdicts INLINE contains those verdicts, so the arrival control stops "
+     "being independent of the killer; the block extractor normalises "
+     "[PASS]/[FAIL] to [VERDICT] and the harness measures the disagreement "
+     "(2 rows, no outcome change).  (2) 18 of 31 of the audited suite's own "
+     "check() detail strings are TYPED LITERALS, five of the six C-controls "
+     "among them, so a mutant perturbing those quantities changes a verdict "
+     "and changes nothing in the report -- which is why M8b moved from "
+     "SURVIVE to INERT: it is not merely uncaught, it is unobservable."),
 ]
 
 
@@ -130,15 +142,63 @@ def code_only(text):
         return text, False
 
 
+def arrival_control_binding(text):
+    """The NAME `arrival_control` is bound to in `text`, or None.
+
+    DEFECT FOUND 2026-10-10, and it is the MIRROR of the one found while
+    writing this file on 2026-10-09.  The first version of classify_source()
+    looked for the literal alias spellings it had seen:
+
+        uses_ac = re.search(r"\bAC\s*\.\s*arrival\s*\(|"
+                            r"\barrival_control\s*\.\s*arrival\s*\(", code)
+
+    `mutation_test_reachable_cross.py` writes `import arrival_control as AC`,
+    so that worked.  `mutation_test_witness_soundness.py`, wired 2026-10-10,
+    writes `as ac`, and the census reported **NONE for a harness that is
+    correctly wired** -- F3 against a true registry row.
+
+    10-09's defect in this same function was a FALSE POSITIVE from matching
+    prose; this is a FALSE NEGATIVE from matching one alias.  Same root cause
+    both times: a textual pattern standing in for a structural fact.  The
+    cheap repair available today was to rename the new harness's alias to
+    `AC`, which would have made the census pass while leaving it unable to
+    read the next harness anyone writes -- the testing equivalent of widening
+    a tolerance until it goes green.  Repaired structurally instead: the
+    binding is read out of the import statement, so every alias works and an
+    alias that is never imported never counts.
+    """
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for a in node.names:
+                if a.name == "arrival_control":
+                    return a.asname or a.name
+        elif isinstance(node, ast.ImportFrom):
+            if node.module == "arrival_control":
+                for a in node.names:
+                    if a.name == "arrival":
+                        return "<from-import>"
+    return None
+
+
 def classify_source(text):
     """What the source actually shows, independent of the registry.
 
     Classification runs on CODE ONLY -- see code_only() for why.
     """
     code, tokenised = code_only(text)
-    imports_ac = bool(re.search(r"\bimport\s+arrival_control\b", code))
-    uses_ac = bool(re.search(r"\bAC\s*\.\s*arrival\s*\(|"
-                             r"\barrival_control\s*\.\s*arrival\s*\(", code))
+    binding = arrival_control_binding(text)
+    imports_ac = binding is not None
+    if binding == "<from-import>":
+        uses_ac = bool(re.search(r"\barrival\s*\(", code))
+    elif binding:
+        uses_ac = bool(re.search(r"\b%s\s*\.\s*arrival\s*\("
+                                 % re.escape(binding), code))
+    else:
+        uses_ac = False
     two_valued = bool(re.search(r"!=\s*baselines?\b|"
                                 r"\bbaselines?\s*\[[^\]]*\]\s*!=", code))
     if imports_ac and uses_ac:
@@ -232,6 +292,38 @@ def main(selftest=False):
               % ("YES -- the regex is reading prose again" if prose_f4
                  else "no"))
         print()
+        print("  AND THE ALIAS CHECK, added 2026-10-10 after this function")
+        print("  reported NONE for a correctly wired harness because it spells")
+        print("  its import `as ac` and the pattern knew only `as AC`:")
+        alias_cases = [
+            ("import arrival_control as ac\nx = ac.arrival(a, b)\n",
+             THREE_VALUED, "lowercase alias"),
+            ("import arrival_control as AC\nx = AC.arrival(a, b)\n",
+             THREE_VALUED, "the alias 10-09 happened to use"),
+            ("import arrival_control\nx = arrival_control.arrival(a, b)\n",
+             THREE_VALUED, "no alias at all"),
+            ("import arrival_control as zz\nx = zz.arrival(a, b)\n",
+             THREE_VALUED, "an alias nobody has used yet"),
+            ("from arrival_control import arrival\nx = arrival(a, b)\n",
+             THREE_VALUED, "a from-import"),
+            ("x = ac.arrival(a, b)\n", NONE,
+             "`ac.arrival(` with NO import -- must NOT count"),
+            ("import arrival_control as ac\n# ac.arrival(a, b)\n", NONE,
+             "the call in a COMMENT -- 10-09's prose path, still closed"),
+            ("import arrival_control as ac\nd = 'ac.arrival(a, b)'\n", NONE,
+             "the call in a STRING -- same"),
+        ]
+        alias_bad = 0
+        for src_, want, why in alias_cases:
+            got = classify_source(src_)[0]
+            good = got == want
+            alias_bad += not good
+            print("    [%s] %-44s -> %s" % ("PASS" if good else "FAIL",
+                                            why, got))
+        if alias_bad:
+            faults.append(("F6", "classify_source",
+                           "%d alias case(s) misclassified" % alias_bad))
+        print()
         for code, path, detail in faults:
             print("  %-3s %s" % (code, path))
             print("      %s" % detail)
@@ -294,10 +386,16 @@ def main(selftest=False):
     print("  guard, which is what this file is for -- the 10-08 backlog")
     print("  sentence it replaces could not notice a harness being added.")
     print()
-    print("  The cheapest remaining row is mutation_test_witness_soundness.py,")
-    print("  whose target is a python mechanism rather than a simulation.  The")
-    print("  four that need a uvm-python sim per row are a different size of")
-    print("  job and are not pretended otherwise.")
+    print("  Both python-target harnesses are now wired (10-09, 10-10).  Every")
+    print("  remaining open row needs a uvm-python SIMULATION PER MUTANT, which")
+    print("  is a different size of job and is not pretended otherwise:")
+    print("    mutation_test_signatures.py       TWO_VALUED, mutant side")
+    print("                                      unguarded -- the worst of the")
+    print("                                      remaining rows, because it has")
+    print("                                      a control that misreports")
+    print("    the other three                   NONE at all")
+    print("  So the cheap half of this item is DONE and what is left is one")
+    print("  session's worth of simulator work, not four sentences of backlog.")
     print()
     print("=" * 78)
     print("RESULT: %s   (%d fault(s), %d harness(es) open)"

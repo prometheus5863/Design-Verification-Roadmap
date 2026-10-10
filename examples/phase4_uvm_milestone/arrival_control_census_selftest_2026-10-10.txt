@@ -1,0 +1,51 @@
+==============================================================================
+ARRIVAL-CONTROL CENSUS over every mutation harness in this repository
+2026-10-09   MODE: SELFTEST
+==============================================================================
+
+  injected: one unregistered harness (F1), one registry row
+            naming a missing file (F2), and one row claiming
+            THREE_VALUED for a file that does not import
+            arrival_control (F3)
+
+  AND THE PROSE CHECK, which is why code_only() exists: the
+  live run must NOT raise F4 against
+  mutation_test_reachable_cross.py, whose docstring quotes the
+  very string F4 searches for.
+  F4 raised against reachable_cross on the live registry: no
+
+  AND THE ALIAS CHECK, added 2026-10-10 after this function
+  reported NONE for a correctly wired harness because it spells
+  its import `as ac` and the pattern knew only `as AC`:
+    [PASS] lowercase alias                              -> THREE_VALUED
+    [PASS] the alias 10-09 happened to use              -> THREE_VALUED
+    [PASS] no alias at all                              -> THREE_VALUED
+    [PASS] an alias nobody has used yet                 -> THREE_VALUED
+    [PASS] a from-import                                -> THREE_VALUED
+    [PASS] `ac.arrival(` with NO import -- must NOT count -> NONE
+    [PASS] the call in a COMMENT -- 10-09's prose path, still closed -> NONE
+    [PASS] the call in a STRING -- same                 -> NONE
+
+  F1  examples/phase4_uvm_milestone/mutation_test_coverage_axis.py
+      a mutation harness exists on disk and is absent from the registry: the census cannot report what it has not been told about, so this is a fault and not a blank
+  F1  examples/phase4_uvm_milestone/mutation_test_evidence_soundness.py
+      a mutation harness exists on disk and is absent from the registry: the census cannot report what it has not been told about, so this is a fault and not a blank
+  F1  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+      a mutation harness exists on disk and is absent from the registry: the census cannot report what it has not been told about, so this is a fault and not a blank
+  F1  examples/phase4_uvm_milestone/mutation_test_signatures.py
+      a mutation harness exists on disk and is absent from the registry: the census cannot report what it has not been told about, so this is a fault and not a blank
+  F1  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+      a mutation harness exists on disk and is absent from the registry: the census cannot report what it has not been told about, so this is a fault and not a blank
+  F1  examples/selftest/mutation_test_not_registered.py
+      a mutation harness exists on disk and is absent from the registry: the census cannot report what it has not been told about, so this is a fault and not a blank
+  F3  examples/phase4_uvm_milestone/mutation_test_witnesses.py
+      the registry adjudicates THREE_VALUED and the source shows NONE
+  F2  examples/selftest/does_not_exist_mutation_test.py
+      the registry names a file that does not exist
+
+  fault codes raised: ['F1', 'F2', 'F3']   expected: ['F1', 'F2', 'F3']
+  [PASS] SELFTEST: F1, F2 and F3 are all reachable, and F4 does
+        not fire on a docstring that merely describes the rule
+==============================================================================
+SELFTEST: PASS
+==============================================================================
