@@ -1,0 +1,191 @@
+============================================================================
+MUTATION TEST -- witness_soundness.py
+  with the 2026-10-09 three-valued arrival control and provenance
+  on the positive column
+============================================================================
+  DETECT  the suite must FAIL, and the harness records WHAT failed:
+          a check (DETECTED_BY_CHECK) or the interpreter (DETECTED_BY_CRASH).
+  SURVIVE the mutant must ARRIVE at the mechanism and not be caught.
+  INERT   the mutant changes nothing the mechanism reports, so it
+          neither survived nor was killed.  Three rows are specified
+          INERT; an INERT row anywhere else is bad news.
+
+  [PASS] A    expect INERT    -> INERT     -                  | arrival INERT
+         TOTAL: 46 passed, 0 failed
+         arrival : the mutant's SECTION 1-8 computed report is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism reports
+         outcome : the mutant changed nothing the mechanism reports, so it neither survived nor was killed -- it never arrived
+         control A: no edit at all. Under a three-valued arrival control this
+          row is NOT a tautology -- the harness runs the suite twice and comp
+         ares the two reports, so an ARRIVED here would mean the audited suit
+         e is NONDETERMINISTIC and every INERT below would be unreliable. Con
+         trol A is now the DETERMINISM control that the rest of the table res
+         ts on; the 'must pass unmutated' half is checked in the pre-flight a
+         bort above, where a missing block stops the run (10-02 check R0)
+
+  [PASS] B    expect INERT    -> INERT     -                  | arrival INERT
+         TOTAL: 46 passed, 0 failed
+         arrival : the mutant's SECTION 1-8 computed report is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism reports
+         outcome : the mutant changed nothing the mechanism reports, so it neither survived nor was killed -- it never arrived
+         control B: semantics-preserving -- rename a local loop variable in w
+         itnesses()
+
+  [PASS] M1   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 41 passed, 5 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 5 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 41 passed, 5 failed)
+         unsound() tests EMPTINESS instead of admissibility -- the exact conf
+         usion the finding is about
+
+  [PASS] M2   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 28 passed, 18 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 18 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 28 passed, 18 failed)
+         soundness() counts BORDERLINE as admissible -- bin 7 would read soun
+         d
+
+  [PASS] M3   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 44 passed, 2 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 2 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 44 passed, 2 failed)
+         scarce() looks for two witnesses instead of one
+
+  [PASS] M4   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 42 passed, 4 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 4 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 42 passed, 4 failed)
+         CAP6 caps at 7, so W3 merges nothing and cannot equal W1
+
+  [PASS] M5   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 34 passed, 12 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 12 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 34 passed, 12 failed)
+         the partition identity is compared against 256 rather than the legal
+          set, so it stops being an identity under any exclusion
+
+  [PASS] M6   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 17 passed, 29 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 29 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 17 passed, 29 failed)
+         witnesses() ignores its exclusion argument -- every anchor and contr
+         ol that depends on the exclusion must break
+
+  [PASS] M7   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival ARRIVED
+         TOTAL: 42 passed, 7 failed
+         arrival : the mutant's SECTION 1-8 computed report differs from control A's, so the mutant reached the mechanism
+         verdict : 7 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 42 passed, 7 failed)
+         closure_draws() computes `need` over all 256 bytes rather than the l
+         egal set, so it waits for bins that cannot be drawn
+
+  [PASS] M8a  expect INERT    -> INERT     -                  | arrival INERT
+         TOTAL: 46 passed, 0 failed
+         arrival : the mutant's SECTION 1-8 computed report is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism reports
+         outcome : the mutant changed nothing the mechanism reports, so it neither survived nor was killed -- it never arrived
+         weaken C3's threshold ALONE (7 of 7 unsound -> at least one unsound)
+         . A weakened assertion still holds on correct input, so this MUST su
+         rvive; requiring detection here would be the 10-02 M6 mis-specificat
+         ion
+
+  [PASS] M8b  expect INERT    -> INERT     -                  | arrival INERT
+         TOTAL: 46 passed, 0 failed
+         arrival : the mutant's SECTION 1-8 computed report is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism reports
+         outcome : the mutant changed nothing the mechanism reports, so it neither survived nor was killed -- it never arrived
+         weaken C3's threshold AND perturb what it guards: allbord now marks 
+         only 0x40 borderline. 10-03 required SURVIVE here; 10-10 measures IN
+         ERT, and that SHARPENS the finding rather than weakening it. C3's de
+         tail string is the typed literal "7 of 7 -- so the instrument is not
+          hard-coded...", so the perturbed quantity is never PRINTED: the mut
+         ant is not merely uncaught, it is UNOBSERVABLE, and the weakened thr
+         eshold was its SOLE observer. 10-02 concluded the threshold is load-
+         bearing; this says the threshold is the only load-bearing thing ther
+         e is
+
+  [PASS] M8c  expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival INERT
+         TOTAL: 45 passed, 1 failed
+         arrival : the mutant's SECTION 1-8 computed report is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism reports
+         verdict : 1 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 45 passed, 1 failed)
+         perturb the same quantity with C3's threshold INTACT -- must be dete
+         cted, which is what proves the threshold was load-bearing all along
+
+  [PASS] M9   expect DETECT   -> KILLED    DETECTED_BY_CHECK  | arrival INERT
+         TOTAL: 45 passed, 1 failed
+         arrival : the mutant's SECTION 1-8 computed report is BYTE-IDENTICAL to control A's: the mutant changed nothing this mechanism reports
+         verdict : 1 of the suite's own checks failed
+         outcome : the suite failed: a failing check (TOTAL: 45 passed, 1 failed)
+         break C1's EXPECTED TUPLE only (25,23,16) -> (25,23,15). The suite m
+         ust fail, and NOTHING COMPUTED CHANGES, because C1's detail line is 
+         a typed literal rather than a format of the three lengths it checks.
+          This is the row that makes the verdict-stripped and raw arrival rul
+         es disagree: stripped says INERT (correctly -- no mechanism was reac
+         hed), raw says ARRIVED on the strength of a [PASS] becoming a [FAIL]
+
+============================================================================
+TOTAL: 13 of 13 mutants behaved as required
+
+  outcome census: INERT 4, KILLED 9
+  detections BY A FAILING CHECK   : 9
+  detections BY AN UNHANDLED EXCEPTION: 0
+    -- every detection here is a check's, so this harness's
+       detection power does not rest on the interpreter.  That
+       is a MEASUREMENT, not an assumption: 2026-10-09 found
+       3 of 6 the other way in a sibling harness.
+
+  WHY TWO ROWS ARE INERT RATHER THAN SURVIVED -- a census of the
+  audited suite's own check() detail strings:
+    detail DERIVED from the checked quantity : 13
+    detail a TYPED LITERAL                   : 18  (58 %)
+    C1 detail is a typed literal : True
+    C3 detail is a typed literal : True
+    of the six C-controls, 5 print a typed literal: C1, C2, C3, C4, C5
+    -- so M9 (perturbs what C1 checks) and M8b (perturbs what C3
+       checks) change a VERDICT and change nothing in the report.
+       They are INERT because the quantities they perturb are
+       never printed, which means the weakened/broken assertion
+       was the SOLE OBSERVER of each.  This is a real property of
+       witness_soundness.py, reported and not fixed: that file
+       owns a committed transcript.
+    EXPECTATION GUARD: if either detail is ever DERIVED, M8b and
+    M9 become observable and their rows above must change from
+    INERT.  That is why this census is a check and not a note.
+
+  VERDICT-STRIPPED vs RAW arrival, measured rather than asserted:
+    M8c  stripped INERT          raw ARRIVED        outcome KILLED
+    M9   stripped INERT          raw ARRIVED        outcome KILLED
+    2 row(s) disagree, and NO outcome changes, because a killer
+    outranks arrival in every one of them.  The strip is kept
+    anyway: it makes the arrival control independent of the
+    killer BY CONSTRUCTION rather than by coincidence, and this
+    repository has twice (09-19, 09-20) found the verdict-
+    reporting subsystem decoupled from the checking one -- which
+    is exactly the case where reading a verdict token would be
+    reading a value already known here to be unreliable.
+
+  control A present and its block present: the baseline is a
+                     baseline (10-02 check R0), or nothing printed
+  control B INERT  : a semantics-preserving rename reaches no
+                     mechanism, so it is INERT and not SURVIVED
+  A is the DETERMINISM control: the suite is run twice and the two
+                     reports compared, so ARRIVED here would mean
+                     every INERT in the table is unreliable
+  M8a/M8b/M8c      : the 10-02 compound form, and 10-10 moves M8b
+                     from SURVIVE to INERT -- a sharpening, not a
+                     loosening.  M8a changes only a threshold and
+                     reports nothing; M8b perturbs a quantity C3
+                     checks but never PRINTS, so it is not merely
+                     uncaught but UNOBSERVABLE, and the weakened
+                     threshold was its sole observer; M8c is the
+                     same perturbation with the threshold intact
+                     and is KILLED while still being INERT -- an
+                     assertion can observe what the report does not
+  M9               : the row that separates the two arrival rules,
+                     and it records that C1's detail string is a
+                     typed literal rather than a format of the
+                     lengths it checks -- 10-01's naming fault in
+                     detail-string form, reported not fixed

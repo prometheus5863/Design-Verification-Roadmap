@@ -1,0 +1,17 @@
+  [PASS] the block starts at SECTION 1 and stops before SUMMARY
+         'SECTION 1 -- x\n  value 7\n  [VERDICT] a control\n        detail 7 of 7\n'
+  [PASS] inline verdict tokens are normalised away
+  [PASS] and are NOT normalised when the caller asks for the raw block
+  [PASS] a [PASS] -> [FAIL] flip with no numeric change is INVISIBLE to the stripped block and VISIBLE to the raw one -- M9's mechanism
+  [PASS] no SECTION marker -> None, so arrival_control sees NO_OBSERVATION
+  [PASS] no SUMMARY banner (a suite that died mid-report) -> None
+  [PASS] empty output -> None
+  [PASS] None output -> None
+  [PASS] and None reaches arrival_control as NO_OBSERVATION
+  [PASS] provenance: non-zero with failing checks is BY_CHECK
+  [PASS] provenance: non-zero with NO TOTAL line is BY_CRASH
+  [PASS] provenance: non-zero with 0 failing checks is a FAULT, not a detection
+  [PASS] provenance: exit 0 while the text reports failures is the same FAULT from the other side (09-19, 09-20 both found this live)
+  [PASS] provenance: a clean pass carries no provenance tag
+
+TOTAL: 14 passed, 0 failed
