@@ -1417,8 +1417,79 @@ staleness guard: a harness on disk and absent from its registry is a FAULT.
 | `mutation_test_witnesses.py` | NONE |
 | `mutation_test_coverage_axis.py` | NONE |
 | `mutation_test_evidence_soundness.py` | NONE |
-| `mutation_test_witness_soundness.py` | NONE — **cheapest remaining**, its target is a python mechanism |
+| `mutation_test_witness_soundness.py` | **THREE_VALUED** (wired 2026-10-10) |
 
-**OPEN: 5 of 6**, 0 faults. The four harnesses needing a uvm-python simulation
-per row are a different size of job from the two python-target ones, and the
-census says so rather than implying they are interchangeable.
+**OPEN: 4 of 6**, 0 faults (2026-10-10). **Both python-target harnesses are now
+wired**, so the cheap half of this item is done and every remaining open row
+needs a uvm-python simulation per mutant — one session's worth of simulator
+work rather than four sentences of backlog. The worst remaining row is
+`mutation_test_signatures.py`, because TWO_VALUED is not a gap but a control
+that *misreports*.
+
+### Wiring the second harness, and what it found (2026-10-10)
+
+`mutation_test_witness_soundness.py`, 13/13 rows as required, extractor
+selftest 14/14. Reports:
+`mutation_report_witness_soundness_2026-10-10.txt`,
+`mutation_witness_soundness_selftest_2026-10-10.txt`.
+
+**Provenance on the positive column, and the answer is the opposite of
+10-09's.** 9 of 9 detections here are a failing check and **none** is the
+interpreter, against 3 of 6 by crash in `mutation_test_reachable_cross.py`.
+That is a measurement, not an assumption, and `provenance()` carries a third
+branch that is a **fault** rather than a tidy-up: a non-zero exit with zero
+failing checks, or exit 0 with failures in the verdict text — the 09-19/09-20
+decoupling, which this repository has found live twice.
+
+**An arrival block must not contain the verdicts.** `witness_soundness.py`
+prints SECTION 8's controls with `[PASS]`/`[FAIL]` *inline* among the numbers
+those controls computed, so a block cut straight out of SECTIONS 1–8 carries
+verdict tokens — and an arrival control that reads a verdict token is reading
+the killer it exists to be independent of. `mechanism_block()` normalises them
+to `[VERDICT]`, and the harness computes arrival **both ways and reports the
+disagreement** rather than asserting there is none: 2 rows, no outcome change,
+because a killer outranks arrival in both. The strip is kept anyway —
+independence by construction rather than by coincidence.
+
+**Control A is now the determinism control.** It used to expect SURVIVE, which
+under a three-valued rule is a tautology (a run compared against itself). The
+harness runs the suite **twice** and compares the two reports, so an ARRIVED
+here would mean the audited suite is nondeterministic and **every INERT in the
+table is unreliable**. The "must pass unmutated" half moved into a pre-flight
+abort (10-02's R0): a missing baseline block prints no rows at all.
+
+**Two rows are not uncaught but UNOBSERVABLE, and that sharpens 10-02's
+compound form.** M8b — weaken C3's threshold *and* perturb what it guards —
+was specified SURVIVE on 10-03 and measures **INERT**. C3's detail string is
+the typed literal `"7 of 7 — so the instrument is not hard-coded to find
+exactly one"`, so the perturbed quantity is **never printed**: the mutant
+reaches nothing observable, and the threshold M8a weakens was its **sole
+observer**. 10-02 concluded the threshold is load-bearing; this says it is the
+only load-bearing thing there is. A new M9 does the same to C1 and exists to
+make the two arrival rules disagree.
+
+**A census of the audited suite's own `check()` detail strings**, which
+explains both rows and is a check rather than a note: **18 of 31 details are
+typed literals**, five of the six C-controls among them — places where a
+mutant changes a verdict and changes nothing in the report, so no arrival
+control can see it. The guard fails *if the file improves*: derive C1's or
+C3's detail and M8b/M9 become observable, and their rows must change. Reported
+and not fixed, because `witness_soundness.py` owns a committed transcript.
+
+Also recorded: M8c is KILLED while being INERT. **An assertion can observe
+what the report does not.**
+
+**A detector that knew one import alias, and the mirror of 10-09's defect
+(2026-10-10).** The census caught the session using it: F3 fired —
+*the registry adjudicates THREE_VALUED and the source shows NONE* — and the
+registry was right. `classify_source()` matched the alias spellings it had
+seen (`AC.arrival(`, `arrival_control.arrival(`); the new harness writes
+`as ac`. 10-09's defect in the same function was a **false positive from
+matching prose**; this is a **false negative from matching one alias**. Same
+root cause three days apart: a textual pattern standing in for a structural
+fact. The cheap repair — rename the new harness's alias to `AC` — would have
+turned the census green while leaving it unable to read the next harness
+anyone writes. Repaired structurally, as 10-09's was: the binding is read out
+of the import statement with `ast`. Eight alias cases in `--selftest`,
+including the comment and string paths that must *not* count and one alias
+nobody has used yet; a misclassification raises a new F6.
