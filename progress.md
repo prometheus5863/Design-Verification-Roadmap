@@ -480,10 +480,18 @@ measured rather than quietly dropped.
             see `tools/open_item_adjudication.md`. What this box actually
             still requires, stated so the next session inherits a
             distinction rather than a contradiction:
-            **(a)** constrained-random rather than directed stimulus
+            **(a)** ~~constrained-random rather than directed stimulus
             inside the UVM environment (the CRV machinery exists in
             `examples/phase6_crv_uart/` in plain Verilog and has never
-            been driven from a UVM sequence);
+            been driven from a UVM sequence)~~ — **DONE 2026-10-11**,
+            `examples/phase6_uvm_crv_uart/`: the same constraints, the
+            same 30-bin model and the same DUT, with the generator as a
+            `UVMSequence` through a `UVMSequencer`, a `UVMDriver` on the
+            APB-lite interface, a passive `UVMMonitor` on a real
+            `UVMAnalysisPort` and two independent subscribers on it
+            (scoreboard and coverage collector). 5/5 mutants behave as
+            required. Deferred for four consecutive sessions before this
+            one;
             **(b)** the SVA protocol checkers of the next box, bound into
             that environment rather than standing alone;
             **(c)** `PayloadAdmissibilityCoverage` wired into the live
@@ -1493,3 +1501,84 @@ anyone writes. Repaired structurally, as 10-09's was: the binding is read out
 of the import statement with `ast`. Eight alias cases in `--selftest`,
 including the comment and string paths that must *not* count and one alias
 nobody has used yet; a misclassification raises a new F6.
+
+### CRV from a UVM sequence, and a ratio with a stable denominator (2026-10-11)
+
+Phase 6 capstone box **(a)** closed, after four consecutive sessions deferred
+it in favour of measurement infrastructure. `examples/phase6_uvm_crv_uart/`
+runs the constrained-random, coverage-driven UART stimulus of
+`examples/phase6_crv_uart/` from a real UVM sequence against the unmodified
+`rtl/uart_controller.v`: same four constraints, same rejection budget, same
+30-bin model over 5 coverpoints and 2 crosses, same bin-to-stimulus steering
+map. 5/5 mutants behave as required; `summarize_closure.py` 8/8 over 6 paired
+seeds.
+
+**The 13.68× speedup is a ratio with a stable denominator and an unstable
+numerator.** A UVM sequence is an object that can be started again, so N seeds
+× 2 policies run in one elaboration where a Verilog bench needs a separate
+`vvp` per seed. In the Verilog bench's own unit — TX_DATA pushes:
+
+| policy | pushes to closure | median | spread | CV |
+|---|---|---|---|---|
+| pure random | 131, 228, 272, 279, 364, 1745 | 275.5 | **13.32×** | **1.218** |
+| steered | 41, 42, 44, 48, 53, 58 | 46.0 | 1.41× | 0.141 |
+
+09-24's **steered** figure of 47 reproduces — it lands in [41, 58] across a
+different language, framework and RNG, which is evidence about the *method*
+rather than about two artefacts. Its **pure-random** 643 lands inside a range
+13.3× wide, which says almost nothing. The ratio spans **2.26× to 42.56×**
+across seeds, an 18.8× range around the single sample this file quoted.
+
+What survives is stronger than what is lost: steering wins on *every* seed and
+the distributions do not overlap (steered max 58 < random min 131), and the
+steered cost is **8.7× tighter in CV**. **Coverage steering makes closure cost
+predictable** — a plan can be scheduled against 46 ± 7 pushes and cannot be
+scheduled against 131…1745 at all. That is the argument a single seed per
+policy cannot make, because one run has no spread.
+
+**Three defects in the new bench, each found by the measurement disagreeing
+with the old one and each recorded in place.** `STEER_AFTER = 24` was ported
+across without its unit — the Verilog bench counts *pushes*, the first draft
+applied 24 to *sequence items*, and a burst carries 1–8 of them, so the
+pure-random head start silently became 4.5× the Verilog bench's and the
+measured speedup was dominated by the prefix. An off-by-one (`cov.items` set
+*after* `finish_item`) reported closure at exactly 24 items for every seed —
+the hand-off point — for a closure that happened during the 25th, making
+steering look like it closed coverage without ever running. And
+`random.Random(seed*7919 + steer)` gave the two policies *different* streams,
+mixing the policy with the draw; same seed for both now, so the runs are
+identical until the hand-off.
+
+One hypothesis is recorded as **refuted** rather than deleted: the unlabelled
+unit looked like the explanation and is not — the per-item and per-push
+speedups agree to 1.01×, because the mean burst length is the same under both
+policies and divides out. Where the unit mattered was the hand-off constant.
+
+**And the scoreboard's own improvement had a blind spot, found by mutation
+testing in the same session.** The scoreboard is fed only by the monitor and
+*derives* push acceptance from observed traffic instead of being told by the
+driver — which removes this repository's 09-19/09-20 coupling. But it derived
+acceptance from the DUT's own `STATUS.tx_full`, so mutant **M4** (tx_full
+asserting one entry early) corrupted the reference model in exactly the same
+way, the two agreed, and **M4 SURVIVED**.
+
+> **A checker that reads a DUT output as ground truth cannot detect a defect
+> in that output.**
+
+The same shape as 10-10's "a control must not read the thing it controls for",
+now in the scoreboard. Repaired by making `tx_full` a *checked output*: the
+burst is filled with the engine disabled, so occupancy is exactly the number
+of accepted `TX_DATA` writes since the last `en=0` CTRL write, and the
+scoreboard predicts `tx_full` with no help from the DUT. M4 is now killed
+naming the occupancy. The prediction is claimed only inside that window — the
+only window in which this bench observes `tx_full` at all — so nothing is
+given up, and claiming it outside would be the 10-05 defect. **The Verilog
+bench in `examples/phase6_crv_uart/` still has the same hole**, for the same
+reason: its driver reads `tx_full` and enqueues on that basis. New open item.
+
+M2 also earns a line: an inverted TX parity bit is caught by the STATUS
+error-bit check and by **no data comparison at all** — the byte still arrives
+correctly in loopback. That check was carried over on the argument that a
+spurious error must fail the run even though no data check would notice; this
+is the first time it has been shown to be the only thing between a real defect
+and a green run.
