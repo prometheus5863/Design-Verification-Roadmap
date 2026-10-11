@@ -1,0 +1,43 @@
+========================================================================
+COVERAGE CLOSURE COST AS A DISTRIBUTION, NOT A NUMBER
+  source: closure_results.csv, 12 rows
+========================================================================
+  [PASS] every (seed, policy) appears exactly once, so no invocation was run twice and silently averaged into the distribution
+         duplicates: none.  A resumable sweep whose rows are appended can double-count if an invocation is repeated with the same SEED_BASE, and averaging duplicates would narrow the spread this script exists to measure.
+  [PASS] both policies were run on the SAME set of seeds, so the comparison is paired
+         steer=0 seeds [1, 2, 3, 4, 5, 6], steer=1 seeds [1, 2, 3, 4, 5, 6].  The testbench draws from one stream per seed and both policies are identical until the hand-off, so an unpaired comparison would mix the policy with the draw -- which the first draft of the testbench did.
+  [PASS] every run reached closure, so every number below is a closure cost and not a truncation at MAX_TX
+         12 of 12 rows closed.
+
+  TX_DATA pushes to closure (the Verilog bench's unit):
+    steer=0  n=6  [131, 228, 272, 279, 364, 1745]
+             min=131 median=275.5 max=1745 mean=503.2 stdev=613.1
+             spread max/min=13.32x   CV=1.218
+    steer=1  n=6  [41, 42, 44, 48, 53, 58]
+             min=41 median=46.0 max=58 mean=47.7 stdev=6.7
+             spread max/min=1.41x   CV=0.141
+
+  [PASS] the STEERED figure REPRODUCES: 2026-09-24's 47 pushes falls inside this sweep's steered range
+         47 against [41, 58], median 46.0.  Reproduced across a different language (Verilog -> Python), a different framework (a hand-written task -> a UVM sequence/sequencer/driver) and a different RNG (Verilog's LCG -> Mersenne Twister).  Agreement under that much change is evidence about the METHOD rather than about two artefacts.
+  [PASS] the PURE-RANDOM figure does not reproduce in any useful sense: it lands inside a range 13.3x wide, so containing it says almost nothing
+         643 against [131, 1745] (13.3x wide, CV 1.218).  An interval that spans an order of magnitude contains 643 the way it would contain most numbers of that size.  Quoting one draw of this as the numerator of a headline ratio is the error, not the value of the draw.
+
+  STEERING SPEEDUP
+    median / median        : 5.99x
+    worst case .. best case: 2.26x .. 42.56x
+    2026-09-24, one seed   : 13.68x
+  [PASS] steering wins on every seed, which is the claim that survives
+         sorted steered maxima 58 < sorted random minima 131; the distributions do not overlap at all.
+  [PASS] but the RATIO is not a property of the method: it spans 18.8x across seeds
+         2.26x to 42.56x, against the single-seed 13.68x quoted in progress.md and the 09-24 note.  A ratio whose denominator is stable (CV 0.141) and whose numerator is not (CV 1.218) inherits the numerator's spread, and a single sample of it is not a result.
+
+  AND THE CLAIM THE SINGLE RATIO COULD NOT MAKE
+    CV of closure cost, pure random : 1.218
+    CV of closure cost, steered     : 0.141
+    ratio                           : 8.7x
+  [PASS] coverage steering makes closure cost PREDICTABLE, and that is a better argument for it than any speedup number
+         the steered cost has CV 0.141 against the random cost's 1.218, 8.7x tighter.  A verification plan can be scheduled against the steered number and cannot be scheduled against the random one at all.  This is not visible from one seed per policy -- a single run has no spread -- so the measurement the 09-24 bench could not make is the one that carries the case.
+
+========================================================================
+CHECKS: 8 passed, 0 failed
+========================================================================

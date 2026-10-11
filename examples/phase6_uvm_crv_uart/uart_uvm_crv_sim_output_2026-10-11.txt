@@ -1,0 +1,360 @@
+### invocation 1:  N_SEEDS=2 SEED_BASE=0 make
+
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_crv_tb.uart_uvm_crv_test
+     0.00ns INFO     cocotb.regression                  running uart_uvm_crv_test (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartCrvTest...
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+  seed=1 steer=0  items= 384  pushes= 1745  bins=30/30  CLOSED
+  seed=2 steer=0  items=  30  pushes=  131  bins=30/30  CLOSED
+  seed=1 steer=1  items=  11  pushes=   48  bins=30/30  CLOSED
+  seed=2 steer=1  items=   9  pushes=   41  bins=30/30  CLOSED
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1836488.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1836488.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1836488.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+========================================================================
+CRV / COVERAGE-DRIVEN UART STIMULUS FROM A UVM SEQUENCE
+  seeds=2  policies=2  bins=30  max_tx=4000  steer_after=24 pushes
+========================================================================
+
+  last run's coverage report:
+  cp_parity  3 2 4
+  cp_stop    5 4
+  cp_baud    1 3 2 3
+  cp_data    6 1 1 4 15 17
+  cp_txq     1492 5603 1
+  cp_pd      9 7 5 4 12 7
+  cp_ps      2 1 1 1 2 2
+  bins hit: 30/30  (100%)
+
+  CLOSURE COUNTED IN SEQUENCE ITEMS (BURST CONFIGURATIONS)
+    steer=0  closed 2/2 runs
+             min=30 median=207.0 max=384 mean=207.0
+             stdev=250.3  spread max/min=12.80x
+    steer=1  closed 2/2 runs
+             min=9 median=10.0 max=11 mean=10.0
+             stdev=1.4  spread max/min=1.22x
+    steering speedup, median/median : 20.70x
+    same ratio, worst to best       : 2.73x .. 42.67x
+
+  CLOSURE COUNTED IN TX_DATA PUSHES (THE VERILOG BENCH'S UNIT)
+    steer=0  closed 2/2 runs
+             min=131 median=938.0 max=1745 mean=938.0
+             stdev=1141.3  spread max/min=13.32x
+    steer=1  closed 2/2 runs
+             min=41 median=44.5 max=48 mean=44.5
+             stdev=4.9  spread max/min=1.17x
+    steering speedup, median/median : 21.08x
+    same ratio, worst to best       : 2.73x .. 42.56x
+
+  THE TWO UNITS DO NOT AGREE, AND THAT IS THE RESULT
+    speedup in sequence items : 20.70x
+    speedup in TX_DATA pushes : 21.08x
+    the two differ by          : 1.02x
+    Verilog bench, one seed each, in PUSHES : 643/47 = 13.68x
+
+    The Verilog bench's `total_tx` increments once per TX_DATA
+    push inside the burst loop, so its 643 and 47 are PUSHES.
+    A sequence item here is one burst configuration carrying
+    1..8 pushes, so the per-item and per-push ratios measure
+    different things over the same two runs -- and nothing in
+    either bench stated the unit.  09-24's headline ratio is
+    not wrong; it is unlabelled, and an unlabelled ratio of
+    counts is the 10-05 defect class (a metric printed beside
+    the thing it does not measure) in its arithmetic form.
+
+    And the per-push numbers do NOT reproduce 643 either:
+    131..1745 pushes to closure under pure random here
+    against 643 there.  Same DUT, same constraints, same
+    bins -- different RNG (Mersenne Twister vs Verilog's
+    LCG) and a per-byte redraw in both.  So the gap is
+    the random stream, which is exactly why a single-seed
+    closure count should never have been quoted as a
+    property of the METHOD.
+
+  bus accesses observed    : 306071  (unresolved samples skipped: 1)
+  bytes pushed             : 1979
+  pushes skipped (tx_full) : 0
+  writes dropped by DUT    : 0
+  RX_DATA reads checked    : 1979
+  constraint rejections    : 971 (steer=0) + 25 (steer=1)
+  burst watchdog failures  : 0
+  checks executed          : 599452 (driver) + 305203 (scoreboard)
+
+  RESULT: PASS  (0 failures over 904655 checks)
+========================================================================
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 1836488.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 17
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[PH/TRC/EXE/ALLDROP] 1
+
+UVM_INFO @ 1836488.0NS: reporter [FINISH] $finish was reached in run_test()
+1836488.00ns INFO     cocotb.regression                  uart_uvm_crv_test passed
+1836488.00ns INFO     cocotb.regression                  *******************************************************************************************
+                                                         ** TEST                               STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                         *******************************************************************************************
+                                                         ** uart_uvm_crv_tb.uart_uvm_crv_test   PASS     1836488.00         128.22      14323.09  **
+                                                         *******************************************************************************************
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                 1836488.00         128.26      14318.53  **
+                                                         *******************************************************************************************
+                                                         
+
+### invocation 2:  N_SEEDS=2 SEED_BASE=2 make
+
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_crv_tb.uart_uvm_crv_test
+     0.00ns INFO     cocotb.regression                  running uart_uvm_crv_test (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartCrvTest...
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+  seed=3 steer=0  items=  55  pushes=  272  bins=30/30  CLOSED
+  seed=4 steer=0  items=  80  pushes=  364  bins=30/30  CLOSED
+  seed=3 steer=1  items=  13  pushes=   53  bins=30/30  CLOSED
+  seed=4 steer=1  items=  12  pushes=   42  bins=30/30  CLOSED
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 669932.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 669932.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 669932.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+========================================================================
+CRV / COVERAGE-DRIVEN UART STIMULUS FROM A UVM SEQUENCE
+  seeds=2  policies=2  bins=30  max_tx=4000  steer_after=24 pushes
+========================================================================
+
+  last run's coverage report:
+  cp_parity  4 4 4
+  cp_stop    5 7
+  cp_baud    3 2 4 3
+  cp_data    6 1 2 4 19 13
+  cp_txq     1916 4953 1
+  cp_pd      8 4 1 6 21 5
+  cp_ps      2 2 1 3 2 2
+  bins hit: 30/30  (100%)
+
+  CLOSURE COUNTED IN SEQUENCE ITEMS (BURST CONFIGURATIONS)
+    steer=0  closed 2/2 runs
+             min=55 median=67.5 max=80 mean=67.5
+             stdev=17.7  spread max/min=1.45x
+    steer=1  closed 2/2 runs
+             min=12 median=12.5 max=13 mean=12.5
+             stdev=0.7  spread max/min=1.08x
+    steering speedup, median/median : 5.40x
+    same ratio, worst to best       : 4.23x .. 6.67x
+
+  CLOSURE COUNTED IN TX_DATA PUSHES (THE VERILOG BENCH'S UNIT)
+    steer=0  closed 2/2 runs
+             min=272 median=318.0 max=364 mean=318.0
+             stdev=65.1  spread max/min=1.34x
+    steer=1  closed 2/2 runs
+             min=42 median=47.5 max=53 mean=47.5
+             stdev=7.8  spread max/min=1.26x
+    steering speedup, median/median : 6.69x
+    same ratio, worst to best       : 5.13x .. 8.67x
+
+  THE TWO UNITS DO NOT AGREE, AND THAT IS THE RESULT
+    speedup in sequence items : 5.40x
+    speedup in TX_DATA pushes : 6.69x
+    the two differ by          : 1.24x
+    Verilog bench, one seed each, in PUSHES : 643/47 = 13.68x
+
+    The Verilog bench's `total_tx` increments once per TX_DATA
+    push inside the burst loop, so its 643 and 47 are PUSHES.
+    A sequence item here is one burst configuration carrying
+    1..8 pushes, so the per-item and per-push ratios measure
+    different things over the same two runs -- and nothing in
+    either bench stated the unit.  09-24's headline ratio is
+    not wrong; it is unlabelled, and an unlabelled ratio of
+    counts is the 10-05 defect class (a metric printed beside
+    the thing it does not measure) in its arithmetic form.
+
+    And the per-push numbers do NOT reproduce 643 either:
+    272..364 pushes to closure under pure random here
+    against 643 there.  Same DUT, same constraints, same
+    bins -- different RNG (Mersenne Twister vs Verilog's
+    LCG) and a per-byte redraw in both.  So the gap is
+    the random stream, which is exactly why a single-seed
+    closure count should never have been quoted as a
+    property of the METHOD.
+
+  bus accesses observed    : 111645  (unresolved samples skipped: 1)
+  bytes pushed             : 745
+  pushes skipped (tx_full) : 0
+  writes dropped by DUT    : 0
+  RX_DATA reads checked    : 745
+  constraint rejections    : 295 (steer=0) + 47 (steer=1)
+  burst watchdog failures  : 0
+  checks executed          : 218550 (driver) + 111325 (scoreboard)
+
+  RESULT: PASS  (0 failures over 329875 checks)
+========================================================================
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 669932.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 17
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[PH/TRC/EXE/ALLDROP] 1
+
+UVM_INFO @ 669932.0NS: reporter [FINISH] $finish was reached in run_test()
+669932.00ns INFO     cocotb.regression                  uart_uvm_crv_test passed
+669932.00ns INFO     cocotb.regression                  *******************************************************************************************
+                                                        ** TEST                               STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *******************************************************************************************
+                                                        ** uart_uvm_crv_tb.uart_uvm_crv_test   PASS      669932.00          46.05      14548.62  **
+                                                        *******************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                  669932.00          46.09      14536.46  **
+                                                        *******************************************************************************************
+                                                        
+
+### invocation 3:  N_SEEDS=2 SEED_BASE=4 make
+
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_crv_tb.uart_uvm_crv_test
+     0.00ns INFO     cocotb.regression                  running uart_uvm_crv_test (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartCrvTest...
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+  seed=5 steer=0  items=  50  pushes=  228  bins=30/30  CLOSED
+  seed=6 steer=0  items=  64  pushes=  279  bins=30/30  CLOSED
+  seed=5 steer=1  items=  11  pushes=   58  bins=30/30  CLOSED
+  seed=6 steer=1  items=  11  pushes=   44  bins=30/30  CLOSED
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 572666.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 572666.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 572666.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+========================================================================
+CRV / COVERAGE-DRIVEN UART STIMULUS FROM A UVM SEQUENCE
+  seeds=2  policies=2  bins=30  max_tx=4000  steer_after=24 pushes
+========================================================================
+
+  last run's coverage report:
+  cp_parity  2 2 7
+  cp_stop    5 6
+  cp_baud    4 3 3 1
+  cp_data    2 3 1 5 17 17
+  cp_txq     1419 4557 1
+  cp_pd      6 9 4 5 17 4
+  cp_ps      1 1 1 1 3 4
+  bins hit: 30/30  (100%)
+
+  CLOSURE COUNTED IN SEQUENCE ITEMS (BURST CONFIGURATIONS)
+    steer=0  closed 2/2 runs
+             min=50 median=57.0 max=64 mean=57.0
+             stdev=9.9  spread max/min=1.28x
+    steer=1  closed 2/2 runs
+             min=11 median=11.0 max=11 mean=11.0
+             stdev=0.0  spread max/min=1.00x
+    steering speedup, median/median : 5.18x
+    same ratio, worst to best       : 4.55x .. 5.82x
+
+  CLOSURE COUNTED IN TX_DATA PUSHES (THE VERILOG BENCH'S UNIT)
+    steer=0  closed 2/2 runs
+             min=228 median=253.5 max=279 mean=253.5
+             stdev=36.1  spread max/min=1.22x
+    steer=1  closed 2/2 runs
+             min=44 median=51.0 max=58 mean=51.0
+             stdev=9.9  spread max/min=1.32x
+    steering speedup, median/median : 4.97x
+    same ratio, worst to best       : 3.93x .. 6.34x
+
+  THE TWO UNITS DO NOT AGREE, AND THAT IS THE RESULT
+    speedup in sequence items : 5.18x
+    speedup in TX_DATA pushes : 4.97x
+    the two differ by          : 1.04x
+    Verilog bench, one seed each, in PUSHES : 643/47 = 13.68x
+
+    The Verilog bench's `total_tx` increments once per TX_DATA
+    push inside the burst loop, so its 643 and 47 are PUSHES.
+    A sequence item here is one burst configuration carrying
+    1..8 pushes, so the per-item and per-push ratios measure
+    different things over the same two runs -- and nothing in
+    either bench stated the unit.  09-24's headline ratio is
+    not wrong; it is unlabelled, and an unlabelled ratio of
+    counts is the 10-05 defect class (a metric printed beside
+    the thing it does not measure) in its arithmetic form.
+
+    And the per-push numbers do NOT reproduce 643 either:
+    228..279 pushes to closure under pure random here
+    against 643 there.  Same DUT, same constraints, same
+    bins -- different RNG (Mersenne Twister vs Verilog's
+    LCG) and a per-byte redraw in both.  So the gap is
+    the random stream, which is exactly why a single-seed
+    closure count should never have been quoted as a
+    property of the METHOD.
+
+  bus accesses observed    : 95434  (unresolved samples skipped: 1)
+  bytes pushed             : 618
+  pushes skipped (tx_full) : 0
+  writes dropped by DUT    : 0
+  RX_DATA reads checked    : 618
+  constraint rejections    : 245 (steer=0) + 20 (steer=1)
+  burst watchdog failures  : 0
+  checks executed          : 186900 (driver) + 95162 (scoreboard)
+
+  RESULT: PASS  (0 failures over 282062 checks)
+========================================================================
+UVM_INFO /sessions/rcw-01tmwhfm6ntium2kyipbpxvf/.local/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 572666.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 17
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[PH/TRC/EXE/ALLDROP] 1
+
+UVM_INFO @ 572666.0NS: reporter [FINISH] $finish was reached in run_test()
+572666.00ns INFO     cocotb.regression                  uart_uvm_crv_test passed
+572666.00ns INFO     cocotb.regression                  *******************************************************************************************
+                                                        ** TEST                               STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        *******************************************************************************************
+                                                        ** uart_uvm_crv_tb.uart_uvm_crv_test   PASS      572666.00          39.66      14439.64  **
+                                                        *******************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                  572666.00          39.69      14427.12  **
+                                                        *******************************************************************************************
+                                                        
+
