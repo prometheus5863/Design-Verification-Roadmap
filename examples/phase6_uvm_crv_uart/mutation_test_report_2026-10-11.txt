@@ -1,0 +1,67 @@
+# Mutation test report -- uart_uvm_crv_tb.py -- 2026-10-11
+#
+# Command: sh run_mutation_tests.sh all
+# DUT: rtl/uart_controller.v, mutated into COPIES under /tmp; nothing in rtl/
+# is edited.  Testbench unmodified; the Makefile's RTL variable points it at
+# each copy.  POLICIES=1 N_SEEDS=1 (the steered policy closes in ~46 pushes),
+# RESULTS_FILE redirected to a scratch path so a mutation run never appends to
+# closure_results.csv.
+#
+# PROVENANCE (2026-10-09's rule: a verdict must name the mechanism that
+# produced it).  All four detections here are a FAILING CHECK and none is a
+# crash or a timeout, against 3 of 6 by crash in
+# mutation_test_reachable_cross.py.  That is a measurement, printed per
+# mutant below, not an assumption.
+#
+# M4's HISTORY, which is the point of this file.  On its first run M4
+# SURVIVED.  The scoreboard derived push acceptance from the DUT's own
+# STATUS.tx_full, so a mutant that corrupts tx_full corrupted the reference
+# model in exactly the same way and the two agreed: A CHECKER THAT READS A DUT
+# OUTPUT AS GROUND TRUTH CANNOT DETECT A DEFECT IN THAT OUTPUT.  The repair
+# makes tx_full a checked output -- during the fill phase the engine is
+# disabled, so occupancy is exactly the number of accepted TX_DATA writes
+# since the last en=0 CTRL write, and the scoreboard predicts tx_full with no
+# help from the DUT.  M4 is now killed by that comparison, naming the exact
+# occupancy.  The survival is recorded rather than quietly fixed because the
+# hole was introduced by this session's own structural improvement, and the
+# Verilog bench in examples/phase6_crv_uart/ still has it.
+#
+# Closure counts are unchanged by the repair (seed 1, steer=1: 11 items /
+# 48 pushes before and after), so the distribution in closure_results.csv
+# still describes this testbench.
+#
+----------------------------------------------------------------
+MUTANT control  (unmutated DUT -- the suite must PASS)
+  expected sites: 0   found: 0
+  suite outcome: PASS   required: PASS
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M1  (loopback mux removed: RX never sees TX)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: burst watchdog: 0 of 7 bytes returned (parity=1 stop2=0 baud=3 len=7 steer=- rej=2)
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M2  (TX even-parity bit inverted: RX must flag parity_err)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: drain status error bits set
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M3  (RX_DATA reads the wrong FIFO slot: bytes out of order)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: scoreboard: loopback mismatch got 0x61 exp 0x73
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M4  (tx_full asserts one entry early)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: scoreboard: tx_full reported 1, model says 0 at occupancy 7 of 8
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+mutation run exit: 0  (0 = every mutant behaved as required)

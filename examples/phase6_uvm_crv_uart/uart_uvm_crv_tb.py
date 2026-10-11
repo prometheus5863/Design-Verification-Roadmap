@@ -106,6 +106,12 @@ SEED_BASE = int(os.environ.get("SEED_BASE", "0"))
 # therefore build one distribution, and a re-run with the same SEED_BASE
 # produces duplicate rows the aggregator detects rather than averages.
 RESULTS_FILE = os.environ.get("RESULTS_FILE", "closure_results.csv")
+# POLICIES lets the mutation harness run one fast policy (steer=1 closes in
+# ~46 pushes against the pure-random median of 275) so a mutant costs ~25 s
+# instead of ~70 s.  A mutation run must not append to the closure
+# distribution, so the harness also points RESULTS_FILE at a scratch path.
+POLICIES = tuple(int(x) for x in
+                 os.environ.get("POLICIES", "0,1").split(",") if x != "")
 
 # ---------------------------------------------------------------------------
 # The 30-bin coverage model, bin-for-bin the Verilog bench's covergroup
@@ -534,13 +540,37 @@ uvm_component_utils(UartBusMonitor)
 class UartScoreboard(UVMScoreboard):
     """Loopback reference model, fed exclusively by the monitor.
 
-    Acceptance is DERIVED, not told: the driver reads STATUS before every
-    push, so bit 0 of the most recent STATUS read says whether the TX FIFO was
-    full when the next TX_DATA write landed.  A write seen while that bit was
-    set was dropped by the DUT and must not be enqueued.  Getting this wrong
-    in either direction shows up immediately as an ordering mismatch, which is
-    why it is safe to derive rather than assert.
+    Acceptance is DERIVED from observed bus traffic, not told by the driver,
+    so driver and checker share no variable.
+
+    BUT DERIVING IT FROM THE DUT'S OWN STATUS.tx_full WAS A BLIND SPOT, and
+    mutation testing in the same session that introduced it found it.  The
+    first draft read bit 0 of the most recent STATUS access and treated a
+    write seen while it was set as dropped.  Mutant M4 -- tx_full asserting
+    one entry early -- SURVIVED: the checker took its acceptance rule from
+    the signal the mutant corrupted, so the reference model was wrong in
+    exactly the same way and the two agreed.  A checker that reads a DUT
+    output as ground truth cannot detect a defect in that output.  (The
+    Verilog bench has the same hole for the same reason; this is not a
+    regression, it is a hole made visible by being written as one line.)
+
+    The repair makes tx_full a CHECKED OUTPUT rather than an input.  The
+    burst is filled with the UART disabled -- the TX engine only pops in
+    TX_IDLE when enabled -- so during the fill phase occupancy is exactly the
+    number of TX_DATA writes since the last CTRL write with en=0, and the
+    scoreboard can predict tx_full with no help from the DUT.  It uses its own
+    model to decide acceptance, and compares the DUT's reported tx_full
+    against that model on every STATUS read of the fill phase.  M4 is then
+    killed twice over: the predicted-vs-reported comparison fails, and the
+    byte the DUT silently dropped is still queued at burst end.
+
+    The prediction is only valid while the engine is stopped, which is also
+    the only window in which this bench observes tx_full at all, so nothing
+    is given up.  Once enabled, occupancy is unobservable from the bus and the
+    check is not attempted -- claiming it there would be the 10-05 defect
+    (a quantity printed beside the thing it does not measure).
     """
+    TX_FIFO_DEPTH = 8
 
     def __init__(self, name, parent):
         super().__init__(name, parent)
@@ -551,6 +581,9 @@ class UartScoreboard(UVMScoreboard):
         self.errors = []
         self.rx_checked = 0
         self.dropped = 0
+        self.fill_phase = False
+        self.fill_accepted = 0
+        self.full_checks = 0
 
     def build_phase(self, phase):
         super().build_phase(phase)
@@ -569,11 +602,31 @@ class UartScoreboard(UVMScoreboard):
             # fails the run even though no data check would notice it.
             self._check((t.data >> 4) & 0x7 == 0,
                         "scoreboard: status error bits set (0x%02x)" % t.data)
+            if self.fill_phase:
+                # tx_full as a CHECKED OUTPUT.  See the class docstring: this
+                # is what kills M4, and it is only claimed in the window where
+                # occupancy is derivable from the bus.
+                want = self.fill_accepted >= self.TX_FIFO_DEPTH
+                self.full_checks += 1
+                self._check(bool(t.data & 0x1) == want,
+                            "scoreboard: tx_full reported %d, model says %d "
+                            "at occupancy %d of %d"
+                            % (t.data & 0x1, int(want), self.fill_accepted,
+                               self.TX_FIFO_DEPTH))
         elif t.write and t.addr == ADDR_TX:
-            if self.last_status is not None and (self.last_status & 0x1):
-                self.dropped += 1          # tx_full at the push: DUT drops it
+            # Acceptance from the scoreboard's OWN occupancy model, never from
+            # the DUT's tx_full.
+            if self.fill_phase and self.fill_accepted >= self.TX_FIFO_DEPTH:
+                self.dropped += 1
+            elif (not self.fill_phase and self.last_status is not None
+                    and (self.last_status & 0x1)):
+                # Outside the fill window occupancy is not derivable, so fall
+                # back to the reported bit and say so rather than guess.
+                self.dropped += 1
             else:
                 self.q.append(t.data & 0xFF)
+                if self.fill_phase:
+                    self.fill_accepted += 1
         elif not t.write and t.addr == ADDR_RX:
             self.rx_checked += 1
             self._check(bool(self.q), "scoreboard: RX_DATA read with an empty "
@@ -584,7 +637,15 @@ class UartScoreboard(UVMScoreboard):
                             "scoreboard: loopback mismatch got 0x%02x exp 0x%02x"
                             % (t.data, exp))
         elif t.write and t.addr == ADDR_CTRL:
-            # A CTRL write with en=0 ends a burst; the queue must be drained.
+            if t.data & 0x1:
+                # Enabling the engine ends the window in which occupancy is
+                # derivable from the bus.
+                self.fill_phase = False
+            else:
+                self.fill_phase = True
+                self.fill_accepted = 0
+            # A CTRL write with en=0 and loopback=0 ends a burst; the queue
+            # must be drained.
             if (t.data & 0x1) == 0 and (t.data & 0x10) == 0:
                 self._check(not self.q,
                             "scoreboard: %d bytes still queued at burst end"
@@ -740,7 +801,7 @@ class UartCrvTest(UVMTest):
         sqr = self.env.agent.sqr
         drv = self.env.agent.drv
 
-        for steer in (0, 1):
+        for steer in POLICIES:
             for s in range(N_SEEDS):
                 seed = 1 + SEED_BASE + s
                 # THE SAME STREAM FOR BOTH POLICIES.  The first draft seeded
@@ -778,6 +839,35 @@ class UartCrvTest(UVMTest):
                                 self.cov.hit_bins(), self.cov.total_bins()))
         phase.drop_objection(self)
 
+    def _tail(self, drv, sb, ok, errs=None):
+            print("  bus accesses observed    : %d  (unresolved samples "
+                  "skipped: %d)" % (self.env.agent.mon.seen,
+                                    self.env.agent.mon.unresolved))
+            print("  bytes pushed             : %d" % drv.bytes_pushed)
+            print("  pushes skipped (tx_full) : %d" % drv.skipped_full)
+            print("  writes dropped by DUT    : %d" % sb.dropped)
+            print("  RX_DATA reads checked    : %d" % sb.rx_checked)
+            print("  tx_full predicted & checked: %d" % sb.full_checks)
+            print("  constraint rejections    : %d (steer=0) + %d (steer=1)"
+                  % (self.rejects[0], self.rejects[1]))
+            print("  burst watchdog failures  : %d" % drv.watchdog_fails)
+            print("  checks executed          : %d (driver) + %d (scoreboard)"
+                  % (drv.checks, sb.checks))
+            if errs is None:
+                errs = drv.errors + sb.errors
+            if errs:
+                ok = False
+                print()
+                print("  FIRST %d FAILURES:" % min(10, len(errs)))
+                for e in errs[:10]:
+                    print("    %s" % e)
+            print()
+            print("  RESULT: %s  (%d failures over %d checks)"
+                  % ("PASS" if ok and not errs else "FAIL", len(errs),
+                     drv.checks + sb.checks))
+            print(line)
+            assert ok and not errs, "%d failures" % len(errs)
+
     def report_phase(self, phase):
         drv = self.env.agent.drv
         sb = self.env.sb
@@ -798,7 +888,7 @@ class UartCrvTest(UVMTest):
         for label, idx in units:
             print("  CLOSURE COUNTED IN %s" % label.upper())
             summary[idx] = {}
-            for steer in (0, 1):
+            for steer in POLICIES:
                 ns = [r[idx] for r in self.results[steer]
                       if r[3] and r[idx] is not None]
                 summary[idx][steer] = ns
@@ -815,13 +905,14 @@ class UartCrvTest(UVMTest):
                 if not allc:
                     ok = False
                     print("             FAIL a run did not reach closure")
-            a, b = summary[idx][0], summary[idx][1]
+            a = summary[idx].get(0, [])
+            b = summary[idx].get(1, [])
             if a and b:
                 print("    steering speedup, median/median : %.2fx"
                       % (statistics.median(a) / statistics.median(b)))
                 print("    same ratio, worst to best       : %.2fx .. %.2fx"
                       % (min(a) / max(b), max(a) / min(b)))
-            else:
+            elif len(POLICIES) == 2:
                 ok = False
             print()
 
@@ -838,6 +929,12 @@ class UartCrvTest(UVMTest):
         # labelling fix stands on its own, and where the unit DID matter was
         # STEER_AFTER (see its definition), not the reported ratio.
         # -------------------------------------------------------------
+        if len(POLICIES) < 2:
+            print("  SINGLE-POLICY RUN (POLICIES=%s): no speedup reported."
+                  % ",".join(str(x) for x in POLICIES))
+            print()
+            self._tail(drv, sb, ok, errs=drv.errors + sb.errors)
+            return
         ri = (statistics.median(summary[1][0]) / statistics.median(summary[1][1])
               if summary[1][0] and summary[1][1] else float("nan"))
         rp = (statistics.median(summary[2][0]) / statistics.median(summary[2][1])
@@ -855,31 +952,8 @@ class UartCrvTest(UVMTest):
         print("  PURE-RANDOM one does not, so 13.68x is a ratio with a")
         print("  stable denominator and an unstable numerator.")
         print()
-        print("  bus accesses observed    : %d  (unresolved samples "
-              "skipped: %d)" % (self.env.agent.mon.seen,
-                                self.env.agent.mon.unresolved))
-        print("  bytes pushed             : %d" % drv.bytes_pushed)
-        print("  pushes skipped (tx_full) : %d" % drv.skipped_full)
-        print("  writes dropped by DUT    : %d" % sb.dropped)
-        print("  RX_DATA reads checked    : %d" % sb.rx_checked)
-        print("  constraint rejections    : %d (steer=0) + %d (steer=1)"
-              % (self.rejects[0], self.rejects[1]))
-        print("  burst watchdog failures  : %d" % drv.watchdog_fails)
-        print("  checks executed          : %d (driver) + %d (scoreboard)"
-              % (drv.checks, sb.checks))
-        errs = drv.errors + sb.errors
-        if errs:
-            ok = False
-            print()
-            print("  FIRST %d FAILURES:" % min(10, len(errs)))
-            for e in errs[:10]:
-                print("    %s" % e)
-        print()
-        print("  RESULT: %s  (%d failures over %d checks)"
-              % ("PASS" if ok and not errs else "FAIL", len(errs),
-                 drv.checks + sb.checks))
-        print(line)
-        assert ok and not errs, "%d failures" % len(errs)
+        self._tail(drv, sb, ok)
+
 
 
 uvm_component_utils(UartCrvTest)

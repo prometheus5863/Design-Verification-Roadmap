@@ -11,7 +11,10 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(PWD)/../../rtl/uart_controller.v
+# RTL is overridable so run_mutation_tests.sh can point the SAME testbench at
+# a mutated COPY of the DUT without editing anything under rtl/.
+RTL ?= $(PWD)/../../rtl/uart_controller.v
+VERILOG_SOURCES += $(RTL)
 
 TOPLEVEL = uart_controller
 MODULE = uart_uvm_crv_tb
