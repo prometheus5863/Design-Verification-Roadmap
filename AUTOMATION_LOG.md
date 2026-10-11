@@ -7131,3 +7131,279 @@ push per the 10-03 race item.
 selftest; the census's alias fix with its registry row and both outputs;
 `progress.md`; the session note). This AUTOMATION_LOG.md entry makes **5**.
 The graphene repository took **5** in the same session, for **10** across both.
+
+---
+
+## 2026-10-11 — The checker read the DUT output it was checking, and the headline ratio had a stable denominator
+
+**Target:** Phase 6 capstone box **(a)** — constrained-random stimulus from a
+UVM sequence. 10-10 recorded that three consecutive sessions had chosen
+measurement infrastructure over new DV content, that the infrastructure work
+was not padding but the roadmap's own next milestone had not moved, and that
+the next session should do this one unless a defect forced otherwise. It is
+done, on the fourth deferral.
+
+**New:** `examples/phase6_uvm_crv_uart/` — `uart_uvm_crv_tb.py`,
+`summarize_closure.py`, `run_mutation_tests.sh`, a parameterised `Makefile`,
+and the dated sim, summary and mutation transcripts. **Note:**
+`notes/2026-10-11-the-checker-read-the-dut-output-it-was-checking.md`.
+
+### 1. What was ported
+
+Same DUT (`rtl/uart_controller.v`, unmodified), same four constraints, same
+rejection budget, same 30-bin model over 5 coverpoints and 2 crosses, same
+bin-to-stimulus steering map. Real UVM, not a Python generator wearing the
+name: `UartCfgItem(UVMSequenceItem)`, `UartCrvSequence(UVMSequence)` through a
+`UVMSequencer`, `UartRegDriver(UVMDriver)` on the APB-lite interface,
+`UartBusMonitor(UVMMonitor)` on a real `UVMAnalysisPort`, and **two
+independent subscribers on it** — scoreboard and coverage collector — inside
+`UartAgent`/`UartEnv`/`UartCrvTest` with the standard phases, objection-based
+termination, factory creation and `UVMConfigDb`.
+
+One deliberate change: the Verilog bench's driver enqueued to the reference
+model itself after reading `tx_full`, so the checker's notion of what the DUT
+accepted came from the thing driving the DUT — the 09-19/09-20 shape. Here the
+scoreboard is fed **only** by the monitor. That change is also what produced
+§3, which is the session's main result.
+
+### 2. The 13.68× ratio has a stable denominator and an unstable numerator
+
+A UVM sequence is an object that can be started again, so N seeds × 2 policies
+run in one elaboration; a Verilog bench needs a separate `vvp` per seed. The
+sweep is **resumable** (one machine-readable row per run, `SEED_BASE` to
+continue) because a seed pair costs ~70 s and this environment's shell calls
+are time-boxed, and `summarize_closure.py` adjudicates the accumulated rows —
+**8/8 over 6 paired seeds**, after first checking the sweep is well-formed: no
+duplicate `(seed, policy)` rows, both policies on the same seed set, every run
+actually closed.
+
+In the Verilog bench's own unit — TX_DATA pushes:
+
+| policy | pushes to closure | median | spread | CV |
+|---|---|---|---|---|
+| pure random | 131, 228, 272, 279, 364, 1745 | 275.5 | **13.32×** | **1.218** |
+| steered | 41, 42, 44, 48, 53, 58 | 46.0 | 1.41× | 0.141 |
+
+**09-24's steered 47 reproduces** — inside [41, 58], across a different
+language, framework and RNG (Verilog's LCG → Mersenne Twister). Agreement
+under that much change is evidence about the *method*, not the two-artefacts
+coincidence the 10-02 rule warns about. **Its pure-random 643 does not**: it
+lands inside a range 13.3× wide, which contains 643 the way it would contain
+most numbers of that size.
+
+The ratio spans **2.26× to 42.56×** across seeds — an 18.8× range around the
+single sample `progress.md` quoted as this repository's argument for
+coverage-driven stimulus.
+
+**What survives is stronger than what is lost.** Steering wins on every seed
+and the distributions do not overlap (steered max 58 < random min 131), and
+the steered cost is **8.7× tighter in CV**:
+
+> Coverage steering does not mainly make closure faster. It makes closure cost
+> **predictable**. A plan can be scheduled against 46 ± 7 pushes and cannot be
+> scheduled against 131…1745 at all.
+
+Invisible from one seed per policy, because a single run has no spread.
+
+### 3. The checker read the DUT output it was checking
+
+4 mutants + an unmutated control, applied to copies of the RTL with the
+testbench unmodified. **On the first run M4 SURVIVED.**
+
+| mutant | first run | after repair |
+|---|---|---|
+| control (unmutated) | PASS, as required | PASS |
+| M1 loopback mux removed | FAIL — burst watchdog | FAIL |
+| M2 TX even-parity bit inverted | FAIL — status error bits | FAIL |
+| M3 RX_DATA reads the wrong FIFO slot | FAIL — loopback mismatch | FAIL |
+| **M4 `tx_full` asserts one entry early** | **SURVIVED** | FAIL — predicted vs reported |
+
+M4 survived *because of* §1's improvement. The scoreboard derives acceptance
+from observed traffic rather than being told by the driver — but it derived it
+from the DUT's own `STATUS.tx_full`. A mutant corrupting `tx_full` corrupts the
+reference model in exactly the same way, the two agree, and nothing fires.
+
+> **A checker that reads a DUT output as ground truth cannot detect a defect
+> in that output.**
+
+10-10's rule one layer down — in the scoreboard rather than in an arrival
+control — and the **first time this repository has caught its own session's
+hole in the same session** rather than the next one finding the previous one's.
+
+Repaired by making `tx_full` a **checked output**: the burst is filled with
+the engine disabled, so occupancy is exactly the number of accepted `TX_DATA`
+writes since the last `en=0` CTRL write, and the scoreboard predicts `tx_full`
+with no help from the DUT. M4 is killed naming the occupancy
+(`tx_full reported 1, model says 0 at occupancy 7 of 8`). The prediction is
+claimed **only** inside the fill window — outside it occupancy is not derivable
+from the bus and claiming it would be the 10-05 defect — and nothing is given
+up, because that is the only window in which this bench observes `tx_full` at
+all. Closure counts are unchanged by the repair (seed 1 steer=1: 11 items /
+48 pushes before and after).
+
+**The Verilog bench still has the hole**, for the same reason: its driver reads
+`tx_full` and enqueues to `expq` on that basis. Open item, not repaired here —
+that file owns a committed transcript.
+
+**Provenance, 10-09's rule:** all four detections are a *failing check*, none a
+crash or timeout, against 3 of 6 by crash in
+`mutation_test_reachable_cross.py`. Printed per mutant.
+
+**M2 earns its own line.** An inverted TX parity bit is caught by the STATUS
+error-bit check and by **no data comparison at all** — the byte still arrives
+correctly in loopback, because both the TX generator and the RX checker read
+`cfg_parity` and only the generator was mutated. That check was carried over
+on the argument that a spurious error must fail the run even though no data
+check would notice; first time it has been shown to be the only thing between
+a real defect and a green run.
+
+**Injection guard, 10-07:** every mutant declares `EXPECTED_SITES` and the run
+aborts with `GUARD_FAIL` on a different count; `cmp -s` is kept only as a
+weaker second gate.
+
+### 4. Three defects in the new bench, and one hypothesis refuted
+
+The port first reported **2.1×**, not 13.68×. Chasing that gap found three
+things, all mine, all recorded in place:
+
+**(a) A constant ported without its unit.** `STEER_AFTER = 24` is in *pushes*
+in the Verilog bench (`total_tx` increments per TX_DATA push); the first draft
+applied it to *sequence items*, and a burst carries 1–8 pushes, so the
+pure-random head start silently became **4.5×** the Verilog bench's and the
+measured speedup was dominated by the prefix rather than the policy.
+
+**(b) An off-by-one that made steering look like it never ran.** `cov.items`
+was set *after* `finish_item`, so a mid-burst closure reported the count of
+*completed* items — **exactly 24 for every seed**, the hand-off point — for a
+closure during the 25th item, the first steered burst. Three identical numbers
+across three seeds is what made it visible.
+
+**(c) An unpaired comparison.** `random.Random(seed*7919 + steer)` gave the
+policies *different* streams, mixing the policy with the draw. Same seed for
+both now: identical until the hand-off.
+
+**Refuted rather than deleted:** the unlabelled unit looked like the whole
+explanation and is not — per-item and per-push speedups agree to **1.01×**,
+because the mean burst length is the same under both policies and divides out.
+The labelling fix stands on its own; where the unit mattered was the constant.
+
+### 5. Methodological note
+
+09-17 a suite can pass against broken RTL. 09-18 and print PASS over its own
+errors. 09-19/09-20 the subsystem reporting the verdict is not the one doing
+the checking. 09-26 a reachability pre-pass answers "did my attempts reach
+it". 09-30 a control has to sit where the failure enters. 10-01 an arrival
+control that cannot fail is not a control. 10-05 a metric can be printed
+beside the thing it does not measure. 10-06 and the detector can misattribute
+what it measured. 10-07 an injection guard is a measurement. 10-08 a false
+SURVIVED is worse than a missed defect. 10-09 and so is a false DETECTED.
+10-10 a control must not read the thing it controls for.
+
+**10-11: AND NEITHER MAY A CHECKER. A SCOREBOARD THAT TAKES ITS REFERENCE FROM
+A DUT OUTPUT IS BLIND TO EXACTLY THAT OUTPUT'S DEFECTS.**
+
+Checkable rule: **for every DUT signal a checker reads, ask whether the checker
+could detect that signal being wrong. If not, predict it independently in the
+window where that is possible, or state the blind spot.** Mechanisable as a
+census: list every DUT signal each scoreboard reads and, for each, name the
+mutant that would prove it is checked rather than trusted.
+
+Second rule, from §4: **a constant carried between benches carries its unit,
+and the unit is usually not in its name.** `STEER_AFTER = 24` is correct in
+both benches and means two things 4.5× apart. Mechanisable: a constant copied
+across harnesses must carry its unit in its identifier.
+
+Third, from §2: **a single-seed figure is not a property of a method.** Quoting
+one draw of a ratio can overstate and understate the case at once — here it
+overstated the speedup and entirely missed the predictability, which is the
+better argument.
+
+### 6. Toolchain and automation health
+
+**The simulator was needed this session, after two without it** — and 10-10
+recorded that two sessions is where the gotchas stop being verified knowledge.
+All three **re-confirmed**: source `tools/setup_iverilog.sh` without a pipe
+(Icarus 10.3 came up); `export PATH="$HOME/.local/bin:$PATH"` or
+`cocotb-config` is missing and the Makefile fails with `No rule to make target
+'/Makefile.sim'` (pip warned about exactly that directory); and the 09-06
+install recipe still works — `python-constraint --use-pep517`, then
+`"cocotb<2.0"` (1.9.2), then `uvm-python` 0.4.0.
+
+Three new environment facts: `print()` inside a cocotb test is **buffered to
+the end of the run**, so a long sweep shows nothing until it finishes, and a
+background `nohup` run does not survive this environment's shell call — both
+are why the sweep is resumable rather than one long run. `UVMConfigDb.get`
+**writes into a list argument** and raises `value must be a list-like with
+append` if given `None`, unlike the SV output-argument form. And cocotb's
+`BinaryValue.__int__` **raises on x/z** rather than resolving, so a monitor
+sampling from time 0 crashes on its first sample; handled by returning `None`,
+skipping, and *counting* the skips — an access the monitor cannot resolve is
+one it must not report, and guessing 0 would fabricate a quiet bus.
+
+Device reachable and folder connected at the first firing; nothing crossed the
+bridge. `pip install` of the three packages succeeded. **Every commit was
+pushed and verified against the GitHub API before the next was written**, with
+`git fetch origin main` immediately before each push per the 10-03 race item.
+
+**Not yet covered (candidates for future runs):**
+
+- **A DUT-SIGNAL CENSUS FOR EVERY SCOREBOARD** — created today out of §3, and
+  the natural successor to the arrival-control work. For each checker, list
+  every DUT signal it reads and name the mutant that would prove the signal is
+  checked rather than trusted. M4 is the first row and
+  `examples/phase6_crv_uart/`'s `tx_full` the second. Ranked first because it
+  is the only open item that generalises a defect found live today.
+- **REPAIR `examples/phase6_crv_uart/`'s SAME BLIND SPOT** — its driver reads
+  `tx_full` and enqueues to `expq` on that basis, so an M4-equivalent survives
+  there too. Deliberately not done today: that file owns a committed transcript
+  and the change would move its numbers, so it needs its own output-neutrality
+  pass. The fix is known (predict occupancy during the fill phase).
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created today out of
+  §4(a). A sweep over every constant that appears in more than one harness,
+  checking its name carries its unit. `STEER_AFTER` is the first instance and
+  it cost a wrong measurement before it was caught.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — 6 paired seeds give CVs of
+  1.218 and 0.141 and a 13.3× pure-random spread; the sweep is resumable, so
+  this is cheap and the pure-random tail is the part least well measured (one
+  of six seeds is 4.8× the median).
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row, because TWO_VALUED is a control that
+  misreports rather than a gap. Needs one uvm-python sim per row, and the
+  simulator is now re-confirmed working, which was the standing blocker.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created 10-10. Flag every
+  `check(label, cond, detail)` whose detail is a typed literal. 18 of 31 in
+  `witness_soundness.py`; no other file measured. The new bench's checks use
+  derived details throughout, so it should score well and is a useful control.
+- **THE SVA PROTOCOL CHECKERS BOUND INTO THIS ENVIRONMENT** — capstone box
+  **(b)**, now the next box in line with (a) closed.
+- **`PayloadAdmissibilityCoverage` INTO THE LIVE COLLECTOR** — box **(c)**,
+  with its 10-05 prerequisite (the live collector's metric does not measure
+  its own cross) still standing.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09,
+  untouched; those are `mutation_test_reachable_cross.py`'s crash-detections.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the third session**. Still a control with no control; the sim loop it needs
+  is now available.
+- **REPAIR THE THREE ROWS THE 10-07 AUDIT NAMED** — `phase6_crv_uart` M3's
+  inserted text, `phase6_rx_pin_driver` M4's two sites and M3's implicit
+  pattern; `phase6_bfm_equivalence` and `phase4_rtl_bringup` still guard with
+  `cmp -s`. Untouched for the fourth session, and today's harness shows the
+  EXPECTED_SITES form they should take.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  10-10, deliberately deferred; that file owns a committed transcript.
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24) —
+  now with a distribution to beat rather than a single number; two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); widen
+  the coverage model (09-24); mutants not yet attempted (interrupt enable
+  combinations, reset asserted mid-frame); a property needing a strengthening
+  invariant; the SVA sequence layer (runnable on neither tool here, open since
+  09-20); code coverage measurement (Icarus has none, open since 09-18);
+  Phase 6 lint, regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 4 (the UVM CRV bench with its sweep, summariser and
+transcripts; the mutation harness with M4's survival and repair; `progress.md`;
+the session note). This AUTOMATION_LOG.md entry makes **5**. The graphene
+repository took **5** in the same session, for **10** across both.
