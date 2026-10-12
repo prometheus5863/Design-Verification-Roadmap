@@ -68,12 +68,17 @@ SECTION 1.  THE CENSUS
                 run.
 
   examples/phase6_crv_uart/uart_crv_cov_tb.v
-    TRUSTED       STATUS.tx_full (st[0])
+    PREDICTED     STATUS.tx_full (st[0])
       checker : run_burst push loop
       mutant  : M7 -- tx_full asserts one entry early (tx_cnt >= 7)
-      status  : OPEN as of 2026-10-12 -- the driver skips the push and the
-                reference model agrees, so an early tx_full corrupts both
-                identically
+      status  : PROVED BY RUN 2026-10-12, in both directions. This row was
+                TRUSTED when the census was written: the driver read st[0] and
+                enqueued on that basis, so an early tx_full corrupted the DUT
+                gating and the reference model identically. M7 ESCAPED on seeds
+                1/3/5 (8203/7926/7225 checks, all passing) and is DETECTED on
+                all three after the repair, the first failing check naming the
+                occupancy. Repaired the same day the census found it, with an
+                exact output-neutrality pass over 8 (seed, steer) combinations.
     OBSERVED_ONLY STATUS.tx_empty (st[1]) and STATUS.tx_full (st[0])
       checker : sample_txq
       mutant  : M4 -- tx_cnt never increments on a lone push
@@ -116,7 +121,7 @@ SECTION 1.  THE CENSUS
                 data comparison at all, the byte still arriving correctly in
                 loopback
 
-  by role: OBSERVED_ONLY 1, PREDICTED 12, SYNC_ONLY 2, TRUSTED 1
+  by role: OBSERVED_ONLY 1, PREDICTED 13, SYNC_ONLY 2
 
 SECTION 2.  C1 -- STALENESS
 ------------------------------------------------------------------------------
@@ -137,28 +142,55 @@ SECTION 3.  C2 -- COMPLETENESS, AND C3 -- ALLOWLIST SIZE
 
 SECTION 4.  C4 -- DISCRIMINATING POWER
 ------------------------------------------------------------------------------
-   TRUSTED: examples/phase6_crv_uart/uart_crv_cov_tb.v
-            STATUS.tx_full (st[0]), read by run_burst push loop
-            mutant that proves it: M7 -- tx_full asserts one entry early (tx_cnt >= 7)
-  [PASS] the census contains at least one TRUSTED row, so it has the power to find the defect class it was built for
-         1 TRUSTED rows.  A census in which everything is already PREDICTED and which reports itself clean would be a control that cannot fail.  The row here is the Verilog CRV bench's STATUS.tx_full, which is the same hole repaired in the uvm-python bench on 2026-10-11 and is still open.
+  AMENDED 2026-10-12, the same session this control was written,
+  and the amendment is the interesting part.  C4 was first phrased
+  as "the census must contain at least one TRUSTED row", on the
+  2026-10-08 argument that a census reporting itself clean has no
+  power to find anything.  That phrasing BROKE THE MOMENT THE
+  DEFECT WAS FIXED: repairing the one TRUSTED row the census found
+  made the control fail, so as written it REQUIRED A DEFECT TO
+  EXIST.  A control must not demand that the thing it looks for
+  still be there.
 
-   rows proved by a mutant that was actually run : 6
+  The right question is not whether a defect is present now but
+  whether this census has EVER been shown to find one.  So C4 now
+  requires at least one row carrying a DEMONSTRATED ESCAPE: a
+  mutant that was actually run against the pre-repair code and
+  survived it.  That property is permanent, and it is the inverse
+  of 2026-10-08's rule -- a control with no control is useless, and
+  so is one that cannot pass on healthy code.
+
+   DEMONSTRATED ESCAPE: examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py
+       STATUS.tx_full (prdata[0]), read by UartScoreboard.write_bus
+       mutant: M4 -- tx_full asserts one entry early (tx_cnt >= 7)
+   DEMONSTRATED ESCAPE: examples/phase6_crv_uart/uart_crv_cov_tb.v
+       STATUS.tx_full (st[0]), read by run_burst push loop
+       mutant: M7 -- tx_full asserts one entry early (tx_cnt >= 7)
+  [PASS] at least one row carries a mutant that was RUN against the pre-repair code and survived it, so this census is known to find the defect class it was built for
+         2 rows with a demonstrated escape: uart_uvm_crv_tb.py, uart_crv_cov_tb.v.  Both are the same defect shape -- tx_full asserting one entry early against a checker that read tx_full -- found independently in a uvm-python scoreboard and in a Verilog driver, which is why the shape rather than the instance is what this census is organised around.
+
+   open TRUSTED rows: 0
+  [PASS] and the count of open TRUSTED rows is REPORTED rather than required to be non-zero, so a clean census is a result and not a control failure
+         0 open TRUSTED rows. Zero is the goal; the census says so explicitly instead of passing silently, because a clean report and an unexercised control look identical from outside and the demonstrated-escape count above is what distinguishes them.
+
+   rows proved by a mutant that was actually run : 7
    rows whose naming mutant has never been run   : 7
   [PASS] and it reports how many rows are PROVED by a run rather than argued, because the second number is the honest measure of what this census knows
-         6 proved by run, 7 argued but unrun, 3 other.  The unrun rows are not failures -- they are the backlog this census exists to make visible, and the FIFO bench's "full asserting one entry early" is the most interesting of them because it is the exact shape of the defect that survived in the UART scoreboard.
+         7 proved by run, 7 argued but unrun, 2 other.  The unrun rows are not failures -- they are the backlog this census exists to make visible, and the FIFO bench's "full asserting one entry early" is the most interesting of them because it is the exact shape of the defect that was demonstrated twice above.
 
 ==============================================================================
-CHECKS: 5 passed, 0 failed
+CHECKS: 6 passed, 0 failed
 ==============================================================================
 
 VERDICT
 
-  The census stands at 16 rows: 1 OBSERVED_ONLY, 12 PREDICTED, 2 SYNC_ONLY, 1 TRUSTED.
-  One TRUSTED row remains open -- the Verilog CRV bench reads
-  STATUS.tx_full to decide whether its own push was accepted, the
-  same hole repaired in the uvm-python bench on 2026-10-11.
-  Mutant M7 names it.
+  The census stands at 16 rows: 1 OBSERVED_ONLY, 13 PREDICTED, 2 SYNC_ONLY.
+  No TRUSTED row is open.  The one the census found on its first
+  run -- the Verilog CRV bench reading STATUS.tx_full to decide
+  whether its own push was accepted -- was repaired the same
+  session, with M7 shown to escape before and to be detected
+  after.  Two rows now carry a demonstrated escape, both of the
+  same shape, found independently in two languages.
 
   What this census does NOT claim:
     1. That the roles are right.  They are declared by a reviewer;

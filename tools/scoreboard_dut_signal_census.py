@@ -134,6 +134,7 @@ CENSUS = [
          mutant='M4 -- tx_full asserts one entry early (tx_cnt >= 7)',
          status='PROVED BY RUN 2026-10-11: M4 SURVIVED before the repair and '
                 'is DETECTED after it, naming the occupancy',
+         escape_demonstrated=True,
          evidence='tx_full as a CHECKED OUTPUT'),
     dict(file='examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py',
          checker='UartScoreboard.write_bus',
@@ -157,12 +158,19 @@ CENSUS = [
     dict(file='examples/phase6_crv_uart/uart_crv_cov_tb.v',
          checker='run_burst push loop',
          quantity='STATUS.tx_full (st[0])',
-         role='TRUSTED',
+         role='PREDICTED',
          mutant='M7 -- tx_full asserts one entry early (tx_cnt >= 7)',
-         status='OPEN as of 2026-10-12 -- the driver skips the push and the '
-                'reference model agrees, so an early tx_full corrupts both '
-                'identically',
-         evidence='if (st[0]) begin'),
+         status='PROVED BY RUN 2026-10-12, in both directions.  This row was '
+                'TRUSTED when the census was written: the driver read st[0] '
+                'and enqueued on that basis, so an early tx_full corrupted '
+                'the DUT gating and the reference model identically.  M7 '
+                'ESCAPED on seeds 1/3/5 (8203/7926/7225 checks, all passing) '
+                'and is DETECTED on all three after the repair, the first '
+                'failing check naming the occupancy.  Repaired the same day '
+                'the census found it, with an exact output-neutrality pass '
+                'over 8 (seed, steer) combinations.',
+         escape_demonstrated=True,
+         evidence='tx_full agrees with predicted occupancy'),
     dict(file='examples/phase6_crv_uart/uart_crv_cov_tb.v',
          checker='sample_txq',
          quantity='STATUS.tx_empty (st[1]) and STATUS.tx_full (st[0])',
@@ -446,19 +454,52 @@ def main():
     print()
     print('SECTION 4.  C4 -- DISCRIMINATING POWER')
     print('-' * 78)
+    print('  AMENDED 2026-10-12, the same session this control was written,')
+    print('  and the amendment is the interesting part.  C4 was first phrased')
+    print('  as "the census must contain at least one TRUSTED row", on the')
+    print('  2026-10-08 argument that a census reporting itself clean has no')
+    print('  power to find anything.  That phrasing BROKE THE MOMENT THE')
+    print('  DEFECT WAS FIXED: repairing the one TRUSTED row the census found')
+    print('  made the control fail, so as written it REQUIRED A DEFECT TO')
+    print('  EXIST.  A control must not demand that the thing it looks for')
+    print('  still be there.')
+    print()
+    print('  The right question is not whether a defect is present now but')
+    print('  whether this census has EVER been shown to find one.  So C4 now')
+    print('  requires at least one row carrying a DEMONSTRATED ESCAPE: a')
+    print('  mutant that was actually run against the pre-repair code and')
+    print('  survived it.  That property is permanent, and it is the inverse')
+    print("  of 2026-10-08's rule -- a control with no control is useless, and")
+    print('  so is one that cannot pass on healthy code.')
+    print()
+    demo = [r for r in CENSUS if r.get('escape_demonstrated')]
+    for r in demo:
+        print('   DEMONSTRATED ESCAPE: %s' % r['file'])
+        print('       %s, read by %s' % (r['quantity'], r['checker']))
+        print('       mutant: %s' % r['mutant'])
+    check('at least one row carries a mutant that was RUN against the '
+          'pre-repair code and survived it, so this census is known to find '
+          'the defect class it was built for',
+          len(demo) >= 1,
+          '%d rows with a demonstrated escape: %s.  Both are the same defect '
+          'shape -- tx_full asserting one entry early against a checker that '
+          'read tx_full -- found independently in a uvm-python scoreboard and '
+          'in a Verilog driver, which is why the shape rather than the '
+          'instance is what this census is organised around.'
+          % (len(demo), ', '.join(os.path.basename(r['file']) for r in demo)))
     trusted = [r for r in CENSUS if r['role'] == 'TRUSTED']
+    print()
+    print('   open TRUSTED rows: %d' % len(trusted))
     for r in trusted:
-        print('   TRUSTED: %s' % r['file'])
-        print('            %s, read by %s' % (r['quantity'], r['checker']))
-        print('            mutant that proves it: %s' % r['mutant'])
-    check('the census contains at least one TRUSTED row, so it has the power '
-          'to find the defect class it was built for',
-          len(trusted) >= 1,
-          '%d TRUSTED rows.  A census in which everything is already '
-          'PREDICTED and which reports itself clean would be a control that '
-          'cannot fail.  The row here is the Verilog CRV bench\'s '
-          'STATUS.tx_full, which is the same hole repaired in the '
-          'uvm-python bench on 2026-10-11 and is still open.'
+        print('     %s / %s' % (r['file'], r['quantity']))
+    check('and the count of open TRUSTED rows is REPORTED rather than '
+          'required to be non-zero, so a clean census is a result and not a '
+          'control failure',
+          True,
+          '%d open TRUSTED rows. Zero is the goal; the census says so '
+          'explicitly instead of passing silently, because a clean report and '
+          'an unexercised control look identical from outside and the '
+          'demonstrated-escape count above is what distinguishes them.'
           % len(trusted))
     proved = [r for r in CENSUS if r['status'].startswith('PROVED BY RUN')]
     never = [r for r in CENSUS if 'never been run' in r['status']
@@ -474,7 +515,7 @@ def main():
           'are not failures -- they are the backlog this census exists to '
           'make visible, and the FIFO bench\'s "full asserting one entry '
           'early" is the most interesting of them because it is the exact '
-          'shape of the defect that survived in the UART scoreboard.'
+          'shape of the defect that was demonstrated twice above.'
           % (len(proved), len(never), len(CENSUS) - len(proved) - len(never)))
 
     print()
@@ -488,10 +529,12 @@ def main():
           % (len(CENSUS),
              ', '.join('%d %s' % (len(v), k)
                        for k, v in sorted(by_role.items()))))
-    print('  One TRUSTED row remains open -- the Verilog CRV bench reads')
-    print('  STATUS.tx_full to decide whether its own push was accepted, the')
-    print('  same hole repaired in the uvm-python bench on 2026-10-11.')
-    print('  Mutant M7 names it.')
+    print('  No TRUSTED row is open.  The one the census found on its first')
+    print('  run -- the Verilog CRV bench reading STATUS.tx_full to decide')
+    print('  whether its own push was accepted -- was repaired the same')
+    print('  session, with M7 shown to escape before and to be detected')
+    print('  after.  Two rows now carry a demonstrated escape, both of the')
+    print('  same shape, found independently in two languages.')
     print()
     print('  What this census does NOT claim:')
     print('    1. That the roles are right.  They are declared by a reviewer;')
