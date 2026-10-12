@@ -426,6 +426,18 @@ strengthening invariant: it is not, and the negative result is recorded as
 measured rather than quietly dropped.
 
 ## Phase 6 — Industry Flow & Capstone
+- [x] **A DUT-signal census for every checker** (2026-10-12,
+      `tools/scoreboard_dut_signal_census.py`, 6/6 controls): 16 rows over 5
+      files, each naming the mutant that would prove the signal is checked
+      rather than trusted. Its completeness control failed on the first run
+      and found two uncensused reads plus five wrong names in the tool's own
+      allowlist. The one TRUSTED row -- the Verilog CRV bench reading
+      `STATUS.tx_full` to decide whether its own push was accepted -- was
+      repaired the same session, M7 shown to escape three seeds before and be
+      detected on all three after, with an exact output-neutrality pass over
+      8 (seed, steer) combinations. Then the repair broke the census's own
+      discriminating-power control, which had required a TRUSTED row to
+      exist; see the note below.
 - [ ] Surrounding flow overview (lint, regression infra, coverage merge,
       waveform debug, bug triage)
 - [ ] CDC verification basics
@@ -1582,3 +1594,85 @@ correctly in loopback. That check was carried over on the argument that a
 spurious error must fail the run even though no data check would notice; this
 is the first time it has been shown to be the only thing between a real defect
 and a green run.
+
+### A DUT-signal census for every checker, and a control that required a defect to exist (2026-10-12)
+
+The top-ranked open item, created the previous session out of a scoreboard
+that read the DUT output it was meant to check. The rule it left behind:
+**for every DUT signal a checker reads, ask whether the checker could detect
+that signal being wrong; if not, predict it independently or state the blind
+spot.** `tools/scoreboard_dut_signal_census.py` mechanises the census half.
+
+**16 rows over 5 files** — 13 PREDICTED, 2 SYNC_ONLY, 1 OBSERVED_ONLY, 0
+TRUSTED. Each row names the checker, the DUT-observed quantity, the role that
+read plays, the **mutant that would prove the signal is checked rather than
+trusted**, and whether that mutant has actually been run (7 yes, 7 no, 2
+other).
+
+**The roles are declared, not inferred.** A tool that inferred a read's role
+by static dataflow would be this repository's class (v) failure, a procedure
+that certifies itself. What is mechanical is the four controls that can
+falsify the declaration: staleness (every row's evidence substring must still
+appear verbatim in its file), completeness (every mechanically extracted DUT
+read must be covered by a row), allowlist derivation, and discriminating
+power.
+
+**Completeness failed on the first run, which is what it is for.** Ten
+omissions, split three ways:
+
+* **Two were real.** The Verilog CRV bench reads `STATUS.rx_avail` to decide
+  when to read `RX_DATA` and no row named it — SYNC_ONLY, exposure indirect,
+  mutant never run. And the Phase 1 FIFO bench compares `rd_data` against its
+  own `ref_model`, the right pattern, also unnamed.
+* **Five were the tool's own defect.** The driven-pin allowlist had been
+  written as a hand list *from the naming convention rather than from the
+  file*, naming three signals that do not exist and missing five that do. The
+  repair is not a corrected list but a **derived** one: a pin is bench-driven
+  if the file assigns it. An allowlist that states what the file states cannot
+  be inflated by hand to make the completeness control pass.
+* **Three were a vocabulary mismatch** between rows naming `STATUS error bits
+  [6:4]` and an extractor naming `frame_err`/`parity_err`/`overrun_err`. **A
+  completeness control only works if the declaration and the extraction speak
+  the same vocabulary.**
+
+**The one TRUSTED row was closed the same session.** The Verilog CRV bench
+read `STATUS.tx_full` and enqueued to its reference model only when that bit
+was clear — the Verilog twin of the hole repaired in the uvm-python bench the
+previous session, deferred that day because the file owns committed
+transcripts. Measured rather than argued in both directions: **M7**
+(`tx_full = tx_cnt >= 7`) **escaped** on seeds 1/3/5 with 8203/7926/7225
+checks all passing, and is **detected on all three after the repair**, the
+first failing check naming the occupancy. `tx_full` is now predicted from the
+bench's own occupancy count during the fill phase, with the prediction's
+**starting point checked rather than assumed** — a predicted occupancy that
+begins from an unverified zero is a second guess — and claimed only inside
+the window where the bench can observe it. Full suite: 7 mutants, 5 detected,
+2 escaped, **7/7 verdicts as predicted**. Output-neutrality pass **exact**
+across all 8 (seed, steer) combinations: identical outside the two
+check-count lines.
+
+> **An untaken branch is not an unused branch — it is the branch the defect
+> takes.** The trusted branch is dead in every passing run (`pushes skipped =
+> 0`), which is both why neutrality is exact and why the defect was invisible.
+> The mutant is what brings it to life, taking it 1–2 times per run.
+
+**And then the repair broke the census.** The discriminating-power control had
+been phrased as *"the census must contain at least one TRUSTED row"*, on the
+earlier argument that a census reporting itself clean has no power to find
+anything. Fixing the one TRUSTED row made it fail.
+
+> **A control must not demand that the thing it looks for still be there.**
+
+The right question is not whether a defect is present now but whether the
+census has **ever been shown to find one**. The control now requires at least
+one row with a **demonstrated escape** — a mutant actually run against
+pre-repair code and shown to survive it — which is a permanent property. Two
+rows qualify, and they are the same defect shape found independently in two
+languages, which is why the census is organised around the shape rather than
+the instance. The open-TRUSTED count is now *reported* rather than required
+to be non-zero, because a clean report and an unexercised control look
+identical from outside, and the demonstrated-escape count is what
+distinguishes them.
+
+This is the inverse of the 2026-10-08 rule. A control with no control is
+useless; so is one that cannot pass on healthy code.
