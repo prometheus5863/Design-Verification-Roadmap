@@ -7407,3 +7407,240 @@ pushed and verified against the GitHub API before the next was written**, with
 transcripts; the mutation harness with M4's survival and repair; `progress.md`;
 the session note). This AUTOMATION_LOG.md entry makes **5**. The graphene
 repository took **5** in the same session, for **10** across both.
+
+---
+
+## 2026-10-12 — a control that required a defect to exist, and a census that guessed five names
+
+**Session type:** the top-ranked item built, its one finding repaired the same
+session, and the tool's own control amended when the repair broke it. Five
+commits plus this entry.
+
+**Item taken:** *a DUT-signal census for every scoreboard*, created 2026-10-11
+out of the finding that a scoreboard reading a DUT output as ground truth is
+blind to exactly that output's defects (M4 SURVIVED a 5/5 suite). Ranked first
+because it was the only open item that generalised a defect found live.
+
+### 1. The census
+
+`tools/scoreboard_dut_signal_census.py`, **16 rows over 5 files**, 6/6
+controls. Roles: 13 PREDICTED, 2 SYNC_ONLY, 1 OBSERVED_ONLY, **0 TRUSTED**.
+Each row names the checker, the DUT-observed quantity, the role that read
+plays, the **mutant that would prove the signal is checked rather than
+trusted**, and whether that mutant has actually been run — **7 yes, 7 no, 2
+other**, and the second number is the honest measure of what the census knows.
+
+**The roles are declared, not inferred.** Inferring a read's role by static
+dataflow would be this repository's class (v) failure. What is mechanical is
+the four controls that can falsify the declaration: **C1** staleness (every
+row's evidence substring must still appear verbatim in its file), **C2**
+completeness (every mechanically extracted DUT read must be covered by a row),
+**C3** allowlist derivation, **C4** discriminating power.
+
+### 2. C2 failed on the first run, and the ten omissions split three ways
+
+**Two were real.** The Verilog CRV bench reads `STATUS.rx_avail` (`st[3]`) to
+decide when to read `RX_DATA` with no row naming it — SYNC_ONLY, exposure
+indirect through the watchdog and the data comparison, mutant never run. And
+the Phase 1 FIFO bench compares `rd_data` against its own `ref_model`, the
+right pattern, also unnamed.
+
+**Five were the tool's own defect.** The driven-pin allowlist was declared as
+a hand-written name list written from the naming **convention** rather than
+from the file: it named `bfm_parity`/`bfm_two_stop`/`bfm_div`, which do not
+exist, and missed `bfm_bad_par`/`bfm_bad_stop`/`bfm_bit_ps`/`bfm_mode`/
+`bfm_par`, which do. The graphene repository's 2026-10-09 rule arriving here:
+**a list re-typed from memory measures its own transcription.** Repaired not
+with a corrected list but by **deriving** it — a pin is bench-driven if the
+file assigns it.
+
+> **An allowlist that states what the file states cannot be inflated by hand
+> to make the control it feeds pass.**
+
+**Three were a vocabulary mismatch** — rows naming `STATUS error bits [6:4]`
+against an extractor naming `frame_err`/`parity_err`/`overrun_err`.
+
+> **A completeness control only works if the declaration and the extraction
+> speak the same vocabulary.** The rows now spell the bit names out; the fix
+> is to make the declaration more specific, not to loosen the match.
+
+### 3. The one TRUSTED row, closed the same session
+
+`examples/phase6_crv_uart/uart_crv_cov_tb.v` read `STATUS.tx_full` and
+enqueued to its reference model only when that bit was clear. An early
+`tx_full` gates the DUT's own `tx_push` **and** the bench's enqueue
+identically. The Verilog twin of the uvm-python hole, deferred 2026-10-11
+because the file owns committed transcripts.
+
+| M7 = `wire tx_full = (tx_cnt >= 4'd7)` | seeds 1 / 3 / 5 |
+|---|---|
+| **before** the repair | **ESCAPED** — 8203 / 7926 / 7225 checks, all passing |
+| **after** | **DETECTED** on all three; first failing check names the occupancy |
+
+`tx_full` is now predicted from the bench's own occupancy count, with three
+details that make the prediction honest rather than decorative: the **starting
+point is checked** (`tx_empty` set, `tx_full` clear) rather than assumed,
+because a predicted occupancy beginning from an unverified zero is a second
+guess; the claim is **limited to the fill window**, the only window in which
+the bench observes `tx_full` at all, since claiming it after the engine is
+enabled would be the 2026-10-05 defect; and **`TX_DEPTH` is named once** with
+the RTL line it comes from quoted, because a predicted bound written as a bare
+`8` at three sites is 2026-10-11's copied-constant defect waiting to happen.
+
+The repair creates **two** exposures where there were none — the
+predicted-occupancy check, and on two of three seeds a `burst watchdog: 7 of
+8 bytes returned`, because the bench now pushes the eighth byte the DUT drops.
+
+Full suite re-run: **7 mutants, 5 detected, 2 escaped, 7/7 verdicts as
+predicted, 0 surprises**. M5 (loopback shares one baud generator) and M6 (no
+error is ever injected in a clean burst) remain predicted escapes with their
+reasons unchanged.
+
+**Output-neutrality pass, exact.** All 8 `(seed, steer)` combinations of seeds
+{1,3,5,6} × steer {0,1} identical outside the two check-count lines — same
+transactions, bytes, pushes skipped, constraint rejections, per-bin coverage
+and closure transaction. Only the check counts rise (8862 → 8960 at seed 1,
+steer 1). Neutrality is exact rather than approximate because on unmodified
+RTL both the old and the new acceptance conditions are false at every
+iteration: the loop samples *before* each push so occupancy never exceeds 7
+inside it, and `burst_len ≤ 8`.
+
+> **And that is the same fact that hid the defect. An untaken branch is not an
+> unused branch — it is the branch the defect takes.** The baseline reports
+> `pushes skipped : 0`; under M7 the old branch was taken 1–2 times per run.
+
+### 4. Then the repair broke the census, and the control was wrong
+
+C4 had been written as *"the census must contain at least one TRUSTED row"*,
+on 2026-10-08's argument that a census reporting itself clean has no power to
+find anything. Repairing the one TRUSTED row it had just found made C4
+**fail**.
+
+> **A control must not demand that the thing it looks for still be there.**
+
+The right question is not whether a defect is present now but whether the
+census has **ever been shown to find one**. C4 now requires at least one row
+carrying a **demonstrated escape** — a mutant actually run against the
+pre-repair code and shown to survive it — which is a permanent property. Two
+rows qualify, and they are the **same defect shape found independently in two
+languages**: the uvm-python scoreboard's `prdata[0]` with M4 and the Verilog
+driver's `st[0]` with M7. That is why the census is organised around the shape
+rather than the instance.
+
+The open-TRUSTED count is now **reported** rather than required to be
+non-zero, because a clean report and an unexercised control look identical
+from outside, and the demonstrated-escape count is what distinguishes them.
+
+**The inverse of 2026-10-08's rule.** A control with no control is useless; so
+is one that cannot pass on healthy code.
+
+### 5. Methodological note
+
+09-17 a suite can pass against broken RTL. 09-18 and print PASS over its own
+errors. 09-19/09-20 the subsystem reporting the verdict is not the one doing
+the checking. 09-26 a reachability pre-pass answers "did my attempts reach
+it". 09-30 a control has to sit where the failure enters. 10-01 an arrival
+control that cannot fail is not a control. 10-05 a metric can be printed
+beside the thing it does not measure. 10-06 and the detector can misattribute
+what it measured. 10-07 an injection guard is a measurement. 10-08 a false
+SURVIVED is worse than a missed defect. 10-09 and so is a false DETECTED.
+10-10 a control must not read the thing it controls for. 10-11 and neither may
+a checker.
+
+**10-12: A CONTROL MUST NOT REQUIRE THE DEFECT IT LOOKS FOR TO STILL EXIST.**
+
+Checkable rule: **for every control, ask what happens to it when the defect it
+looks for is fixed. If it fails, it is measuring the presence of the defect
+rather than its own ability to find one.** The repair is to make the control
+assert a *permanent* property — that it has fired at least once, on evidence
+retained in the row — rather than a *current* one.
+
+Second rule, from §2: **a completeness control only works if the declaration
+and the extraction speak the same vocabulary.** Three of ten first-run
+omissions were a naming mismatch, not a gap.
+
+Third, also from §2: **an allowlist should state what the file states.** The
+hand-written version got five of its names wrong by being written from the
+naming convention; the derived version cannot.
+
+### 6. Toolchain and automation health
+
+The simulator was needed. Both 2026-10-11 gotchas **re-confirmed**: `source
+tools/setup_iverilog.sh` without a pipe (Icarus 10.3 came up), and
+`iverilog`/`vvp` are shell functions, so `timeout` needs the real binaries at
+`/tmp/iverilog_install/usr/bin` with `-M .../lib/x86_64-linux-gnu/ivl`. No
+cocotb or uvm-python this session, so the 09-06 install recipe and the
+`PATH`/`cocotb-config` gotcha were **not exercised** and are now one session
+from the two-session staleness threshold 10-10 recorded.
+
+Device reachable and folder connected at the first firing; the whole session
+ran on the device VM and nothing crossed the bridge. **Every commit was pushed
+and verified against the GitHub API before the next was written**, with
+`git fetch origin main` immediately before each push per the 10-03 race item.
+
+**Not yet covered (candidates for future runs):**
+
+- **RUN THE "full ONE ENTRY EARLY" MUTANT AGAINST THE PHASE 1 FIFO BENCH** —
+  created today and ranked first. The census's most interesting unrun row:
+  that bench predicts `full`/`empty` from its own `ref_model`, which is the
+  right pattern, and the mutant of **exactly the shape demonstrated twice this
+  week** has never been run against it. A PREDICTED row is a declaration until
+  a mutant tests it, and this is the cheapest test of whether the census's
+  declarations mean anything.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — five files are censused
+  and C2 is complete only *within* a censused file. `phase6_rx_pin_driver`,
+  `phase6_bfm_equivalence`, `phase5_*` and the Phase 2 ALU benches are
+  unlisted. Adding a file can only add rows, never remove them, so this is
+  monotone work with a guaranteed yield.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — found by the census today
+  and argued rather than measured. SYNC_ONLY is the role whose exposure
+  argument is weakest, and it has never been tested in either direction.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — the repair predicts
+  `tx_empty` at one site and no mutant has been run against it. Created today
+  by the repair itself.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched;
+  today's `TX_DEPTH` is a worked instance of the right form (named once, with
+  the RTL line it comes from quoted).
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — 6 paired seeds, CVs 1.218 and
+  0.141, 13.3× pure-random spread; the sweep is resumable and the pure-random
+  tail is least well measured.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row, because TWO_VALUED is a control that
+  misreports rather than a gap. Needs one uvm-python sim per row.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created 10-10. 18 of 31 in
+  `witness_soundness.py`; no other file measured. Today's census file is a
+  useful control: its details are derived throughout.
+- **THE SVA PROTOCOL CHECKERS BOUND INTO THIS ENVIRONMENT** — capstone box
+  **(b)**, still the next box in line.
+- **`PayloadAdmissibilityCoverage` INTO THE LIVE COLLECTOR** — box **(c)**,
+  with its 10-05 prerequisite standing.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09,
+  untouched; those are `mutation_test_reachable_cross.py`'s crash-detections.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the fourth session**. Still a control with no control, and today's C4
+  amendment is the other half of the same question.
+- **REPAIR THE THREE ROWS THE 10-07 AUDIT NAMED** — `phase6_crv_uart` M3's
+  inserted text, `phase6_rx_pin_driver` M4's two sites and M3's implicit
+  pattern; `phase6_bfm_equivalence` and `phase4_rtl_bringup` still guard with
+  `cmp -s`. **Untouched for the fifth session**, and today's M7 row was added
+  to `run_mutation_tests.sh` with the same `cmp -s` guard rather than the
+  EXPECTED_SITES form, so the debt grew by one row today.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  10-10, deferred; that file owns a committed transcript.
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, reset asserted mid-frame); a property needing a
+  strengthening invariant; the SVA sequence layer (runnable on neither tool
+  here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+**Commits this run:** 5 (the census tool with its transcript; the Verilog
+bench repair with its mutation report, neutrality pass and simulation
+transcript; C4's amendment; `progress.md`; the session note). This
+AUTOMATION_LOG.md entry makes **6**. The graphene repository took **4** in the
+same session, for **10** across both.
