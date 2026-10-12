@@ -1,0 +1,40 @@
+OUTPUT-NEUTRALITY PASS -- examples/phase6_crv_uart/uart_crv_cov_tb.v
+date: 2026-10-12
+
+WHY THIS EXISTS.  The 2026-10-12 repair makes STATUS.tx_full a CHECKED OUTPUT
+instead of a trusted input.  That file owns committed transcripts, and the
+repair was deferred on 2026-10-11 for exactly this reason: the change must add
+checks and move NOTHING else.  Stated as a measurement rather than as an
+intention.
+
+METHOD.  The pre-repair and post-repair benches were each compiled against the
+unmodified RTL and run over all 8 (seed, steer) combinations of
+seeds {1,3,5,6} x steer {0,1}.  The two lines that MUST change -- "checks
+executed:" and the "RESULT: PASS (n/n checks)" count -- were removed, and
+everything else compared verbatim.
+
+RESULT.  All 8 runs IDENTICAL outside the check counts: same transactions
+driven, same bytes received, same pushes skipped, same constraint rejections,
+same per-bin coverage counts, same TRANSACTIONS TO CLOSURE, same verdict.
+
+  seed=1 steer=0  old=98749  new=99965
+  seed=1 steer=1  old= 8862  new= 8960
+  seed=3 steer=0  old=32078  new=32560
+  seed=3 steer=1  old= 8337  new= 8438
+  seed=5 steer=0  old=11909  new=12111
+  seed=5 steer=1  old= 6023  new= 6116
+  seed=6 steer=0  old=18958  new=19188
+  seed=6 steer=1  old=11460  new=11576
+
+WHY NEUTRALITY IS EXACT HERE RATHER THAN APPROXIMATE.  The repair changes the
+push-acceptance condition from the DUT's st[0] to the model's
+(pushed == TX_DEPTH).  On unmodified RTL both are false at every iteration --
+the loop samples BEFORE each push, so occupancy never exceeds 7 inside it, and
+C4 bounds burst_len at 8 -- so the branch is not taken under either spelling.
+The baseline's "pushes skipped (tx_full) : 0" is the evidence.  Everything else
+added is a check.
+
+AND THE SAME FACT IS WHY THE DEFECT WAS INVISIBLE.  The trusted branch is dead
+in every passing run; M7 is what brings it to life, taking it 1-2 times per
+run.  An untaken branch is not an unused branch -- it is the branch the defect
+takes.

@@ -44,8 +44,12 @@
 //     loopback burst, so a spurious framing/parity/overrun error fails the
 //     run even though no data check would notice it
 //   * the reference queue is empty at the end of every burst
-//   * the driver reads tx_full before every push and enqueues to the
-//     reference model only when the DUT actually accepted the byte
+//   * STATUS.tx_full is PREDICTED from the bench's own occupancy count and
+//     compared on every status read of the fill phase, with the fill phase's
+//     starting point (tx_empty set) checked rather than assumed -- so an
+//     early or late tx_full fails the run.  Until 2026-10-12 the driver
+//     instead READ tx_full and enqueued on that basis, which made it a
+//     trusted input: mutant M7 escaped this suite on three seeds
 //   * a per-burst watchdog sized from that burst's own baud divisor: a
 //     burst that does not complete is a FAILURE, not a hang
 //   * coverage closure is a PASS CRITERION, not a report line
@@ -326,6 +330,13 @@ module uart_crv_cov_tb;
     reg [7:0] expq [0:63];
     integer   exp_wr = 0, exp_rd = 0;
 
+    // The TX FIFO depth, as rtl/uart_controller.v decodes tx_full:
+    //     wire tx_full = (tx_cnt == 4'd8);
+    // Named here because the push loop now PREDICTS tx_full from its own
+    // occupancy count, and a predicted bound written as a bare 8 at three
+    // sites is the 2026-10-11 copied-constant defect waiting to happen.
+    localparam integer TX_DEPTH = 8;
+
     integer total_tx     = 0;
     integer total_rx     = 0;
     integer closure_tx   = -1;
@@ -375,12 +386,53 @@ module uart_crv_cov_tb;
             note_closure;
 
             // ---- push phase
+            //
+            // REPAIR 2026-10-12, from the DUT-signal census (tools/
+            // scoreboard_dut_signal_census.py).  The version committed until
+            // today read STATUS.tx_full and enqueued to the reference model
+            // only when that bit was clear, which made tx_full a TRUSTED
+            // INPUT: a tx_full asserting one entry early corrupts the DUT's
+            // own push gating and the bench's reference model IDENTICALLY, so
+            // the two agree and nothing fails.  Measured, not argued -- M7
+            // (tx_full = tx_cnt >= 7) ESCAPED this suite on seeds 1, 3 and 5,
+            // 8203/7926/7225 checks all passing, with pushes-skipped rising
+            // from 0 to 1/2/2.  The same hole was repaired in the uvm-python
+            // bench on 2026-10-11; this is its Verilog twin.
+            //
+            // tx_full is now a CHECKED OUTPUT.  tx_push is independent of
+            // CTRL.en and the TX engine only pops when enabled, so during
+            // this fill phase occupancy is exactly the number of accepted
+            // TX_DATA writes -- which this bench counts itself in `pushed`.
+            // The prediction is claimed ONLY inside this window, the only
+            // window in which the bench observes tx_full at all; claiming it
+            // after the engine is enabled would be the 2026-10-05 defect of
+            // printing a metric beside something it does not measure.
+            //
+            // The prediction needs a verified STARTING POINT, so the first
+            // thing checked is that the FIFO really is empty before the first
+            // push.  Asserting the start of a model rather than assuming it
+            // is the difference between a prediction and a second guess.
             pushed = 0;
+            apb_read(ADDR_STATUS); st = rd_data;
+            check_eq({31'd0, st[1]}, 32'd1,
+                     "fill phase starts with tx_empty set");
+            check_eq({31'd0, st[0]}, 32'd0,
+                     "fill phase starts with tx_full clear");
             for (n = 0; n < burst_len; n = n + 1) begin
                 apb_read(ADDR_STATUS); st = rd_data;
                 check_eq({29'd0, st[6:4]}, 32'd0, "push-phase status error bits clear");
+                // tx_full against the bench's OWN occupancy model, with no
+                // help from the DUT.  This is the check M7 fails.
+                check_eq({31'd0, st[0]}, {31'd0, (pushed == TX_DEPTH)},
+                         "tx_full agrees with predicted occupancy");
                 sample_txq(st);
-                if (st[0]) begin
+                // Acceptance from the model, never from the DUT's bit.  With
+                // C4's burst_len <= 8 and TX_DEPTH = 8 this branch is
+                // unreachable -- the baseline reports pushes skipped = 0, and
+                // it is retained because raising burst_len would need it.
+                // Under the old DUT-driven condition the same branch was
+                // taken 1-2 times per M7 run, which is what hid the mutant.
+                if (pushed == TX_DEPTH) begin
                     push_skipped = push_skipped + 1;
                 end else begin
                     byte_to_send = (steer_byte <= 9'h0FF) ? steer_byte[7:0]
@@ -413,6 +465,10 @@ module uart_crv_cov_tb;
             // closure is a pass criterion here: 29/30 failed the run.
             apb_read(ADDR_STATUS); st = rd_data;
             check_eq({29'd0, st[6:4]}, 32'd0, "post-push status error bits clear");
+            check_eq({31'd0, st[0]}, {31'd0, (pushed == TX_DEPTH)},
+                     "post-push tx_full agrees with occupancy");
+            check_eq({31'd0, st[1]}, {31'd0, (pushed == 0)},
+                     "post-push tx_empty agrees with occupancy");
             sample_txq(st);
 
             // ---- enable and drain

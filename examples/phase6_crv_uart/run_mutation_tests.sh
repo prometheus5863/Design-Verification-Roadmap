@@ -69,6 +69,7 @@ MUT_NAMES=(
   "M4 TX FIFO count never increments on a lone push"
   "M5 BAUD_DIV ignored by the baud generator (always divide-by-1)"
   "M6 STATUS read no longer clears the sticky error bits"
+  "M7 tx_full asserts one entry early (tx_cnt >= 7)"
 )
 MUT_SEDS=(
   's/tx_par_bit <= (cfg_parity == PARITY_EVEN) ?  ^tx_fifo\[tx_rptr\] :/tx_par_bit <= (cfg_parity == PARITY_EVEN) ?  ~^tx_fifo[tx_rptr] :/'
@@ -77,6 +78,7 @@ MUT_SEDS=(
   's/2.b10: tx_cnt <= tx_cnt + 4.d1;/2\x27b10: tx_cnt <= tx_cnt;/'
   's/else if (baud_cnt == 8.d0) baud_cnt <= baud_div;/else if (baud_cnt == 8\x27d0) baud_cnt <= 8\x27d0;/'
   's/frame_err <= 1.b0; parity_err <= 1.b0; overrun_err <= 1.b0;\n            end\n\n            if (!cfg_en)/XXX/'
+  's/wire tx_full  = (tx_cnt == 4.d8);/wire tx_full  = (tx_cnt >= 4\\x27d7);/'
 )
 MUT_EXPECT=(
   "DETECT"
@@ -85,6 +87,7 @@ MUT_EXPECT=(
   "DETECT"
   "ESCAPE"
   "ESCAPE"
+  "DETECT"
 )
 MUT_WHY=(
   "the RX parity check must disagree and set STATUS.parity_err, which every status read asserts is clear"
@@ -93,6 +96,7 @@ MUT_WHY=(
   "tx_full can then never assert, so coverage bin cp_txq.full is unreachable and CLOSURE fails -- this mutant is caught by the coverage criterion, not by any data check"
   "PREDICTED ESCAPE: in loopback the TX and RX engines share one baud generator, so a wrong divisor desynchronises nothing. A loopback bench is structurally blind to baud-rate errors"
   "PREDICTED ESCAPE: no error is ever injected in a clean loopback burst, so a bit that fails to CLEAR is never observed set in the first place"
+  "added 2026-10-12 by the DUT-signal census. It ESCAPED this suite on all three seeds before that day's repair -- the driver read tx_full to decide whether its own push was accepted, so an early tx_full corrupted the DUT's gating and the reference model identically. Now DETECTED by the predicted-occupancy check, which names the occupancy"
 )
 
 DETECTED=0; ESCAPED=0; AS_PREDICTED=0; SURPRISES=0
