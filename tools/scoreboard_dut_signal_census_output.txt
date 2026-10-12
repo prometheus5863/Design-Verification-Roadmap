@@ -1,0 +1,174 @@
+==============================================================================
+DUT-SIGNAL CENSUS FOR EVERY CHECKER
+==============================================================================
+
+  16 rows over 5 files.
+
+  Rule (2026-10-11): for every DUT signal a checker reads, ask
+  whether the checker could detect that signal being wrong.  If
+  not, predict it independently in the window where that is
+  possible, or state the blind spot.
+
+SECTION 1.  THE CENSUS
+------------------------------------------------------------------------------
+
+  examples/phase1_milestone/sync_fifo_directed_tb.v
+    PREDICTED     empty
+      checker : check_flags
+      mutant  : empty stuck at 0 after the first pop
+      status  : PREDICTED BY CONSTRUCTION from ref_model.size(); the mutant has
+                never been run
+    PREDICTED     full
+      checker : check_flags
+      mutant  : full asserting one entry early (count >= DEPTH-1)
+      status  : PREDICTED BY CONSTRUCTION from ref_model.size(); the mutant has
+                never been run -- and it is the exact shape of the defect that
+                survived in the UART scoreboard, which is why this row is worth
+                having even though it looks clean
+    PREDICTED     rd_data
+      checker : directed read/pop checks
+      mutant  : rd_data driven from tx_wptr instead of tx_rptr
+      status  : FOUND BY THIS CENSUS 2026-10-12 -- the bench compares rd_data
+                against exp_data and exp_pop_data taken from its own ref_model,
+                which is the right pattern, and no row named it. Mutant never
+                run.
+
+  examples/phase4_ral/uart_ral_tb.py
+    PREDICTED     STATUS (whole byte)
+      checker : CHECK 4, STATUS at reset
+      mutant  : tx_empty not set at reset
+      status  : PREDICTED against the constant STATUS_RESET, which is a declared
+                literal and not a DUT read; mutant never run
+    PREDICTED     CTRL read-back (mirror)
+      checker : CHECK 1, explicit predictor
+      mutant  : CTRL storing pwdata[7:0] instead of pwdata[4:0]
+      status  : PREDICTED: the mirror is moved by the predictor from the BUS
+                WRITE, with auto_predict off, so the expected value does not
+                come from the DUT; mutant never run
+
+  examples/phase4_uvm_milestone/uart_uvm_tb.py
+    PREDICTED     prdata on an RX_DATA read
+      checker : RX_DATA scoreboard
+      mutant  : M2 -- RX data bit inverted at the mid-bit sample
+      status  : PREDICTED against the frame the BFM was told to send; mutant run
+                in phase6 and not here
+    PREDICTED     prdata STATUS parity/frame bits
+      checker : error-bit checks
+      mutant  : sticky error bit that never sets
+      status  : PREDICTED from the BFM's injected defect, so the expected value
+                is known independently; mutant never run
+    SYNC_ONLY     bfm_done_cnt
+      checker : frame-completion wait
+      mutant  : bfm_done_cnt increments one bit-time early
+      status  : NOT A DUT OUTPUT -- it is TB-side BFM infrastructure, so a
+                defect in it is a bench bug rather than an escape. Censused
+                because the read decides WHEN the scoreboard samples: an early
+                increment samples RX_DATA before the frame lands, which shows up
+                as a data mismatch and not as a silent agreement. Mutant never
+                run.
+
+  examples/phase6_crv_uart/uart_crv_cov_tb.v
+    TRUSTED       STATUS.tx_full (st[0])
+      checker : run_burst push loop
+      mutant  : M7 -- tx_full asserts one entry early (tx_cnt >= 7)
+      status  : OPEN as of 2026-10-12 -- the driver skips the push and the
+                reference model agrees, so an early tx_full corrupts both
+                identically
+    OBSERVED_ONLY STATUS.tx_empty (st[1]) and STATUS.tx_full (st[0])
+      checker : sample_txq
+      mutant  : M4 -- tx_cnt never increments on a lone push
+      status  : PROVED BY RUN 2026-09-24: M4 is DETECTED here, but by the
+                COVERAGE CRITERION (cp_txq.full becomes unreachable) and not by
+                any data check -- a different exposure from a comparison
+    PREDICTED     STATUS error bits st[6:4] = frame_err, parity_err, overrun_err
+      checker : run_burst status checks
+      mutant  : M1 -- TX parity polarity swapped
+      status  : PROVED BY RUN 2026-09-24 (M1 DETECTED)
+    PREDICTED     RX_DATA read value (rd_data)
+      checker : run_burst drain loop
+      mutant  : M2 -- RX data bit inverted at the mid-bit sample
+      status  : PROVED BY RUN 2026-09-24 (M2 DETECTED)
+    SYNC_ONLY     STATUS.rx_avail (st[3])
+      checker : run_burst drain loop
+      mutant  : rx_avail asserting before the stop bit is sampled
+      status  : FOUND BY THIS CENSUS 2026-10-12 -- the drain loop reads st[3] to
+                decide when to read RX_DATA and no row named it. SYNC_ONLY
+                rather than TRUSTED: an rx_avail that never asserts trips the
+                per-burst watchdog, and one that asserts early reads a byte the
+                receiver has not finished, which the data comparison catches. So
+                the exposure exists, but it is indirect and no mutant has ever
+                been run for it.
+
+  examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py
+    PREDICTED     STATUS.tx_full (prdata[0])
+      checker : UartScoreboard.write_bus
+      mutant  : M4 -- tx_full asserts one entry early (tx_cnt >= 7)
+      status  : PROVED BY RUN 2026-10-11: M4 SURVIVED before the repair and is
+                DETECTED after it, naming the occupancy
+    PREDICTED     RX_DATA read value
+      checker : UartScoreboard.write_bus
+      mutant  : M2 -- RX data bit inverted at the mid-bit sample
+      status  : PROVED BY RUN 2026-10-11 (M2 DETECTED)
+    PREDICTED     STATUS error bits st[6:4] = frame_err, parity_err, overrun_err
+      checker : UartDriver.run_burst
+      mutant  : M1 -- TX parity polarity swapped
+      status  : PROVED BY RUN 2026-10-11: M1 is caught by this check and by NO
+                data comparison at all, the byte still arriving correctly in
+                loopback
+
+  by role: OBSERVED_ONLY 1, PREDICTED 12, SYNC_ONLY 2, TRUSTED 1
+
+SECTION 2.  C1 -- STALENESS
+------------------------------------------------------------------------------
+  [PASS] every row's evidence substring still appears verbatim in its file
+         16 of 16 rows checked against the files themselves.  A row whose evidence has been edited away is a claim about code that no longer exists, which is how a census becomes decoration.
+
+SECTION 3.  C2 -- COMPLETENESS, AND C3 -- ALLOWLIST SIZE
+------------------------------------------------------------------------------
+   sync_fifo_directed_tb.v                                    reads  3  allowlisted  0  uncovered 0
+   uart_ral_tb.py                                             reads  0  allowlisted  8  uncovered 0
+   uart_uvm_tb.py                                             reads  2  allowlisted 16  uncovered 0
+   uart_crv_cov_tb.v                                          reads  7  allowlisted  0  uncovered 0
+   uart_uvm_crv_tb.py                                         reads  1  allowlisted  1  uncovered 0
+  [PASS] every mechanically extracted DUT-observed read in every censused file is covered by a row
+         13 reads extracted across 5 files, 13 covered, 0 omitted.  This is the direction that can grow: a new DUT read added to a censused file fails the census until someone states its role.
+  [PASS] the driven-pin allowlist is DERIVED from assignment sites rather than declared, so it cannot be inflated by hand to make C2 pass
+         only 2 names are declared by hand (clk, rst_n); every other allowlisted name was found because the file ASSIGNS it.  25 allowlist hits against 13 censused reads.  The first draft declared a name list instead and got five of the names wrong, which C2 reported as omissions -- the list had been written from the naming convention rather than from the file.  An allowlist large enough to swallow the DUT outputs would make C2 pass on an empty census, which is the 2026-10-08 failure, and a derived one cannot grow that way.
+
+SECTION 4.  C4 -- DISCRIMINATING POWER
+------------------------------------------------------------------------------
+   TRUSTED: examples/phase6_crv_uart/uart_crv_cov_tb.v
+            STATUS.tx_full (st[0]), read by run_burst push loop
+            mutant that proves it: M7 -- tx_full asserts one entry early (tx_cnt >= 7)
+  [PASS] the census contains at least one TRUSTED row, so it has the power to find the defect class it was built for
+         1 TRUSTED rows.  A census in which everything is already PREDICTED and which reports itself clean would be a control that cannot fail.  The row here is the Verilog CRV bench's STATUS.tx_full, which is the same hole repaired in the uvm-python bench on 2026-10-11 and is still open.
+
+   rows proved by a mutant that was actually run : 6
+   rows whose naming mutant has never been run   : 7
+  [PASS] and it reports how many rows are PROVED by a run rather than argued, because the second number is the honest measure of what this census knows
+         6 proved by run, 7 argued but unrun, 3 other.  The unrun rows are not failures -- they are the backlog this census exists to make visible, and the FIFO bench's "full asserting one entry early" is the most interesting of them because it is the exact shape of the defect that survived in the UART scoreboard.
+
+==============================================================================
+CHECKS: 5 passed, 0 failed
+==============================================================================
+
+VERDICT
+
+  The census stands at 16 rows: 1 OBSERVED_ONLY, 12 PREDICTED, 2 SYNC_ONLY, 1 TRUSTED.
+  One TRUSTED row remains open -- the Verilog CRV bench reads
+  STATUS.tx_full to decide whether its own push was accepted, the
+  same hole repaired in the uvm-python bench on 2026-10-11.
+  Mutant M7 names it.
+
+  What this census does NOT claim:
+    1. That the roles are right.  They are declared by a reviewer;
+       only the controls are mechanical.  A row declared PREDICTED
+       that is really TRUSTED passes every control here, and the
+       only thing that would catch it is running its mutant.
+    2. That the file list is complete.  5 files are censused;
+       the repository has more checkers than that, and C2 is
+       complete only WITHIN a censused file.  Adding a file can
+       only add rows, never remove them.
+    3. That a PREDICTED row is safe.  It means a defect in that
+       signal is observable by this checker, not that the
+       prediction itself is right.
