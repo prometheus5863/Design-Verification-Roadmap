@@ -215,30 +215,82 @@ CENSUS = [
          checker='check_flags',
          quantity='empty',
          role='PREDICTED',
-         mutant='empty stuck at 0 after the first pop',
-         status='PREDICTED BY CONSTRUCTION from ref_model.size(); the mutant '
-                'has never been run',
+         mutant='M3 -- empty asserts one entry early (occupancy 1 reads empty)',
+         mutant_run='2026-10-13, examples/phase1_mutation/',
+         status='MEASURED 2026-10-13: DETECTED, but BY TIMEOUT rather than by '
+                'a FAIL line. The bench\'s drain loop is '
+                '`while (ref_model.size() > 0) do_pop(...)` and do_pop gates '
+                'the pop_front on the DUT\'s own empty, so an early empty '
+                'stops the model draining and the testbench never terminates. '
+                'A runner reading "no FAIL line, therefore PASS" would score '
+                'this an ESCAPE, which is why TIMEOUT is a named verdict in '
+                'that runner rather than folded into either.',
          evidence='exp_empty = (ref_model.size() == 0)'),
     dict(file='examples/phase1_milestone/sync_fifo_directed_tb.v',
          checker='check_flags',
          quantity='full',
          role='PREDICTED',
-         mutant='full asserting one entry early (count >= DEPTH-1)',
-         status='PREDICTED BY CONSTRUCTION from ref_model.size(); the mutant '
-                'has never been run -- and it is the exact shape of the '
-                'defect that survived in the UART scoreboard, which is why '
-                'this row is worth having even though it looks clean',
+         mutant='M1 -- full asserts one entry early (occupancy DEPTH-1)',
+         mutant_run='2026-10-13, examples/phase1_mutation/',
+         status='MEASURED 2026-10-13: DETECTED, 5 errors at 134 checks. The '
+                'row was PREDICTED BY CONSTRUCTION from ref_model.size() and '
+                'carried the exact shape of the defect that survived in both '
+                'UART scoreboards, so it was the census\'s first-ranked unrun '
+                'row. It is no longer a declaration. See '
+                'examples/phase1_mutation/mutation_report_2026-10-13.txt.',
          evidence='exp_full  = (ref_model.size() == DEPTH)'),
+
+    # --- AND THE TWO ROWS THIS CENSUS MISSED ON 2026-10-12 ------------------
+    # One row per (file, checker, quantity) was the schema, and it cannot
+    # express a signal that has TWO ROLES IN ONE FILE.  `full` is read by
+    # check_flags as PREDICTED and by do_push as TRUSTED, three lines apart,
+    # and only the first was listed.  The census said PREDICTED and was right
+    # about the file -- but by luck of which read it enumerated, not because
+    # it had weighed both.  Found 2026-10-13 while running the row above.
+    dict(file='examples/phase1_milestone/sync_fifo_directed_tb.v',
+         checker='do_push / do_push_and_pop (ref_model gating)',
+         quantity='full',
+         role='TRUSTED',
+         mutant='M1 -- full asserts one entry early (occupancy DEPTH-1)',
+         mutant_run='2026-10-13, examples/phase1_mutation/',
+         status='MISSED BY THE 2026-10-12 CENSUS and added 2026-10-13. This '
+                'is the defect class verbatim: `was_full = full` read from '
+                'the DUT, then `if (!was_full) ref_model.push_back(...)`. It '
+                'is the same three lines that let the defect survive in both '
+                'UART benches. MEASURED: DETECTED anyway, because check_flags '
+                'independently predicts the SAME signal on EVERY operation '
+                'that reads it, so a desync is caught by the very next check. '
+                'The rule this row exists to record: A TRUSTED READ IS SAFE '
+                'EXACTLY WHERE THE SAME QUANTITY IS INDEPENDENTLY PREDICTED '
+                'AT THE SAME RATE. What was wrong in the UART benches was '
+                'never the trusted read alone -- it was a trusted read with '
+                'no corresponding prediction.',
+         evidence='was_full = full;'),
+    dict(file='examples/phase1_milestone/sync_fifo_directed_tb.v',
+         checker='do_pop / do_push_and_pop (ref_model gating)',
+         quantity='empty',
+         role='TRUSTED',
+         mutant='M3 -- empty asserts one entry early',
+         mutant_run='2026-10-13, examples/phase1_mutation/',
+         status='MISSED BY THE 2026-10-12 CENSUS and added 2026-10-13. The '
+                'read-side twin, and the WORSE of the two: `was_empty` gates '
+                'the rd_data comparison as well as the pop, so a defect here '
+                'silently disables a check rather than only desyncing a '
+                'model. MEASURED: DETECTED, by timeout -- see the empty row '
+                'above.',
+         evidence='was_empty = empty;'),
 
     dict(file='examples/phase1_milestone/sync_fifo_directed_tb.v',
          checker='directed read/pop checks',
          quantity='rd_data',
          role='PREDICTED',
-         mutant='rd_data driven from tx_wptr instead of tx_rptr',
-         status='FOUND BY THIS CENSUS 2026-10-12 -- the bench compares '
-                'rd_data against exp_data and exp_pop_data taken from its '
-                'own ref_model, which is the right pattern, and no row named '
-                'it. Mutant never run.',
+         mutant='M5 -- rd_data returns the entry AFTER the front',
+         mutant_run='2026-10-13, examples/phase1_mutation/',
+         status='FOUND BY THIS CENSUS 2026-10-12; MEASURED 2026-10-13: '
+                'DETECTED, 30 errors at 138 checks. The control row of that '
+                'run -- a pure data-path mutant with no flag involvement, so '
+                'it is the one the ref_model data comparison had to catch on '
+                'its own terms.',
          evidence='if (rd_data !== exp_data) begin'),
 
     # --- the RAL bench: a mirror is a reference model -----------------------
@@ -488,19 +540,32 @@ def main():
           'instance is what this census is organised around.'
           % (len(demo), ', '.join(os.path.basename(r['file']) for r in demo)))
     trusted = [r for r in CENSUS if r['role'] == 'TRUSTED']
+    # SPLIT 2026-10-13.  "open TRUSTED rows" conflated two states that the
+    # 2026-10-13 run forced apart: a TRUSTED row nobody has tested, and a
+    # TRUSTED row whose mutant has been run and DETECTED because some other
+    # checker predicts the same quantity.  The second is not open.  Both of
+    # the rows added that day are of the second kind, and reporting them as
+    # "open" would have overstated the census by exactly the amount the
+    # measurement removed.
+    trusted_open = [r for r in trusted if not r.get('mutant_run')]
+    trusted_measured = [r for r in trusted if r.get('mutant_run')]
     print()
-    print('   open TRUSTED rows: %d' % len(trusted))
-    for r in trusted:
-        print('     %s / %s' % (r['file'], r['quantity']))
-    check('and the count of open TRUSTED rows is REPORTED rather than '
+    print('   TRUSTED rows: %d total -- %d measured, %d OPEN (no mutant run)'
+          % (len(trusted), len(trusted_measured), len(trusted_open)))
+    for r in trusted_measured:
+        print('     measured: %s / %s  (%s)'
+              % (r['file'], r['quantity'], r['mutant_run']))
+    for r in trusted_open:
+        print('     OPEN:     %s / %s' % (r['file'], r['quantity']))
+    check('and the count of OPEN TRUSTED rows is REPORTED rather than '
           'required to be non-zero, so a clean census is a result and not a '
           'control failure',
           True,
-          '%d open TRUSTED rows. Zero is the goal; the census says so '
-          'explicitly instead of passing silently, because a clean report and '
-          'an unexercised control look identical from outside and the '
+          '%d open TRUSTED rows out of %d. Zero is the goal; the census says '
+          'so explicitly instead of passing silently, because a clean report '
+          'and an unexercised control look identical from outside and the '
           'demonstrated-escape count above is what distinguishes them.'
-          % len(trusted))
+          % (len(trusted_open), len(trusted)))
     proved = [r for r in CENSUS if r['status'].startswith('PROVED BY RUN')]
     never = [r for r in CENSUS if 'never been run' in r['status']
              or 'never run' in r['status']]
@@ -529,12 +594,38 @@ def main():
           % (len(CENSUS),
              ', '.join('%d %s' % (len(v), k)
                        for k, v in sorted(by_role.items()))))
-    print('  No TRUSTED row is open.  The one the census found on its first')
-    print('  run -- the Verilog CRV bench reading STATUS.tx_full to decide')
-    print('  whether its own push was accepted -- was repaired the same')
-    print('  session, with M7 shown to escape before and to be detected')
-    print('  after.  Two rows now carry a demonstrated escape, both of the')
-    print('  same shape, found independently in two languages.')
+    # DERIVED 2026-10-13.  This sentence was HAND-WRITTEN as "No TRUSTED row
+    # is open." and stayed true for exactly one day.  Adding two TRUSTED rows
+    # made the derived count three hundred lines above print 2 while this
+    # line still printed 0, in the same transcript.  A prose summary of a
+    # derived number has to be derived too -- the repository's own
+    # "an allowlist should state what the file states", applied to a verdict.
+    if not trusted_open:
+        print('  No TRUSTED row is OPEN (%d TRUSTED row(s), all measured).'
+              % len(trusted))
+    else:
+        print('  %d of %d TRUSTED row(s) are OPEN -- no mutant has been run.'
+              % (len(trusted_open), len(trusted)))
+    print('  The one the census found on its first run -- the Verilog CRV')
+    print('  bench reading STATUS.tx_full to decide whether its own push was')
+    print('  accepted -- was repaired the same session, with M7 shown to')
+    print('  escape before and to be detected after.  %d rows carry a'
+          % len(demo))
+    print('  demonstrated escape, both of the same shape, found')
+    print('  independently in two languages.')
+    if trusted_measured:
+        print()
+        print('  And 2026-10-13 added a THIRD state to that picture: %d'
+              % len(trusted_measured))
+        print('  TRUSTED row(s) that are measured and DETECTED, because')
+        print('  another checker in the same file predicts the same quantity')
+        print('  on every operation that reads it.  A TRUSTED READ IS SAFE')
+        print('  EXACTLY WHERE THE SAME QUANTITY IS INDEPENDENTLY PREDICTED')
+        print('  AT THE SAME RATE.  TRUSTED and PREDICTED are roles of a')
+        print('  READ, not of a signal, and one file can hold both for one')
+        print('  signal three lines apart -- which is how the 2026-10-12')
+        print('  census listed this file as PREDICTED and missed its two')
+        print('  TRUSTED reads entirely.')
     print()
     print('  What this census does NOT claim:')
     print('    1. That the roles are right.  They are declared by a reviewer;')

@@ -2,7 +2,7 @@
 DUT-SIGNAL CENSUS FOR EVERY CHECKER
 ==============================================================================
 
-  16 rows over 5 files.
+  18 rows over 5 files.
 
   Rule (2026-10-11): for every DUT signal a checker reads, ask
   whether the checker could detect that signal being wrong.  If
@@ -15,23 +15,53 @@ SECTION 1.  THE CENSUS
   examples/phase1_milestone/sync_fifo_directed_tb.v
     PREDICTED     empty
       checker : check_flags
-      mutant  : empty stuck at 0 after the first pop
-      status  : PREDICTED BY CONSTRUCTION from ref_model.size(); the mutant has
-                never been run
+      mutant  : M3 -- empty asserts one entry early (occupancy 1 reads empty)
+      status  : MEASURED 2026-10-13: DETECTED, but BY TIMEOUT rather than by a
+                FAIL line. The bench's drain loop is `while (ref_model.size() >
+                0) do_pop(...)` and do_pop gates the pop_front on the DUT's own
+                empty, so an early empty stops the model draining and the
+                testbench never terminates. A runner reading "no FAIL line,
+                therefore PASS" would score this an ESCAPE, which is why TIMEOUT
+                is a named verdict in that runner rather than folded into
+                either.
     PREDICTED     full
       checker : check_flags
-      mutant  : full asserting one entry early (count >= DEPTH-1)
-      status  : PREDICTED BY CONSTRUCTION from ref_model.size(); the mutant has
-                never been run -- and it is the exact shape of the defect that
-                survived in the UART scoreboard, which is why this row is worth
-                having even though it looks clean
+      mutant  : M1 -- full asserts one entry early (occupancy DEPTH-1)
+      status  : MEASURED 2026-10-13: DETECTED, 5 errors at 134 checks. The row
+                was PREDICTED BY CONSTRUCTION from ref_model.size() and carried
+                the exact shape of the defect that survived in both UART
+                scoreboards, so it was the census's first-ranked unrun row. It
+                is no longer a declaration. See
+                examples/phase1_mutation/mutation_report_2026-10-13.txt.
+    TRUSTED       full
+      checker : do_push / do_push_and_pop (ref_model gating)
+      mutant  : M1 -- full asserts one entry early (occupancy DEPTH-1)
+      status  : MISSED BY THE 2026-10-12 CENSUS and added 2026-10-13. This is
+                the defect class verbatim: `was_full = full` read from the DUT,
+                then `if (!was_full) ref_model.push_back(...)`. It is the same
+                three lines that let the defect survive in both UART benches.
+                MEASURED: DETECTED anyway, because check_flags independently
+                predicts the SAME signal on EVERY operation that reads it, so a
+                desync is caught by the very next check. The rule this row
+                exists to record: A TRUSTED READ IS SAFE EXACTLY WHERE THE SAME
+                QUANTITY IS INDEPENDENTLY PREDICTED AT THE SAME RATE. What was
+                wrong in the UART benches was never the trusted read alone -- it
+                was a trusted read with no corresponding prediction.
+    TRUSTED       empty
+      checker : do_pop / do_push_and_pop (ref_model gating)
+      mutant  : M3 -- empty asserts one entry early
+      status  : MISSED BY THE 2026-10-12 CENSUS and added 2026-10-13. The
+                read-side twin, and the WORSE of the two: `was_empty` gates the
+                rd_data comparison as well as the pop, so a defect here silently
+                disables a check rather than only desyncing a model. MEASURED:
+                DETECTED, by timeout -- see the empty row above.
     PREDICTED     rd_data
       checker : directed read/pop checks
-      mutant  : rd_data driven from tx_wptr instead of tx_rptr
-      status  : FOUND BY THIS CENSUS 2026-10-12 -- the bench compares rd_data
-                against exp_data and exp_pop_data taken from its own ref_model,
-                which is the right pattern, and no row named it. Mutant never
-                run.
+      mutant  : M5 -- rd_data returns the entry AFTER the front
+      status  : FOUND BY THIS CENSUS 2026-10-12; MEASURED 2026-10-13: DETECTED,
+                30 errors at 138 checks. The control row of that run -- a pure
+                data-path mutant with no flag involvement, so it is the one the
+                ref_model data comparison had to catch on its own terms.
 
   examples/phase4_ral/uart_ral_tb.py
     PREDICTED     STATUS (whole byte)
@@ -121,12 +151,12 @@ SECTION 1.  THE CENSUS
                 data comparison at all, the byte still arriving correctly in
                 loopback
 
-  by role: OBSERVED_ONLY 1, PREDICTED 13, SYNC_ONLY 2
+  by role: OBSERVED_ONLY 1, PREDICTED 13, SYNC_ONLY 2, TRUSTED 2
 
 SECTION 2.  C1 -- STALENESS
 ------------------------------------------------------------------------------
   [PASS] every row's evidence substring still appears verbatim in its file
-         16 of 16 rows checked against the files themselves.  A row whose evidence has been edited away is a claim about code that no longer exists, which is how a census becomes decoration.
+         18 of 18 rows checked against the files themselves.  A row whose evidence has been edited away is a claim about code that no longer exists, which is how a census becomes decoration.
 
 SECTION 3.  C2 -- COMPLETENESS, AND C3 -- ALLOWLIST SIZE
 ------------------------------------------------------------------------------
@@ -169,14 +199,16 @@ SECTION 4.  C4 -- DISCRIMINATING POWER
   [PASS] at least one row carries a mutant that was RUN against the pre-repair code and survived it, so this census is known to find the defect class it was built for
          2 rows with a demonstrated escape: uart_uvm_crv_tb.py, uart_crv_cov_tb.v.  Both are the same defect shape -- tx_full asserting one entry early against a checker that read tx_full -- found independently in a uvm-python scoreboard and in a Verilog driver, which is why the shape rather than the instance is what this census is organised around.
 
-   open TRUSTED rows: 0
-  [PASS] and the count of open TRUSTED rows is REPORTED rather than required to be non-zero, so a clean census is a result and not a control failure
-         0 open TRUSTED rows. Zero is the goal; the census says so explicitly instead of passing silently, because a clean report and an unexercised control look identical from outside and the demonstrated-escape count above is what distinguishes them.
+   TRUSTED rows: 2 total -- 2 measured, 0 OPEN (no mutant run)
+     measured: examples/phase1_milestone/sync_fifo_directed_tb.v / full  (2026-10-13, examples/phase1_mutation/)
+     measured: examples/phase1_milestone/sync_fifo_directed_tb.v / empty  (2026-10-13, examples/phase1_mutation/)
+  [PASS] and the count of OPEN TRUSTED rows is REPORTED rather than required to be non-zero, so a clean census is a result and not a control failure
+         0 open TRUSTED rows out of 2. Zero is the goal; the census says so explicitly instead of passing silently, because a clean report and an unexercised control look identical from outside and the demonstrated-escape count above is what distinguishes them.
 
    rows proved by a mutant that was actually run : 7
-   rows whose naming mutant has never been run   : 7
+   rows whose naming mutant has never been run   : 4
   [PASS] and it reports how many rows are PROVED by a run rather than argued, because the second number is the honest measure of what this census knows
-         7 proved by run, 7 argued but unrun, 2 other.  The unrun rows are not failures -- they are the backlog this census exists to make visible, and the FIFO bench's "full asserting one entry early" is the most interesting of them because it is the exact shape of the defect that was demonstrated twice above.
+         7 proved by run, 4 argued but unrun, 7 other.  The unrun rows are not failures -- they are the backlog this census exists to make visible, and the FIFO bench's "full asserting one entry early" is the most interesting of them because it is the exact shape of the defect that was demonstrated twice above.
 
 ==============================================================================
 CHECKS: 6 passed, 0 failed
@@ -184,13 +216,25 @@ CHECKS: 6 passed, 0 failed
 
 VERDICT
 
-  The census stands at 16 rows: 1 OBSERVED_ONLY, 13 PREDICTED, 2 SYNC_ONLY.
-  No TRUSTED row is open.  The one the census found on its first
-  run -- the Verilog CRV bench reading STATUS.tx_full to decide
-  whether its own push was accepted -- was repaired the same
-  session, with M7 shown to escape before and to be detected
-  after.  Two rows now carry a demonstrated escape, both of the
-  same shape, found independently in two languages.
+  The census stands at 18 rows: 1 OBSERVED_ONLY, 13 PREDICTED, 2 SYNC_ONLY, 2 TRUSTED.
+  No TRUSTED row is OPEN (2 TRUSTED row(s), all measured).
+  The one the census found on its first run -- the Verilog CRV
+  bench reading STATUS.tx_full to decide whether its own push was
+  accepted -- was repaired the same session, with M7 shown to
+  escape before and to be detected after.  2 rows carry a
+  demonstrated escape, both of the same shape, found
+  independently in two languages.
+
+  And 2026-10-13 added a THIRD state to that picture: 2
+  TRUSTED row(s) that are measured and DETECTED, because
+  another checker in the same file predicts the same quantity
+  on every operation that reads it.  A TRUSTED READ IS SAFE
+  EXACTLY WHERE THE SAME QUANTITY IS INDEPENDENTLY PREDICTED
+  AT THE SAME RATE.  TRUSTED and PREDICTED are roles of a
+  READ, not of a signal, and one file can hold both for one
+  signal three lines apart -- which is how the 2026-10-12
+  census listed this file as PREDICTED and missed its two
+  TRUSTED reads entirely.
 
   What this census does NOT claim:
     1. That the roles are right.  They are declared by a reviewer;
