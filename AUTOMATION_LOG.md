@@ -7644,3 +7644,233 @@ bench repair with its mutation report, neutrality pass and simulation
 transcript; C4's amendment; `progress.md`; the session note). This
 AUTOMATION_LOG.md entry makes **6**. The graphene repository took **4** in the
 same session, for **10** across both.
+
+---
+
+## 2026-10-13 — The census's first-ranked row, run: the trusted read was there and did not escape, and the detection criterion fired on the name of a file
+
+**Target:** the 2026-10-12 census's top unrun row — *"a PREDICTED row is a
+declaration until a mutant tests it"*. `examples/phase1_mutation/`, **5
+mutants, 5 detected, 5/5 verdicts as predicted, 3 controls**, with the census
+and `progress.md` updated from the result.
+
+### 1. The declaration holds — and the reason is better than the score
+
+| mutant | verdict |
+|---|---|
+| **M1 `full` one entry early** (THE census row) | FAIL, 5 errors at 134 checks |
+| M2 `full` never asserts | FAIL, 4 errors |
+| **M3 `empty` one entry early** | **TIMEOUT** |
+| M4 wrap bit dropped from `full` | FAIL, 46 errors at 92 checks |
+| M5 `rd_data` returns the entry after the front | FAIL, 30 errors at 138 checks |
+
+M1 is the exact shape that escaped the uvm-python bench (2026-10-11) and the
+Verilog UART bench (2026-10-12). It is detected here. **And this bench has
+the trusted read too**, three lines above the prediction:
+
+```systemverilog
+was_full = full;                        // read from the DUT
+@(posedge clk); #1;
+if (!was_full) ref_model.push_back(pushed_value);
+check_flags(tag);                       // full vs ref_model.size()==DEPTH
+```
+
+The two UART benches had the first line and nothing like the last one.
+
+> **A TRUSTED READ IS SAFE EXACTLY WHERE THE SAME QUANTITY IS INDEPENDENTLY
+> PREDICTED AT THE SAME RATE. What was wrong in those benches was never the
+> trusted read on its own — it was a trusted read with no corresponding
+> prediction.**
+
+Which makes **TRUSTED and PREDICTED roles of a READ, not of a signal** — and
+the census's one-row-per-`(file, checker, quantity)` schema cannot express
+that. It listed this file as PREDICTED and **missed both of its TRUSTED
+reads**. It was right about the file by which read it happened to enumerate,
+not by having weighed both. Both are rows now with measured verdicts.
+`empty` is the worse of the two: `was_empty` gates the `rd_data` comparison
+as well as the pop, so a defect there **disables a check** rather than only
+desyncing a model.
+
+### 2. M3 does not fail. It hangs.
+
+`while (ref_model.size() > 0) do_pop(...)` never terminates once `empty`
+reads high at occupancy 1, because the pop that would drain the model is
+gated on the DUT's flag. That is a detection — but a runner reading *"no
+FAIL line, therefore PASS"* scores it an **escape**. `TIMEOUT` is a named
+verdict in this runner rather than folded into either.
+
+### 3. The detection criterion fired on the NAME OF A FILE
+
+The runner's **first draft failed its own neutrality pass**, on an identity
+injection, between two byte-identical files. Icarus prints
+
+```
+ERROR: base.v:89: sync_fifo: wr_en asserted while full=1 at time 115000 ...
+```
+
+— **the source file and line number are in the transcript.**
+
+> **A transcript-diff detection criterion on this bench reports DETECTED for
+> a mutant that changed only the file's name, and for any mutant that shifts
+> a line number without changing behaviour.** M1 inserts two lines above line
+> 89 and would have scored DETECTED on that alone, before the simulation did
+> anything.
+
+Repaired both ways — one path for every variant, and the comparison reported
+twice, `differs_raw` and `differs_norm` with `dut.v:NNN:` collapsed — and
+then given **a positive control that fires**. G0b inserts two comment lines
+above the `full` assignment: `verdict=PASS, errors=0, differs_raw=True,
+differs_norm=False`. **2026-10-09's false DETECTED, demonstrated on real
+output rather than argued**, and the script exits non-zero unless it fires.
+
+This DUT is unusual in printing `$error` from inside the RTL on deliberate
+protocol violations, so its **passing** baseline already carries two ERROR
+lines — which is what makes the contamination visible here. It is present
+wherever a transcript carries anything that is a property of the file rather
+than of the behaviour.
+
+### 4. And a verdict sentence that was prose about a derived number
+
+The census's closing line was a literal `print('  No TRUSTED row is open.')`.
+Adding two TRUSTED rows made the derived count three hundred lines above
+print **2** while that line still printed **0**, in the same transcript, in
+the same run.
+
+> **The repository's own rule — *an allowlist should state what the file
+> states* — applies to a verdict as much as to a list.**
+
+Both the sentence and the demonstrated-escape count are derived now. The
+"open TRUSTED rows" counter was also split, because it conflated a TRUSTED
+row nobody has tested with one whose mutant has been run and detected: now
+*2 total — 2 measured, 0 OPEN*. Reporting the new rows as "open" would have
+overstated the census by exactly what the measurement removed.
+
+### 5. One row of the 2026-10-07 debt, paid
+
+This runner guards injection with a declared **EXPECTED_SITES** count against
+an exact anchor: a mismatch aborts the row as INJECTION FAILED rather than
+scoring it. `cmp -s` passes when a sed meant for one site hits three. The
+audit named four runners with that guard and 2026-10-12 added a fifth; this
+is the first one written the other way, and it is the form the other five
+should be rewritten into.
+
+### 6. Methodological note
+
+09-17 a suite can pass against broken RTL. 09-18 and print PASS over its own
+errors. 09-19/09-20 the subsystem reporting the verdict is not the one doing
+the checking. 09-26 a reachability pre-pass answers "did my attempts reach
+it". 09-30 a control has to sit where the failure enters. 10-01 an arrival
+control that cannot fail is not a control. 10-05 a metric can be printed
+beside the thing it does not measure. 10-06 and the detector can misattribute
+what it measured. 10-07 an injection guard is a measurement. 10-08 a false
+SURVIVED is worse than a missed defect. 10-09 and so is a false DETECTED.
+10-10 a control must not read the thing it controls for. 10-11 and neither
+may a checker. 10-12 a control must not require the defect it looks for to
+still exist.
+
+**10-13: A TRUSTED READ IS SAFE EXACTLY WHERE THE SAME QUANTITY IS
+INDEPENDENTLY PREDICTED AT THE SAME RATE.**
+
+Checkable rule: **for every read of a DUT signal that gates a reference-model
+update, ask whether some checker in the same file predicts that signal
+independently, and at every operation that performs the read. If yes, the
+trusted read is covered. If the prediction is rarer than the read, it is
+not.** The census must therefore record the ROLE OF EACH READ, not one role
+per signal per file.
+
+Second rule, from §3: **a detection criterion must not be able to fire on a
+property of the file rather than of the behaviour.** Source paths, line
+numbers, timestamps and seeds in a transcript all qualify. The check is a
+cosmetic-edit positive control.
+
+Third, from §4: **a prose summary of a derived number must itself be
+derived.**
+
+### 7. Toolchain and automation health
+
+The simulator was needed. Both 2026-10-11 gotchas **re-confirmed again**:
+`source tools/setup_iverilog.sh` without a pipe (Icarus 10.3 came up), and
+`iverilog`/`vvp` are shell functions, so the real binaries under
+`/tmp/iverilog_install/usr/bin` with `-M .../ivl` are what `timeout` can
+wrap. One new one, logged: **a mutant can hang the simulator**, and the VCD
+dump grows without bound while it does — the first attempt was OOM-killed.
+Every mutant run is capped at 15 s and the VCD is deleted after each run.
+No cocotb or uvm-python this session, so the 09-06 install recipe and the
+`PATH`/`cocotb-config` gotcha are now **two sessions stale**, at the
+threshold 10-10 recorded.
+
+Device reachable and folder connected at the first firing; the whole session
+ran on the device VM and nothing crossed the bridge. **Every commit was
+pushed and verified against the GitHub API before the next was written**,
+with `git fetch origin main` immediately before each push per the 10-03 race
+item.
+
+**Not yet covered (candidates for future runs):**
+
+- **REWRITE THE OTHER FIVE RUNNERS' INJECTION GUARDS INTO THE EXPECTED_SITES
+  FORM** — the 10-07 debt, now with a worked reference implementation in
+  `examples/phase1_mutation/` and **ranked first** because it is mechanical,
+  monotone and the debt has stood for six sessions. `phase6_crv_uart`,
+  `phase6_rx_pin_driver`, `phase6_bfm_equivalence`, `phase4_rtl_bringup`.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — created today, and the generalisation of §3. The other
+  runners compare on `grep -q "RESULT: PASS"`, which is the bench's own
+  verdict and therefore sound; but any that ever diff a transcript needs
+  G0b, and none has it. Cheap: two comment lines and an assertion.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  created today out of §1 and the clear next change to the census's schema.
+  The 18 rows were written against the old schema, so every censused file
+  has to be re-walked once; adding reads can only add rows.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files
+  censused, `phase6_rx_pin_driver`, `phase6_bfm_equivalence`, `phase5_*` and
+  the Phase 2 ALU benches unlisted. Monotone work with a guaranteed yield,
+  and now with a sharper question to ask of each file.
+- **THE UVM ENVIRONMENT AGAINST THE UART RTL** — the Phase 4 milestone's
+  actual remaining content (register-bus agent, serial agent with a
+  standalone RX bit-driver, reference-model scoreboard, coverage collector),
+  unblocked since the 2026-09-17 bring-up and **untouched for a fourth
+  session** while the sessions went to harness quality instead. This is the
+  roadmap's own next step and the one a verification interview would ask
+  about; it is ranked below the two items above only because they are each
+  one session and this is several.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; SYNC_ONLY is the
+  role whose exposure argument is weakest and it has never been tested.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — carried from 10-12.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for a second session.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; the sweep is
+  resumable and the pure-random tail is least well measured.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row: a control that misreports rather than
+  a gap.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created 10-10; today's runner
+  is another file whose details are derived throughout.
+- **RAL BASICS, VIRTUAL SEQUENCERS, ACTIVE/PASSIVE AGENTS, CRV UART
+  STIMULUS, vplan v2** — the standing Phase 4 list, all untouched.
+- **THE SVA PROTOCOL CHECKERS BOUND INTO THIS ENVIRONMENT** — capstone box
+  **(b)**, still next in line.
+- **`PayloadAdmissibilityCoverage` INTO THE LIVE COLLECTOR** — box **(c)**.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09,
+  untouched.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the fifth session**; today's G0b is the same shape built for a different
+  control, which is a reason to expect this one to be cheap.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  10-10, deferred; today's §4 is a worked instance of why.
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage
+  of the Phase 4 UVM environment (09-23); a less greedy steering policy
+  (09-24); two transmitters at once (09-25); `abc pdr` as a second engine
+  (09-23); widen the coverage model (09-24); mutants not yet attempted
+  (interrupt enable combinations, reset asserted mid-frame); a property
+  needing a strengthening invariant; the SVA sequence layer (runnable on
+  neither tool here, open since 09-20); code coverage measurement (Icarus has
+  none, open since 09-18); Phase 6 lint, regression infra, coverage merge,
+  CDC basics, interview prep.
+
+**Commits this run:** 3 (the Phase 1 mutation runner with its report; the
+census's two missed TRUSTED rows, measured verdicts and derived verdict
+sentence; `progress.md` with the session note). This AUTOMATION_LOG.md entry
+makes **4**. The graphene repository took **3** in the same session, for
+**7** across both.
