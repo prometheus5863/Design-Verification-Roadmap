@@ -1,0 +1,91 @@
+==========================================================================
+MUTATION TEST -- examples/phase1_milestone/sync_fifo_directed_tb.v
+the 2026-10-12 census's first-ranked unrun row
+==========================================================================
+
+G1  baseline on unmodified RTL
+      verdict=PASS  checks=138  errors=0  dut $error lines=2
+      (the 2 $error lines are Tests 3 and 5, the DELIBERATE protocol
+       violations.  They are in the PASSING transcript, which is why
+       "the transcript differs" cannot be the detection criterion.)
+
+G0  neutrality pass: the anchor injected onto ITSELF
+      a real write through the real injection path, changing nothing.
+      transcript byte-identical to baseline: True
+      verdict=PASS
+
+G0b positive control for the false DETECTED: a COSMETIC edit
+      two comment lines inserted above the `full` assignment.
+      verdict=PASS  errors=0  differs_raw=True  differs_norm=False
+      ==> A TRANSCRIPT-DIFF CRITERION SCORES THIS AS DETECTED.
+          The bench's own checker scores it as PASS, correctly,
+          and the normalised diff agrees with the bench.  This is
+          the false DETECTED of 2026-10-09, demonstrated rather
+          than argued, on a DUT whose $error lines carry their own
+          source line numbers into the transcript.
+
+M1  full asserts ONE ENTRY EARLY (occupancy 7 of 8)
+    sites injected: 1 (declared 1)
+    verdict=FAIL    errors=5      checks=134    dut $error=5
+    differs_raw=True   differs_norm=True 
+    -> DETECT, as predicted
+    why: THE CENSUS ROW.  Exactly the shape that escaped the uvm-python bench (2026-10-11) and the Verilog UART bench (2026-10-12).  The design's own wrap-bit technique is preserved and wr_ptr is substituted by wr_ptr+1, so the flag is wrong by exactly one entry and by nothing else.
+
+M2  full NEVER asserts
+    sites injected: 1 (declared 1)
+    verdict=FAIL    errors=4      checks=139    dut $error=0
+    differs_raw=True   differs_norm=True 
+    -> DETECT, as predicted
+    why: the other direction of the same flag.  Included because the trusted read `was_full = full` fails OPEN here: the bench believes every push landed.
+
+M3  empty asserts ONE ENTRY EARLY (occupancy 1 reads as empty)
+    sites injected: 1 (declared 1)
+    verdict=TIMEOUT  errors=None   checks=None   dut $error=0
+    differs_raw=True   differs_norm=True 
+    -> DETECT, as predicted
+    why: the read-side twin.  `do_pop` reads `was_empty = empty` and gates BOTH the rd_data check and the ref_model pop on it, so an early empty silently disables the data comparison as well as desyncing the model.
+
+M4  the wrap bit is dropped from full (full == empty)
+    sites injected: 1 (declared 1)
+    verdict=FAIL    errors=46     checks=92     dut $error=54
+    differs_raw=True   differs_norm=True 
+    -> DETECT, as predicted
+    why: the classic FIFO bug this module's header says the extra pointer bit exists to prevent.  An empty FIFO reads as full.
+
+M5  rd_data returns the entry AFTER the front
+    sites injected: 1 (declared 1)
+    verdict=FAIL    errors=30     checks=138    dut $error=2
+    differs_raw=True   differs_norm=True 
+    -> DETECT, as predicted
+    why: a pure data-path mutant with no flag involvement -- the control row for M1-M4, since it is the one the ref_model data comparison must catch on its own terms.
+
+--------------------------------------------------------------------------
+WHAT THE WEAK CRITERION WOULD HAVE SAID
+--------------------------------------------------------------------------
+
+  mutant                                         raw      norm      bench's own verdict
+  M1  full asserts ONE ENTRY EARLY (occupancy 7  True     True      FAIL   
+  M2  full NEVER asserts                         True     True      FAIL   
+  M3  empty asserts ONE ENTRY EARLY (occupancy 1 True     True      TIMEOUT 
+  M4  the wrap bit is dropped from full (full == True     True      FAIL   
+  M5  rd_data returns the entry AFTER the front  True     True      FAIL   
+
+  rows where the RAW transcript diff and the bench's own checker
+  disagree: 0
+  rows whose raw diff is PURE LINE-NUMBER NOISE: 0
+  (0 here because all five mutants genuinely fail.  G0b above is
+   the row that fires: cosmetic edit, raw=True, norm=False, verdict=PASS.)
+
+  And the neutrality pass G0 is the sharpest row of all: an
+  identity injection, byte-identical behaviour, which the first
+  draft of this script scored as a transcript difference because
+  the file was called neutral.v instead of base.v.  A detection
+  criterion that fires on the NAME OF THE FILE is not measuring
+  the DUT.
+
+==========================================================================
+SUMMARY: 5 mutants scored, 5 detected, 0 escaped, 5/5 verdicts as predicted
+==========================================================================
+CONTROLS: G1 baseline PASS; G0 identity injection byte-identical;
+          G0b cosmetic edit separates the two criteria: FIRED
+==========================================================================
