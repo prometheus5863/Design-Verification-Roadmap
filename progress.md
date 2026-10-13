@@ -12,6 +12,16 @@ Last updated: 2026-09-07
 - [x] Synthesizable coding style + simple self-checking testbenches
 - [x] Milestone: synchronous FIFO or FSM design + directed testbench
       (Icarus Verilog + GTKWave)
+- [x] **Milestone bench mutation-tested** (2026-10-13,
+      `examples/phase1_mutation/`, 5 mutants / 5 detected / 5-of-5 verdicts as
+      predicted, 3 controls). The 2026-10-12 census's first-ranked unrun row:
+      `full` asserting one entry early, the shape that escaped two UART benches
+      this week. DETECTED, 5 errors at 134 checks. `empty` one-early is also
+      detected but **by timeout** -- the drain loop gates its own pop on the
+      DUT's flag, so the bench never terminates. The bench has the trusted-read
+      pattern verbatim (`was_full = full` gating `ref_model.push_back`) and
+      survives it only because `check_flags` predicts the same signal on every
+      operation that reads it.
 
 ## Phase 2 — SystemVerilog for Verification
 - [x] SV data types, interfaces/modports
@@ -1319,6 +1329,93 @@ measured rather than quietly dropped.
             unreachable because the axes are causally linked. The question
             is how many of the CRV bench's cells are illegal bins in
             disguise
+
+### The census's first-ranked row, run — and a detection criterion that fired on the name of a file (2026-10-13)
+
+The 2026-10-12 DUT-signal census ranked one row first among its unrun ones:
+the Phase 1 FIFO bench predicts `full`/`empty` from its own `ref_model`,
+which is the right pattern, and the mutant of the shape that escaped two
+benches that week had never been run against it. *A PREDICTED row is a
+declaration until a mutant tests it.*
+
+**Run. 5 mutants, 5 detected, 5/5 verdicts as predicted.** The declaration
+holds. But the reason is more useful than the score.
+
+**The bench contains BOTH patterns, three lines apart, in the same task.**
+
+```systemverilog
+was_full = full;                        // the trusted read, verbatim
+@(posedge clk); #1;
+if (!was_full) ref_model.push_back(pushed_value);
+wr_en = 1'b0;
+check_flags(tag);                       // full vs ref_model.size()==DEPTH
+```
+
+The two UART benches had the first line and nothing like the last one. Here
+`check_flags()` independently predicts the same flag on **every operation
+that reads it**, so a desync caused by the trusted read is caught by the very
+next check.
+
+> **A trusted read is safe exactly where the same quantity is independently
+> predicted at the same rate. What was wrong in the UART benches was never
+> the trusted read on its own — it was a trusted read with no corresponding
+> prediction.**
+
+Which also means **TRUSTED and PREDICTED are roles of a READ, not of a
+signal**, and the census's one-row-per-(file, checker, quantity) schema
+cannot say that. It listed this file as PREDICTED and **missed both of its
+TRUSTED reads**. Both are rows now, carrying measured verdicts. `empty` is
+the worse of the two: `was_empty` gates the `rd_data` comparison as well as
+the pop, so a defect there *disables a check* rather than only desyncing a
+model.
+
+**M3 does not print FAIL. It hangs.** `while (ref_model.size() > 0)
+do_pop(...)` never terminates once `empty` reads high at occupancy 1, because
+the pop that would drain the model is gated on the DUT's flag. A detection —
+but a runner reading "no FAIL line, therefore PASS" scores it an escape, so
+`TIMEOUT` is a named verdict in the runner rather than folded into either.
+
+#### And the detection criterion fired on the name of a file
+
+The runner's **first draft failed its own neutrality pass** — an identity
+injection, byte-identical behaviour. Icarus prints `$error` as
+
+```
+ERROR: base.v:89: sync_fifo: wr_en asserted while full=1 at time 115000 ...
+```
+
+— **the source file and line number are in the transcript**. So a
+transcript-diff criterion on this bench reports DETECTED for a mutant that
+only changed the file's *name*, and for any mutant that shifts a line number
+without changing behaviour. M1 inserts two lines above line 89 and would have
+scored DETECTED on that basis alone, before the simulation did anything.
+
+Repaired both ways — one path for every variant, and the comparison reported
+twice, raw and with `dut.v:NNN:` collapsed — and then given a **positive
+control that fires**: G0b inserts two comment lines above the `full`
+assignment and measures `verdict=PASS, errors=0, differs_raw=True,
+differs_norm=False`. The 2026-10-09 false DETECTED, demonstrated on real
+output rather than argued.
+
+This DUT is unusual in printing `$error` from inside the RTL on deliberate
+protocol violations, so its *passing* baseline already carries two ERROR
+lines. That is what makes the contamination visible here; it is present
+wherever a transcript carries anything that is a property of the file rather
+than of the behaviour.
+
+#### A verdict sentence that was prose about a derived number
+
+The census's closing line, `print('  No TRUSTED row is open.')`, was a
+literal. Adding two TRUSTED rows made the derived count three hundred lines
+above print **2** while that line still printed **0** — in the same
+transcript, in the same run. Both are derived now.
+
+> **The repository's own rule — an allowlist should state what the file
+> states — applies to a verdict as much as to a list.**
+
+Also paid down one row of the 2026-10-07 debt: this runner guards injection
+with a declared **EXPECTED_SITES** count against an exact anchor, not with
+`cmp -s`. A `cmp -s` guard passes when a sed meant for one site hits three.
 
 ## Notes
 
