@@ -1,0 +1,139 @@
+==============================================================================
+HARNESS FILE-CLOSURE AUDIT -- can each harness compile at all?
+created 2026-10-14, out of a runner that had not compiled since 09-27
+==============================================================================
+
+  Verilog files indexed : 43
+  modules defined       : 26
+  harness scripts found : 20
+
+  modules defined in MORE THAN ONE file (a closure built from the
+  index alone would be ambiguous for these, so they are named):
+      alu_dut                      examples/phase2/alu_if_and_dut.sv, examples/phase4_uvm_python/alu_if_and_dut.sv
+      testbench                    examples/phase5_csr_formal/uart_csr_cover/engine_0/trace0_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace0_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace1_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace1_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace2_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace2_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace3_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace3_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace4_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace4_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace5_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace5_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace6_tb.v, examples/phase5_csr_formal/uart_csr_cover/engine_0/trace6_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace0_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace0_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace1_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace1_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace2_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace2_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace3_tb.v, examples/phase5_csr_formal/uart_reset_cover/engine_0/trace3_tb.v, examples/phase5_formal_uart/uart_fifo_cover/engine_0/trace0_tb.v, examples/phase5_formal_uart/uart_fifo_cover/engine_0/trace0_tb.v, examples/phase5_formal_uart/uart_fifo_cover/engine_0/trace1_tb.v, examples/phase5_formal_uart/uart_fifo_cover/engine_0/trace1_tb.v
+      uart_controller              examples/phase5_csr_formal/uart_csr_bmc/src/uart_controller.v, examples/phase5_csr_formal/uart_csr_cover/src/uart_controller.v, examples/phase5_csr_formal/uart_csr_prove/src/uart_controller.v, examples/phase5_csr_formal/uart_reset_bmc/src/uart_controller.v, examples/phase5_csr_formal/uart_reset_cover/src/uart_controller.v, examples/phase5_formal_uart/uart_fifo_bmc/src/uart_controller.v, examples/phase5_formal_uart/uart_fifo_cover/src/uart_controller.v, examples/phase5_formal_uart/uart_fifo_prove/src/uart_controller.v, rtl/uart_controller.v
+
+------------------------------------------------------------------------------
+PER HARNESS
+------------------------------------------------------------------------------
+
+  examples/phase1_mutation/run_mutation_tests.py                 OK
+      .v files named      : examples/phase1_milestone/sync_fifo.v, examples/phase1_milestone/sync_fifo_directed_tb.v
+      UNRESOLVED_PATHS    : base.v, dut.v, mut.v, neutral.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase4_ral/run_mutation_tests.sh                      OK
+      .v files named      : rtl/uart_controller.v
+      UNRESOLVED_PATHS    : HERE/../../rtl/uart_controller.v, n.v, uart_controller_M3.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase4_uvm_milestone/run_axis_audit.py                OK
+      .v files named      : (none)
+
+  examples/phase4_uvm_milestone/run_phase4_uvm.sh                OK
+      .v files named      : (none)
+
+  examples/phase5_csr_formal/run_csr_formal.sh                   OK
+      .v files named      : examples/phase4_rtl_bringup/uart_controller_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : ROOT/examples/phase4_rtl_bringup/uart_controller_tb.v, ROOT/rtl/uart_controller.v, WORK/mut_N5.v, name.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase5_csr_formal/run_reset_formal.sh                 OK
+      .v files named      : examples/phase4_rtl_bringup/uart_controller_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : ROOT/examples/phase4_rtl_bringup/uart_controller_tb.v, ROOT/rtl/uart_controller.v, _M3/uart_controller.v, dir/uart_controller.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase5_formal_uart/run_formal.sh                      OK
+      .v files named      : examples/phase4_rtl_bringup/uart_controller_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : ROOT/examples/phase4_rtl_bringup/uart_controller_tb.v, ROOT/rtl/uart_controller.v, WORK/no_p1.v, name.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase5_property_coverage/run_chunk.sh                 OK
+      .v files named      : (none)
+
+  examples/phase5_property_coverage/run_one.sh                   OK
+      .v files named      : (none)
+
+  examples/phase5_property_coverage/run_property_coverage.sh     OK
+      .v files named      : (none)
+
+  examples/phase6_baud_error_coverage/run_baud_cov.sh            OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, examples/phase6_baud_error_coverage/uart_baud_cov_tb.v, rtl/uart_controller.v
+
+  examples/phase6_baud_error_coverage/run_mutation_tests.sh      OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, examples/phase6_baud_error_coverage/uart_baud_cov_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : i.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_bfm_equivalence/run_bfm_equiv.sh               OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, bfm/uart_rx_pin_legacy_ref.v
+      UNRESOLVED_PATHS    : bfm_equiv_tb.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_bfm_equivalence/run_mutation_tests.sh          OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, bfm/uart_rx_pin_legacy_ref.v, examples/phase6_bfm_equivalence/bfm_equiv_tb.v
+      UNRESOLVED_PATHS    : bfm_equiv_tb.v, golden.v, mut.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_crv_uart/run_crv_cov.sh                        OK
+      .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
+
+  examples/phase6_crv_uart/run_mutation_tests.sh                 OK
+      .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : WORK/mut.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_divisor_window/run_divisor_window.sh           OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : uart_divisor_window_tb.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_rx_pin_driver/run_mutation_tests.sh            OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, examples/phase6_rx_pin_driver/uart_rx_pin_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : i.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_rx_pin_driver/run_rx_pin.sh                    OK
+      .v files named      : bfm/uart_rx_pin_bfm.v, examples/phase6_rx_pin_driver/uart_rx_pin_tb.v, rtl/uart_controller.v
+
+  examples/phase6_uvm_crv_uart/run_mutation_tests.sh             OK
+      .v files named      : rtl/uart_controller.v
+      UNRESOLVED_PATHS    : NAME.v, ROOT/rtl/uart_controller.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+------------------------------------------------------------------------------
+CONFIRMATION BY REAL ELABORATION
+------------------------------------------------------------------------------
+  The static verdict above is a claim about file lists.  Each
+  harness whose named files include a bench is now actually compiled
+  with the pinned Icarus build, because a script can satisfy the
+  static check and still fail to elaborate.
+
+  examples/phase1_mutation/run_mutation_tests.py             ELABORATES
+  examples/phase5_csr_formal/run_csr_formal.sh               ELABORATES
+  examples/phase5_csr_formal/run_reset_formal.sh             ELABORATES
+  examples/phase5_formal_uart/run_formal.sh                  ELABORATES
+  examples/phase6_baud_error_coverage/run_baud_cov.sh        ELABORATES
+  examples/phase6_baud_error_coverage/run_mutation_tests.sh  ELABORATES
+  examples/phase6_bfm_equivalence/run_mutation_tests.sh      ELABORATES
+  examples/phase6_crv_uart/run_crv_cov.sh                    ELABORATES
+  examples/phase6_crv_uart/run_mutation_tests.sh             ELABORATES
+  examples/phase6_rx_pin_driver/run_mutation_tests.sh        ELABORATES
+  examples/phase6_rx_pin_driver/run_rx_pin.sh                ELABORATES
+
+------------------------------------------------------------------------------
+CONTROLS
+------------------------------------------------------------------------------
+  [PASS] (1) the 2026-09-27 omission, reinstated synthetically, FAILS elaboration and names the module
+         without the BFM: 'examples/phase6_rx_pin_driver/uart_rx_pin_tb.v:126: error: Unknown module type: uart_rx_pi'
+  [PASS] (2) and the same closure WITH the BFM elaborates, so (1) is about the omission and not about the bench
+         with the BFM: ok=True
+  [PASS] (3) the module index resolves uart_rx_pin_bfm to exactly one file
+         index says ['bfm/uart_rx_pin_bfm.v']
+  [PASS] (4) no harness passes the static check and then fails elaboration
+         disagreeing: []
+
+==============================================================================
+RESULT: 20 harness scripts audited, 11 elaborated, 0 FAILED to elaborate
+CONTROLS: 4 passed, 0 failed
+==============================================================================
