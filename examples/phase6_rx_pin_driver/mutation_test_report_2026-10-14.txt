@@ -1,0 +1,98 @@
+==============================================================
+RX-PIN BENCH MUTATION TEST   date: 2026-10-14
+  each mutant is injected into a COPY of rtl/uart_controller.v
+  a mutant that the bench does not fail on is an ESCAPE
+==============================================================
+
+  baseline (unmutated RTL): PASS
+
+  detected  M1 BAUD_DIV ignored by the baud generator (the 2026-09-24 loopback ESCAPE)
+            sites: declared 1, SITES_OK:1
+            59 errors; first: ** FAIL: 8N1 sample count 12, expected 10
+  detected  M2 RX samples at oversample position 7 instead of 8
+            sites: declared 1, SITES_OK:1
+            9 errors; first: ** FAIL: T1b data still correct past the slow limit  got=ca exp=4a  (t=22753125000)
+  detected  M3 stop-bit check removed from RX_STOP1
+            sites: declared 1, SITES_OK:1
+            3 errors; first: ** FAIL: swept slow 700 bp outside the derived band 590..659 bp
+  detected  M4 RX parity polarity swapped
+            sites: declared 2, SITES_OK:2
+            14 errors; first: ** FAIL: CRV frame 1 lost: data=ce eps=0/10000 par=2 two_stop=0 (t=12037765000)
+  detected  M5 start-bit glitch filter removed
+            sites: declared 1, SITES_OK:1
+            1 errors; first: ** FAIL: T6 runt pulse queues no byte  got=1 exp=0  (t=23071415000)
+  detected  M6 overrun OVERWRITES the oldest byte instead of dropping the new one
+            sites: declared 1, SITES_OK:1
+            3 errors; first: ** FAIL: T5 rx_full set with 8 queued  got=0 exp=1  (t=23066375000)
+  detected  M7 rx_sync bypassed (receiver samples the pin asynchronously)
+            sites: declared -, structural guard
+            4 errors; first: ** FAIL: swept slow 630 bp outside the derived band 520..590 bp
+
+  detected 7   escaped 0   voided 0
+
+  P6 (pre-registered in the testbench): this bench DETECTS M1, the
+  BAUD_DIV mutant that escaped the 2026-09-24 loopback bench.
+
+==============================================================================
+NOTES, 2026-10-14
+==============================================================================
+
+1. THIS SCRIPT HAD NOT COMPILED SINCE 2026-09-27.
+
+   On 2026-09-27 the RX pin driver was extracted into bfm/uart_rx_pin_bfm.v
+   and this bench was rewritten to instantiate it.  That commit verified both
+   BENCH runners and reported their outputs reproducing byte for byte.  It did
+   not update this MUTATION runner's compile line, which still named only
+   rtl/uart_controller.v and the bench.  Since then every invocation has died
+   at elaboration:
+
+       uart_rx_pin_tb.v:126: error: Unknown module type: uart_rx_pin_bfm
+
+   The baseline guard behaved correctly -- it refused to score rows it could
+   not trust and exited 1.  Nothing read the exit code, because nothing
+   re-runs this script.  Seventeen sessions passed with
+   mutation_test_report_2026-09-25.txt sitting in this directory reading
+   "detected 7   escaped 0   voided 0".
+
+   A SUITE THAT CANNOT RUN IS INDISTINGUISHABLE FROM A SUITE NOBODY RAN:
+   both produce no new output.  Every guard this repository has added since
+   2026-09-30 sits INSIDE a harness and answers "is this verdict sound".
+   None of them answers "did this harness run at all".
+
+2. THE VERDICTS ARE UNCHANGED, WHICH IS WHAT MAKES (1) MEASURABLE RATHER THAN
+   ALARMING.
+
+   All seven rows detect, with the same error counts and the same first FAIL
+   line as 2026-09-25, byte for byte:
+
+       M1 59   M2 9   M3 3   M4 14   M5 1   M6 3   M7 4
+
+   So the BFM extraction WAS output-neutral on this bench, exactly as
+   2026-09-27 claimed -- it was the harness's compile line, not the bench's
+   behaviour, that the refactor missed.  The seventeen-session-old report was
+   telling the truth about the RTL and lying about having been produced.
+
+3. DECLARED SITE COUNTS (control C, enforced -- the 2026-10-07 debt, paid for
+   this runner).
+
+   Each mutant now declares how many lines of rtl/uart_controller.v its anchor
+   matches, and a row that measures a different number voids as
+   INJECTION_FAILED rather than scoring.  Measured and declared:
+
+       M1 1   M2 1   M3 1   M4 2   M5 1   M6 1   M7 structural
+
+   M4's 2 is the row the 2026-10-13 anchor audit reported as OK_MULTISITE:2 --
+   a mutant that mutation_test_report_2026-09-25.txt presents as one defect
+   ("RX parity polarity swapped") and that changes two sites.  Fully injected,
+   so its kill was always real; the kill names the suite's response to a
+   COMPOUND change.  Declared, it is legal and stated.
+
+4. M3's SED IS REWRITTEN, AND THE REWRITE IS BYTE-IDENTICAL.
+
+   It was `0,/re/s||repl|`, an address-scoped substitution with an empty
+   pattern reusing the address regex, for which the 2026-10-13 audit could
+   form no text-level control at all (A_SKIPPED:unparsable).  The anchor
+   occurs exactly once in the RTL, so the address scoping was never doing
+   anything.  The explicit form produces a byte-identical mutant (checked with
+   cmp) and now passes the full control set (OK) rather than being
+   uncontrollable.  That retires the one repair the 2026-10-13 audit named.

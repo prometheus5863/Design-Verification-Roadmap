@@ -283,3 +283,59 @@ mc_verdict_usable() {
         *) return 1 ;;
     esac
 }
+
+# ----------------------------------------------------------------------------
+# CONTROL C, ENFORCED  (added 2026-10-14)
+# ----------------------------------------------------------------------------
+# Control C above is REPORTED and not enforced, and the header says why: more
+# than one matching line is not wrong, because sed mutates all of them.  That
+# reasoning is sound about CORRECTNESS and silent about DESCRIPTION, and
+# 2026-10-13's audit found the gap in this repository's own committed rows:
+#
+#     phase6_rx_pin_driver M4 -> OK_MULTISITE:2
+#
+# a mutant described in its report as one defect that changes two sites.  Its
+# kill is real, and the kill names the suite's response to a COMPOUND change
+# while the report presents it as one.  Nothing was wrong; something was
+# unstated -- and a reported-only control leaves it unstated forever, because
+# nothing ever reads the report back.
+#
+# So the count becomes a DECLARATION.  Each mutant states how many sites it
+# expects to change; a row whose anchor matches a different number aborts as
+# INJECTION_FAILED instead of being scored.  A multi-site mutant is then
+# perfectly legal -- it declares 2 and gets 2 -- and what is no longer legal
+# is a mutant whose site count nobody wrote down.
+#
+# This is also a REGRESSION guard on the RTL, which is the half of it that
+# only shows up later: the anchors live in the harness and the sites live in
+# rtl/uart_controller.v.  An RTL edit that duplicates or removes an anchored
+# line silently changes what every mutant built on it injects.  Today that
+# would pass `cmp -s` and score.  With a declared count it stops the row.
+#
+# mc_require_sites <original> <sed_expr> <expected_lines>
+#   echoes  SITES_OK:n            and returns 0
+#           SITES:n!=expected     and returns 1   (the count is wrong)
+#           SITES_UNPARSABLE      and returns 2   (no pattern can be formed)
+#
+# Return 2 is deliberately distinct from return 1.  An unparsable sed is a
+# row this control CANNOT certify, not a row that failed it, and a caller
+# that collapses the two would report a harness limitation as a defect -- the
+# 2026-10-09 rule (a false DETECTED is as bad as a missed defect) applied to
+# the harness's own guards.  The one row in this repository that hits it is
+# named in tools/mutation_anchor_audit_output.txt and is repaired, not
+# tolerated: an address-scoped `0,/re/s||repl|` has no recoverable pattern.
+mc_require_sites() {
+    local orig="$1" expr="$2" want="$3" n
+    if ! mc__split_sed "$expr"; then
+        mc__detail "SITES_UNPARSABLE: no pattern can be formed from this sed expression, so the declared site count cannot be checked. Rewrite the row with an explicit pattern."
+        echo SITES_UNPARSABLE; return 2
+    fi
+    n=$(mc__lines_bre "$MC_LHS" "$orig")
+    n="${n:-0}"
+    if [ "$n" -ne "$want" ]; then
+        mc__detail "SITES:${n}!=${want}: the anchor matches ${n} line(s) of ${orig} and the mutant declares ${want}. Either the RTL changed under the harness or the declaration is wrong; both void the row."
+        echo "SITES:${n}!=${want}"; return 1
+    fi
+    mc__detail "SITES_OK:${n}"
+    echo "SITES_OK:${n}"; return 0
+}
