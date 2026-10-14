@@ -7874,3 +7874,254 @@ census's two missed TRUSTED rows, measured verdicts and derived verdict
 sentence; `progress.md` with the session note). This AUTOMATION_LOG.md entry
 makes **4**. The graphene repository took **3** in the same session, for
 **7** across both.
+
+---
+
+## 2026-10-14 — Two harnesses had not compiled since 2026-09-27, and six sessions of guards never asked
+
+**Target:** the §"not yet covered" item ranked **first** on 2026-10-13 —
+rewrite the remaining runners' injection guards into the EXPECTED_SITES form,
+a debt standing since 2026-10-07. The debt is paid for two runners. On the way
+to the first one the session found that the runner does not run.
+
+`tools/mutation_controls.sh` (`mc_require_sites`),
+`tools/harness_file_closure_audit.py` (**4/4 controls**, with its transcript),
+`examples/phase6_rx_pin_driver/` and `examples/phase6_baud_error_coverage/`
+repaired and re-run with new reports, `progress.md`.
+
+### 1. The finding, which the session was not looking for
+
+`examples/phase6_rx_pin_driver/run_mutation_tests.sh` has failed at
+**elaboration** since 2026-09-27:
+
+```
+examples/phase6_rx_pin_driver/uart_rx_pin_tb.v:126:
+    error: Unknown module type: uart_rx_pin_bfm
+```
+
+That day the RX pin driver was extracted into `bfm/uart_rx_pin_bfm.v` and both
+benches were rewritten to instantiate it. The commit message reads *"BOTH
+benches now drive the pin through the shared BFM ... and BOTH committed outputs
+reproduce byte for byte."* Both **benches**, and both **bench** runners, which
+name the BFM. **Neither MUTATION runner was touched.** Each has aborted at its
+own baseline check and exited 1 ever since — for **seventeen sessions**,
+through every one of which `mutation_test_report_2026-09-25.txt` sat in the
+directory reading `detected 7 escaped 0 voided 0`.
+
+The baseline guard worked. It refused to score rows it could not trust.
+**Nothing read the exit code, because nothing re-runs the script.**
+
+> **A SUITE THAT CANNOT RUN IS INDISTINGUISHABLE FROM A SUITE NOBODY RAN.**
+
+Every guard added here since 2026-09-30 sits **inside** a harness and answers
+*is this verdict sound*. None answers *did this harness run*. Six consecutive
+sessions went to the first question — arrival controls, injection guards,
+witness soundness, detail-string derivation, the signal census — while two
+harnesses sat dead.
+
+### 2. The second one was found by a tool
+
+`tools/harness_file_closure_audit.py` asks the compile-at-all question of
+every harness, in two independent ways with different blind spots:
+
+* **statically** — collect the literal `*.v` paths each script names, and
+  require every module its benches instantiate to be defined in one of them.
+  This is what the omission looks like from outside: the script never mentions
+  `bfm/` at all.
+* **by real elaboration** — compile that closure with the pinned Icarus build,
+  because a script can satisfy the static check and still fail. The static
+  half is a claim about file lists; the elaboration is the fact.
+
+**20 harness scripts audited, 11 with a bench to compile, 2 failing before
+this session and 0 after.** Both halves named
+`examples/phase6_baud_error_coverage/run_mutation_tests.sh` independently. Its
+own sibling `run_baud_cov.sh` **does** name the BFM, which is what makes this a
+refactor that updated some callers and not all of them rather than a missing
+file.
+
+Four controls, all passing. (1) is the one that matters: the 2026-09-27
+omission is reinstated **synthetically** — the bench's closure minus the BFM
+must fail to elaborate *and* must name the missing module — because a control
+that cannot fail certifies nothing (2026-10-01). (2) the same closure **with**
+the BFM elaborates, so (1) is about the omission and not about the bench.
+(3) the module index resolves `uart_rx_pin_bfm` to exactly one file. (4) no
+harness passes the static half and then fails the elaboration.
+
+### 3. The verdicts are unchanged, line for line, in both
+
+| | 2026-09-25/26 | today |
+|---|---|---|
+| RX-pin M1…M7 errors | 59, 9, 3, 14, 1, 3, 4 | **identical**, same first FAIL line |
+| baud-cov M1…M5 errors | 9, 1, 6, 2, 5 | **identical**, same first ERROR line |
+| baud-cov M6 | expected escape | expected escape |
+
+So the BFM extraction **was** output-neutral exactly as 2026-09-27 claimed.
+It was the harnesses' compile lines it missed, not the benches' behaviour.
+
+> **Both seventeen-session-old reports were telling the truth about the RTL and
+> lying about having been produced.**
+
+### 4. The debt itself, paid for two runners
+
+`mc_require_sites`: **control C enforced** rather than reported. Each mutant
+declares its site count; a row measuring a different number aborts as
+`INJECTION_FAILED` instead of scoring. The header records why reporting was
+not enough — **nothing ever reads the report back** — and the 2026-10-13
+anchor audit's `OK_MULTISITE:2` row is the proof, having sat unstated in a
+committed report ever since. `SITES_UNPARSABLE` returns 2, deliberately
+distinct from a count mismatch's 1: a row this control **cannot certify** is
+not a row that **failed** it, and collapsing the two would report a harness
+limitation as a defect — 2026-10-09's rule applied to the guards themselves.
+
+The declaration is also an **RTL regression guard**, which is the half that
+only bites later: the anchors live in the harness and the anchored lines live
+in `rtl/uart_controller.v`, so an RTL edit that duplicates or removes one
+silently changes what every mutant built on it injects. `cmp -s` passes that.
+
+Declared counts: RX-pin `1 1 1 2 1 1 structural`, baud-cov `1 1 1 1 2 1`. The
+two 2s are the parity anchor, which occurs on two RTL lines. Fully injected,
+so both kills were always real; each kill names the suite's response to a
+**compound** change while its report said one defect. Declared, that is legal
+and stated.
+
+Both directories' stop-bit mutant carried the same `0,/re/s||repl|` sed, for
+which no text-level control can be formed at all. The anchor occurs exactly
+once, so the address scoping was inert. Rewritten to an explicit pattern in
+both, each **byte-identical** by `cmp`, each now passing the full control set.
+That retires the one repair the 2026-10-13 audit named **and finds its twin**,
+which that audit missed because the two harnesses were audited for different
+properties.
+
+### 5. The new audit carried two faults, both fixed before it was committed
+
+**(a)** Its instantiation regex allowed zero whitespace between the type and
+the instance name, so a Verilog **task call** `apb_read(addr, d);` matched by
+splitting the identifier itself — and the audit reported **eight to twenty-one
+nonexistent missing modules per harness**, with names one character short of
+real tasks (`apb_rea`, `whil`, `fo`). The noise was the tell: a missing module
+called `whil` is a parser bug, not a missing module. **2026-10-06's rule — a
+detector can misattribute what it measured — in a brand-new instrument.**
+
+**(b)** It passed absolute paths to `iverilog`, so its transcript carried this
+machine's session directory: a property of **where the audit ran** rather than
+of what it found, which is exactly what 2026-10-13 ruled out of a transcript.
+Caught by reading the transcript against this repository's own rule before
+committing it.
+
+### 6. Methodological note
+
+09-17 a suite can pass against broken RTL. 09-18 and print PASS over its own
+errors. 09-19/09-20 the subsystem reporting the verdict is not the one doing
+the checking. 09-26 a reachability pre-pass answers "did my attempts reach
+it". 09-30 a control has to sit where the failure enters. 10-01 an arrival
+control that cannot fail is not a control. 10-05 a metric can be printed
+beside the thing it does not measure. 10-06 and the detector can misattribute
+what it measured. 10-07 an injection guard is a measurement. 10-08 a false
+SURVIVED is worse than a missed defect. 10-09 and so is a false DETECTED.
+10-10 a control must not read the thing it controls for. 10-11 and neither
+may a checker. 10-12 a control must not require the defect it looks for to
+still exist. 10-13 a trusted read is safe exactly where the same quantity is
+independently predicted at the same rate.
+
+**10-14: EVERY ONE OF THOSE ASKS WHETHER A VERDICT IS SOUND. NONE ASKS
+WHETHER THE HARNESS RAN.**
+
+Checkable rule: **for every committed report, ask what re-runs the script that
+produced it, and what reads that script's exit code. If the answer to either
+is "nothing", the report's age is not evidence of stability — it is the
+absence of evidence.** The audit is the mechanical form:
+`tools/harness_file_closure_audit.py` before any session that trusts a
+harness's last report.
+
+Second rule, from §4: **a control that is reported rather than enforced is a
+control only if something reads the report.** The `OK_MULTISITE:2` row had
+been correctly measured, correctly printed and acted on by no one for two
+sessions.
+
+### 7. Toolchain and automation health
+
+The simulator was needed and both 2026-10-11 gotchas held again: `source
+tools/setup_iverilog.sh` without a pipe, and the real binaries under
+`/tmp/iverilog_install/usr/bin` with `-M .../ivl` for anything wrapped in
+`timeout`. Suites were started with `nohup ... &` and polled, because each
+runner exceeds the 120 s shell limit on this device. No cocotb or uvm-python
+this session, so the 09-06 install recipe and the `PATH`/`cocotb-config`
+gotcha are now **three sessions stale**, past the threshold 10-10 recorded.
+
+Device reachable and folder connected at the **first** firing; the two later
+firings will find both repositories carrying today's entry and stop. The whole
+session ran on the device VM and nothing crossed the bridge. **Every commit
+was pushed and verified against the GitHub API before the next was written**,
+with `git fetch origin main` immediately before each push per the 10-03 race
+item.
+
+**Not yet covered (candidates for future runs):**
+
+- **AUDIT WHAT RE-RUNS EACH HARNESS, AND WHAT READS ITS EXIT CODE** — created
+  today, **ranked first**, and the direct generalisation of §1. The closure
+  audit answers *can it compile*; nothing answers *when did it last actually
+  run*, and a committed report carries a date in its text with no relation to
+  whether it was produced. Cheapest route: a tool that compares each report's
+  stated date against the mtime/commit date of every file its suite depends
+  on, and flags a report older than its own inputs. Both of today's would
+  have been flagged on 2026-09-28.
+- **THE FOUR REMAINING `cmp -s` RUNNERS** — `phase6_crv_uart`,
+  `phase6_uvm_crv_uart`, `phase6_bfm_equivalence`, `phase4_ral`. Note the
+  2026-10-13 list said **four** runners carried the weak guard and named one
+  (`phase4_rtl_bringup`) that has no runner script at all; the real count was
+  **six**, and two are now converted. The remaining four are mechanical and
+  each has a worked reference in `examples/phase6_rx_pin_driver/`.
+- **THE UVM ENVIRONMENT AGAINST THE UART RTL — THIS ITEM IS STALE AND IS
+  RETIRED HERE.** `tools/open_item_adjudication.md` settled on 2026-10-03
+  that `examples/phase4_uvm_milestone/uart_uvm_tb.py` has been COMPLETE since
+  2026-09-18 — register agent, active serial RX agent, passive serial TX
+  agent, reference-model scoreboard, coverage collector, virtual sequencer,
+  five sequences — and that the capstone box is a **different** thing. The
+  item nevertheless reappeared in this list on 2026-10-10 and has been
+  carried for four more entries, exactly the twelve-session error that
+  adjudication was written to end. **What is actually open is the capstone
+  box's lettered remainder, and only that: (b) the SVA protocol checkers
+  bound into that environment, and (c) `PayloadAdmissibilityCoverage` wired
+  into the live `UartCoverage` collector.** Those two are the Phase 4/6
+  content; "build the UVM environment" is not.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13, the census's next schema change.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest
+  exposure argument in the census and never tested.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — carried from 10-12.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row: a control that misreports rather than a gap.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for a third session.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; the sweep is
+  resumable.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created 10-10.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the sixth session**.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  10-10.
+- **RAL BASICS, VIRTUAL SEQUENCERS, ACTIVE/PASSIVE AGENTS, CRV UART STIMULUS,
+  vplan v2** — the standing Phase 4 list. Note that virtual sequencers and
+  concurrent sequences were in fact added 2026-09-18 and CRV-from-UVM
+  stimulus 2026-10-11; this line needs the same adjudication the item above
+  just received.
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, reset asserted mid-frame); a property needing a
+  strengthening invariant; the SVA sequence layer (runnable on neither tool
+  here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+**Commits this run:** 3 (the RX-pin runner's repair with `mc_require_sites`;
+the closure audit and the second broken harness; `progress.md`). This
+AUTOMATION_LOG.md entry makes **4**. The graphene repository took **4** in the
+same session, for **8** across both.
