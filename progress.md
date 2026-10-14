@@ -1773,3 +1773,93 @@ distinguishes them.
 
 This is the inverse of the 2026-10-08 rule. A control with no control is
 useless; so is one that cannot pass on healthy code.
+
+---
+
+### Session note, 2026-10-14 — two harnesses had not compiled since 2026-09-27, and nothing noticed
+
+The session set out to pay the 2026-10-07 debt: convert the remaining
+runners' injection guards from `cmp -s` ("did the file change at all") to the
+declared-sites form. It paid that debt for two runners, and found something
+bigger on the way to the first one.
+
+**`examples/phase6_rx_pin_driver/run_mutation_tests.sh` has failed at
+elaboration since 2026-09-27.** That day the RX pin driver was extracted into
+`bfm/uart_rx_pin_bfm.v` and both benches were rewritten to instantiate it. The
+commit verified both BENCH runners and reported their outputs reproducing byte
+for byte. It did not touch either MUTATION runner's compile line, which still
+named only the RTL and the bench. Every invocation since has died with
+`Unknown module type: uart_rx_pin_bfm`, aborted at its own baseline check and
+exited 1 — for **seventeen sessions**, through every one of which
+`mutation_test_report_2026-09-25.txt` sat in the directory reading
+`detected 7 escaped 0 voided 0`.
+
+The baseline guard behaved exactly as designed. It refused to score rows it
+could not trust. Nothing read the exit code, because nothing re-runs the
+script.
+
+> **A SUITE THAT CANNOT RUN IS INDISTINGUISHABLE FROM A SUITE NOBODY RAN.**
+> Both produce no new output. Every guard this repository has added since
+> 2026-09-30 sits INSIDE a harness and answers "is this verdict sound". None
+> of them answers "did this harness run at all", and six consecutive sessions
+> went to the first question while two harnesses sat dead.
+
+**The second one was found by a tool, not by hand.**
+`tools/harness_file_closure_audit.py` asks the compile-at-all question of
+every harness in the repository, twice over: statically, by requiring every
+module a bench instantiates to be defined in a `.v` file the script actually
+names — which is what the omission looks like from outside, the script never
+mentioning `bfm/` at all — and then by really elaborating that closure with
+the pinned Icarus build, because a script can satisfy the static check and
+still fail to compile. **20 harness scripts audited, 11 with a bench to
+compile, 2 failing before this session and 0 after.** Both halves named
+`examples/phase6_baud_error_coverage/run_mutation_tests.sh` independently.
+
+**The verdicts are unchanged in both, line for line**, which is what makes
+this measurable rather than alarming: RX-pin 7/7 detected with the same error
+counts and first FAIL lines as 2026-09-25 (59, 9, 3, 14, 1, 3, 4), baud
+coverage 5 detected + 1 expected escape with the same counts as 2026-09-26
+(9, 1, 6, 2, 5). So the BFM extraction *was* output-neutral exactly as it
+claimed — it was the harnesses' compile lines it missed.
+
+> **Both seventeen-session-old reports were telling the truth about the RTL
+> and lying about having been produced.**
+
+**The debt itself, paid for two runners.** `tools/mutation_controls.sh` gains
+`mc_require_sites`: control C **enforced** rather than reported. Each mutant
+declares its site count and a row measuring a different number aborts as
+`INJECTION_FAILED` instead of scoring. A reported-only control was not enough
+for the reason the header now records — nothing ever reads the report back —
+and the 2026-10-13 anchor audit's `OK_MULTISITE:2` row sat unstated in a
+committed report for that reason. The declaration is also an **RTL regression
+guard**, the half that only bites later: the anchors live in the harness and
+the anchored lines live in `rtl/uart_controller.v`, so an RTL edit that
+duplicates or deletes one silently changes what every mutant built on it
+injects, and `cmp -s` passes that.
+
+Two mutants now declare 2 sites (`phase6_rx_pin_driver` M4,
+`phase6_baud_error_coverage` M5 — the parity anchor, on two RTL lines in
+both). Fully injected, so their kills were always real; each kill names the
+suite's response to a **compound** change, which the reports presented as one
+defect. Declared, that is legal and stated.
+
+Both directories' stop-bit mutant carried the same unparsable
+`0,/re/s||repl|` sed — an address-scoped substitution with an empty pattern
+reusing the address regex, for which no text-level control can be formed at
+all. The anchor occurs exactly once in the RTL, so the scoping was inert.
+Rewritten to an explicit pattern in both, each verified **byte-identical** by
+`cmp`, and each now passes the full control set. That retires the one repair
+the 2026-10-13 audit named — and finds its twin, which that audit missed
+because the two harnesses were audited for different properties.
+
+**And the new audit carried two faults of its own, both fixed before it was
+committed.** Its instantiation regex allowed zero whitespace between the type
+and the instance name, so a Verilog task call `apb_read(addr, d);` matched by
+splitting the identifier itself and the audit reported eight to twenty-one
+nonexistent missing modules per harness, with names one character short of
+real tasks. The noise was the tell: a missing module called `whil` is a parser
+bug, not a missing module — **2026-10-06's rule, that a detector can
+misattribute what it measured, in a brand-new instrument.** And it passed
+absolute paths to `iverilog`, so its committed transcript carried this
+machine's session directory: a property of where the audit ran rather than of
+what it found, which is exactly what 2026-10-13 ruled out of a transcript.
