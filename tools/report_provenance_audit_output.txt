@@ -1,0 +1,477 @@
+==========================================================================
+REPORT PROVENANCE AUDIT -- what re-runs each harness, and when was
+the report beside it last capable of being about that harness
+==========================================================================
+
+REPORT PROVENANCE
+  70 committed reports
+  STALE on the TIGHT closure (older than an input it names): 45
+  STALE on the DIRECTORY closure (upper bound, conflates sibling
+        exercises -- reported, not used as the headline):     50
+  UNREACHABLE (nothing re-runs the runner): 49
+  BOTH: 32   <- the 2026-10-14 failure mode exactly
+
+  Of the stale reports:
+    44 are beside a RUNNER -- a live harness with a report that
+       cannot be about it.  THIS is the actionable set.
+     1 have no runner at all -- one-off transcripts of finished
+       exercises, whose source was edited afterwards.  Expected,
+       and reported rather than counted as debt.
+
+  STALE  examples/phase4_uvm_milestone/mutation_test_report_2026-09-18.txt
+         stated 2026-09-18; 21 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/uart_uvm_tb_sim_output_2026-09-18.txt
+         stated 2026-09-18; 7 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
+           2026-10-08  examples/phase4_uvm_milestone/run_axis_audit.py
+           2026-10-08  examples/phase4_uvm_milestone/uart_uvm_tb.py
+           2026-10-06  examples/phase4_uvm_milestone/run_phase4_uvm.sh
+           2026-09-30  examples/phase4_uvm_milestone/payload_coverage_model.py
+           2026-09-29  examples/phase4_uvm_milestone/budget_law_exhaustive.py
+           2026-09-27  bfm/uart_rx_pin_bfm.v
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_ral/mutation_test_report_2026-09-19.txt
+         stated 2026-09-19; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-07  examples/phase4_ral/run_mutation_tests.sh
+           2026-10-07  tools/audit_mutation_anchors.sh
+           2026-10-07  tools/test_mutation_controls.sh
+           2026-09-23  rtl/uart_controller.v
+         runner(s): run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase4_ral/uart_ral_tb_sim_output_2026-09-19.txt
+         stated 2026-09-19; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-07  examples/phase4_ral/run_mutation_tests.sh
+           2026-10-07  tools/audit_mutation_anchors.sh
+           2026-10-07  tools/test_mutation_controls.sh
+           2026-09-23  rtl/uart_controller.v
+         runner(s): run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase5_formal_uart/formal_run_output_2026-09-20.txt
+         stated 2026-09-20; 1 input(s) newer, latest 2026-09-23 (rtl/uart_controller.v)
+           2026-09-23  rtl/uart_controller.v
+         runner(s): run_formal.sh
+           run_formal.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase5_csr_formal/csr_formal_run_output_2026-09-21.txt
+         stated 2026-09-21; 2 input(s) newer, latest 2026-09-23 (rtl/uart_controller.v)
+           2026-09-23  rtl/uart_controller.v
+           2026-09-22  examples/phase5_csr_formal/run_reset_formal.sh
+         runner(s): run_csr_formal.sh, run_reset_formal.sh
+           run_csr_formal.sh <- NOTHING IN THIS REPOSITORY
+           run_reset_formal.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase5_csr_formal/reset_formal_run_output_2026-09-22.txt
+         stated 2026-09-22; 1 input(s) newer, latest 2026-09-23 (rtl/uart_controller.v)
+           2026-09-23  rtl/uart_controller.v
+         runner(s): run_csr_formal.sh, run_reset_formal.sh
+           run_csr_formal.sh <- NOTHING IN THIS REPOSITORY
+           run_reset_formal.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase6_crv_uart/closure_sweep_2026-09-24.txt
+         stated 2026-09-24; 2 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/run_mutation_tests.sh)
+           2026-10-12  examples/phase6_crv_uart/run_mutation_tests.sh
+           2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
+         runner(s): run_crv_cov.sh, run_mutation_tests.sh
+           run_crv_cov.sh <- NOTHING IN THIS REPOSITORY
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase6_crv_uart/mutation_test_report_2026-09-24.txt
+         stated 2026-09-24; 2 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/run_mutation_tests.sh)
+           2026-10-12  examples/phase6_crv_uart/run_mutation_tests.sh
+           2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
+         runner(s): run_crv_cov.sh, run_mutation_tests.sh
+           run_crv_cov.sh <- NOTHING IN THIS REPOSITORY
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase6_crv_uart/uart_crv_cov_sim_output_2026-09-24.txt
+         stated 2026-09-24; 2 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/run_mutation_tests.sh)
+           2026-10-12  examples/phase6_crv_uart/run_mutation_tests.sh
+           2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
+         runner(s): run_crv_cov.sh, run_mutation_tests.sh
+           run_crv_cov.sh <- NOTHING IN THIS REPOSITORY
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase6_rx_pin_driver/mutation_test_report_2026-09-25.txt
+         stated 2026-09-25; 5 input(s) newer, latest 2026-10-14 (examples/phase6_rx_pin_driver/run_mutation_tests.sh)
+           2026-10-14  examples/phase6_rx_pin_driver/run_mutation_tests.sh
+           2026-10-14  tools/mutation_controls.sh
+           2026-09-27  bfm/uart_rx_pin_bfm.v
+           2026-09-27  examples/phase6_rx_pin_driver/run_rx_pin.sh
+           2026-09-27  examples/phase6_rx_pin_driver/uart_rx_pin_tb.v
+         runner(s): run_mutation_tests.sh, run_rx_pin.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_rx_pin.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
+
+  STALE  examples/phase6_rx_pin_driver/uart_rx_pin_sim_output_2026-09-25.txt
+         stated 2026-09-25; 5 input(s) newer, latest 2026-10-14 (examples/phase6_rx_pin_driver/run_mutation_tests.sh)
+           2026-10-14  examples/phase6_rx_pin_driver/run_mutation_tests.sh
+           2026-10-14  tools/mutation_controls.sh
+           2026-09-27  bfm/uart_rx_pin_bfm.v
+           2026-09-27  examples/phase6_rx_pin_driver/run_rx_pin.sh
+           2026-09-27  examples/phase6_rx_pin_driver/uart_rx_pin_tb.v
+         runner(s): run_mutation_tests.sh, run_rx_pin.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_rx_pin.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
+
+  STALE  examples/phase6_baud_error_coverage/mutation_test_report_2026-09-26.txt
+         stated 2026-09-26; 6 input(s) newer, latest 2026-10-14 (examples/phase6_baud_error_coverage/run_mutation_tests.sh)
+           2026-10-14  examples/phase6_baud_error_coverage/run_mutation_tests.sh
+           2026-10-14  tools/harness_file_closure_audit.py
+           2026-10-14  tools/mutation_controls.sh
+           2026-09-27  bfm/uart_rx_pin_bfm.v
+           2026-09-27  examples/phase6_baud_error_coverage/run_baud_cov.sh
+           2026-09-27  examples/phase6_baud_error_coverage/uart_baud_cov_tb.v
+         runner(s): run_baud_cov.sh, run_mutation_tests.sh
+           run_baud_cov.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase6_baud_error_coverage/uart_baud_cov_sim_output_2026-09-26.txt
+         stated 2026-09-26; 6 input(s) newer, latest 2026-10-14 (examples/phase6_baud_error_coverage/run_mutation_tests.sh)
+           2026-10-14  examples/phase6_baud_error_coverage/run_mutation_tests.sh
+           2026-10-14  tools/harness_file_closure_audit.py
+           2026-10-14  tools/mutation_controls.sh
+           2026-09-27  bfm/uart_rx_pin_bfm.v
+           2026-09-27  examples/phase6_baud_error_coverage/run_baud_cov.sh
+           2026-09-27  examples/phase6_baud_error_coverage/uart_baud_cov_tb.v
+         runner(s): run_baud_cov.sh, run_mutation_tests.sh
+           run_baud_cov.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase4_uvm_milestone/uart_uvm_sim_output_2026-09-27.txt
+         stated 2026-09-27; 5 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
+           2026-10-08  examples/phase4_uvm_milestone/run_axis_audit.py
+           2026-10-08  examples/phase4_uvm_milestone/uart_uvm_tb.py
+           2026-10-06  examples/phase4_uvm_milestone/run_phase4_uvm.sh
+           2026-09-30  examples/phase4_uvm_milestone/payload_coverage_model.py
+           2026-09-29  examples/phase4_uvm_milestone/budget_law_exhaustive.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/uart_uvm_sim_output_2026-09-28.txt
+         stated 2026-09-28; 5 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
+           2026-10-08  examples/phase4_uvm_milestone/run_axis_audit.py
+           2026-10-08  examples/phase4_uvm_milestone/uart_uvm_tb.py
+           2026-10-06  examples/phase4_uvm_milestone/run_phase4_uvm.sh
+           2026-09-30  examples/phase4_uvm_milestone/payload_coverage_model.py
+           2026-09-29  examples/phase4_uvm_milestone/budget_law_exhaustive.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/budget_law_exhaustive_2026-09-29.txt
+         stated 2026-09-29; 17 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_budget_law_2026-09-29.txt
+         stated 2026-09-29; 17 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/uart_uvm_sim_output_2026-09-29.txt
+         stated 2026-09-29; 4 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
+           2026-10-08  examples/phase4_uvm_milestone/run_axis_audit.py
+           2026-10-08  examples/phase4_uvm_milestone/uart_uvm_tb.py
+           2026-10-06  examples/phase4_uvm_milestone/run_phase4_uvm.sh
+           2026-09-30  examples/phase4_uvm_milestone/payload_coverage_model.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_payload_coverage_2026-09-30.txt
+         stated 2026-09-30; 16 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/payload_coverage_model_2026-09-30.txt
+         stated 2026-09-30; 16 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_reachable_cross_2026-10-02.txt
+         stated 2026-10-02; 15 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/reachable_cross_per_byte_rule_2026-10-02.txt
+         stated 2026-10-02; 15 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_witness_soundness_2026-10-03.txt
+         stated 2026-10-03; 14 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/open_item_staleness_2026-10-03.txt
+         stated 2026-10-03; 14 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/witness_soundness_2026-10-03.txt
+         stated 2026-10-03; 14 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/evidence_soundness_2026-10-04.txt
+         stated 2026-10-04; 12 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_evidence_soundness_2026-10-04.txt
+         stated 2026-10-04; 12 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/coverage_axis_audit_2026-10-05.txt
+         stated 2026-10-05; 10 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_coverage_axis_2026-10-05.txt
+         stated 2026-10-05; 10 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_witnesses_2026-10-06.txt
+         stated 2026-10-06; 8 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/run_axis_audit_2026-10-06.txt
+         stated 2026-10-06; 8 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+           2026-10-08  examples/phase4_uvm_milestone/mutation_test_signatures.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/uart_uvm_sim_output_2026-10-06.txt
+         stated 2026-10-06; 2 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
+           2026-10-08  examples/phase4_uvm_milestone/run_axis_audit.py
+           2026-10-08  examples/phase4_uvm_milestone/uart_uvm_tb.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_ral/mutation_test_report_2026-10-07.txt
+         stated 2026-10-07; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+         runner(s): run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_signatures_2026-10-08.txt
+         stated 2026-10-08; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_signatures_selftest_2026-10-08.txt
+         stated 2026-10-08; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/run_axis_audit_2026-10-08.txt
+         stated 2026-10-08; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+           2026-10-09  examples/phase4_uvm_milestone/arrival_control.py
+           2026-10-09  examples/phase4_uvm_milestone/mutation_test_reachable_cross.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_reachable_cross_arrival_2026-10-09.txt
+         stated 2026-10-09; 3 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+           2026-10-10  examples/phase4_uvm_milestone/arrival_control_census.py
+           2026-10-10  examples/phase4_uvm_milestone/mutation_test_witness_soundness.py
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/arrival_control_census_selftest_2026-10-10.txt
+         stated 2026-10-10; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_report_witness_soundness_2026-10-10.txt
+         stated 2026-10-10; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase4_uvm_milestone/mutation_witness_soundness_selftest_2026-10-10.txt
+         stated 2026-10-10; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+         runner(s): run_phase4_uvm.sh
+           run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase6_uvm_crv_uart/closure_summary_2026-10-11.txt
+         stated 2026-10-11; 1 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/uart_crv_cov_tb.v)
+           2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
+         runner(s): run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-11.txt
+         stated 2026-10-11; 1 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/uart_crv_cov_tb.v)
+           2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
+         runner(s): run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  STALE  examples/phase6_uvm_crv_uart/uart_uvm_crv_sim_output_2026-10-11.txt
+         stated 2026-10-11; 1 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/uart_crv_cov_tb.v)
+           2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
+         runner(s): run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+
+  UNREACHABLE runners (report may be fresh and still unverified):
+    examples/phase1                                runner(s): NONE
+    examples/phase1_milestone                      runner(s): NONE
+    examples/phase1_mutation                       runner(s): NONE
+    examples/phase2                                runner(s): NONE
+    examples/phase2_milestone                      runner(s): NONE
+    examples/phase4_rtl_bringup                    runner(s): NONE
+    examples/phase4_uvm_milestone                  runner(s): run_phase4_uvm.sh
+    examples/phase4_uvm_python                     runner(s): NONE
+    examples/phase5_csr_formal                     runner(s): run_csr_formal.sh, run_reset_formal.sh
+    examples/phase5_formal_uart                    runner(s): run_formal.sh
+    examples/phase6_divisor_window                 runner(s): run_divisor_window.sh
+
+  DOMINANT CAUSES (directories whose reports each input invalidates):
+    4  dirs  SHARED  tools/mutation_controls.sh
+    4  dirs  SHARED  rtl/uart_controller.v
+    3  dirs  SHARED  bfm/uart_rx_pin_bfm.v
+    2  dirs  local   examples/phase6_crv_uart/uart_crv_cov_tb.v
+    1  dirs  local   examples/phase4_ral/run_mutation_tests.sh
+    1  dirs  SHARED  tools/audit_mutation_anchors.sh
+
+  UNDATED inputs (counted as neither fresh nor stale): 0
+  UNRESOLVED path strings (invisible to this audit): 11 -- .../uart_controller_M3.v, /golden.v, /mut.v, WORK/mut.v
+
+CONTROLS
+  [PASS] C1 as-of 2026-09-28 flags BOTH harnesses that were dead
+         missed: none  -- and 13 reports in total were already stale that day
+         surplus mutation reports stale on 2026-09-28, not named
+         by 2026-10-14: 2 -- examples/phase4_ral, examples/phase4_uvm_milestone
+  [PASS] C2 as-of 2026-09-26 (before the break) neither is flagged
+         flagged: none
+  [PASS] C3 planted comparison both fires and refrains
+         rtl/uart_controller.v last committed 2026-09-23: newer than 2000-01-01 = True, newer than 2099-01-01 = False
+  [PASS] C4 the date parser rejects 5/5 non-dates and accepts a real one
+         accepted: 
+  [PASS] C5 an input with no git history dates to None, not to today
+         None
+  [PASS] C6 caller detection never counts a script as its own caller
+         6/6 runners excluded from their own caller sets
+
+==========================================================================
+Controls: 6 passed, 0 failed
+==========================================================================
