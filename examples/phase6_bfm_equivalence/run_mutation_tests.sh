@@ -29,6 +29,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${HERE}/../.." && pwd)"
 # shellcheck disable=SC1091
 source "${ROOT}/tools/setup_iverilog.sh" > /dev/null 2>&1
+# shellcheck disable=SC1091
+source "${ROOT}/tools/mutation_controls.sh"
 IVL_DIR="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}"
 IVERILOG="${IVL_DIR}/usr/bin/iverilog"
 VVP="${IVL_DIR}/usr/bin/vvp"
@@ -57,9 +59,40 @@ report="${HERE}/mutation_test_report_$(date -u +%F).txt"
 
 det=0; esc=0; void=0; n=0
 
+# CONVERTED 2026-10-15 from the bare `cmp -s` guard to the declared-sites
+# control -- the fourth of the six runners 2026-10-07 found guarding this way,
+# and the second-ranked item since 2026-10-13.  Both guards are kept, because
+# they ask different questions and the difference is the point:
+#
+#   mc_require_sites  asks of the ORIGINAL: how many lines does this anchor
+#                     reach, and is that the number the row declares?  It
+#                     fires when the file changed under the harness even if
+#                     the sed still matches SOMETHING -- which `cmp -s` cannot
+#                     see, because differing from the original is all `cmp`
+#                     requires.
+#   cmp -s            asks of the RESULT: did anything change at all?  The
+#                     weaker question, retained as the backstop for the one
+#                     row whose pattern spans two lines.
+#
+# AND THE DECLARATION CHANGES WHAT A VOID MEANS.  Row 7 declares sites=0: it
+# is a line-oriented sed against a two-line pattern, and it is in the suite
+# deliberately, to check that an unmatched pattern is reported void rather
+# than scored as a pass.  Until today its VOID was indistinguishable from an
+# accidental one.  Declaring 0 makes it an EXPECTED void -- the control passes
+# BECAUSE the measurement is zero -- so the row tests the harness on purpose
+# instead of by coincidence.
 run_case() {
-  local name="$1" prog="$2" why="$3"
+  local name="$1" prog="$2" sites="$3" why="$4"
+  local sitev
   n=$((n+1))
+  if ! sitev="$(mc_require_sites "${ROOT}/bfm/uart_rx_pin_bfm.v" "${prog}" "${sites}" 2>/dev/null)"; then
+    echo "[$n] ${name}: VOID -- declared ${sites} site(s), control says ${sitev}" >> "${report}"
+    echo "     The anchor does not reach the number of lines this row declares," >> "${report}"
+    echo "     so either the BFM changed under the harness or the declaration is" >> "${report}"
+    echo "     wrong.  Both void the row; neither is scored." >> "${report}"
+    echo >> "${report}"
+    void=$((void+1)); return
+  fi
   cp "${WORK}/golden.v" "${WORK}/mut.v"
   if ! sed -i "${prog}" "${WORK}/mut.v" 2>/dev/null; then
     echo "[$n] ${name}: VOID -- sed program rejected" >> "${report}"
@@ -67,7 +100,8 @@ run_case() {
   fi
   if cmp -s "${WORK}/golden.v" "${WORK}/mut.v"; then
     echo "[$n] ${name}: VOID -- the sed program matched nothing, so NO defect was" >> "${report}"
-    echo "     injected.  Reported as void rather than counted as a detection: a" >> "${report}"
+    echo "     injected (declared sites ${sites}, control ${sitev}).  Reported as" >> "${report}"
+    echo "     void rather than counted as a detection: a" >> "${report}"
     echo "     mutation harness whose unmatched patterns score as passes is the" >> "${report}"
     echo "     same failure mode as a testbench that passes against broken RTL." >> "${report}"
     echo >> "${report}"
@@ -94,6 +128,7 @@ run_case() {
     echo "[$n] ${name}: ESCAPED" >> "${report}"
     esc=$((esc+1))
   fi
+  echo "     sites: declared ${sites}, control ${sitev}" >> "${report}"
   echo "     why it matters: ${why}" >> "${report}"
   [ -n "${first}" ] && echo "     first failure: ${first}" >> "${report}"
   echo >> "${report}"
@@ -102,34 +137,42 @@ run_case() {
 
 run_case "bit_ps_off_by_one_ps" \
   's/#(bit_ps);/#(bit_ps + 1);/g' \
+  6 \
   "one picosecond per bit -- 3e-6 of a bit period.  No DUT-level check can see this: it is four orders of magnitude below the 5 bp sweep grid and would never move a measured tolerance limit.  Only a timestamp comparison catches it."
 
 run_case "phase_ignored" \
   's/if (phase_ps != 0) #(phase_ps);/;/g' \
+  2 \
   "the initial edge phase silently dropped.  09-25 measured edge phase moving a tolerance limit by 0.69% of eps, so a driver that ignores it reports optimistically biased limits -- the dangerous direction."
 
 run_case "data_msb_first" \
   's/rx = data\[i\];/rx = data[7-i];/g' \
+  1 \
   "bit order reversed.  Palindromic bytes (0x00, 0xFF, 0x3C, 0x81) cannot see this at all, so detection depends on the data table containing 0x01, 0x80, 0xAA, 0x55 -- the mutant is a test of the trial set as much as of the checker."
 
 run_case "parity_polarity_swapped" \
   's/p = (par == PAR_EVEN) ? \^data : ~(\^data);/p = (par == PAR_EVEN) ? ~(^data) : ^data;/g' \
+  1 \
   "even and odd parity exchanged."
 
 run_case "bad_stop_ignored" \
   's/rx = bad_stop ?/rx = 0 ?/g' \
+  1 \
   "the deliberate frame-error injection stops working, so the stop bit is always driven high.  This is a defect that makes benches PASS more often, which is the direction that does not announce itself."
 
 run_case "two_stop_ignored" \
   's/if (two_stop) begin/if (0) begin/g' \
+  1 \
   "the second stop bit never driven -- 8x2 frames silently become 8x1."
 
 run_case "stop_bit_delay_dropped" \
   's/rx = bad_stop ? 1.b0 : 1.b1;     \/\/ stop 1\n            #(bit_ps);/XX/g' \
+  0 \
   "a structural mutant expected to VOID: sed is line-oriented and this pattern spans two lines, so it matches nothing.  Kept in the suite deliberately as a live check that the harness reports an unmatched pattern as void instead of as a pass."
 
 run_case "idle_return_dropped" \
   's/rx = 1.b1;                       \/\/ return to idle//g' \
+  1 \
   "the pin left at the stop-bit value instead of being returned to idle.  Harmless when the stop bit was high, a stuck-low line when bad_stop was set -- so detection depends on the trial set exercising bad_stop, which T1 does across 12 of its 24 configs."
 
 {

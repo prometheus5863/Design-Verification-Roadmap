@@ -72,7 +72,15 @@ LIMITS, STATED
     be the 2026-10-09 false-DETECTED fault inverted into a false-fresh.
   * This tool reads dates and call graphs.  It does not run anything, so it
     cannot say a suite still PASSES -- only whether its report could possibly
-    be about the suite that is there now.
+    be about the suite that is there now.  2026-10-15 demonstrated the
+    distinction: examples/phase6_bfm_equivalence's report was stale by three
+    newer inputs, and re-running the suite reproduced its eight verdicts LINE
+    FOR LINE.  The staleness was real and the consequence was nil.  That is
+    the honest reading of every row here -- a stale report is unverified, not
+    wrong.
+  * It audits COMMITTED reports, via `git ls-files`, so a report just written
+    and not yet committed is invisible.  Run it after committing, or the
+    suite you have just re-run still reads stale.
 """
 
 import argparse
@@ -368,6 +376,40 @@ def print_table(rows, asof=None):
           % len(wide))
     print('  UNREACHABLE (nothing re-runs the runner): %d' % len(unreach))
     print('  BOTH: %d   <- the 2026-10-14 failure mode exactly' % len(both))
+
+    # THE PER-REPORT COUNT CANNOT REACH ZERO, AND THAT IS NOT THE AUDIT'S
+    # FAULT -- added 2026-10-15 after the first run of this tool in anger.
+    #
+    # Converting examples/phase6_bfm_equivalence's injection guard and
+    # re-running it RAISED the stale count from 45 to 47.  Correctly: the
+    # runner is an input to every report in its directory, so repairing a
+    # harness invalidates that harness's own older reports, and this
+    # repository keeps superseded reports in place by policy rather than
+    # deleting them.  THE AUDIT IS REFLEXIVE, and a metric that a repair
+    # makes worse is a metric nobody will act on.
+    #
+    # So the headline is per-SUITE and not per-REPORT: for each directory,
+    # is its NEWEST report fresh?  That number CAN reach zero, it does not
+    # punish keeping history, and it is the question the 2026-10-14 item
+    # actually asks -- does a live harness have a current report.
+    bydir = {}
+    for r in rows:
+        d = os.path.dirname(r.report)
+        if d not in bydir or r.stated > bydir[d].stated:
+            bydir[d] = r
+    suites = sorted(bydir.items())
+    with_runner = [(d, r) for d, r in suites if r.runners]
+    not_current = [(d, r) for d, r in with_runner if r.stale]
+    print('\n  PER-SUITE (the headline: is each suite\'s NEWEST report fresh?)')
+    print('    %d directories hold reports; %d of those have a runner.'
+          % (len(suites), len(with_runner)))
+    print('    %d suite(s) with a runner have NO CURRENT REPORT.'
+          % len(not_current))
+    for d, r in not_current:
+        print('      %-46s newest %s, %d input(s) newer'
+              % (d, r.stated.isoformat(), len(r.newer)))
+    print('    (The per-report counts above cannot reach zero while')
+    print('     superseded reports are kept in place, which is policy here.)')
 
     # THE SEGMENTATION THAT MAKES THE NUMBER MEAN SOMETHING.  The item asks
     # about HARNESSES.  A transcript in a directory with no runner script was

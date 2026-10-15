@@ -5,14 +5,26 @@ the report beside it last capable of being about that harness
 
 REPORT PROVENANCE
   70 committed reports
-  STALE on the TIGHT closure (older than an input it names): 45
+  STALE on the TIGHT closure (older than an input it names): 47
   STALE on the DIRECTORY closure (upper bound, conflates sibling
-        exercises -- reported, not used as the headline):     50
+        exercises -- reported, not used as the headline):     52
   UNREACHABLE (nothing re-runs the runner): 49
   BOTH: 32   <- the 2026-10-14 failure mode exactly
 
+  PER-SUITE (the headline: is each suite's NEWEST report fresh?)
+    18 directories hold reports; 11 of those have a runner.
+    6 suite(s) with a runner have NO CURRENT REPORT.
+      examples/phase4_ral                            newest 2026-10-07, 1 input(s) newer
+      examples/phase4_uvm_milestone                  newest 2026-10-10, 1 input(s) newer
+      examples/phase5_csr_formal                     newest 2026-09-22, 1 input(s) newer
+      examples/phase5_formal_uart                    newest 2026-09-20, 1 input(s) newer
+      examples/phase6_bfm_equivalence                newest 2026-09-27, 1 input(s) newer
+      examples/phase6_uvm_crv_uart                   newest 2026-10-11, 1 input(s) newer
+    (The per-report counts above cannot reach zero while
+     superseded reports are kept in place, which is policy here.)
+
   Of the stale reports:
-    44 are beside a RUNNER -- a live harness with a report that
+    46 are beside a RUNNER -- a live harness with a report that
        cannot be about it.  THIS is the actionable set.
      1 have no runner at all -- one-off transcripts of finished
        exercises, whose source was edited afterwards.  Expected,
@@ -48,7 +60,7 @@ REPORT PROVENANCE
            2026-10-07  tools/test_mutation_controls.sh
            2026-09-23  rtl/uart_controller.v
          runner(s): run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase4_ral/uart_ral_tb_sim_output_2026-09-19.txt
          stated 2026-09-19; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
@@ -58,7 +70,7 @@ REPORT PROVENANCE
            2026-10-07  tools/test_mutation_controls.sh
            2026-09-23  rtl/uart_controller.v
          runner(s): run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase5_formal_uart/formal_run_output_2026-09-20.txt
          stated 2026-09-20; 1 input(s) newer, latest 2026-09-23 (rtl/uart_controller.v)
@@ -87,7 +99,7 @@ REPORT PROVENANCE
            2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
          runner(s): run_crv_cov.sh, run_mutation_tests.sh
            run_crv_cov.sh <- NOTHING IN THIS REPOSITORY
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_crv_uart/mutation_test_report_2026-09-24.txt
          stated 2026-09-24; 2 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/run_mutation_tests.sh)
@@ -95,7 +107,7 @@ REPORT PROVENANCE
            2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
          runner(s): run_crv_cov.sh, run_mutation_tests.sh
            run_crv_cov.sh <- NOTHING IN THIS REPOSITORY
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_crv_uart/uart_crv_cov_sim_output_2026-09-24.txt
          stated 2026-09-24; 2 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/run_mutation_tests.sh)
@@ -103,7 +115,7 @@ REPORT PROVENANCE
            2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
          runner(s): run_crv_cov.sh, run_mutation_tests.sh
            run_crv_cov.sh <- NOTHING IN THIS REPOSITORY
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_rx_pin_driver/mutation_test_report_2026-09-25.txt
          stated 2026-09-25; 5 input(s) newer, latest 2026-10-14 (examples/phase6_rx_pin_driver/run_mutation_tests.sh)
@@ -113,7 +125,7 @@ REPORT PROVENANCE
            2026-09-27  examples/phase6_rx_pin_driver/run_rx_pin.sh
            2026-09-27  examples/phase6_rx_pin_driver/uart_rx_pin_tb.v
          runner(s): run_mutation_tests.sh, run_rx_pin.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
            run_rx_pin.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
 
   STALE  examples/phase6_rx_pin_driver/uart_rx_pin_sim_output_2026-09-25.txt
@@ -124,7 +136,7 @@ REPORT PROVENANCE
            2026-09-27  examples/phase6_rx_pin_driver/run_rx_pin.sh
            2026-09-27  examples/phase6_rx_pin_driver/uart_rx_pin_tb.v
          runner(s): run_mutation_tests.sh, run_rx_pin.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
            run_rx_pin.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
 
   STALE  examples/phase6_baud_error_coverage/mutation_test_report_2026-09-26.txt
@@ -137,7 +149,7 @@ REPORT PROVENANCE
            2026-09-27  examples/phase6_baud_error_coverage/uart_baud_cov_tb.v
          runner(s): run_baud_cov.sh, run_mutation_tests.sh
            run_baud_cov.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_baud_error_coverage/uart_baud_cov_sim_output_2026-09-26.txt
          stated 2026-09-26; 6 input(s) newer, latest 2026-10-14 (examples/phase6_baud_error_coverage/run_mutation_tests.sh)
@@ -149,7 +161,7 @@ REPORT PROVENANCE
            2026-09-27  examples/phase6_baud_error_coverage/uart_baud_cov_tb.v
          runner(s): run_baud_cov.sh, run_mutation_tests.sh
            run_baud_cov.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase4_uvm_milestone/uart_uvm_sim_output_2026-09-27.txt
          stated 2026-09-27; 5 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
@@ -160,6 +172,20 @@ REPORT PROVENANCE
            2026-09-29  examples/phase4_uvm_milestone/budget_law_exhaustive.py
          runner(s): run_phase4_uvm.sh
            run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
+
+  STALE  examples/phase6_bfm_equivalence/mutation_test_report_2026-09-27.txt
+         stated 2026-09-27; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+         runner(s): run_bfm_equiv.sh, run_mutation_tests.sh
+           run_bfm_equiv.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
+
+  STALE  examples/phase6_bfm_equivalence/uart_bfm_equiv_sim_output_2026-09-27.txt
+         stated 2026-09-27; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+           2026-10-14  tools/mutation_controls.sh
+         runner(s): run_bfm_equiv.sh, run_mutation_tests.sh
+           run_bfm_equiv.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase4_uvm_milestone/uart_uvm_sim_output_2026-09-28.txt
          stated 2026-09-28; 5 input(s) newer, latest 2026-10-08 (examples/phase4_uvm_milestone/run_axis_audit.py)
@@ -356,7 +382,7 @@ REPORT PROVENANCE
          stated 2026-10-07; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
            2026-10-14  tools/mutation_controls.sh
          runner(s): run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase4_uvm_milestone/mutation_report_signatures_2026-10-08.txt
          stated 2026-10-08; 5 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
@@ -418,19 +444,19 @@ REPORT PROVENANCE
          stated 2026-10-11; 1 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/uart_crv_cov_tb.v)
            2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
          runner(s): run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-11.txt
          stated 2026-10-11; 1 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/uart_crv_cov_tb.v)
            2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
          runner(s): run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_uvm_crv_uart/uart_uvm_crv_sim_output_2026-10-11.txt
          stated 2026-10-11; 1 input(s) newer, latest 2026-10-12 (examples/phase6_crv_uart/uart_crv_cov_tb.v)
            2026-10-12  examples/phase6_crv_uart/uart_crv_cov_tb.v
          runner(s): run_mutation_tests.sh
-           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py
+           run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_bfm_equivalence/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   UNREACHABLE runners (report may be fresh and still unverified):
     examples/phase1                                runner(s): NONE
@@ -446,7 +472,7 @@ REPORT PROVENANCE
     examples/phase6_divisor_window                 runner(s): run_divisor_window.sh
 
   DOMINANT CAUSES (directories whose reports each input invalidates):
-    4  dirs  SHARED  tools/mutation_controls.sh
+    5  dirs  SHARED  tools/mutation_controls.sh
     4  dirs  SHARED  rtl/uart_controller.v
     3  dirs  SHARED  bfm/uart_rx_pin_bfm.v
     2  dirs  local   examples/phase6_crv_uart/uart_crv_cov_tb.v
