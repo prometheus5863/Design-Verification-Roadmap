@@ -1863,3 +1863,146 @@ misattribute what it measured, in a brand-new instrument.** And it passed
 absolute paths to `iverilog`, so its committed transcript carried this
 machine's session directory: a property of where the audit ran rather than of
 what it found, which is exactly what 2026-10-13 ruled out of a transcript.
+
+---
+
+### Session note, 2026-10-15 — a report's date has no relation to whether it was produced, and the audit that says so is reflexive
+
+**The 2026-10-14 item ranked first, built:** `tools/report_provenance_audit.py`,
+6/6 controls, with its transcript. Plus the fourth of six `cmp -s` runner
+conversions, and a re-run that turns one of the audit's own flags into a
+measurement.
+
+#### 1. The question the closure audit cannot ask
+
+`tools/harness_file_closure_audit.py` (2026-10-14) asks whether a harness can
+compile **today**. That is necessary and it is not sufficient:
+
+> **A report carries a date in its text with no relation to whether it was
+> produced. A harness that compiles tells you nothing about whether the report
+> beside it describes today's harness or a version that stopped existing three
+> weeks ago.**
+
+The new audit asks two things, kept on separate axes because they fail
+independently and want different fixes:
+
+| axis | question | fix |
+|---|---|---|
+| **STALENESS** | is the report older than an input it depends on? | re-run the suite |
+| **RE-RUN REACHABILITY** | does anything in this repository invoke the runner? | give it a caller |
+
+Dates come from **git commit dates, not mtimes**. A fresh clone gives every
+file the same mtime, so an mtime-based audit reports everything fresh on any
+machine but the one that wrote it — 2026-10-13's rule about transcripts
+carrying properties of where they ran, applied to the instrument instead of to
+the output.
+
+#### 2. The result, and the three shared files responsible
+
+47 of 70 committed reports are stale on the tight closure, 46 of them beside a
+live runner. The count is not the finding; the cause rollup is, and it counts
+**directories** rather than reports so that one edit does not look like forty:
+
+| directories invalidated | input | |
+|---|---|---|
+| 4 | `tools/mutation_controls.sh` | SHARED |
+| 4 | `rtl/uart_controller.v` | SHARED |
+| 3 | `bfm/uart_rx_pin_bfm.v` | SHARED |
+
+> **The dominant pattern is not rot. It is SHARED-DEPENDENCY EDITS WITH
+> PARTIAL RE-RUNS.**
+
+The top row is **yesterday's**: 2026-10-14 edited the shared mutation-control
+library and re-ran two of the suites depending on it. The `bfm/` row is the
+2026-09-27 refactor that session found twice — and it reached a **third**
+suite, `examples/phase4_uvm_milestone`, whose report has been stale since then
+and still is.
+
+#### 3. The per-report count cannot reach zero, which retired the first headline
+
+Converting `examples/phase6_bfm_equivalence`'s guard and re-running it **raised**
+the stale count from 45 to 47. Correctly: the runner is an input to every
+report in its directory, so **repairing a harness invalidates that harness's
+own older reports**, and this repository keeps superseded reports in place by
+policy rather than deleting them.
+
+> **The audit is reflexive, and a metric that a repair makes worse is a metric
+> nobody will act on.**
+
+The headline is now **per-suite**: for each directory, is its *newest* report
+fresh? That number can reach zero, it does not punish keeping history, and it
+is what the item actually asks. It read **6** suites with a runner and no
+current report before today's re-run and **5** after — the first time this
+measure has moved.
+
+Still without a current report: `phase4_ral`, `phase4_uvm_milestone`,
+`phase5_csr_formal`, `phase5_formal_uart`, `phase6_uvm_crv_uart`.
+
+#### 4. The flag turned into a measurement: real staleness, nil consequence
+
+`examples/phase6_bfm_equivalence` was one of the 44. Re-run today, its **eight
+verdicts reproduce line for line** — 7 detected, 0 escaped, 1 void, identical
+text. So the staleness was **real** (the inputs had genuinely changed under the
+report) and the **consequence was nil**. That is now a stated limit of the
+audit:
+
+> **A stale report is UNVERIFIED, not wrong, and this tool cannot tell which
+> until the suite is run.**
+
+#### 5. `cmp -s` → declared sites, and a void that is now deliberate
+
+The fourth of the six runners 2026-10-07 found guarding with a bare `cmp -s`.
+Both guards are kept, because they ask different questions: `mc_require_sites`
+asks of the **original** how many lines the anchor reaches and whether that is
+the declared number — which fires when the file changed under the harness even
+while the sed still matches *something*, the case `cmp -s` structurally cannot
+see; `cmp -s` asks of the **result** whether anything changed at all. All seven
+scored rows read `SITES_OK` at their declared counts (6, 2, 1, 1, 1, 1, 1).
+
+And the declaration changed what one row **means**. Row 7,
+`stop_bit_delay_dropped`, is a line-oriented sed against a two-line pattern,
+kept deliberately to check that an unmatched pattern is voided rather than
+scored. Until today its VOID was indistinguishable from an accidental one. It
+now declares `sites=0` and the control reads `SITES_OK:0`, so it is an
+**expected** void: the row tests the harness on purpose instead of by
+coincidence.
+
+#### 6. Three of the audit's own defects, recorded rather than quietly fixed
+
+**(a) The first control asserted the wrong thing and the audit was right.**
+C1 required `--asof 2026-09-28` to flag **exactly** the two dead harnesses, and
+got four. 2026-10-14 never claimed they were the only two. Asserting "exactly"
+would have forced either a loosened detector or a deleted row; the control now
+asserts the claim that was actually made and **prints the surplus as a
+finding**.
+
+**(b) An incomplete closure under-reports, silently.** The first version
+matched path literals only, so the 17 `$HERE/..` strings every mutation runner
+builds its paths from resolved to nothing — it omitted
+`rtl/uart_controller.v` from the dependency set of the **DUT's own mutation
+tests**. Unlike a noisy detector, this one fails quiet.
+
+**(c) A narrowing that keeps everything is not a narrowing.** The first
+subject-based narrowing kept every `.sh` **and** `.py` in a directory, which
+defeated itself for the python suites where the subject *is* a `.py`. The
+directory closure is retained as a declared **upper bound** (52) beside the
+tight headline (47), because `examples/phase2` holds six independent exercises
+side by side and `alu_if`'s transcript is not invalidated by a later commit to
+`alu_sva_checker.sv`.
+
+#### 7. Methodological note
+
+10-14: every guard asks whether a verdict is sound; none asks whether the
+harness ran. **10-15: and none asks whether the report in front of you was
+produced by the harness in front of you.**
+
+Checkable rule: **a report is evidence only about the version of its inputs
+that existed when it was written. Compare its date against the commit date of
+every file it depends on before citing it — and prefer the per-suite question
+(does this harness have a current report?) to the per-report one, because
+keeping history makes the per-report count rise.**
+
+Second rule, from §4: **a stale report is unverified, not wrong.** The one
+re-run today reproduced its verdicts exactly. Reporting staleness as a defect
+would have been a false DETECTED (10-09) at the level of the audit rather than
+the suite.

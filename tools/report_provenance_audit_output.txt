@@ -4,7 +4,7 @@ the report beside it last capable of being about that harness
 ==========================================================================
 
 REPORT PROVENANCE
-  70 committed reports
+  71 committed reports
   STALE on the TIGHT closure (older than an input it names): 47
   STALE on the DIRECTORY closure (upper bound, conflates sibling
         exercises -- reported, not used as the headline):     52
@@ -13,12 +13,11 @@ REPORT PROVENANCE
 
   PER-SUITE (the headline: is each suite's NEWEST report fresh?)
     18 directories hold reports; 11 of those have a runner.
-    6 suite(s) with a runner have NO CURRENT REPORT.
+    5 suite(s) with a runner have NO CURRENT REPORT.
       examples/phase4_ral                            newest 2026-10-07, 1 input(s) newer
       examples/phase4_uvm_milestone                  newest 2026-10-10, 1 input(s) newer
       examples/phase5_csr_formal                     newest 2026-09-22, 1 input(s) newer
       examples/phase5_formal_uart                    newest 2026-09-20, 1 input(s) newer
-      examples/phase6_bfm_equivalence                newest 2026-09-27, 1 input(s) newer
       examples/phase6_uvm_crv_uart                   newest 2026-10-11, 1 input(s) newer
     (The per-report counts above cannot reach zero while
      superseded reports are kept in place, which is policy here.)
@@ -174,14 +173,16 @@ REPORT PROVENANCE
            run_phase4_uvm.sh <- NOTHING IN THIS REPOSITORY
 
   STALE  examples/phase6_bfm_equivalence/mutation_test_report_2026-09-27.txt
-         stated 2026-09-27; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+         stated 2026-09-27; 2 input(s) newer, latest 2026-10-15 (examples/phase6_bfm_equivalence/run_mutation_tests.sh)
+           2026-10-15  examples/phase6_bfm_equivalence/run_mutation_tests.sh
            2026-10-14  tools/mutation_controls.sh
          runner(s): run_bfm_equiv.sh, run_mutation_tests.sh
            run_bfm_equiv.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
            run_mutation_tests.sh <- examples/phase4_ral/run_mutation_tests.sh, examples/phase6_baud_error_coverage/run_mutation_tests.sh, examples/phase6_crv_uart/run_mutation_tests.sh, examples/phase6_rx_pin_driver/run_mutation_tests.sh, examples/phase6_uvm_crv_uart/run_mutation_tests.sh, tools/audit_mutation_anchors.sh, tools/harness_file_closure_audit.py, tools/report_provenance_audit.py
 
   STALE  examples/phase6_bfm_equivalence/uart_bfm_equiv_sim_output_2026-09-27.txt
-         stated 2026-09-27; 1 input(s) newer, latest 2026-10-14 (tools/mutation_controls.sh)
+         stated 2026-09-27; 2 input(s) newer, latest 2026-10-15 (examples/phase6_bfm_equivalence/run_mutation_tests.sh)
+           2026-10-15  examples/phase6_bfm_equivalence/run_mutation_tests.sh
            2026-10-14  tools/mutation_controls.sh
          runner(s): run_bfm_equiv.sh, run_mutation_tests.sh
            run_bfm_equiv.sh <- examples/phase6_rx_pin_driver/run_mutation_tests.sh
