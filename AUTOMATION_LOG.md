@@ -8125,3 +8125,274 @@ item.
 the closure audit and the second broken harness; `progress.md`). This
 AUTOMATION_LOG.md entry makes **4**. The graphene repository took **4** in the
 same session, for **8** across both.
+
+---
+
+## 2026-10-15 — A report's date has no relation to whether it was produced, and the audit that says so is reflexive
+
+**Target:** the §"not yet covered" item ranked **first** on 2026-10-14 —
+"audit what re-runs each harness, and what reads its exit code" — plus the
+**second-ranked** item, the remaining `cmp -s` injection guards. The first is
+built and found yesterday's own fault repeated in six places; the second is
+advanced by one runner, and that runner's re-run is what turned the first
+item's output from a list of flags into a measurement.
+
+`tools/report_provenance_audit.py` (**6/6 controls**, with its transcript),
+`examples/phase6_bfm_equivalence/` converted and re-run with a new report,
+`progress.md`.
+
+### 1. The question the closure audit cannot ask
+
+2026-10-14 built the tool that asks whether a harness can compile **today**,
+after finding two that had not since 2026-09-27. Necessary, not sufficient:
+
+> **A REPORT CARRIES A DATE IN ITS TEXT WITH NO RELATION TO WHETHER IT WAS
+> PRODUCED.** A harness that compiles tells you nothing about whether the
+> report beside it describes today's harness or a version that stopped
+> existing three weeks ago.
+
+Two axes, kept separate because they fail independently and want different
+fixes: **staleness** (is the report older than an input it depends on → re-run
+it) and **re-run reachability** (does anything invoke the runner → give it a
+caller). Both of 2026-10-14's dead harnesses were **both**.
+
+Dates come from **git commit dates, not mtimes.** A fresh clone gives every
+file the same mtime, so an mtime audit reports everything fresh on any machine
+but the one that wrote it — 2026-10-13's rule about transcripts carrying
+properties of where they ran, turned on the instrument.
+
+### 2. The result: 47 of 70, and three shared files did it
+
+47 of 70 committed reports are stale on the tight closure; **46 sit beside a
+live runner**. One has no runner at all and is the one-off transcript of a
+finished exercise — reported, not counted as debt, because it was never
+re-runnable by design.
+
+The count is not the finding. The cause rollup is, and it counts
+**directories** so that one edit does not look like forty:
+
+| dirs invalidated | input | |
+|---|---|---|
+| 4 | `tools/mutation_controls.sh` | **SHARED** |
+| 4 | `rtl/uart_controller.v` | **SHARED** |
+| 3 | `bfm/uart_rx_pin_bfm.v` | **SHARED** |
+| 2 | `examples/phase6_crv_uart/uart_crv_cov_tb.v` | local |
+
+> **THE DOMINANT PATTERN IS NOT ROT. IT IS SHARED-DEPENDENCY EDITS WITH
+> PARTIAL RE-RUNS.**
+
+The top row is **yesterday's**: 2026-10-14 edited the shared mutation-control
+library and re-ran two of the four suites that depend on it. The `bfm/` row is
+the 2026-09-27 refactor that session found twice — and it reached a **third**
+suite, `examples/phase4_uvm_milestone`, whose report has been stale since then
+and **still is**. The fault 2026-10-14 described as having happened twice
+happened at least three times, and the tool it asked for is what says so.
+
+### 3. The audit is reflexive, which retired its own headline
+
+Converting `phase6_bfm_equivalence`'s guard and re-running it **raised** the
+stale count from 45 to 47. Correctly: the runner is an input to every report in
+its directory, so **repairing a harness invalidates that harness's own older
+reports**, and superseded reports are kept here by policy rather than deleted.
+
+> **A METRIC THAT A REPAIR MAKES WORSE IS A METRIC NOBODY WILL ACT ON.**
+
+The headline is now **per-suite** — for each directory, is its *newest* report
+fresh? That can reach zero, does not punish keeping history, and is what the
+item actually asks. **6 suites with a runner and no current report before
+today's re-run; 5 after** — the first time this measure has moved. Remaining:
+`phase4_ral`, `phase4_uvm_milestone`, `phase5_csr_formal`,
+`phase5_formal_uart`, `phase6_uvm_crv_uart`.
+
+### 4. One flag turned into a measurement: real staleness, nil consequence
+
+`phase6_bfm_equivalence` was one of the 44, stale since 2026-09-27. Re-run
+today: **eight verdicts reproduce line for line** — 7 detected, 0 escaped, 1
+void, identical text. The staleness was **real** and the **consequence nil**,
+and that is now a stated limit of the audit rather than an unstated hope:
+
+> **A STALE REPORT IS UNVERIFIED, NOT WRONG, and this tool cannot tell which
+> until the suite is run.** Reporting staleness as a defect would be a false
+> DETECTED (2026-10-09) at the level of the instrument instead of the suite.
+
+### 5. `cmp -s` → declared sites, and a void that is now deliberate
+
+The **fourth** of the six runners 2026-10-07 found guarding with a bare
+`cmp -s`. Both guards are kept, because they ask different questions and the
+difference is the point: `mc_require_sites` asks of the **original** how many
+lines the anchor reaches and whether that is the declared number — which fires
+when the file changed under the harness *even while the sed still matches
+something*, the case `cmp -s` structurally cannot see, since differing from the
+original is all `cmp` requires. All seven scored rows read `SITES_OK` at their
+declared counts (6, 2, 1, 1, 1, 1, 1).
+
+And the declaration changed what one row **means**. Row 7,
+`stop_bit_delay_dropped`, is a line-oriented sed against a two-line pattern,
+kept in the suite deliberately to check that an unmatched pattern is voided
+rather than scored. Until today its VOID was indistinguishable from an
+accidental one. It now declares `sites=0`, the control reads `SITES_OK:0`, and
+the void is **expected** — the row tests the harness on purpose instead of by
+coincidence.
+
+### 6. Six controls, and three of the audit's own defects kept on the record
+
+**C1 is the one that matters.** 2026-10-14 asserted both dead harnesses "would
+have been flagged on 2026-09-28"; an assertion about what an instrument would
+have said is worth what the instrument run that way says, so `--asof` reruns
+history and C1 requires both. **C2** requires neither to be flagged as of
+2026-09-26, so C1 is about the 2026-09-27 commit and not about those reports
+being flaggable at any time. **C4** rejects five near-miss non-dates, because
+2026-10-14's first audit reported missing modules called `whil` and `fo` on a
+lenient parser. **C5** requires an undatable input to date to `None` rather
+than to today — the false-**fresh** inversion of 2026-10-09's false DETECTED.
+**C6** requires caller detection never to count a script as its own caller;
+every mutation runner names its own path in its usage text, so self-references
+would make all six look reachable (2026-10-10's rule).
+
+**(a) C1's first draft asserted the wrong thing and the audit was right.** It
+required *exactly* the two and got four. 2026-10-14 never claimed they were the
+only two. Asserting "exactly" would have forced either a loosened detector or a
+deleted row; the control now asserts the claim that was **actually made** and
+prints the surplus as a finding — which is how `phase4_ral` and
+`phase4_uvm_milestone` entered the record.
+
+**(b) An incomplete closure under-reports, silently.** The first version
+matched path literals only, so the 17 `$HERE/..` strings every mutation runner
+builds its paths from resolved to nothing — it omitted `rtl/uart_controller.v`
+from the dependency set of **the DUT's own mutation tests**, the one input
+whose change most obviously invalidates a mutation report. Unlike a noisy
+detector, this one fails **quiet**, which is the harder half of 2026-10-06's
+rule.
+
+**(c) A narrowing that keeps everything is not a narrowing.** The first
+subject-based narrowing kept every `.sh` **and** `.py` in a directory, which
+defeated itself for the python suites where the subject *is* a `.py`. The
+directory closure is retained as a declared **upper bound** (52) beside the
+tight headline (47), because `examples/phase2` holds six independent exercises
+side by side and `alu_if`'s transcript is not invalidated by a later commit to
+`alu_sva_checker.sv`.
+
+### 7. Methodological note
+
+09-17 a suite can pass against broken RTL. 09-18 and print PASS over its own
+errors. 09-19/09-20 the subsystem reporting the verdict is not the one doing
+the checking. 09-26 a reachability pre-pass answers "did my attempts reach
+it". 09-30 a control has to sit where the failure enters. 10-01 an arrival
+control that cannot fail is not a control. 10-05 a metric can be printed
+beside the thing it does not measure. 10-06 and the detector can misattribute
+what it measured. 10-07 an injection guard is a measurement. 10-08 a false
+SURVIVED is worse than a missed defect. 10-09 and so is a false DETECTED.
+10-10 a control must not read the thing it controls for. 10-11 and neither may
+a checker. 10-12 a control must not require the defect it looks for to still
+exist. 10-13 a trusted read is safe exactly where the same quantity is
+independently predicted at the same rate. 10-14 every one of those asks
+whether a verdict is sound; none asks whether the harness ran.
+
+**10-15: AND NONE ASKS WHETHER THE REPORT IN FRONT OF YOU WAS PRODUCED BY THE
+HARNESS IN FRONT OF YOU.**
+
+Checkable rule: **a report is evidence only about the version of its inputs
+that existed when it was written. Compare its date against the commit date of
+every file it depends on before citing it — and prefer the per-suite question
+to the per-report one, because keeping history makes the per-report count
+rise.** Second rule, from §4: **a stale report is unverified, not wrong.**
+
+### 8. Toolchain and automation health
+
+The simulator was needed and both 2026-10-11 gotchas held again: `source
+tools/setup_iverilog.sh` **without a pipe**, and the real binaries under
+`/tmp/iverilog_install/usr/bin` with `-M .../ivl` for anything wrapped in
+`timeout`. The suite was started with `nohup ... &` and polled, because the
+runner exceeds the 120 s shell limit on this device. No cocotb or uvm-python
+this session, so the 2026-09-06 install recipe and the `PATH`/`cocotb-config`
+gotcha are now **four sessions stale**.
+
+**A new gotcha, which corrupted a commit message before it was caught:**
+passing a commit message with `git commit -m "... \`cmp -s\` ..."` lets bash
+run the backticked text as a command substitution, and the message lands with
+those spans **replaced by empty output**. Caught by grepping the committed
+message for text that should have been in it; repaired with `--amend -F`. **Use
+`-F` with a quoted heredoc for any message containing backticks** — which, in
+this repository, is most of them.
+
+Device reachable and folder connected at the **first** firing (08:17 UTC); the
+two later firings will find both repositories carrying today's entry and stop.
+The whole session ran on the device VM except one literature fetch in the other
+repository; nothing else crossed the bridge. Every commit was pushed and
+**verified against the GitHub API**.
+
+**Not yet covered (candidates for future runs):**
+
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — created today,
+  **ranked first**, and now a finite named list rather than a principle:
+  `phase4_ral`, `phase4_uvm_milestone`, `phase5_csr_formal`,
+  `phase5_formal_uart`, `phase6_uvm_crv_uart`. Today's re-run shows the shape
+  of the work (one suite, one commit, metric 6 → 5) and shows that the
+  expected outcome is **verdicts unchanged** — which is the point: unverified
+  is not wrong, and the only way to tell is to run it. `phase4_uvm_milestone`
+  should go first: its report has been stale since 2026-09-27, it is the third
+  suite the `bfm/` refactor reached, and it needs the cocotb/uvm-python
+  toolchain whose recipe is now four sessions stale, so it exercises both.
+- **THE TWO REMAINING `cmp -s` RUNNERS** — `phase6_crv_uart` and
+  `phase6_uvm_crv_uart`, down from four. Each is mechanical and now has two
+  worked references (`phase6_rx_pin_driver`, `phase6_bfm_equivalence`). Doing
+  `phase6_uvm_crv_uart` also clears a row from the item above, so it is the
+  cheaper of the two.
+- **NOTHING READS ANY RUNNER'S EXIT CODE — THE SECOND HALF OF TODAY'S ITEM IS
+  MEASURED AND UNADDRESSED.** The audit reports 49 reports whose runner nothing
+  in this repository invokes, and the six mutation runners reference each other
+  only in prose. The 2026-10-14 failure took seventeen sessions **because
+  nothing re-runs the scripts**, and today's audit does not fix that — it
+  counts it. Cheapest route: one `tools/run_all_harnesses.sh` that invokes each
+  runner and fails on any nonzero exit, which makes the exit codes load-bearing
+  for the first time. Until that exists, every row of the reachability column
+  stays at zero.
+- **MAKE THE PROVENANCE AUDIT A TEST, NOT A REPORT** — created today, and the
+  same shape as the graphene repository's standing item. The audit is a script
+  someone has to run; nothing fails when a sixth suite loses its current
+  report. It should be the first thing `run_all_harnesses.sh` calls.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13, the census's next schema change.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — carried from 10-14's
+  adjudication, and the only genuinely open Phase 4/6 *content*: (b) the SVA
+  protocol checkers bound into the existing UVM environment, and (c)
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage` collector.
+  The environment itself has been complete since 2026-09-18 and the item
+  saying otherwise is retired.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest
+  exposure argument in the census and never tested.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — carried from 10-12.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row: a control that misreports rather than a gap.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for a fourth session.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; the sweep is
+  resumable.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created 10-10.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the seventh session**.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  10-10.
+- **RAL BASICS, ACTIVE/PASSIVE AGENTS, vplan v2** — the surviving part of the
+  standing Phase 4 list, after 10-14's adjudication removed virtual sequencers
+  (added 09-18) and CRV-from-UVM stimulus (added 10-11).
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, reset asserted mid-frame); a property needing a
+  strengthening invariant; the SVA sequence layer (runnable on neither tool
+  here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+**Commits this run:** 3 (the provenance audit; the `cmp -s` conversion with its
+re-run and the per-suite headline; `progress.md`). This AUTOMATION_LOG.md entry
+makes **4**. The graphene repository took **4** in the same session, for **8**
+across both.
