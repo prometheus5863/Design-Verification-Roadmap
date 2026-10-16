@@ -83,7 +83,36 @@ run_one() {
     else
         MECH="n/a"
     fi
+    # AMENDED 2026-10-16.  The block above computes MECH, prints it, and the
+    # verdict below then IGNORED it: a mutant required to FAIL was scored OK
+    # whenever the suite failed, by any means at all.  So the 2026-10-09 rule
+    # -- a verdict must name the mechanism that produced it -- was implemented
+    # for the REPORT and not for the VERDICT, which is the half that counts.
+    #
+    # Found by tools/run_all_harnesses.sh on its first run, in this
+    # environment, with cocotb absent.  Every invocation crashed before the
+    # testbench started, and this suite printed:
+    #
+    #     M1  suite outcome: FAIL  required: FAIL
+    #         mechanism: crash or timeout (no RESULT line)
+    #         VERDICT: OK                      <-- four times
+    #
+    # Four mutants "detected" by a toolchain that could not run the DUT at
+    # all.  That is a FALSE DETECTED of exactly the kind 2026-10-09 named,
+    # and the only thing between this suite and a full card of OK verdicts
+    # was the single control row at the top.
+    #
+    # A mutant that fails by crashing is NOT detected and NOT escaped: it is
+    # VOID, the third value this repository has carried as an open item since
+    # 2026-09-26 and used deliberately for one row on 2026-10-15.  A void row
+    # fails the suite, because an unscoreable mutant is not a passing one.
     if [ "$GOT" = "$WANT" ]; then
+        if [ "$WANT" = "FAIL" ] && [ "$MECH" = "crash or timeout (no RESULT line)" ]; then
+            echo "  VERDICT: VOID -- the suite failed by CRASHING, which is not"
+            echo "           detection.  No checker ran, so this mutant is"
+            echo "           unscored rather than caught."
+            return 1
+        fi
         echo "  VERDICT: OK"
         return 0
     fi
@@ -93,10 +122,42 @@ run_one() {
 
 WHICH=${1:-all}
 RC=0
+
+# A BASELINE GATE, 2026-10-16, copied in substance from
+# examples/phase4_ral/run_mutation_tests.sh, which already had one.
+#
+# Those two suites are siblings: both drive the DUT through the uvm-python /
+# cocotb stack.  Run with cocotb absent, phase4_ral printed
+#
+#     BASELINE: *** NORESULT on unmodified RTL -- mutation results are
+#               meaningless until this passes.
+#
+# and scored nothing, while this suite scored all four mutants OK.  Same
+# missing toolchain, same class of suite, opposite behaviour -- and the
+# difference was one gate that one of them happened to have.  If the control
+# row does not pass, nothing downstream of it can be scored, so this suite no
+# longer tries.
+if [ "$WHICH" = "all" ]; then
+    if ! run_one control 0 "" PASS "unmutated DUT -- the suite must PASS" ""; then
+        echo "----------------------------------------------------------------"
+        echo "BASELINE GATE: the control row did not pass, so the DUT or the"
+        echo "    toolchain is not working here and NO mutant can be scored."
+        echo "    M1-M4 are VOID by construction and are not run: scoring them"
+        echo "    would report four detections from a suite that never"
+        echo "    executed a check.  Fix the control first."
+        echo "mutation run exit: 1  (baseline gate)"
+        exit 1
+    fi
+    CONTROL_DONE=1
+else
+    CONTROL_DONE=0
+fi
+
 for M in control M1 M2 M3 M4; do
     [ "$WHICH" = "all" ] || [ "$WHICH" = "$M" ] || continue
     case $M in
     control)
+        [ "$CONTROL_DONE" = "1" ] && continue
         run_one control 0 "" PASS "unmutated DUT -- the suite must PASS" "" || RC=1 ;;
     M1)
         run_one M1 1 \
