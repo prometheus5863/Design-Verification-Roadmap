@@ -2006,3 +2006,105 @@ Second rule, from §4: **a stale report is unverified, not wrong.** The one
 re-run today reproduced its verdicts exactly. Reporting staleness as a defect
 would have been a false DETECTED (10-09) at the level of the audit rather than
 the suite.
+
+---
+
+### 2026-10-16 — The exit codes become load-bearing, and the first caller finds three red harnesses
+
+`tools/run_all_harnesses.sh` (new) + `examples/phase6_uvm_crv_uart/run_mutation_tests.sh` (two fixes).
+
+#### 1. The item 10-15 ranked third and fourth, built as one thing
+
+10-15 measured it: **49 committed reports whose runner nothing in this
+repository invokes**, six mutation runners referencing each other only in
+prose, and a 10-14 failure that took **seventeen sessions** to surface
+"because nothing re-runs the scripts". The companion item asked for the
+provenance audit to become a test rather than a report. Both are one script:
+a caller that runs every harness, reads every exit code, and runs the
+provenance audit **first** with its per-suite headline enforced.
+
+> **An exit code nobody reads is not a check. It is a number written to a
+> terminal that closed.**
+
+#### 2. Four design decisions, each paying off a fault already paid for
+
+**(a) The manifest must cover the repository, both ways.** Every path the
+stated discovery rule finds is declared `HARNESS` or `NOT_A_HARNESS` with a
+reason. Undeclared → `MANIFEST_GAP`, fails. Declared but absent →
+`STALE_MANIFEST`, fails. **There is no third, silent class**, because a
+harness that stops being run without anything saying so is how 2026-09-27
+stayed invisible for seventeen sessions. The guard caught **itself** on its
+first run — the script was undeclared in its own manifest — which is the
+cheapest possible demonstration that it works.
+
+**(b) A missing tool is not a broken harness, and the difference is
+declared.** Each `HARNESS` names a `requires` command; absent → `SKIP`,
+counted and printed, never folded into `PASS` or `FAIL`. Inferring "tool
+absent" from a crash is reading a cause off a symptom.
+
+**(c) A ratchet, not a target.** The provenance headline is 5. Demanding 0
+today would make the script fail on arrival and be switched off within a
+session, so 5 is a budget that may only go **down** — and coming in *under*
+it fails too, with an instruction to lower it, because a ratchet nobody
+tightens sits at its starting value forever.
+
+**(d) Deliberately no expected-fail list.** Refused in the file, with the
+reason: a "known-red, don't count it" column is a green claim over a red
+guard — the thing the sibling graphene repository spent the same day removing
+after shipping one for twelve days. **While a harness is red, this script is
+red.**
+
+#### 3. What the first run found: 16 PASS, 1 FAIL, 7 SKIP over 24 harnesses
+
+**(i) `phase6_uvm_crv_uart` scored four mutants OK on a toolchain that could
+not run the DUT.** With cocotb absent every invocation crashed before the
+testbench started, and the suite printed `mechanism: crash or timeout (no
+RESULT line)` followed by `VERDICT: OK`, four times.
+
+> **`MECH` was computed, printed, and then ignored by the line that decides
+> the verdict. 10-09's rule — a verdict must name the mechanism that produced
+> it — was implemented for the REPORT and not for the VERDICT, which is the
+> half that counts.** Same shape as the graphene repository's 10-09 finding,
+> where a sign was computed and thrown away.
+
+Fixed twice over, because the first fix hides the second here: a mutant
+required to FAIL that fails by **crashing** is now **VOID** (not detected, not
+escaped, unscored, and it fails the suite) — the three-valued axis carried
+open since 09-26; and a **baseline gate** copied in substance from
+`phase4_ral`, **which already had one**. Under the identical missing toolchain
+`phase4_ral` refused to score anything and this suite scored all four OK:
+same fault, sibling suites, opposite behaviour, and the difference was one
+gate that one of them happened to have.
+
+**(ii) The declaration that prevents false FAILs would also have hidden
+(i).** This bug surfaced only because the suite's prerequisite was initially
+**under**-declared, so it ran where it cannot run. Now declared, it `SKIP`s.
+Stated rather than smoothed over, and it generalises: **running a mutation
+suite with its toolchain deliberately removed is a cheap, sharp test for
+false DETECTEDs, and nothing here does that on purpose.**
+
+**(iii) `tools/open_item_staleness_audit.py` is genuinely red** — 10 passed,
+2 failed: six top-ranked open items have no adjudication entry on disk, and
+six adjudication entries are **orphans** whose items have left the list.
+Judgement work on the item list rather than a defect in the audit, and the
+single reason the caller exits 1. Ranked first.
+
+**(iv) `phase4_ral`'s health is UNVERIFIED, not good.** It failed on the same
+under-declaration and is now a declared cocotb `SKIP`. 10-15's rule — a stale
+report is unverified, not wrong — applies verbatim to a skipped one.
+
+#### 4. Methodological note
+
+10-14: every guard asks whether a verdict is sound; none asks whether the
+harness ran. 10-15: and none asks whether the report was produced by the
+harness beside it. **10-16: and none of it matters while nothing runs the
+guards, because a guard that is not run is not a guard.**
+
+Checkable rule: **every runner must have a caller that fails on its exit
+code, and every file that looks like a runner must be classified as one or
+explicitly not one. A set with a silent default has no members you can name.**
+
+Second rule, from §3(i): **a verdict must be gated on the mechanism it
+reports, not merely accompanied by it.** A mutant that "fails" by crashing is
+unscored, and reporting it as caught is a false DETECTED with provenance
+printed directly above it.
