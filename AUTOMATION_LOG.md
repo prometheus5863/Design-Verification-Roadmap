@@ -8396,3 +8396,263 @@ repository; nothing else crossed the bridge. Every commit was pushed and
 re-run and the per-suite headline; `progress.md`). This AUTOMATION_LOG.md entry
 makes **4**. The graphene repository took **4** in the same session, for **8**
 across both.
+
+## 2026-10-16 — The exit codes become load-bearing, and the first caller finds three red harnesses
+
+**Target:** the items 2026-10-15 ranked **third** and **fourth** — "nothing
+reads any runner's exit code" and "make the provenance audit a test, not a
+report" — which are one piece of work and were built as one. The
+**first**-ranked item (give the five suites without a current report one,
+`phase4_uvm_milestone` first) was attempted and **abandoned on evidence**: it
+needs the cocotb/uvm-python stack, and the caller built today shows that
+**seven** of 24 harnesses cannot run in this environment at all, which makes
+"give that suite a current report" a toolchain task rather than a verification
+one. What it got instead is a declared prerequisite and an honest SKIP.
+
+`tools/run_all_harnesses.sh` (new, with both chunk transcripts),
+`examples/phase6_uvm_crv_uart/run_mutation_tests.sh` (two fixes), `progress.md`.
+
+### 1. An exit code nobody reads is not a check
+
+2026-10-15 measured the gap precisely: **49 committed reports whose runner
+nothing in this repository invokes**, six mutation runners that reference each
+other only in prose, and a 2026-10-14 failure — two harnesses that had not
+compiled since the 2026-09-27 `bfm/` refactor — that took **seventeen
+sessions** to surface, for the reason that entry stated plainly: *nothing
+re-runs the scripts*.
+
+> **AN EXIT CODE NOBODY READS IS NOT A CHECK. IT IS A NUMBER WRITTEN TO A
+> TERMINAL THAT CLOSED.**
+
+This is the caller, and it is the same lesson the sibling graphene repository
+reached from the other end on the same day: a guard that is not run is not a
+guard, and the rule applies to the guard that checks the guards.
+
+### 2. Four design decisions, each paying off a fault already paid for
+
+**(a) The manifest must cover the repository, in both directions.** Every path
+the stated discovery rule finds must be declared `HARNESS` or `NOT_A_HARNESS`
+with a reason. Undeclared → `MANIFEST_GAP`, fails. Declared but absent →
+`STALE_MANIFEST`, fails. **There is deliberately no third, silent class**: a
+harness that stops being run without anything saying so is precisely how
+2026-09-27 stayed invisible for seventeen sessions, and a runner added tomorrow
+must not be able to join that set by default. The graphene repository reached
+the identical rule from the other side on 2026-10-14 — an unassigned member of
+a patch set is refused rather than silently left at its shipped object.
+
+> **The guard caught ITSELF on its first run.** The script was not in its own
+> manifest, so discovery reported one `MANIFEST_GAP`: `tools/run_all_harnesses.sh`.
+> It is now `NOT_A_HARNESS` with the reason stated — the caller cannot call
+> itself — declared rather than special-cased, because an undeclared exception
+> is the one thing this script refuses.
+
+**(b) A missing tool is not a broken harness, and the difference is
+declared.** Each `HARNESS` names a `requires` command; if it is absent the
+suite is `SKIP`ped — counted, printed, and never folded into either `PASS` or
+`FAIL`. Inferring "tool absent" from a crash would be reading a cause off a
+symptom.
+
+**(c) A ratchet, not a target.** The provenance audit's per-suite headline is
+**5**. Requiring 0 today would make this script fail on arrival and be switched
+off inside a session, so 5 is a budget that may only go **down** — and coming
+in *under* budget **also fails**, with an instruction to lower it, because a
+ratchet nobody tightens sits at its starting value forever.
+
+**(d) Deliberately NO expected-fail list.** The obvious next feature is a
+"known-red, don't count it" column so the script can exit 0 with failing
+harnesses inside it. It is refused in the file, with the reason recorded there:
+that is a green claim over a red guard, which is exactly what the graphene
+repository spent 2026-10-16 removing after shipping one for twelve days. Once
+this script exits 0 with real failures inside it, its exit code means nothing
+again and we are back where 2026-10-15 found us. **While a harness is red, this
+script is red.**
+
+### 3. The first run: 16 PASS, 1 FAIL, 7 SKIP over 24 harnesses
+
+#### (i) `phase6_uvm_crv_uart` scored four mutants OK on a toolchain that could not run the DUT
+
+With cocotb absent, every invocation crashed before the testbench started, and
+the suite printed, four times:
+
+```
+MUTANT M1  (loopback mux removed: RX never sees TX)
+  suite outcome: FAIL   required: FAIL
+  mechanism: crash or timeout (no RESULT line)
+  VERDICT: OK
+```
+
+> **`MECH` IS COMPUTED, DISTINGUISHES "failing check" FROM "crash or timeout",
+> IS PRINTED — AND IS THEN IGNORED BY THE LINE THAT DECIDES THE VERDICT, WHICH
+> ASKED ONLY WHETHER THE SUITE FAILED.** 2026-10-09's rule, that a verdict must
+> name the mechanism that produced it, was implemented for the **report** and
+> not for the **verdict**, which is the half that counts. The same shape as the
+> graphene repository's 2026-10-09 finding, where a sign was computed and then
+> thrown away.
+
+Fixed twice, and the two are demonstrated separately because the second hides
+the first in this environment:
+
+1. **A mechanism-aware verdict.** A mutant required to FAIL which failed by
+   *crashing* is now **VOID** — not detected, not escaped, unscored — and a
+   void row fails the suite, because an unscoreable mutant is not a passing
+   one. This is the three-valued outcome axis carried as an open item since
+   2026-09-26 and used deliberately for one row on 2026-10-15, applied where it
+   was actually needed. Shown by invoking a single mutant, which bypasses the
+   gate below.
+2. **A baseline gate, copied in substance from `phase4_ral` — WHICH ALREADY HAD
+   ONE.** Those two suites are siblings; both drive the DUT through
+   uvm-python/cocotb. Under the *identical* missing toolchain `phase4_ral`
+   printed "BASELINE: *** NORESULT on unmodified RTL — mutation results are
+   meaningless until this passes" and scored nothing, while this suite scored
+   all four mutants OK. **Same fault, same class of suite, opposite behaviour,
+   and the difference was one gate that one of them happened to have.**
+
+What stood between this suite and a full card of OK verdicts was its single
+control row, which did report `UNEXPECTED` and did make the suite exit 1. So
+the **suite-level** verdict was never wrong. The **per-mutant** verdicts were,
+and a reader skimming the report saw four detections that had not happened.
+
+#### (ii) The declaration that prevents false FAILs would also have hidden (i)
+
+This is the uncomfortable half and it is stated rather than smoothed over. The
+bug surfaced **only because the suite's prerequisite was initially
+UNDER-declared**, so the caller ran it where it cannot run. Now that
+`requires cocotb-config` is declared — which is correct, and which stops a
+false FAIL — the suite `SKIP`s, and this bug would never have been seen.
+
+> **A `requires` declaration buys quiet at the cost of blindness, and the two
+> directions are not symmetric: UNDER-declaring gives a false FAIL, which is
+> noisy and self-correcting, while OVER-declaring gives a false SKIP, which is
+> quiet and permanent.** Running a mutation suite with its toolchain
+> deliberately removed is therefore a cheap and very sharp test for false
+> DETECTEDs — and nothing in this repository does that on purpose. New item,
+> ranked second.
+
+#### (iii) `tools/open_item_staleness_audit.py` is genuinely red
+
+10 passed, 2 failed. Six top-ranked open items have **no adjudication entry on
+disk**, and six adjudication entries are **ORPHANs** whose items have left the
+list (2026-10-14's adjudication closed or renamed them). Judgement work on the
+item list rather than a defect in the audit, untouched today, and **the single
+reason the caller exits 1.** Ranked first.
+
+#### (iv) `phase4_ral` is UNVERIFIED, not healthy
+
+It FAILED on the same under-declaration — `make: cocotb-config: No such file or
+directory`, an empty baseline log — and is now a declared cocotb `SKIP`.
+2026-10-15's rule, that a stale report is *unverified* rather than *wrong*,
+applies verbatim to a skipped one: with the toolchain absent it cannot be
+distinguished from a suite that is also broken for some other reason.
+
+### 4. `--chunk`, and why it is not a feature
+
+The automation driving these sessions caps a single shell call at **180
+seconds** and a full run is longer. `--chunk i/n` partitions the `HARNESS`
+entries in manifest order, **round-robin** so one chunk does not collect every
+slow suite, which makes `1/2` and `2/2` a reproducible cover of exactly the set
+a bare run covers. The partition is the script's own rather than an ad-hoc
+regex typed at a prompt. Both transcripts are committed; together they are the
+24. This is an environment limit written down, not a capability.
+
+### 5. Environment and automation health
+
+Device reachable and folder connected at the **first** firing of the day; the
+later firings will find both repositories carrying today's entry and stop.
+`iverilog` 10.3 installed from the cached `tools/setup_iverilog.sh` in 2s.
+**`yosys`/`sby` and `cocotb` are both absent**, which is what produced the
+seven SKIPs — four formal suites and three uvm-python ones. **No live web
+search was used and none was needed**: today's work was entirely internal to
+the repository's own harnesses. One environment fact worth recording for future
+runs: **a `nohup`'d background process does NOT survive the shell call that
+started it** — each call runs in its own PID namespace — so a long run must be
+chunked into foreground calls, which is why §4 exists. Nothing was deleted.
+
+**Not yet covered (candidates for future runs):**
+
+- **ADJUDICATE THE SIX UNADJUDICATED TOP ITEMS AND THE SIX ORPHANED ENTRIES**
+  — created today, **ranked first**, and it is the **only** thing keeping
+  `run_all_harnesses.sh` red. `tools/open_item_staleness_audit.py` names all
+  twelve. Six top-ranked items have no entry in
+  `tools/open_item_adjudication.md`; six entries there are orphans whose items
+  2026-10-14's adjudication removed or renamed. The 2026-10-14 precedent
+  applies: a verdict of OPEN or STALE, with a reason, and a STALE verdict must
+  name what inherits the work. **This is now surfaced by a caller rather than
+  remembered, which is the whole point of today.**
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  created today, **ranked second**, and it generalises §3(i)/(ii). Today found
+  two suites behaving oppositely under a missing toolchain **by accident**,
+  because one prerequisite was under-declared. Six mutation runners exist; two
+  are now known (`phase4_ral` gates, `phase6_uvm_crv_uart` gates as of today),
+  and **four have never been tested this way**:
+  `phase1_mutation`, `phase6_baud_error_coverage`, `phase6_bfm_equivalence`,
+  `phase6_rx_pin_driver`. Cheapest route: a control that runs each suite with
+  `PATH` stripped of its simulator and requires the suite to refuse rather than
+  to score. A false SKIP is quiet and permanent; this is the check that makes
+  it loud.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried from
+  2026-10-15, **ranked third and re-scoped by today's evidence**. The list is
+  `phase4_ral`, `phase4_uvm_milestone`, `phase5_csr_formal`,
+  `phase5_formal_uart`, `phase6_uvm_crv_uart` — and **all five are in the
+  seven that cannot run here**: three need cocotb, two need `sby`. So this is a
+  **toolchain** item, not a verification one, and 2026-10-15's advice to start
+  with `phase4_uvm_milestone` stands for a new reason: it exercises the
+  cocotb/uvm-python recipe in
+  `notes/2026-09-06-uvm-python-toolchain-resolution.md`, now **five** sessions
+  stale, and clearing it unblocks three of the five at once.
+  `tools/setup_formal.sh` wants the same treatment for the other two.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, down from four.
+  `phase6_uvm_crv_uart` was touched today for a different reason and its
+  `cmp -s` was deliberately **not** bundled in, so it is still on the list as
+  well. Two worked references exist (`phase6_rx_pin_driver`,
+  `phase6_bfm_equivalence`).
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — created today, and the
+  obvious recursion of this session's own lesson. The caller now reads every
+  runner's exit code, and **nothing reads the caller's.** It is a script
+  someone has to remember to run, which is the condition the 2026-10-15 item
+  described. There is no CI here, so the honest form is a line in the session
+  prompt or a `tools/` entry point that a run cannot skip — a decision for a
+  reviewer rather than a thing to build unilaterally.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13, the census's next schema change.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — carried from 10-14's
+  adjudication, and still the only genuinely open Phase 4/6 *content*: (b) the
+  SVA protocol checkers bound into the existing UVM environment, and (c)
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage` collector.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest
+  exposure argument in the census and never tested.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — carried from 10-12.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row: a control that misreports rather than a gap.
+  **Today supplies a worked reference for the three-valued form** in
+  `phase6_uvm_crv_uart`'s new VOID verdict.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for a fifth session.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; the sweep is
+  resumable.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — created 10-10.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — created 10-09.
+- **A POSITIVE CONTROL THAT MAKES S-f FIRE** — created 10-08, **untouched for
+  the eighth session**.
+- **DERIVE C1's AND C3's DETAIL STRINGS in `witness_soundness.py`** — created
+  10-10.
+- **RAL BASICS, ACTIVE/PASSIVE AGENTS, vplan v2** — the surviving part of the
+  standing Phase 4 list.
+- **A diversity TARGET** — still deliberately open; a reviewer's decision.
+- Apply the three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26);
+  audit every remaining runner for the 09-27 pattern; per-property coverage of
+  the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24);
+  two transmitters at once (09-25); `abc pdr` as a second engine (09-23);
+  widen the coverage model (09-24); mutants not yet attempted (interrupt
+  enable combinations, reset asserted mid-frame); a property needing a
+  strengthening invariant; the SVA sequence layer (runnable on neither tool
+  here, open since 09-20); code coverage measurement (Icarus has none, open
+  since 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+**Commits this run:** 3 (the `phase6_uvm_crv_uart` false-DETECTED fix; the
+all-harness caller with both chunk transcripts; `progress.md`). This
+AUTOMATION_LOG.md entry makes **4**. The graphene repository took **7** in the
+same session, for **11** across both.
