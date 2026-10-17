@@ -108,6 +108,43 @@ def tokens(text):
     return out
 
 
+def stems(text):
+    """`tokens()` with a crude suffix fold, for DIAGNOSIS ONLY.
+
+    ADDED 2026-10-17.  The exact matcher below decides whether an entry is
+    matched; this one decides, for an entry it did NOT match, whether the
+    cause is a WORDING difference or a genuine RETIREMENT.  It is deliberately
+    not substituted for `tokens()`: loosening the matcher would make the
+    verdict "adjudicated" easier to earn, which is the opposite of what this
+    audit is for, and a stemmer that silently accepted `tx_empty` for
+    `tx_empty_prediction` would hide exactly the kind of item drift the file
+    exists to catch.  So the loose form may only ever move a row from one
+    REPORTED category to another, never from FAIL to PASS.
+
+    The fold also splits identifier-case words -- `UartCoverage` ->
+    {uart, coverage} -- which is the other half of the 2026-10-17 miss:
+    `uvm coverage collector` against `UartCoverage collector`.
+    """
+    out = set()
+    # Split identifier case BEFORE lowercasing, which is the half of the
+    # 2026-10-17 miss that operating on tokens() cannot recover: by the time
+    # `tokens()` has run, `UartCoverage` is the single token `uartcoverage`
+    # and the boundary is gone.  The first draft of this function folded
+    # suffixes over tokens() output and therefore fixed `wire`/`wired` and
+    # missed `uvm coverage`/`UartCoverage` -- half a repair, and it left all
+    # six 2026-10-17 entries in the RETIRED column, i.e. it changed nothing
+    # the check reported.
+    split = re.sub(r'([a-z0-9])([A-Z])', r'\1 \2', text)
+    for t in tokens(split):
+        part = t
+        for suf in ('ingly', 'edly', 'ing', 'ies', 'ed', 'es', 's'):
+            if part.endswith(suf) and len(part) - len(suf) >= 4:
+                part = part[:-len(suf)]
+                break
+        out.add(part)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Parsing
 # ---------------------------------------------------------------------------
@@ -247,7 +284,7 @@ def s4_adjudication(ranked, cut, all_items=None):
     reason paragraph.  Returns (entries, covered, uncovered, extra).
     """
     if not os.path.exists(ADJUDICATION):
-        return [], [], [(first_line(r[1], 60), None) for r in ranked[:cut]], []
+        return [], [], [(first_line(r[1], 60), None) for r in ranked[:cut]], [], []
     text = open(ADJUDICATION, encoding='utf-8').read()
     entries = re.findall(r'^##\s+(STALE|OPEN):\s*(.+?)\s*$', text, re.M)
     head = ranked[:cut]
@@ -281,9 +318,28 @@ def s4_adjudication(ranked, cut, all_items=None):
     # list, so of course it no longer ranks -- and the entry is the audit
     # trail, which must not be deleted to keep a check green.  Only a
     # lingering OPEN entry is an orphan worth reporting.
-    extra = [entries[i][1] for i in range(len(entries))
-             if i not in used and entries[i][0] == 'OPEN']
-    return entries, covered, uncovered, extra
+    unmatched = [i for i in range(len(entries))
+                 if i not in used and entries[i][0] == 'OPEN']
+    # SPLIT 2026-10-17.  `extra` used to be every unmatched OPEN entry, and
+    # the check below reported all of them as having "lost its item from the
+    # list entirely".  On 2026-10-17 six entries were unmatched and only FOUR
+    # had lost their item; the other two were on the list under different
+    # wording -- `wire` against `wired`, `uvm coverage collector` against
+    # `UartCoverage collector` -- and one of those rewordings had been
+    # produced by this file's own adjudication of 2026-10-14.  A verdict must
+    # be gated on the mechanism it reports, so the mechanism is now measured:
+    # an unmatched entry whose stems ARE contained in some item is a WORDING
+    # miss and is reported as one; only the rest is a retirement.
+    extra, wording = [], []
+    for i in unmatched:
+        ep = stems(entries[i][1])
+        hit = None
+        for it in pool:
+            if ep and len(ep & stems(it)) / float(len(ep)) >= 0.75:
+                hit = it
+                break
+        (wording if hit else extra).append((entries[i][1], hit))
+    return entries, covered, uncovered, extra, wording
 
 
 # ---------------------------------------------------------------------------
@@ -340,6 +396,49 @@ def s5_controls():
     r3 = s3_rank([verbatim], done)
     res.append(('E1', 'EXACT: an open item that is verbatim a completed block '
                       'scores exactly 1.0', r3[0][0] == 1.0, repr(r3[0][0])))
+
+    # -- controls on the 2026-10-17 RETIRED/WORDING split.  The split moves
+    # rows between two REPORTED categories, so a control on it has to show
+    # that it moves the right ones and, crucially, that it does not move a
+    # genuine retirement.  Without W3 below the split is a way to make a
+    # failing check pass, which is what it must not be.
+    items_w = ['- THE CAPSTONE BOX: (c) PayloadAdmissibilityCoverage wired '
+               'into the live UartCoverage collector',
+               '- something about baud tolerance measurement entirely']
+    e_w = 'Wire PayloadAdmissibilityCoverage into the live UVM coverage collector'
+    e_r = 'A mutant on the budget law exhaustive stimulus generator itself'
+    def _is_wording(entry, pool):
+        ep = stems(entry)
+        return any(ep and len(ep & stems(it)) / float(len(ep)) >= 0.75
+                   for it in pool)
+    def _is_exact(entry, pool):
+        tp = tokens(entry)
+        return any(tp and len(tp & tokens(it)) / float(len(tp)) >= 0.75
+                   for it in pool)
+    res.append(('W1', 'the EXACT matcher misses an item that differs only in '
+                      'wording', not _is_exact(e_w, items_w),
+                'wire/wired and uvm-coverage-collector/UartCoverage-collector'))
+    res.append(('W2', 'and the wording-tolerant form finds it',
+                _is_wording(e_w, items_w),
+                'so the row is reported WORDING, with the item it matches, '
+                'rather than as a\n        retirement -- the sentence the old '
+                'form printed about it was false'))
+    res.append(('W3', 'NEGATIVE CONTROL: the loose form does NOT rescue an '
+                      'entry whose item is really gone',
+                not _is_wording(e_r, items_w),
+                'the split must never be able to turn a FAIL into a PASS; it '
+                'may only move a\n        row between two reported '
+                'categories'))
+    res.append(('W4', 'and identifier-case splitting is what does the work, '
+                      'not the suffix fold alone',
+                'coverage' in stems('UartCoverage')
+                and 'uart' in stems('UartCoverage'),
+                "stems('UartCoverage') = %s.  The first draft folded suffixes "
+                "over tokens()\n        output, by which time `UartCoverage` "
+                "is one token and the boundary is gone;\n        it fixed "
+                "wire/wired, left all six 2026-10-17 entries RETIRED, and so "
+                "changed\n        nothing the check reported."
+                % sorted(stems('UartCoverage'))))
     return res
 
 
@@ -413,20 +512,40 @@ def main():
     print('\n' + '-' * 78)
     print('S4 -- the committed adjudication of the top %d' % REPORTING_CUT)
     print('-' * 78)
-    entries, covered, uncovered, extra = s4_adjudication(ranked, REPORTING_CUT,
-                                                        all_items=items)
+    entries, covered, uncovered, extra, wording = s4_adjudication(
+        ranked, REPORTING_CUT, all_items=items)
     print('  adjudication entries on disk: %d' % len(entries))
     for txt, verdict in covered:
         print('    %-7s %s' % (verdict, txt))
     for txt, _v in uncovered:
         print('    MISSING %s' % txt)
-    for e in extra:
-        print('    ORPHAN  %s' % first_line(e, 70))
+    for e, _hit in extra:
+        print('    RETIRED %s' % first_line(e, 70))
+    for e, hit in wording:
+        print('    WORDING %s' % first_line(e, 70))
+        print('            still on the list as: %s' % first_line(hit, 62))
     report(not uncovered, 'every item at or above the reporting cut is '
                           'adjudicated on disk, with a reason')
     report(not extra, 'no OPEN adjudication entry has lost its item from the '
                       'list entirely (a STALE entry losing its item is the '
                       'audit trail working, not an orphan)')
+    # The WORDING rows are NOT a failure: the item is on the list and the work
+    # is tracked.  They are a defect in the LIST's stability, not in the
+    # adjudication, and reporting them separately is the whole point of the
+    # split -- the previous form failed the check above on them and said, in
+    # the failure text, something false about where the item was.  What IS
+    # required is that the two categories stay disjoint and account for every
+    # unmatched OPEN entry, so a future loosening of either matcher cannot
+    # quietly move a retirement into the benign column.
+    report(not ({e for e, _ in extra} & {e for e, _ in wording}),
+           'the RETIRED and WORDING categories are disjoint')
+    if wording:
+        print('  NOTE: %d adjudicated item(s) are tracked under a different '
+              'wording than the\n        entry that judged them.  The entry '
+              'is right and the item is live; what\n        moved is the '
+              'list.  Each is named above with the item it matches, so a\n'
+              '        reviewer can align the two without re-deciding the '
+              'verdict.' % len(wording))
     # A STALE verdict retires the only text pointing at a piece of work, so
     # it must say what inherits it.  Without this, an audit of the list that
     # chooses the work can itself delete work -- which is the "repair built

@@ -122,7 +122,7 @@ than aged.
 that session's finding. v10 contains such a paragraph of its own and it has had
 no more checking than v9's did.
 
-## OPEN: The four unchecked capstone boxes as newly disambiguated — constrained-random stimulus inside the UVM environment, SVA checkers bound into it, the coverage wiring, the methodology summary
+## STALE: The four unchecked capstone boxes as newly disambiguated — constrained-random stimulus inside the UVM environment, SVA checkers bound into it, the coverage wiring, the methodology summary
 
 **Rank 2 on the 10-03 list, score 0.333. Verdict: OPEN.** Created today as the
 named successor to the retired item. It scores high for the obvious reason —
@@ -137,6 +137,23 @@ constrained-random, coverage-driven UART stimulus in plain Verilog-2001 and has
 never been driven from a UVM sequence. That is an integration task against
 existing, measured machinery rather than new study, which makes it the most
 actionable thing on the list.
+
+> **[2026-10-17: verdict changed OPEN → STALE, and the text above is kept
+> intact.** Sub-item **(a)** — the one this entry called "the most actionable
+> thing on the list" — was closed, and 2026-10-14's adjudication narrowed the
+> remaining three to a lettered remainder, which the list now carries under a
+> different name. So most of this heading's text is no longer work: two of
+> the four boxes are gone and the entry out-states its item by enough that
+> the audit's 0.75 containment test cannot match it even with the wording
+> fold added today. **The correct action in 2026-10-14 was this verdict, with
+> a successor named, and it was not taken** — which is how an entry whose
+> work is live came to be reported as having lost its item. Recorded here
+> rather than backdated.
+> **REPLACED-BY:** THE CAPSTONE BOX'S LETTERED REMAINDER — (b) the SVA
+> protocol checkers bound into the existing UVM environment, and (c)
+> `PayloadAdmissibilityCoverage` wired into the live `UartCoverage`
+> collector. Nothing from this entry is retired except sub-item (a), which is
+> done, and the methodology summary, which 2026-10-14 judged written.**]**
 
 ## OPEN: Apply the three-valued outcome axis to phase6_crv_uart's crosses, and audit every remaining runner for the "greps a file it did not just write" pattern
 
@@ -252,7 +269,7 @@ work that was finished before the item started being carried.
 | active/passive agents | **DONE 2026-09-18**, per `progress.md`, in the same milestone as the serial and register agents. |
 | vplan v2 | **Superseded thirteen times over.** The plan is at **v13 (2026-10-05)**; v2 is from 09-17. A "v2 revision" is not outstanding work, it is a version that happened. |
 
-**NO-SUCCESSOR**, and the reason is stated rather than implied: all three
+**NO-SUCCESSOR:** all three
 components are complete, so there is no residue to inherit. This is not the
 case where a STALE verdict hides live work — contrast the four restored items
 below, where it would have been. The one piece of Phase 4 content that *is*
