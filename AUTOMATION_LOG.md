@@ -8656,3 +8656,249 @@ chunked into foreground calls, which is why §4 exists. Nothing was deleted.
 all-harness caller with both chunk transcripts; `progress.md`). This
 AUTOMATION_LOG.md entry makes **4**. The graphene repository took **7** in the
 same session, for **11** across both.
+
+---
+
+## 2026-10-17 — Four items fell off the list while the work stayed live, and two "orphans" were entries resolved on spelling
+
+**Status:** The item ranked first by 2026-10-16 is cleared, and clearing it
+found that the instrument reporting it conflated two different failures under
+one word.
+
+**Entry point.** `tools/open_item_staleness_audit.py` was red at 10 passed / 2
+failed — six top items unadjudicated and six adjudication entries orphaned —
+and it was the **only** thing keeping `tools/run_all_harnesses.sh` red.
+Yesterday ranked it first for that reason. Running the caller is what surfaced
+it, which is the whole point of 2026-10-16's work and worth recording as
+having actually paid off one day later.
+
+### 1. The six top items, adjudicated against evidence rather than scores
+
+Five OPEN, one STALE. The two worth naming here:
+
+**`RAL BASICS, ACTIVE/PASSIVE AGENTS, vplan v2` — STALE, NO-SUCCESSOR.** The
+last fragment of the Phase 4 standing list, and it has the same defect as the
+parent entry retired on 2026-10-03: it names work finished before the item
+started being carried. RAL basics **done 09-19** (`examples/phase4_ral/`, 8/8,
+5-of-5 mutants) — the audit's own S3 output names that very checkbox as this
+item's top match, which is the ranker working exactly as designed;
+active/passive agents **done 09-18**; and `vplan v2` is **superseded thirteen
+times over** — the plan is at **v13 (2026-10-05)**, so "a v2 revision" is a
+version that happened, not outstanding work. All three complete, hence no
+residue to inherit. The still-open Phase 4 *content* is carried separately and
+correctly as the capstone box's lettered remainder, and this verdict must not
+be read as retiring it.
+
+**`A MUTANT FOR THE NEW tx_empty PREDICTION` — OPEN, and checked rather than
+assumed.** It ranks first at 0.750 purely as a text artefact. `grep -rl
+tx_empty examples/*/mutation_report*` is **empty across all twelve committed
+reports**, while the prediction is live in the scoreboard and the signal is
+read by the RTL and the CRV bench. It is the cheapest remaining mutant: the
+prediction, the harness and the injection machinery all exist.
+
+`MORE SEEDS ON THE CLOSURE DISTRIBUTION` is adjudicated OPEN **and narrowed**,
+which is the useful part: a 40-seed sweep already exists in
+`witness_soundness.py` and is what established that v10's 703→663 "speedup"
+was seed noise. What is left is a *distribution* for the figures the vplan
+quotes as characteristic, not another point.
+
+### 2. The six ORPHANs were not one phenomenon, and the audit could not say so
+
+**Four were entries whose item left the list with no verdict at all** — the
+exact loss `tools/open_item_adjudication.md` exists to prevent. All four
+re-checked today, all four still live work, all four **restored to the list
+below** rather than having their entries deleted. Deleting an entry to make a
+check green is the one move that file is built to refuse.
+
+The worst of the four: **the F7 cross / `0x40` BORDERLINE conflict**, which the
+2026-10-03 entry called *"the repository's top item"*. It fell off the list
+with no verdict **while three vplan revisions were written about it** — v11
+re-measured it and recommended W3 "flagged for sign-off rather than applied",
+v12 gave the BORDERLINE case a mechanism and split soundness into population
+and run axes, v13 found the same pattern independently in a second collector.
+So it was neither done nor abandoned: **worked on continuously and untracked**,
+which is the worst available combination, because what it is waiting for is a
+reviewer's decision that nothing was reminding anyone to make.
+
+**Two were not orphans.** Their items are on the list under different wording,
+and the check's own failure text — *"has lost its item from the list
+entirely"* — is false for both. The matcher is a 0.75 token-containment test,
+so
+
+    entry: Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
+    item:  (c) PayloadAdmissibilityCoverage wired into the live UartCoverage collector
+
+does not match, on `wire`/`wired` and `uvm coverage collector`/`UartCoverage
+collector`. **A verdict resolved on spelling** — the same class as this
+repository's own 2026-10-01 dead-name loophole, and the same class as the two
+graphene docstrings found in the other repository on the same day. 2026-10-16's
+rule applies verbatim: **a verdict must be gated on the mechanism it reports.**
+
+The second miss is the more troubling: the rewording that caused it was
+produced by **2026-10-14's own adjudication**, narrowing four capstone boxes to
+a lettered remainder. **This file's correct operation is what made the check
+fail.** That entry is re-verdicted OPEN → STALE with `REPLACED-BY` naming the
+remainder, its text kept intact and the change annotated in place — because
+the correct action in 2026-10-14 *was* that verdict with a successor named, and
+it was not taken.
+
+### 3. The split, and the control that makes it honest
+
+`ORPHAN` is now `RETIRED` or `WORDING`. `stems()` is a wording-tolerant token
+form used **for diagnosis only**: it splits identifier case *before*
+lowercasing and folds a few suffixes. It is deliberately **not** substituted
+for `tokens()` — loosening the matcher would make the verdict "adjudicated"
+easier to earn, which is the opposite of what the audit is for. A `WORDING`
+row prints the item it matches, so a reviewer can align the two without
+re-deciding the verdict; only `RETIRED` fails the check; and a new check
+requires the two categories to be **disjoint**, so a future loosening of
+either matcher cannot move a retirement into the benign column.
+
+Four controls, W1–W4, and **W3 is the load-bearing one**: the tolerant form
+must NOT rescue an entry whose item is really gone. *The split must never be
+able to turn a FAIL into a PASS; it may only move a row between two reported
+categories.* Without W3 this change is a way to silence a red check.
+
+**W4 exists because of a defect in this change's own first draft.** `stems()`
+first folded suffixes over `tokens()` output — by which time `UartCoverage` is
+the single token `uartcoverage` and the case boundary is gone. It fixed
+`wire`/`wired`, left **all six** entries in the RETIRED column, and therefore
+**changed nothing the check reported**: half a repair that looked like a whole
+one, and indistinguishable from the whole one by the check's own output. W4
+pins the identifier-case split specifically.
+
+### 4. Methodological note
+
+10-14: every guard asks whether a verdict is sound; none asks whether the
+harness ran. 10-15: and none asks whether the report was produced by the
+harness beside it. 10-16: and none of it matters while nothing runs the
+guards. **10-17: and a guard that runs, and fails, can still be making a claim
+its mechanism does not support — "lost its item from the list entirely" was a
+sentence about existence derived from a text-similarity test.**
+
+Checkable rule: **when a check's failure message names a cause, the cause must
+be measured, not inferred from the check firing.** Where two causes produce
+the same failure, they are two reported categories with a disjointness check
+between them, and any tolerance added to tell them apart must be provably
+unable to turn a failure into a pass.
+
+### 5. Environment and automation health
+
+Device reachable at the **second** firing (10:3x UTC); 04:30 found the machine
+asleep. `iverilog` 10.3 from the cached `tools/setup_iverilog.sh`. **Two
+environment facts confirmed again, both already recorded and both still true:**
+a `nohup`'d background process does **not** survive the shell call that started
+it (re-tested with `setsid` as well today, in the graphene repository — every
+child was reaped at the call boundary), so the 180 s per-call cap is a **hard**
+cap on a single command; and `yosys`/`sby`/`cocotb` remain absent, so the seven
+SKIPs stand. **No live web search was used and none was needed**: today's work
+was entirely internal to the repository's own instruments. Nothing was deleted.
+The clone was initially `--depth 30` and was unshallowed, after a shallow clone
+produced a false failure in the other repository.
+
+**Not yet covered (candidates for future runs):**
+
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — **restored to the
+  list today** after falling off it with no verdict. `tools/mutation_controls.sh`
+  is shared, but control B — a grep for the **inserted** text, as against
+  control A's grep for the **removed** text — is still exercised only by
+  `phase4_uvm_milestone`'s suites and the budget-law re-derivation; the four
+  older harnesses have control A only. **Not the same item** as the
+  missing-toolchain control below: this one is about false DETECTEDs from an
+  anchor that cannot distinguish a mutant that was applied from one that was
+  already there.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  **restored today.** `mutation_report_budget_law_2026-09-29.txt` still mutates
+  the law under test and not the generator producing its stimulus; nothing in
+  the tree targets the generator. Created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`, AND `0x40` IS
+  BORDERLINE** — **restored today, and it is a reviewer's decision, not a
+  build.** F7's goal remains W0 with two unsound bins. Read with v11's
+  W1/W3/W4 options (W1 and W3 give the same goal and a 40-seed sweep does not
+  separate them; W3 recommended) and v12's two-number sign-off refusal
+  (cardinality 100.00 % against sound 93.75 %).
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  **restored today.** v13 contains one of its own, and it has had no more
+  checking than v9's did, which is the sentence the item was created about.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — adjudicated OPEN today and
+  now the **cheapest** item on the list: no committed mutation report mentions
+  `tx_empty`, and the prediction, the harness and the injection machinery all
+  exist. **Ranked first** on cost-to-value.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, **ranked second**, untouched today. Two suites are
+  now known to gate (`phase4_ral`, `phase6_uvm_crv_uart`); **four have never
+  been tested this way**: `phase1_mutation`, `phase6_baud_error_coverage`,
+  `phase6_bfm_equivalence`, `phase6_rx_pin_driver`. Cheapest route: a control
+  that runs each suite with `PATH` stripped of its simulator and requires the
+  suite to refuse rather than to score. A false SKIP is quiet and permanent.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — adjudicated OPEN
+  today, with the evidence: `phase6_rx_pin_driver`'s 10-14 report catches them
+  by aggregate counts and **one distinguishing check each** (`M1 1  M4 2  M5
+  1`), which is the detection-by-side-effect the item exists to replace. M5
+  rests on exactly one check. Eight sessions old.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried from
+  2026-10-15, and it remains a **toolchain** item: all five of `phase4_ral`,
+  `phase4_uvm_milestone`, `phase5_csr_formal`, `phase5_formal_uart`,
+  `phase6_uvm_crv_uart` are in the seven that cannot run here. Start with
+  `phase4_uvm_milestone`: it exercises the cocotb/uvm-python recipe in
+  `notes/2026-09-06-uvm-python-toolchain-resolution.md`, now **six** sessions
+  stale, and clearing it unblocks three of the five at once.
+  `tools/setup_formal.sh` wants the same for the other two.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — adjudicated OPEN and
+  **narrowed** today: the 40-seed W1-vs-W3 sweep exists; what is missing is a
+  stated expectation with a spread for the 703 / 663 / 387–663 figures the
+  vplan quotes as characteristic.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — adjudicated OPEN today;
+  confirmed no such tool exists, and the only worked instances are the
+  hand-derived C1/C3 strings in `witness_soundness.py`.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — adjudicated OPEN today
+  and **deliberately not actionable unilaterally**: both honest forms change
+  how the automation is driven rather than what the repository contains, so it
+  is a reviewer's decision. Today is itself the evidence — this session's work
+  exists because an audit went red and a session happened to run the caller.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING, OR DECIDE NOT TO**
+  — created today. One `WORDING` row stands, and the audit now names the item
+  it matches. The reviewer's choice is to reword the heading (losing the
+  original phrasing of the judgement) or to reword the item (losing the
+  history of how it was carried); the audit should not pick. Recording the
+  choice is cheap and it stops the row being re-diagnosed every session.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, plus
+  `phase6_uvm_crv_uart` whose `cmp -s` was deliberately not bundled into
+  10-16's fix. Two worked references exist (`phase6_rx_pin_driver`,
+  `phase6_bfm_equivalence`).
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) the SVA protocol checkers
+  bound into the existing UVM environment, and (c)
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage` collector.
+  Still the only genuinely open Phase 4/6 *content*, and now the named
+  successor of a STALE entry rather than an informal rewording.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13, the census's next schema change.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest exposure
+  argument in the census and never tested.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row: a control that misreports rather than a gap.
+  `phase6_uvm_crv_uart`'s VOID verdict is the worked reference.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for a sixth session.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** is above; **A CHECK THAT CATCHES
+  M1, M4 AND M5** is above; the rest of the standing list is unchanged:
+  **A POSITIVE CONTROL THAT MAKES S-f FIRE** (10-08, **ninth** session
+  untouched); **DERIVE C1's AND C3's DETAIL STRINGS** (10-10); **A diversity
+  TARGET** (a reviewer's decision, deliberately open); apply the three-valued
+  outcome axis to `phase6_crv_uart`'s crosses (09-26); audit every remaining
+  runner for the 09-27 pattern; per-property coverage of the Phase 4 UVM
+  environment (09-23); a less greedy steering policy (09-24); two transmitters
+  at once (09-25); `abc pdr` as a second engine (09-23); widen the coverage
+  model (09-24); mutants not yet attempted (interrupt enable combinations,
+  reset asserted mid-frame); a property needing a strengthening invariant; the
+  SVA sequence layer (runnable on neither tool here, open since 09-20); code
+  coverage measurement (Icarus has none, open since 09-18); Phase 6 lint,
+  regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 so far (the adjudication of twelve; the RETIRED/WORDING
+split with its four controls; this AUTOMATION_LOG entry), plus the regenerated
+audit and caller transcripts and `progress.md`. The graphene repository took
+**6** in the same session.
