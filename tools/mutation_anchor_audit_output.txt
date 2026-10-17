@@ -23,12 +23,12 @@ mutation-anchor audit -- every sed-injected mutant committed in this repository
                    real injection is done in python; the sed string is a
                    placeholder or annotation marker, so auditing it as the
                    mutation would be a category error
+  [ OK            ] phase6_crv_uart  M7 tx_full asserts one entry early (tx_cnt >= 7)
 
   examples/phase6_rx_pin_driver/run_mutation_tests.sh
   [ OK            ] phase6_rx_pin_driver  M1 BAUD_DIV ignored by the baud generator (the 2026-09-24 loopback ESCAPE)
   [ OK            ] phase6_rx_pin_driver  M2 RX samples at oversample position 7 instead of 8
-  [ A_SKIPPED:unparsable ] phase6_rx_pin_driver  M3 stop-bit check removed from RX_STOP1
-                   could not parse the sed expression; controls not applied.
+  [ OK            ] phase6_rx_pin_driver  M3 stop-bit check removed from RX_STOP1
   [ OK_MULTISITE:2 ] phase6_rx_pin_driver  M4 RX parity polarity swapped
                    OK, but CONTROL C: the anchor matched 2 lines of the original, so this mutant changes 2 sites while being described as one defect.
   [ OK            ] phase6_rx_pin_driver  M5 start-bit glitch filter removed
@@ -39,8 +39,8 @@ mutation-anchor audit -- every sed-injected mutant committed in this repository
                    mutation would be a category error
 
 ==============================================================================
-RESULT: 16 sed-injected mutants audited
-        13 clean, 3 reported-not-failing, 0 failing a control, 2 skipped
+RESULT: 17 sed-injected mutants audited
+        15 clean, 2 reported-not-failing, 0 failing a control, 2 skipped
 ==============================================================================
   NO COMMITTED MUTANT IS HALF-INJECTED.  Every row whose sed is the
   real injection passes control B, so no committed verdict in this
@@ -52,7 +52,6 @@ RESULT: 16 sed-injected mutants audited
   BUT THE AUDIT IS NOT EMPTY.  Three rows are usable and are NOT what
   their harness's own control can certify:
     phase6_crv_uart M3 -> OK_A_VACUOUS
-    phase6_rx_pin_driver M3 -> A_SKIPPED:unparsable
     phase6_rx_pin_driver M4 -> OK_MULTISITE:2
 
   Read in order of what they cost:

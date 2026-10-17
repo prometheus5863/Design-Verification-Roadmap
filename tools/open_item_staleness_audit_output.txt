@@ -1,0 +1,87 @@
+==============================================================================
+OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
+consistent with the file that records what is finished?  (2026-10-03)
+==============================================================================
+  AUTOMATION_LOG.md: 36 "Not yet covered" lists; the most recent has 21 items
+  progress.md: 32 completed checkboxes, 4 unchecked
+  [PASS] the most recent open-items list parses into items
+  [PASS] progress.md parses into completed blocks
+
+------------------------------------------------------------------------------
+S1 -- every backticked path an open item names exists in the tree
+------------------------------------------------------------------------------
+  paths named: 8   resolved: 8   unresolved: 0
+  An unresolved path is not automatically a fault: an item may name a file
+  it asks a future session to CREATE.  Reported, not failed.
+  [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
+
+------------------------------------------------------------------------------
+S2 -- every "created <date>" parses and is not in the future
+------------------------------------------------------------------------------
+  dates found: 1   ok: 1   bad: 0
+  [PASS] no open item carries an unparseable or future creation date
+
+------------------------------------------------------------------------------
+S3 -- CONTRADICTION RANKING against progress.md's completed items
+------------------------------------------------------------------------------
+  score = fraction of the open item's distinctive tokens that a
+  COMPLETED checkbox also contains.  A RANKING, not a verdict.
+
+    score  open item
+    0.333  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — restored today. muta...  <-- adjudicate
+    0.308  - THE ONE REMAINING cmp -s RUNNER — phase6_crv_uart, plus phase6_uvm_crv_uart whose cm...  <-- adjudicate
+    0.300  - A MUTANT FOR THE rx_avail SYNC_ONLY ROW — carried; the weakest exposure argument in ...  <-- adjudicate
+    0.286  - EXTEND THE CENSUS TO THE REMAINING CHECKERS — carried; 5 files censused.  <-- adjudicate
+    0.286  - A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES TRANSCRIPTS — carried...  <-- adjudicate
+    0.250  - A MUTANT FOR THE NEW tx_empty PREDICTION — adjudicated OPEN today and now the cheape...  <-- adjudicate
+    0.227  - THE CAPSTONE BOX'S LETTERED REMAINDER — (b) the SVA protocol checkers bound into the...
+    0.222  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — restored today. v13...
+    0.222  - RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE — carried from 10-13,...
+    0.200  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — adjudicated OPEN today, with...
+
+  top match for the highest-ranked item:
+    - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
+
+------------------------------------------------------------------------------
+S4 -- the committed adjudication of the top 6
+------------------------------------------------------------------------------
+  adjudication entries on disk: 18
+    OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
+    OPEN    - THE ONE REMAINING cmp -s RUNNER — phase6_crv_uart, plus ph...
+    OPEN    - A MUTANT FOR THE rx_avail SYNC_ONLY ROW — carried; the wea...
+    OPEN    - EXTEND THE CENSUS TO THE REMAINING CHECKERS — carried; 5 f...
+    OPEN    - A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMP...
+    OPEN    - A MUTANT FOR THE NEW tx_empty PREDICTION — adjudicated OPE...
+    WORDING Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
+            still on the list as: - THE CAPSTONE BOX'S LETTERED REMAINDER — (b) the SVA protocol...
+  [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
+  [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
+  [PASS] the RETIRED and WORDING categories are disjoint
+  NOTE: 1 adjudicated item(s) are tracked under a different wording than the
+        entry that judged them.  The entry is right and the item is live; what
+        moved is the list.  Each is named above with the item it matches, so a
+        reviewer can align the two without re-deciding the verdict.
+  [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
+  verdicts: 3 STALE, 15 OPEN
+
+------------------------------------------------------------------------------
+S5 -- controls on the ranker, and its mutation test
+------------------------------------------------------------------------------
+  [PASS] C1  an open item whose components are all named in a COMPLETED checkbox ranks high   [0.818]
+  [PASS] C2  an unrelated open item ranks low   [0.143]
+  [PASS] C3  and the contradicted item ranks ABOVE the unrelated one   [0.818 > 0.143]
+  [PASS] M1  MUTATION TEST: with the completed checkbox removed, the same item no longer ranks high   [0.818 -> 0.000]
+  [PASS] E1  EXACT: an open item that is verbatim a completed block scores exactly 1.0   [1.0]
+  [PASS] W1  the EXACT matcher misses an item that differs only in wording   [wire/wired and uvm-coverage-collector/UartCoverage-collector]
+  [PASS] W2  and the wording-tolerant form finds it   [so the row is reported WORDING, with the item it matches, rather than as a
+        retirement -- the sentence the old form printed about it was false]
+  [PASS] W3  NEGATIVE CONTROL: the loose form does NOT rescue an entry whose item is really gone   [the split must never be able to turn a FAIL into a PASS; it may only move a
+        row between two reported categories]
+  [PASS] W4  and identifier-case splitting is what does the work, not the suffix fold alone   [stems('UartCoverage') = ['coverage', 'uart'].  The first draft folded suffixes over tokens()
+        output, by which time `UartCoverage` is one token and the boundary is gone;
+        it fixed wire/wired, left all six 2026-10-17 entries RETIRED, and so changed
+        nothing the check reported.]
+
+==============================================================================
+RESULT: 17 passed, 0 failed
+==============================================================================

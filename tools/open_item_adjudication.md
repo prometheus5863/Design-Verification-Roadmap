@@ -346,3 +346,73 @@ accordingly. Same work, narrower and renamed. A second matcher miss, from a
 rewording the adjudication process itself produced, which is the more
 troubling of the two: **this file's own correct operation is what made the
 check fail.**
+
+---
+
+# Second adjudication pass of 2026-10-17, same session
+
+**Why there are two passes today.** Restoring the four silently-dropped items
+to the list **moved the ranking head**, so four items that were previously
+below the reporting cut are now above it and unadjudicated. This is precisely
+what the design note at the top of this file describes — *"the adjudication is
+pinned to a ranking, and the ranking moves when the list does, so a new list
+and a refreshed adjudication belong in the same commit"* — and 2026-10-03
+needed a second pass for the same reason. **It is a property of the design and
+not an accident, and today is the second recorded instance, which makes it a
+pattern rather than a one-off:** any session that changes the item list owes
+the audit a re-adjudication before the caller can be green.
+
+## OPEN: THE ONE REMAINING cmp -s RUNNER — phase6_crv_uart
+
+**Verdict: OPEN, and the item's own COUNT is unverified — which is the more
+useful finding.** The item says one remains, down from four, plus
+`phase6_uvm_crv_uart` whose `cmp -s` 2026-10-16 deliberately did not bundle in.
+A plain `grep -rln 'cmp -s' examples/` today returns **ten runner files**,
+including `phase6_rx_pin_driver/run_mutation_tests.sh` and
+`phase6_bfm_equivalence/run_mutation_tests.sh` — **the two this repository
+names as the worked references for having been fixed.**
+
+That does not mean the fixes were not made. `cmp -s` in a *control* (checking
+that an injection landed, or that a cosmetic edit did not move a transcript) is
+not the same as `cmp -s` *as the verdict*, and the fix was about the latter.
+**But nothing in the repository distinguishes the two**, so "one remaining" is
+a number no instrument here can reproduce, and it has been carried as if it
+were measured. Cheapest route, and it is the same shape as the census work
+already done for scoreboard reads: classify every `cmp -s` occurrence as
+verdict-bearing or control-bearing, and require each to be one or the other —
+the 2026-10-16 rule that *a set with a silent default has no members you can
+name*, applied to this count instead of to the runner list.
+
+## OPEN: A MUTANT FOR THE rx_avail SYNC_ONLY ROW
+
+**Verdict: OPEN, and confirmed as the census's weakest row.**
+`tools/scoreboard_dut_signal_census_output.txt` carries `SYNC_ONLY
+STATUS.rx_avail (st[3])` with its exposure argument in prose — "decide when to
+read RX_DATA and no row named it" — and it is one of only **2 SYNC_ONLY rows
+of 18** (`OBSERVED_ONLY 1, PREDICTED 13, SYNC_ONLY 2, TRUSTED 2`). A SYNC_ONLY
+role is the census's claim that a signal is *read to sequence the bench* and
+never *checked*, which is exactly the claim a mutant tests: break the signal
+and the bench should hang or mis-sequence rather than report a mismatch. No
+mutant targets it. Untouched since creation.
+
+## OPEN: EXTEND THE CENSUS TO THE REMAINING CHECKERS
+
+**Verdict: OPEN, with the boundary quoted from the census itself.** The census
+is complete *within* its five files and says so in its own words: "13 reads
+extracted across 5 files, 13 covered, 0 omitted … **complete only WITHIN a
+censused file. Adding a file can** …". So this item is not a gap in the
+instrument but the instrument's stated scope limit, and it is the honest kind
+of open item: the file list is the part no check can grow by itself. Worth
+pairing with the `cmp -s` item above, since both are "enumerate the population
+before trusting a count".
+
+## OPEN: A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES TRANSCRIPTS
+
+**Verdict: OPEN, and today raises its priority rather than its age.** Ten
+runners compare transcripts; the control that proves a comparison can *fail*
+on a change that does not matter (whitespace, a reordered line) exists in only
+a few. Today's own `W4` is the argument for it in miniature: a first draft of
+`stems()` changed the audit's behaviour in a way its output could not
+distinguish from the intended change, and only a control aimed at the
+mechanism caught it. A runner whose transcript comparison has never been shown
+to fire is in the same position. Created 10-13.

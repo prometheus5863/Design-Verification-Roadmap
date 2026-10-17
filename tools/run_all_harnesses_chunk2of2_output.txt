@@ -1,9 +1,9 @@
 ======================================================================
-RUN ALL HARNESSES -- 2026-10-16T11:26:52Z
+RUN ALL HARNESSES -- 2026-10-17T11:39:34Z
 the first caller in this repository that reads a runner's exit code
 ======================================================================
-  repo root : /sessions/rcw-012njjfrjtvy7ir5ftk9naij/work/Design-Verification-Roadmap
-  logs      : /tmp/run_all_harnesses.Cb9Bjt
+  repo root : /sessions/rcw-01mc2wujz7qn9lqqz112bgsn/work/Design-Verification-Roadmap
+  logs      : /tmp/run_all_harnesses.YaMK1R
 
 ----------------------------------------------------------------------
 SECTION 1 -- manifest vs repository
@@ -23,10 +23,10 @@ SECTION 2 -- every HARNESS, with its exit code read
   phase4_uvm_milestone/run_phase4_uvm.sh                   SKIP      (requires cocotb-config)
   phase5_csr_formal/run_reset_formal.sh                    SKIP      (requires sby)
   phase5_property_coverage/run_property_coverage.sh        SKIP      (requires sby)
-  phase6_baud_error_coverage/run_mutation_tests.sh         PASS        16s
+  phase6_baud_error_coverage/run_mutation_tests.sh         PASS        14s
   phase6_bfm_equivalence/run_mutation_tests.sh             PASS         5s
-  phase6_crv_uart/run_mutation_tests.sh                    PASS         2s
-  phase6_rx_pin_driver/run_mutation_tests.sh               PASS        44s
+  phase6_crv_uart/run_mutation_tests.sh                    PASS         1s
+  phase6_rx_pin_driver/run_mutation_tests.sh               PASS        41s
   phase6_uvm_crv_uart/run_mutation_tests.sh                SKIP      (requires cocotb-config)
 
 ----------------------------------------------------------------------
@@ -47,6 +47,6 @@ SUMMARY
     examples/phase6_uvm_crv_uart/run_mutation_tests.sh(needs:cocotb-config)
   manifest structure : OK
   ratchet            : OK
-  logs kept at       : /tmp/run_all_harnesses.Cb9Bjt
+  logs kept at       : /tmp/run_all_harnesses.YaMK1R
   exit               : 0
 ======================================================================

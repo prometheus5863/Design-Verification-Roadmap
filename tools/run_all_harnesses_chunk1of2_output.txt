@@ -1,9 +1,9 @@
 ======================================================================
-RUN ALL HARNESSES -- 2026-10-16T11:24:50Z
+RUN ALL HARNESSES -- 2026-10-17T11:37:39Z
 the first caller in this repository that reads a runner's exit code
 ======================================================================
-  repo root : /sessions/rcw-012njjfrjtvy7ir5ftk9naij/work/Design-Verification-Roadmap
-  logs      : /tmp/run_all_harnesses.Fkeu4G
+  repo root : /sessions/rcw-01mc2wujz7qn9lqqz112bgsn/work/Design-Verification-Roadmap
+  logs      : /tmp/run_all_harnesses.nwDF6W
 
 ----------------------------------------------------------------------
 SECTION 1 -- manifest vs repository
@@ -16,31 +16,18 @@ SECTION 1 -- manifest vs repository
 ----------------------------------------------------------------------
 SECTION 2 -- every HARNESS, with its exit code read
 ----------------------------------------------------------------------
-  tools: report_provenance_audit.py                        PASS         1s
-  tools: open_item_staleness_audit.py                      FAIL rc=1      0s
-        last 12 lines of output:
-          | ------------------------------------------------------------------------------
-          | S5 -- controls on the ranker, and its mutation test
-          | ------------------------------------------------------------------------------
-          |   [PASS] C1  an open item whose components are all named in a COMPLETED checkbox ranks high   [0.818]
-          |   [PASS] C2  an unrelated open item ranks low   [0.143]
-          |   [PASS] C3  and the contradicted item ranks ABOVE the unrelated one   [0.818 > 0.143]
-          |   [PASS] M1  MUTATION TEST: with the completed checkbox removed, the same item no longer ranks high   [0.818 -> 0.000]
-          |   [PASS] E1  EXACT: an open item that is verbatim a completed block scores exactly 1.0   [1.0]
-          | 
-          | ==============================================================================
-          | RESULT: 10 passed, 2 failed
-          | ==============================================================================
-  tools: audit_mutation_anchors.sh                         PASS         1s
-  phase1_mutation/run_mutation_tests.py                    PASS        15s
+  tools: report_provenance_audit.py                        PASS         2s
+  tools: open_item_staleness_audit.py                      PASS         0s
+  tools: audit_mutation_anchors.sh                         PASS         0s
+  phase1_mutation/run_mutation_tests.py                    PASS        16s
   phase4_uvm_milestone/run_axis_audit.py                   PASS         0s
   phase5_csr_formal/run_csr_formal.sh                      SKIP      (requires sby)
   phase5_formal_uart/run_formal.sh                         SKIP      (requires sby)
-  phase6_baud_error_coverage/run_baud_cov.sh               PASS         6s
+  phase6_baud_error_coverage/run_baud_cov.sh               PASS         5s
   phase6_bfm_equivalence/run_bfm_equiv.sh                  PASS         1s
-  phase6_crv_uart/run_crv_cov.sh                           PASS        12s
-  phase6_divisor_window/run_divisor_window.sh              PASS        53s
-  phase6_rx_pin_driver/run_rx_pin.sh                       PASS        28s
+  phase6_crv_uart/run_crv_cov.sh                           PASS        11s
+  phase6_divisor_window/run_divisor_window.sh              PASS        50s
+  phase6_rx_pin_driver/run_rx_pin.sh                       PASS        25s
 
 ----------------------------------------------------------------------
 SECTION 3 -- the provenance audit as a test, not a report
@@ -52,14 +39,12 @@ SECTION 3 -- the provenance audit as a test, not a report
 ======================================================================
 SUMMARY
 ======================================================================
-  PASS 9   FAIL 1 (of which TIMEOUT 0)   SKIP 2
+  PASS 10   FAIL 0 (of which TIMEOUT 0)   SKIP 2
   skipped (declared prerequisite absent):
     examples/phase5_csr_formal/run_csr_formal.sh(needs:sby)
     examples/phase5_formal_uart/run_formal.sh(needs:sby)
-  failed:
-    tools/open_item_staleness_audit.py(rc=1)
   manifest structure : OK
   ratchet            : OK
-  logs kept at       : /tmp/run_all_harnesses.Fkeu4G
-  exit               : 1
+  logs kept at       : /tmp/run_all_harnesses.nwDF6W
+  exit               : 0
 ======================================================================
