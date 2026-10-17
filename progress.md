@@ -2108,3 +2108,91 @@ Second rule, from §3(i): **a verdict must be gated on the mechanism it
 reports, not merely accompanied by it.** A mutant that "fails" by crashing is
 unscored, and reporting it as caught is a false DETECTED with provenance
 printed directly above it.
+
+---
+
+### 2026-10-17 — the caller is green, and clearing it found a verdict resolved on spelling
+
+`tools/run_all_harnesses.sh` **exits 0 for the first time**: PASS 17, FAIL 0,
+SKIP 7 across both chunks. The single red harness was
+`tools/open_item_staleness_audit.py` (10/2), ranked first yesterday, now
+**17 passed, 0 failed**.
+
+**What clearing it required.** Six top items adjudicated against evidence —
+five OPEN, one STALE (`RAL BASICS, ACTIVE/PASSIVE AGENTS, vplan v2`: RAL done
+09-19, active/passive done 09-18, and the plan is at **v13**, so "a v2
+revision" is a version that happened; `NO-SUCCESSOR:` all three complete) —
+and the six "orphan" entries dispositioned.
+
+**The six orphans were not one phenomenon, and the audit could not say so.**
+
+- **Four were entries whose item left the list with no verdict**, which is
+  exactly the loss `tools/open_item_adjudication.md` exists to prevent. All
+  four are live work and all four are **restored to the list**, not deleted.
+  The worst is the **F7 cross / `0x40` BORDERLINE** conflict, which the 10-03
+  entry called "the repository's top item" and which then fell off the list
+  **while three vplan revisions were written about it** — worked on
+  continuously and untracked, with a reviewer's decision outstanding that
+  nothing was reminding anyone to make.
+- **Two were not orphans at all.** Their items are on the list under different
+  wording, and the check's failure text — *"has lost its item from the list
+  entirely"* — is false for both. The matcher is a 0.75 token-containment
+  test, so `Wire PayloadAdmissibilityCoverage into the live UVM coverage
+  collector` misses the live `(c) PayloadAdmissibilityCoverage wired into the
+  live UartCoverage collector` on `wire`/`wired` and `uvm coverage
+  collector`/`UartCoverage collector`. **A verdict resolved on spelling** —
+  the same class as this repository's 10-01 dead-name loophole. The second
+  miss is worse: **the rewording was produced by 10-14's own adjudication**, so
+  this file's correct operation is what made the check fail.
+
+`ORPHAN` is now `RETIRED` or `WORDING`, with the matching item printed beside
+each `WORDING` row, a disjointness check between the categories, and four
+controls — **`W3` being the load-bearing one: the wording-tolerant form must
+not rescue an entry whose item is really gone.** *The split must never be able
+to turn a FAIL into a PASS; it may only move a row between two reported
+categories.* `W4` exists because this change's own first draft folded suffixes
+over `tokens()` output, by which time `UartCoverage` is one token and the case
+boundary is gone — it fixed `wire`/`wired`, left all six entries RETIRED, and
+so **changed nothing the check reported**: half a repair indistinguishable
+from a whole one by the check's own output.
+
+**Two things the run found that nobody was looking for.**
+
+1. `tools/mutation_anchor_audit_output.txt` **has been stale since 2026-10-14,
+   in the flattering direction** — committed verdicts read
+   `A_SKIPPED:unparsable` for `phase6_rx_pin_driver` M3 and omit
+   `phase6_crv_uart` M7; both now read OK. Verified reproducible here (two
+   runs byte for byte) **before** committing the better numbers, so it is not
+   nondeterminism: commit `72add95` converted the RX-pin runner to the
+   declared-sites guard, changed the sed expressions the anchor audit parses,
+   and did not regenerate the anchor audit's transcript. A repair that changed
+   what a second instrument says about the runner it repaired, with the second
+   claim left on disk for three days.
+2. `tools/open_item_staleness_audit.py` **had no committed transcript at
+   all** — the one harness in the manifest with no claim on disk beside it,
+   and it was the one gating the caller. A missing transcript is weaker than a
+   stale one: nothing to go stale, nothing to compare.
+
+**And a second adjudication pass was needed in the same session**, because
+restoring four items moved the ranking head. The adjudication file's own
+design note predicted it; 10-03 needed one for the same reason. **Two recorded
+instances make it a rule: any session that changes the item list owes the
+audit a re-adjudication before the caller can be green.** Of the four newly
+top-ranked items, the useful one is `THE ONE REMAINING cmp -s RUNNER`, whose
+own **count is unverified** — a plain grep finds `cmp -s` in ten runners,
+including the two named as worked references, and nothing here distinguishes
+`cmp -s` in a control from `cmp -s` as the verdict.
+
+#### Methodological note
+
+10-14: every guard asks whether a verdict is sound; none asks whether the
+harness ran. 10-15: and none asks whether the report was produced by the
+harness beside it. 10-16: and none of it matters while nothing runs the
+guards. **10-17: and a guard that runs, and fails, can still make a claim its
+mechanism does not support.**
+
+Checkable rule: **when a check's failure message names a cause, the cause must
+be measured, not inferred from the check firing.** Where two causes produce
+the same failure they become two reported categories with a disjointness check
+between them, and any tolerance added to tell them apart must be provably
+unable to turn a failure into a pass.
