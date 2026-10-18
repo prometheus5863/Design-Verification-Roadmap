@@ -8902,3 +8902,321 @@ produced a false failure in the other repository.
 split with its four controls; this AUTOMATION_LOG entry), plus the regenerated
 audit and caller transcripts and `progress.md`. The graphene repository took
 **6** in the same session.
+
+## 2026-10-18 — An audit accused eleven harnesses of a fault none of them had, and the cause was a file the previous session left in /tmp
+
+**Status:** The caller's only red was a false accusation by one of its own
+tools. Withdrawn, with its diagnosis made three-valued; the underlying
+collision found latent in four more harnesses; and the ratchet restored by
+doing the work it asked for rather than by raising its budget.
+
+**Entry point, and it was not the ranked-first item.** 2026-10-17 ranked the
+`tx_empty` mutant first. It was checked against the tree before being taken —
+the discipline the sibling repository spent this same session establishing
+after finding two of its own standing items asserting the opposite of its tree
+— and it survived: `grep -rl tx_empty examples/*/mutation_report*` is still
+empty across all twelve committed reports, while the signal is read by the RTL
+and the CRV bench. Then `tools/run_all_harnesses.sh` was run to establish the
+baseline, and produced something that outranked it.
+
+### 1. The accusation, and the measured cause
+
+`tools/harness_file_closure_audit.py`, carried inside the caller's output:
+
+    RESULT: 21 harness scripts audited, 0 elaborated, 11 FAILED to elaborate
+    CONTROLS: 2 passed, 2 failed
+
+**Every one of those verdicts was false, and the same caller run reports eleven
+of the accused scripts `PASS` eleven lines further down the page** — two claims
+contradicting each other on one screen, which is what made it worth looking at
+rather than fixing.
+
+    $ ls -la /tmp/closure_examples_phase1_mutation_run_mutation_tests_py.sim
+    -rwxr-xr-x 1 nobody nogroup 21099 Oct 17 11:39 ...
+    $ id -un
+    rcw-01yjbzptk5n2oaw6cot1pa4j
+    $ iverilog ... -o /tmp/closure_..._py.sim rtl/... tb/...
+    /tmp/closure_..._py.sim: Permission denied
+    error: Code generator failure: -1
+
+`iverilog` was fine: the same command with a fresh `-o` returns 0. The `-o`
+path was a **deterministic name in a namespace that outlives the session**, and
+yesterday's artefacts were still in it, owned by another user. *Zero of
+twenty-one* elaborating was the tell — a repository-wide verdict that uniform
+is a statement about the instrument.
+
+### 2. Two defects, and why fixing only the obvious one would have been worse
+
+**(a)** A deterministic name in a shared, session-outliving namespace collides
+by construction — with yesterday, and with any concurrent session. Scratch
+moves to a private `mkdtemp()` removed at exit.
+
+**(b)** The audit could not tell **"this closure does not elaborate"** (a fact
+about the repository) from **"the audit could not run an elaboration at all"**
+(a fact about the machine), so it reported the second as the first. That is
+**this repository's own 2026-10-17 rule, broken by one of its own tools**:
+*when a check's failure message names a cause, the cause must be measured, not
+inferred from the check firing.* "FAILED to elaborate" is a sentence about
+Verilog and it was derived from a file-permission error.
+
+Fixing (a) alone would have turned today green and left (b) in place for the
+next environment to trip — **the worse outcome**, because the audit would have
+retained the ability to make an unfounded accusation and would merely have not
+made one today. So the verdict becomes three-valued, `True` / `False` / `ENV`,
+with `ENV` on its own `RESULT` line and **never folded into the harness
+count**. `_is_env_failure` is deliberately conservative: an unmatched message
+counts as a **real** elaboration failure, so a genuine defect is never
+explained away as an environment problem. The asymmetry is the point — (b) was
+the audit erring in the other direction.
+
+Four new controls. **(5) is load-bearing**: a closure *known* to elaborate,
+sent to a deliberately unwritable output path, must be reported `ENV` and must
+not be reported `FAILS` — a three-valued verdict whose third value is never
+exercised is a comment (2026-10-01), and this is the row that would have caught
+today on the day. (6) the same closure with a writable path still elaborates,
+so (5) is about the path and not the files. (7) `FAILS` and `ENV` are disjoint,
+so no future widening of `ENV_MARKERS` can move a real failure into the benign
+column (the 2026-10-17 two-category pattern). (8) the scratch directory is
+session-private rather than a fixed path.
+
+### 3. The collision was repository-wide, and latent in four more harnesses
+
+`tools/shared_scratch_audit.py` (new, registered in the caller's manifest)
+sweeps every `.sh`/`.py` for temp-namespace paths and classifies `PRIVATE` /
+`SCOPED` / `SHARED`, with the exemption marker and its **required reason** in
+the source rather than in the checker (the sibling repository's 2026-10-01
+rule). Measured against the pre-session tree at `1e2529e` — **10 `SHARED` rows
+in 5 files**:
+
+| file | lines |
+|---|---|
+| `tools/harness_file_closure_audit.py` | 187 — *the incident* |
+| `examples/phase6_uvm_crv_uart/run_mutation_tests.sh` | 31 |
+| `examples/phase4_ral/run_mutation_tests.sh` | 72 |
+| `examples/phase5_property_coverage/run_property_coverage.sh` | 53, 54, 55, 57, 58, 60 |
+| `examples/phase5_property_coverage/run_chunk.sh` | 9 |
+
+**All four newly found scripts are in suites that `SKIP` here** — cocotb and
+sby are both absent — so the fault was invisible on every run to date, waiting
+for the first machine where those tools exist *and* a previous session had
+been. Latent and harmless are not the same property.
+
+### 4. And the two cases needed opposite fixes
+
+`phase6_uvm_crv_uart` and `phase4_ral` had **no** reason for a stable path;
+they were the two mutation harnesses never given `mktemp -d` like their six
+siblings. They get one.
+
+`phase5_property_coverage` is the reverse: **its stability is load-bearing.**
+Each shell this automation gets is time-limited and background jobs do not
+survive it, so the sweep is resumable by construction and `run_chunk.sh` must
+find the same `$RESULTS` on the next invocation. Randomising that path would
+break the feature — **and would still have passed any check that merely tests
+for `mktemp`.** So it is **scoped by uid**: stable within a user, distinct
+between users, reason stated in the source and required by the audit, plus a
+guard that refuses to run if the work directory exists unwritable.
+
+**Its exposure was the worse of the two, and in the direction that matters.**
+`phase()` begins `rm -rf "$work"`, which **fails** on a directory owned by
+another user, and `report.py` then reads `$work/results.txt` — so a stale
+results file from another session would be reported as **this** run's results,
+with no error raised anywhere. The closure audit failed *loudly* and falsely;
+this one would have succeeded *quietly* and falsely. A third instance of the
+same shape was hit in the sibling repository on the same day: a redirect to a
+stale `/tmp` file failed with `Permission denied` while `tail` of that path
+returned a **previous session's output** and read as a successful run.
+
+### 5. The ratchet fired, and loosening it was the wrong answer
+
+`run_all_harnesses.sh` went to `ratchet: BROKEN` — 6 suites with a runner and
+no current report against a declared budget of 5. The sixth is
+`phase5_property_coverage`, which joined **because today's repair edited its
+runner**, and which cannot be re-run here (needs sby). Raising
+`STALE_SUITE_BUDGET` to 6 was rejected: *a ratchet nobody tightens sits at its
+starting value forever* cuts both ways, and this would have ratcheted backwards
+on an inflated number.
+
+Instead `phase6_baud_error_coverage` — the one suite in the list that does run
+here — was re-run and given a current report: **5 detected, 1 expected escape
+(M6, stated), 0 unexpected, 0 voided, identical to 2026-10-14** down to the
+per-mutant error counts (9/1/6/2/5) and the first-failing messages. The value
+of the re-run is the confirmation that the scratch-path repair moved nothing in
+the bench; the 2026-10-14 report is kept in place. Both chunks of the caller
+are now green: **18 PASS, 0 FAIL, the 7 known SKIPs, `ratchet: OK`.**
+
+**And the edge that demanded that report is not real**, recorded in the report
+itself rather than worked around.
+`tools/harness_file_closure_audit.py` does not run the baud bench, sources
+nothing it sources, and cannot change what it produces — it is an auditor that
+*reads* harness scripts and names them. Two over-reporting mechanisms put it in
+the closure:
+
+1. **`callers_of()` resolves on BASENAME.** Six different harnesses here are
+   called `run_mutation_tests.sh`, so each is reported as a caller of the
+   others — visible in the audit's own output, where the baud bench's runner
+   lists `phase4_ral`, `phase6_bfm_equivalence`, `phase6_crv_uart`,
+   `phase6_rx_pin_driver` and `phase6_uvm_crv_uart` as callers. They are
+   **siblings, not callers.**
+2. **The closure treats "names the runner" as "is an input to its results".**
+   Any tool that enumerates harness scripts therefore marks every harness's
+   report stale the moment it is edited — and *adding* one such tool, as today
+   did, does the same.
+
+### 6. Four defects in this session's own work, all caught by checks, all one cause
+
+- **The closure-audit fix's first draft printed the `mkdtemp` path verbatim**
+  in control (5)'s detail line, random suffix and all, so the transcript would
+  have differed on every run — exactly what the comment above `elaborate()` has
+  forbidden since 2026-10-13 ("a property of where the audit ran rather than of
+  what it found"). Added `_redact()`; **two consecutive runs are now
+  byte-identical, verified by `diff`.**
+- **The scratch audit's first pattern required a literal `/tmp/` with a
+  trailing slash**, so it found the eight `SHARED` rows in the shell scripts
+  and **zero** in the Python file that caused the incident, whose spelling is
+  `os.path.join('/tmp', ...)`. A checker that passes on the broken tree
+  certifies nothing, and that draft would have passed on the exact breakage it
+  exists for. `/tmp` is now matched as a whole path component, which also
+  caught `phase4_ral`'s `${TMPDIR:-/tmp}/ral_mutants` — **a fourth instance
+  invisible to the first draft.** Plants `p_py_join`, `p_py_join_private` and
+  `p_tmpdir_var` pin all three spellings.
+- **The throwaway script written to verify the audit against the pre-fix tree
+  used the SIBLING repository's commit hash**, got empty strings from
+  `git show`, and printed `SHARED pre-fix: 0` for every file — which read as
+  "the audit does not work". A vacuous input that looks like a clean result:
+  the audit's own `R3` non-vacuity check in miniature, and the reason that
+  check exists.
+- `PLANT_LOG_TRUE`-equivalent: none here, but the sibling repository shipped a
+  dead constant in the same session and caught it the same way.
+
+**Across the two repositories that is four separate instances today of a check
+answering a weaker question than the one asked**, and the sibling repository
+independently ranked *resolve-on-spelling* as its own dominant failure mode in
+the same session. It is now a named item in both.
+
+### 7. Environment and automation health
+
+Device reachable and folder connected at the **first** firing (06:5x UTC).
+Icarus Verilog 10.3 from the cached `tools/setup_iverilog.sh`; `yosys`/`sby`/
+`cocotb` remain absent, so the seven SKIPs stand. **`run_all_harnesses.sh` no
+longer fits in one call** — a full run hit the 180 s cap at 175 s with results
+still printing, so both halves were run as `--chunk 1/2` and `--chunk 2/2`, and
+the two chunk transcripts are the committed evidence. The chunk flag existed
+for exactly this and is now load-bearing rather than optional.
+
+**The /tmp lesson generalises past this repository and is the session's
+environment fact:** the device VM's `/tmp` **outlives the session** and its
+previous occupant's files are owned by `nobody:nogroup`. Session scratch
+belongs under `$HOME`, or in a `mkdtemp()`. Nothing was deleted; nothing
+crossed the bridge; no live web search was used and none was needed.
+
+**Not yet covered (candidates for future runs):**
+
+- **`callers_of()` RESOLVES ON BASENAME, AND THE CLOSURE TREATS "NAMES" AS
+  "FEEDS"** — created today, **ranked first**. Both mechanisms are named in §5
+  with the evidence in the audit's own output. **Warning for whoever takes it:
+  repairing this LOWERS the stale count, and the ratchet fails UNDER budget by
+  design — so `STALE_SUITE_BUDGET` must be lowered in the same commit.** Also
+  expect the 49 `STALE` rows and the 48 "beside a RUNNER" figure to move; they
+  are the actionable set, and part of them is this artefact. Cheapest honest
+  route: make the caller relation require an *invocation* (`sh X`, `bash X`,
+  `source X`, `subprocess` on X, or a manifest entry) rather than a mention,
+  and keep the mention-based set as a reported upper bound beside it — the
+  `TIGHT` / `DIRECTORY` pattern this audit already uses for the other closure.
+- **A MUTANT FOR THE NEW `tx_empty` PREDICTION** — **re-verified live today**
+  and still the cheapest *content* item, now **ranked second**. No committed
+  mutation report mentions `tx_empty` (checked across all twelve), while the
+  prediction is live in the scoreboard and the signal is read by the RTL and
+  the CRV bench. Prediction, harness and injection machinery all exist.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, untouched for a third session, **ranked third**, and
+  today sharpens why it matters: control (5) of the closure audit is exactly
+  this shape (remove the ability to do the work, require the suite to *refuse*
+  rather than to score) and it is now a worked reference. Two suites are known
+  to gate (`phase4_ral`, `phase6_uvm_crv_uart`); **four have never been tested
+  this way**: `phase1_mutation`, `phase6_baud_error_coverage`,
+  `phase6_bfm_equivalence`, `phase6_rx_pin_driver`. A false SKIP is quiet and
+  permanent.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) the SVA protocol checkers
+  bound into the existing UVM environment, and (c) `PayloadAdmissibilityCoverage`
+  wired into the live `UartCoverage` collector. Still the only genuinely open
+  Phase 4/6 **content**, and untouched today — a second consecutive session
+  spent in the instrument layer, which is worth noting deliberately rather than
+  by default. Both need cocotb, which is the item below.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, and the
+  membership changed today: `phase6_baud_error_coverage` **left** (it was
+  re-run and has a current report) and `phase5_property_coverage` **joined**
+  (today's repair edited its runner). The five are now `phase4_ral`,
+  `phase5_csr_formal`, `phase5_formal_uart`, `phase5_property_coverage`,
+  `phase6_uvm_crv_uart` — **all five need cocotb or sby and none can be given a
+  report from this environment.** It is a toolchain item and not a reporting
+  item, and the ranked-first item above may remove some of them outright by
+  correcting the relation that marked them stale. Start with the toolchain
+  recipe in `notes/2026-09-06-uvm-python-toolchain-resolution.md`, now **seven**
+  sessions stale.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, untouched. `tools/mutation_controls.sh` is shared, but control B —
+  a grep for the **inserted** text, against control A's grep for the
+  **removed** text — is exercised only by `phase4_uvm_milestone`'s suites and
+  the budget-law re-derivation. Not the same item as the missing-toolchain
+  control above.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29, untouched.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`, AND `0x40` IS
+  BORDERLINE** — carried; a reviewer's decision, not a build. Read with v11's
+  W1/W3/W4 options and v12's two-number sign-off refusal.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried, untouched.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried, nine
+  sessions old; M5 still rests on exactly one check.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried and narrowed: what is
+  missing is a stated expectation with a spread for the 703 / 663 / 387–663
+  figures the vplan quotes as characteristic.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists and
+  the only worked instances are the hand-derived C1/C3 strings in
+  `witness_soundness.py`.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, and **today is
+  the second consecutive session that exists because a session happened to run
+  the caller.** Both honest forms change how the automation is driven rather
+  than what the repository contains, so it remains a reviewer's decision — but
+  the evidence for it is now two sessions deep, and today adds that the caller
+  no longer fits in one shell call, so "run the caller" is itself a two-step
+  procedure a session has to know about.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING, OR DECIDE NOT TO** —
+  carried from 2026-10-17; one `WORDING` row stands.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, plus
+  `phase6_uvm_crv_uart` whose `cmp -s` was deliberately not bundled into
+  10-16's fix.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13, the census's next schema change.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest exposure
+  argument in the census and never tested.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row: a control that misreports rather than a gap.
+  **Today supplies a second worked reference for the three-valued shape** —
+  `harness_file_closure_audit`'s `True`/`False`/`ENV` with a disjointness check
+  — alongside `phase6_uvm_crv_uart`'s `VOID` verdict.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for a seventh session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **tenth** session untouched); **DERIVE C1's AND C3's
+  DETAIL STRINGS** (10-10); **A diversity TARGET** (a reviewer's decision,
+  deliberately open); apply the three-valued outcome axis to
+  `phase6_crv_uart`'s crosses (09-26); audit every remaining runner for the
+  09-27 pattern; per-property coverage of the Phase 4 UVM environment (09-23);
+  a less greedy steering policy (09-24); two transmitters at once (09-25);
+  `abc pdr` as a second engine (09-23); widen the coverage model (09-24);
+  mutants not yet attempted (interrupt enable combinations, reset asserted
+  mid-frame); a property needing a strengthening invariant; the SVA sequence
+  layer (runnable on neither tool here, open since 09-20); code coverage
+  measurement (Icarus has none, open since 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 4 (the closure audit's three-valued verdict, private
+scratch and four controls; the repository-wide scratch audit with the four
+latent collisions closed and two opposite fixes; the baud-bench current report
+with the unreal dependency edge recorded in it; the progress.md session note).
+This AUTOMATION_LOG.md entry makes **5**, and the two green chunk transcripts
+make **6**.
