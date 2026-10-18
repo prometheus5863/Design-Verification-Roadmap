@@ -1,0 +1,89 @@
+==============================================================
+BAUD-ERROR COVERAGE BENCH MUTATION TEST   date: 2026-10-18
+  each mutant is injected into a COPY of rtl/uart_controller.v
+  a mutant the bench does not fail on is an ESCAPE unless the
+  row is marked EXPECTED ESCAPE with a stated reason
+==============================================================
+  baseline (unmutated RTL): PASS
+
+  detected  M1 BAUD_DIV ignored by the baud generator (the 2026-09-24 loopback ESCAPE)
+            sites: declared 1, SITES_OK:1
+            9 errors; first: ERROR: 8N1 fast limit outside 09-25 +/- the phase band
+  detected  M2 RX samples at oversample position 7 instead of 8
+            sites: declared 1, SITES_OK:1
+            1 errors; first: ERROR: 8N1 fast limit outside 09-25 +/- the phase band
+  detected  M3 RX samples at oversample position 12 (far off mid-bit)
+            sites: declared 1, SITES_OK:1
+            6 errors; first: ERROR: 8N1 fast limit outside 09-25 +/- the phase band
+  detected  M4 stop-bit check removed from RX_STOP1
+            sites: declared 1, SITES_OK:1
+            2 errors; first: ERROR: 8N1 slow limit outside 09-25 +/- the phase band
+  detected  M5 RX parity polarity swapped
+            sites: declared 2, SITES_OK:2
+            5 errors; first: ERROR: 8E1 fast limit outside 09-25 +/- the phase band
+  esc(exp)  M6 start-bit glitch filter removed (EXPECTED ESCAPE -- not checked here)
+            expected: no check in this bench observes a runt start pulse
+
+  detected 5   escaped 1 (unexpected: 0)   voided 0
+
+  The detector in this bench is the ANCHORED CROSS-CHECK of the measured
+  tolerance against 09-25's independently measured values.  A coverage
+  model on its own detects nothing: every mutant below still fills the
+  same bins.  That is the point worth keeping -- coverage records what
+  the stimulus reached, and only a check can say the DUT was right.
+
+==============================================================
+WHY THIS RE-RUN EXISTS, AND WHAT IT DOES NOT CLAIM
+==============================================================
+
+NOTHING IN THIS BENCH OR ITS DUT CHANGED TODAY.  Every mutant outcome above
+is identical to mutation_test_report_2026-10-14.txt: 5 detected, 1 expected
+escape, 0 unexpected, 0 voided, the same per-mutant error counts (9/1/6/2/5)
+and the same first-failing messages.  The 2026-10-14 report is kept in place
+and is not superseded in substance -- only in date.
+
+The re-run was prompted by tools/run_all_harnesses.sh going over its ratchet:
+the provenance audit reported 6 suites with a runner and no current report
+against a declared budget of 5.  This suite was one of the six, with
+
+    stated 2026-10-14; 1 input(s) newer,
+    latest 2026-10-18 (tools/harness_file_closure_audit.py)
+
+AND THAT DEPENDENCY EDGE IS NOT REAL, which is recorded here rather than
+worked around.  tools/harness_file_closure_audit.py does not run this bench,
+does not source anything this bench sources, and cannot change what a mutation
+run of it produces.  It is an auditor that READS harness scripts and names
+them.  Two distinct over-reporting mechanisms put it in this suite's closure:
+
+  1. `callers_of()` resolves on BASENAME.  Six different harnesses in this
+     repository are called `run_mutation_tests.sh`, so each is reported as a
+     caller of the others -- visible in the audit's own output, where this
+     suite's runner lists phase4_ral, phase6_bfm_equivalence, phase6_crv_uart,
+     phase6_rx_pin_driver and phase6_uvm_crv_uart as callers.  They are
+     siblings, not callers.
+
+  2. The closure treats "names the runner" as "is an input to the runner's
+     results".  Any tool that enumerates harness scripts therefore marks every
+     harness's report stale the moment it is edited -- and adding one new such
+     tool (tools/shared_scratch_audit.py, today) does the same.
+
+So the ratchet fired on a real policy with an inflated number.  The response
+here is the honest one available without changing a relation that currently
+governs 49 STALE rows: re-run the suite that CAN be run and give it a current
+report, which is work the standing item asks for anyway.  Raising
+STALE_SUITE_BUDGET to 6 was the alternative and was rejected -- that would
+ratchet backwards on a false signal, and "a ratchet nobody tightens sits at
+its starting value forever" cuts both ways.
+
+The relation itself is ranked first for the next session, with the mechanism
+named above and the warning that fixing it LOWERS the stale count, so
+STALE_SUITE_BUDGET must be lowered in the same commit or the ratchet will fail
+UNDER budget by design.
+
+Toolchain: Icarus Verilog 10.3 from tools/setup_iverilog.sh.  The five
+still-uncurrent suites after this report are phase4_ral, phase5_csr_formal,
+phase5_formal_uart, phase5_property_coverage and phase6_uvm_crv_uart; all five
+need cocotb or sby, neither of which is installable here, so none of them can
+be given a current report from this environment.  phase5_property_coverage
+joined that list today because its runner was edited by the scratch-path
+repair.
