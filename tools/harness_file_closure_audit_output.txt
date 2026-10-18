@@ -5,7 +5,7 @@ created 2026-10-14, out of a runner that had not compiled since 09-27
 
   Verilog files indexed : 43
   modules defined       : 26
-  harness scripts found : 20
+  harness scripts found : 21
 
   modules defined in MORE THAN ONE file (a closure built from the
   index alone would be ambiguous for these, so they are named):
@@ -101,6 +101,9 @@ PER HARNESS
       UNRESOLVED_PATHS    : NAME.v, ROOT/rtl/uart_controller.v   (built from variables;
                             invisible to this audit, not a pass)
 
+  tools/run_all_harnesses.sh                                     OK
+      .v files named      : (none)
+
 ------------------------------------------------------------------------------
 CONFIRMATION BY REAL ELABORATION
 ------------------------------------------------------------------------------
@@ -132,8 +135,17 @@ CONTROLS
          index says ['bfm/uart_rx_pin_bfm.v']
   [PASS] (4) no harness passes the static check and then fails elaboration
          disagreeing: []
+  [PASS] (5) a closure known to elaborate, sent to an unwritable output path, is reported ENV and not FAILS
+         verdict='ENV' msg='<SCRATCH>/locked/closure_ctrl_env.sim: Permission denied'
+  [PASS] (6) and the SAME closure with a writable path elaborates, so (5) is about the path and not about the files
+  [PASS] (7) the FAILS and ENV sets are disjoint
+         overlap []
+  [PASS] (8) the elaboration scratch directory is session-private, not a fixed path in a shared namespace
+         scratch is <TMP>/harness_closure_* (suffix redacted: it is random, and a transcript must not record where the audit ran)
 
 ==============================================================================
-RESULT: 20 harness scripts audited, 11 elaborated, 0 FAILED to elaborate
-CONTROLS: 4 passed, 0 failed
+RESULT: 21 harness scripts audited, 11 elaborated, 0 FAILED to elaborate
+        0 could not be elaborated here at all (ENV -- a fact about the machine,
+        not about the harness; see the note above elaborate())
+CONTROLS: 8 passed, 0 failed
 ==============================================================================

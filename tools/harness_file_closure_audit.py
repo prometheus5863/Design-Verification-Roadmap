@@ -51,13 +51,22 @@ any harness, and report finding nothing as the negative result it would be.
 
 import os
 import re
+import atexit
+import shutil
 import subprocess
+import tempfile
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IVL = os.environ.get('IVERILOG_INSTALL_DIR', '/tmp/iverilog_install')
 IVL_BIN = os.path.join(IVL, 'usr/bin')
 IVL_LIB = os.path.join(IVL, 'usr/lib/x86_64-linux-gnu/ivl')
+
+# Session-private scratch.  See the long note above elaborate().  Created
+# lazily at import and removed at exit, so nothing this audit writes can be
+# inherited by, or collide with, another session.
+SCRATCH = tempfile.mkdtemp(prefix='harness_closure_')
+atexit.register(shutil.rmtree, SCRATCH, True)
 
 # Verilog keywords that can follow an identifier in instantiation position.
 NOT_A_MODULE = {
@@ -180,16 +189,103 @@ def mentioned_v_paths(rel):
     return sorted(real), sorted(missing)
 
 
-def elaborate(files, label):
-    """Really compile `files` with the pinned Icarus build."""
+# ---------------------------------------------------------------------------
+# SCRATCH, AND WHY IT IS NOT IN /tmp ANY MORE  (2026-10-18)
+# ---------------------------------------------------------------------------
+# This audit spent 2026-10-18 reporting that ELEVEN harnesses "FAILED to
+# elaborate", with CONTROLS at 2 passed / 2 failed, and every one of those
+# verdicts was false.  The cause, measured rather than inferred:
+#
+#   $ ls -la /tmp/closure_examples_phase1_mutation_run_mutation_tests_py.sim
+#   -rwxr-xr-x 1 nobody nogroup 21099 Oct 17 11:39 ...
+#   $ id -un
+#   rcw-01yjbzptk5n2oaw6cot1pa4j
+#   $ iverilog ... -o /tmp/closure_examples_phase1_..._py.sim rtl/... tb/...
+#   /tmp/closure_examples_phase1_mutation_run_mutation_tests_py.sim: Permission denied
+#   error: Code generator failure: -1
+#
+# The output path was DETERMINISTIC in a SHARED namespace, so the previous
+# session's artefacts were still sitting there, owned by a different user, and
+# every elaboration died trying to overwrite one.  iverilog was fine: the same
+# command with a fresh -o succeeded, rc=0.  And in the same run of
+# tools/run_all_harnesses.sh that carried this audit's accusation, eleven of
+# the accused scripts are reported PASS, eleven lines further down -- the two
+# claims contradicted each other on one page.
+#
+# TWO SEPARATE DEFECTS, and they are worth keeping apart because they have
+# different fixes.
+#
+#   (a) A deterministic name in a shared, session-outliving namespace collides
+#       BY CONSTRUCTION -- with the previous session, and with any other
+#       session running this audit concurrently.  Fixed by a private
+#       mkdtemp(), which cannot collide and does not outlive the run.
+#
+#   (b) The audit could not tell "this closure does not elaborate" (a fact
+#       about the repository) from "the audit could not run an elaboration at
+#       all" (a fact about the machine), so it reported the second as the
+#       first.  That is this repository's own 2026-10-17 rule broken by one of
+#       its own tools: WHEN A CHECK'S FAILURE MESSAGE NAMES A CAUSE, THE CAUSE
+#       MUST BE MEASURED, NOT INFERRED FROM THE CHECK FIRING.  "FAILED to
+#       elaborate" is a sentence about Verilog, and it was derived from a
+#       nonzero exit status that had nothing to do with Verilog.
+#
+# Fixing (a) alone would have made today's run green and left (b) in place for
+# the next environment to trip -- the worse outcome, because the audit would
+# have gone on being able to make an unfounded accusation and would simply not
+# have made one today.  So the verdict gains a third value, ENV, and the RESULT
+# line counts it separately and never folds it into the harness count.
+
+ENV_MARKERS = (
+    'permission denied',
+    'code generator failure',
+    'no such file or directory',
+    'cannot open',
+    'read-only file system',
+    'no space left on device',
+)
+
+
+def _redact(msg):
+    """Strip session-private paths out of anything that reaches the
+    transcript.  SCRATCH carries a random mkdtemp suffix, so a message quoting
+    it verbatim would make this audit's transcript differ on every run -- and
+    this file already forbids exactly that ("a property of where the audit ran
+    rather than of what it found", 2026-10-13).  The first draft of the
+    2026-10-18 fix printed it in control (5)'s detail line and would have
+    committed an unreproducible transcript."""
+    out = (msg or '')
+    out = out.replace(SCRATCH, '<SCRATCH>')
+    out = out.replace(tempfile.gettempdir(), '<TMP>')
+    return out
+
+
+def _is_env_failure(msg):
+    """True when the elaboration failed for a reason that is about the machine
+    and not about the Verilog.  Deliberately conservative: a message that does
+    not match is treated as a REAL elaboration failure, so a genuine defect is
+    never explained away as an environment problem.  The asymmetry is the
+    point -- (b) above was the audit erring in the other direction."""
+    low = (msg or '').lower()
+    return any(m in low for m in ENV_MARKERS)
+
+
+def elaborate(files, label, outdir=None):
+    """Really compile `files` with the pinned Icarus build.
+
+    Returns (verdict, msg) where verdict is True (elaborates), False (does
+    not), None (iverilog unavailable) or 'ENV' (the elaboration could not be
+    carried out here, which is not a statement about `files`)."""
     if not os.path.isdir(IVL_BIN):
         return None, 'iverilog not installed at %s' % IVL_BIN
-    out = os.path.join('/tmp', 'closure_%s.sim' % re.sub(r'\W', '_', label))
+    out = os.path.join(outdir or SCRATCH, 'closure_%s.sim'
+                       % re.sub(r'\W', '_', label))
     # Relative paths, with cwd=ROOT, so that iverilog's diagnostics name
     # repository-relative files.  The first draft passed absolute paths and
     # the committed transcript then carried this machine's session directory
     # -- a property of where the audit ran rather than of what it found,
-    # which is exactly what 2026-10-13 ruled out of a transcript.
+    # which is exactly what 2026-10-13 ruled out of a transcript.  The -o path
+    # is absolute and session-private and is NEVER printed, for the same
+    # reason.
     cmd = [os.path.join(IVL_BIN, 'iverilog'), '-B', IVL_LIB, '-g2012',
            '-o', out] + list(files)
     try:
@@ -198,7 +294,10 @@ def elaborate(files, label):
     except subprocess.TimeoutExpired:
         return False, 'elaboration timed out'
     msg = (r.stdout + r.stderr).strip().splitlines()
-    return r.returncode == 0, (msg[0] if msg else '')
+    first = msg[0] if msg else ''
+    if r.returncode != 0 and _is_env_failure(' '.join(msg)):
+        return 'ENV', _redact(first)
+    return r.returncode == 0, _redact(first)
 
 
 def main():
@@ -277,11 +376,16 @@ def main():
         elab[sc] = ok
         if ok is None:
             print('  %-58s SKIPPED (%s)' % (sc, msg))
+        elif ok == 'ENV':
+            print('  %-58s ENV: %s' % (sc, msg[:60]))
+            print('      the elaboration could not be CARRIED OUT here; this')
+            print('      is not a verdict on this harness.  See the note above')
+            print('      elaborate() -- 2026-10-18.')
         elif ok:
             print('  %-58s ELABORATES' % sc)
         else:
             print('  %-58s FAILS: %s' % (sc, msg[:60]))
-        if ok is not None and bool(missing) == bool(ok):
+        if ok not in (None, 'ENV') and bool(missing) == bool(ok):
             print('      note: static said %s and elaboration said %s'
                   % ('INCOMPLETE' if missing else 'OK',
                      'ELABORATES' if ok else 'FAILS'))
@@ -313,17 +417,71 @@ def main():
     check('(3) the module index resolves uart_rx_pin_bfm to exactly one file',
           idx.get('uart_rx_pin_bfm') == [bfm],
           'index says %r' % (idx.get('uart_rx_pin_bfm'),))
-    # (4) Every harness the audit calls OK must actually elaborate.
+    # (4) Every harness the audit calls OK must actually elaborate.  ENV rows
+    #     are excluded BY IDENTITY, not by a filter on the message: an ENV row
+    #     is not a verdict on the harness, so counting it here is the 2026-10-18
+    #     defect itself.
     bad = [sc for sc, ok in elab.items()
            if ok is False and not dict((r[0], r[3]) for r in rows)[sc]]
     check('(4) no harness passes the static check and then fails elaboration',
           not bad, 'disagreeing: %r' % (bad,))
 
+    # (5) THE CONTROL THAT PROVES THE DISTINCTION, against an exactly known
+    #     behaviour.  Reproduce 2026-10-18's cause synthetically: a closure
+    #     that is known to elaborate, compiled into an output path that is
+    #     deliberately unwritable.  The audit must say ENV and must NOT say
+    #     FAILS.  A three-valued verdict whose third value is never exercised
+    #     is a comment (2026-10-01), and this is the one row that would have
+    #     caught today's run on the day.
+    if all(os.path.isfile(os.path.join(ROOT, f)) for f in (bench, bfm, rtl)):
+        locked = os.path.join(SCRATCH, 'locked')
+        os.makedirs(locked, exist_ok=True)
+        os.chmod(locked, 0o500)                      # readable, not writable
+        try:
+            v_env, m_env = elaborate([rtl, bfm, bench], 'ctrl_env', locked)
+        finally:
+            os.chmod(locked, 0o700)
+        check('(5) a closure known to elaborate, sent to an unwritable output '
+              'path, is reported ENV and not FAILS',
+              v_env == 'ENV', 'verdict=%r msg=%r' % (v_env, (m_env or '')[:80]))
+        check('(6) and the SAME closure with a writable path elaborates, so '
+              '(5) is about the path and not about the files',
+              elaborate([rtl, bfm, bench], 'ctrl_env_ok')[0] is True)
+
+    # (7) The two categories must be DISJOINT, so that no future widening of
+    #     ENV_MARKERS can move a real elaboration failure into the benign
+    #     column.  (Design-Verification-Roadmap, 2026-10-17: where two causes
+    #     produce the same failure they are two reported categories with a
+    #     disjointness check between them.)
+    real_fail = {sc for sc, ok in elab.items() if ok is False}
+    env_fail = {sc for sc, ok in elab.items() if ok == 'ENV'}
+    check('(7) the FAILS and ENV sets are disjoint',
+          not (real_fail & env_fail), 'overlap %r' % sorted(real_fail & env_fail))
+
+    # (8) And the scratch directory must be private, which is the other half
+    #     of the fix.  A deterministic path under /tmp is what collided.
+    check('(8) the elaboration scratch directory is session-private, not a '
+          'fixed path in a shared namespace',
+          SCRATCH.startswith(tempfile.gettempdir())
+          and os.path.basename(SCRATCH).startswith('harness_closure_')
+          and SCRATCH != tempfile.gettempdir(),
+          'scratch is <TMP>/harness_closure_* (suffix redacted: it is random, '
+          'and a transcript must not record where the audit ran)')
+
     print()
     print('=' * 78)
     nb = len([1 for sc, ok in elab.items() if ok is False])
+    nenv = len([1 for sc, ok in elab.items() if ok == 'ENV'])
+    nok = len([1 for v in elab.values() if v is True])
     print('RESULT: %d harness scripts audited, %d elaborated, %d FAILED to '
-          'elaborate' % (len(scripts), len([1 for v in elab.values() if v]), nb))
+          'elaborate' % (len(scripts), nok, nb))
+    # ENV is reported on its own line and is NEVER folded into the count
+    # above.  Before 2026-10-18 these eleven were in the FAILED column and the
+    # sentence "FAILED to elaborate" was a claim about Verilog derived from a
+    # file-permission error.
+    print('        %d could not be elaborated here at all (ENV -- a fact '
+          'about the machine,' % nenv)
+    print('        not about the harness; see the note above elaborate())')
     print('CONTROLS: %d passed, %d failed' % (passed, failed))
     print('=' * 78)
     return 0 if failed == 0 else 1
