@@ -2196,3 +2196,152 @@ be measured, not inferred from the check firing.** Where two causes produce
 the same failure they become two reported categories with a disjointness check
 between them, and any tolerance added to tell them apart must be provably
 unable to turn a failure into a pass.
+
+### 2026-10-18 — An audit accused eleven harnesses of a fault none of them had, and the cause was a file left in /tmp by the previous session
+
+**Entry point, and it was not the ranked-first item.** 2026-10-17 ranked the
+`tx_empty` mutant first. Before taking it, the ranked items were checked
+against the tree — the discipline the sibling repository spent this same
+session establishing, after finding two of its own standing items asserting the
+opposite of what its tree contained. `tx_empty` survived that check (no
+committed mutation report mentions it, and the prediction is live in the
+scoreboard). But running `tools/run_all_harnesses.sh` first, to establish the
+baseline, produced something that outranked it.
+
+**`tools/harness_file_closure_audit.py` reported `21 harness scripts audited,
+0 elaborated, 11 FAILED to elaborate`, with its own controls at 2 passed / 2
+failed. Every one of those verdicts was false** — and the same caller run
+reports eleven of the accused scripts `PASS`, eleven lines further down the
+page. Two claims contradicting each other on one screen.
+
+The cause, measured rather than inferred:
+
+```
+$ ls -la /tmp/closure_examples_phase1_mutation_run_mutation_tests_py.sim
+-rwxr-xr-x 1 nobody nogroup 21099 Oct 17 11:39 ...
+$ id -un
+rcw-01yjbzptk5n2oaw6cot1pa4j
+$ iverilog ... -o /tmp/closure_..._py.sim rtl/... tb/...
+/tmp/closure_..._py.sim: Permission denied
+error: Code generator failure: -1
+```
+
+The `-o` path was a deterministic name in a namespace that outlives the
+session. Yesterday's run left those files behind owned by `nobody:nogroup`;
+this session could not overwrite them; and the audit reported a file-permission
+error as a verdict on Verilog. `iverilog` was fine — the same command with a
+fresh `-o` returns 0.
+
+**Two defects, kept apart because they have different fixes.** (a) A
+deterministic name in a shared namespace collides by construction, with
+yesterday and with any concurrent session: scratch moved to a private
+`mkdtemp()`. (b) The audit could not tell *this closure does not elaborate* (a
+fact about the repository) from *the audit could not run an elaboration* (a
+fact about the machine), so it reported the second as the first. **That is this
+repository's own 2026-10-17 rule broken by one of its own tools:** when a
+check's failure message names a cause, the cause must be measured, not inferred
+from the check firing. Fixing (a) alone would have made the run green and left
+(b) for the next environment to trip — the worse outcome, because the audit
+would still have been able to make an unfounded accusation and merely would not
+have made one today. So the verdict is three-valued — `True` / `False` / `ENV`
+— with `ENV` on its own `RESULT` line, never folded into the harness column,
+and `_is_env_failure` deliberately conservative: an unmatched message counts as
+a *real* failure, so no genuine defect is ever explained away as an environment
+problem.
+
+Four new controls, and (5) is the load-bearing one: a closure **known** to
+elaborate, sent to a deliberately unwritable output path, must be reported
+`ENV` and must not be reported `FAILS`. A three-valued verdict whose third
+value is never exercised is a comment, and this is the row that would have
+caught today on the day it happened. (6) the same closure with a writable path
+still elaborates, so (5) is about the path. (7) `FAILS` and `ENV` are disjoint,
+so no future widening of `ENV_MARKERS` can move a real failure into the benign
+column. (8) the scratch directory is session-private.
+
+**The property was repository-wide and latent in four more harnesses.**
+`tools/shared_scratch_audit.py` (new) sweeps every `.sh`/`.py` for
+temp-namespace paths and classifies `PRIVATE` / `SCOPED` / `SHARED`. Against
+the pre-session tree it finds **10 `SHARED` rows in 5 files**: the closure
+audit's line 187, `phase6_uvm_crv_uart` line 31, `phase4_ral` line 72, and six
+lines across `phase5_property_coverage`. All four newly found scripts are in
+suites that `SKIP` here — cocotb and sby are both absent — so the fault was
+invisible on every run to date, waiting for the first machine where those tools
+exist and a previous session had been.
+
+**The two cases needed opposite fixes, which is the part worth keeping.**
+`phase6_uvm_crv_uart` and `phase4_ral` had no reason for a stable path; they
+were the two mutation harnesses never given `mktemp -d` like their six
+siblings, and they get one. `phase5_property_coverage` is the reverse: its
+stability is **load-bearing**, because each shell is time-limited and
+background jobs do not survive it, so the sweep is resumable by construction
+and `run_chunk.sh` must find the same `$RESULTS` next invocation. Randomising
+that path would break the feature *and* would still have passed a check that
+only tests for `mktemp`. So it is **scoped by uid** — stable within a user,
+distinct between users — with the reason stated in the source and *required* by
+the audit, and a guard that refuses to run if the work directory exists
+unwritable.
+
+Its exposure was the worse of the two, in the direction that matters: `phase()`
+begins `rm -rf "$work"`, which **fails** on a directory owned by another user,
+and `report.py` then reads `$work/results.txt` — a stale results file from
+another session reported as this run's results, with no error raised anywhere.
+**The closure audit failed loudly and falsely; this one would have succeeded
+quietly and falsely.**
+
+**Four defects in this session's own work, all caught, all one cause.** The
+closure-audit fix's first draft printed the `mkdtemp` path verbatim in control
+(5)'s detail line — random suffix and all — so the transcript would have
+differed on every run, which is exactly what the comment above `elaborate()`
+has forbidden since 2026-10-13. Added `_redact()`; two consecutive runs are now
+byte-identical, verified by `diff`. The scratch audit's first pattern required a
+literal `/tmp/` **with a trailing slash**, so it found the eight `SHARED` rows
+in the shell scripts and **zero** in the Python file that caused the incident,
+whose spelling is `os.path.join('/tmp', ...)`. A checker that passes on the
+broken tree certifies nothing, and that draft would have passed on the exact
+breakage it exists for; `/tmp` is now matched as a whole path component, which
+also caught `phase4_ral`'s `${TMPDIR:-/tmp}/ral_mutants` — a fourth instance
+invisible to the first draft. And the throwaway script written to *verify* the
+audit against the pre-fix tree used the **sibling repository's** commit hash,
+got empty strings from `git show`, and printed `SHARED pre-fix: 0` for every
+file — a vacuous input that read as "the audit does not work". That is the
+audit's own `R3` non-vacuity check in miniature.
+
+Across the two repositories that is **four separate instances today of a check
+answering a weaker question than the one asked** — and the sibling repository
+independently ranked "resolve-on-spelling" as its own dominant failure mode in
+the same session.
+
+**The ratchet fired, and the honest response was not to loosen it.**
+`run_all_harnesses.sh` went to `ratchet: BROKEN`, 6 suites with a runner and no
+current report against a declared budget of 5. The sixth was
+`phase5_property_coverage`, which joined because **its runner was edited by
+today's repair** and which cannot be re-run here. Raising
+`STALE_SUITE_BUDGET` to 6 was rejected — that ratchets backwards. Instead
+`phase6_baud_error_coverage`, the one suite in the list that *does* run here,
+was re-run and given a current report: **5 detected, 1 expected escape
+(M6, stated), 0 unexpected, 0 voided — identical to 2026-10-14**, same
+per-mutant error counts (9/1/6/2/5) and same first-failing messages. The value
+of that re-run is the confirmation that today's scratch-path repair moved
+nothing in the bench. Both chunks of the caller are now green: **18 PASS,
+0 FAIL, the 7 known SKIPs, ratchet OK.**
+
+**And the edge that demanded that report is not real**, which is recorded in
+the report itself rather than worked around.
+`tools/harness_file_closure_audit.py` does not run the baud bench and cannot
+change what it produces; it is an auditor that *reads* harness scripts. Two
+over-reporting mechanisms put it in the closure: `callers_of()` resolves on
+**basename**, so the six harnesses all named `run_mutation_tests.sh` are
+reported as each other's callers — visible in the audit's own output — and the
+closure treats *names the runner* as *is an input to its results*, so any tool
+that enumerates harness scripts marks every harness's report stale when edited,
+and adding one new such tool does the same. **Ranked first for the next
+session**, with the warning that repairing it *lowers* the stale count, so
+`STALE_SUITE_BUDGET` must be lowered in the same commit or the ratchet will
+fail *under* budget by design.
+
+**Checklist movement.** No Phase 4 or Phase 6 content box closes today; the
+capstone remainder (b) and (c) are untouched and the `tx_empty` mutant remains
+the cheapest content item, now verified live rather than assumed. What changed
+is the instrument layer the content work runs on: a false accusation withdrawn,
+a three-valued verdict where there was a two-valued one, a new repository-wide
+guard, four latent collisions closed, and one suite given a current report.
