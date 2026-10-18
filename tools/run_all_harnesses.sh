@@ -84,6 +84,7 @@ LOGDIR="$(mktemp -d /tmp/run_all_harnesses.XXXXXX)"
 read -r -d '' MANIFEST <<'EOM'
 tools/report_provenance_audit.py|HARNESS|-|120|runs FIRST: what re-runs each harness, and is its report about it
 tools/harness_file_closure_audit.py|HARNESS|-|120|which files each harness actually reads
+tools/shared_scratch_audit.py|HARNESS|-|120|no harness writes scratch to a fixed path another session can own
 tools/open_item_staleness_audit.py|HARNESS|-|120|open-item ages across both repositories
 tools/scoreboard_dut_signal_census.py|HARNESS|-|120|every DUT signal a checker reads, and in what role
 tools/audit_mutation_anchors.sh|HARNESS|-|60|every mutation sed anchor still matches its target

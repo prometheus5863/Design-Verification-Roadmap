@@ -28,8 +28,17 @@ set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
 SRC="$ROOT/rtl/uart_controller.v"
-WORK="/tmp/uvm_crv_mut"
-mkdir -p "$WORK"
+# 2026-10-18: was WORK="/tmp/uvm_crv_mut", a FIXED path in a shared namespace.
+# Every other mutation harness here already uses `mktemp -d`; this one was the
+# outlier.  A fixed name in /tmp is inherited from, and collides with, any other
+# session -- which is how tools/harness_file_closure_audit.py came to accuse
+# eleven harnesses of failing to elaborate on 2026-10-18 when the real cause
+# was a .sim file left by the previous session, owned by another user.  This
+# harness has no resumability reason to keep a stable path (contrast
+# examples/phase5_property_coverage, where the stable path IS load-bearing and
+# is scoped by uid instead of randomised).
+WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"
+trap 'rm -rf "$WORK"' EXIT
 
 run_one() {
     NAME="$1"; SITES="$2"; EXPR="$3"; WANT="$4"; DESC="$5"

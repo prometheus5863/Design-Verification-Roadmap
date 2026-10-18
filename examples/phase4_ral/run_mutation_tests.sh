@@ -69,8 +69,16 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck disable=SC1091
 . "$HERE/../../tools/mutation_controls.sh"
 RTL="$HERE/../../rtl/uart_controller.v"
-WORK="${TMPDIR:-/tmp}/ral_mutants"
-mkdir -p "$WORK"
+# 2026-10-18: was WORK="${TMPDIR:-/tmp}/ral_mutants" -- a FIXED directory name
+# in the temp namespace, since TMPDIR is normally unset.  Mutated copies of the
+# RTL were written there under stable names, so two sessions (or one session
+# after another) share them.  Found by tools/shared_scratch_audit.py, and found
+# only on its SECOND pattern: the first required a literal "/tmp/" and missed
+# both this spelling and the os.path.join('/tmp', ...) that caused the incident
+# the audit was written about.  Like phase6_uvm_crv_uart this harness has no
+# resumability reason for a stable path, so it gets a private one.
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/ral_mutants.XXXXXX")"
+trap 'rm -rf "$WORK"' EXIT
 
 declare -a NAMES DESCS TARGETS SEDS
 add() { NAMES+=("$1"); DESCS+=("$2"); TARGETS+=("$3"); SEDS+=("$4"); }

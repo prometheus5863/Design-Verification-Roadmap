@@ -1,0 +1,87 @@
+==============================================================================
+SHARED-SCRATCH AUDIT -- does any harness write to a fixed path
+in a namespace that outlives the session?
+created 2026-10-18, after a fixed /tmp path made the closure audit
+accuse eleven harnesses of a fault none of them had
+==============================================================================
+
+------------------------------------------------------------------------------
+1.  POSITIVE CONTROL ON THE CLASSIFIER
+------------------------------------------------------------------------------
+  planted p_private              expect PRIVATE  got PRIVATE
+  [PASS]     plant p_private classifies PRIVATE
+         rows=[(1, 'WORK="$(mktemp -d /tmp/foo.XXXXXX)"', 'PRIVATE', '')]
+  planted p_shared               expect SHARED   got SHARED
+  [PASS]     plant p_shared classifies SHARED
+         rows=[(1, 'WORK="/tmp/foo"', 'SHARED', '')]
+  planted p_scoped_no_reason     expect SHARED   got SHARED
+  [PASS]     plant p_scoped_no_reason classifies SHARED
+         rows=[(1, 'WORK="/tmp/foo-$(id -u)"', 'SHARED', 'uid-scoped but NO stated reason -- the marker is required')]
+  planted p_scoped_with_reason   expect SCOPED   got SCOPED
+  [PASS]     plant p_scoped_with_reason classifies SCOPED
+         rows=[(2, 'WORK="/tmp/foo-$(id -u)"', 'SCOPED', 'resumable across shells')]
+  planted p_comment_only         expect IGNORED  got IGNORED
+  [PASS]     plant p_comment_only classifies IGNORED
+         rows=[]
+  planted p_toolchain            expect IGNORED  got IGNORED
+  [PASS]     plant p_toolchain classifies IGNORED
+         rows=[]
+  planted p_py_tempdir           expect PRIVATE  got PRIVATE
+  [PASS]     plant p_py_tempdir classifies PRIVATE
+         rows=[(1, "d = tempfile.mkdtemp(prefix='/tmp/x')", 'PRIVATE', '')]
+  planted p_py_join              expect SHARED   got SHARED
+  [PASS]     plant p_py_join classifies SHARED
+         rows=[(1, "out = os.path.join('/tmp', 'closure_%s.sim' % label)", 'SHARED', '')]
+  planted p_py_join_private      expect IGNORED  got IGNORED
+  [PASS]     plant p_py_join_private classifies IGNORED
+         rows=[]
+  planted p_tmpdir_var           expect SHARED   got SHARED
+  [PASS]     plant p_tmpdir_var classifies SHARED
+         rows=[(1, 'TMPDIR="/tmp"', 'SHARED', '')]
+
+------------------------------------------------------------------------------
+2.  THE REPOSITORY
+------------------------------------------------------------------------------
+  examples/phase4_ral/run_mutation_tests.sh
+      80   PRIVATE  WORK="$(mktemp -d "${TMPDIR:-/tmp}/ral_mutants.XXXXX
+  examples/phase5_property_coverage/run_chunk.sh
+      16   SCOPED   WORK="${WORK:-/tmp/pcov-$(id -u)}"
+           reason: stable path required for cross-shell resumability;
+  examples/phase5_property_coverage/run_property_coverage.sh
+      68   SCOPED   PCOV_BASE="${PCOV_BASE:-/tmp/pcov-$(id -u)}"
+           reason: stable path required for cross-shell resumability;
+  examples/phase6_baud_error_coverage/run_baud_cov.sh
+      21   PRIVATE  SIM="$(mktemp -u /tmp/baudcov_sim.XXXXXX)"
+  examples/phase6_baud_error_coverage/run_mutation_tests.sh
+      50   PRIVATE  WORK="$(mktemp -d /tmp/baudmut.XXXXXX)"
+  examples/phase6_crv_uart/run_crv_cov.sh
+      23   PRIVATE  SIM="$(mktemp -u /tmp/crv_sim.XXXXXX)"
+  examples/phase6_crv_uart/run_mutation_tests.sh
+      32   PRIVATE  WORK="$(mktemp -d /tmp/uart_mut.XXXXXX)"
+  examples/phase6_rx_pin_driver/run_mutation_tests.sh
+      78   PRIVATE  WORK="$(mktemp -d /tmp/rxmut.XXXXXX)"
+  examples/phase6_rx_pin_driver/run_rx_pin.sh
+      20   PRIVATE  SIM="$(mktemp -u /tmp/rxpin_sim.XXXXXX)"
+  examples/phase6_uvm_crv_uart/run_mutation_tests.sh
+      40   PRIVATE  WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"
+  tools/run_all_harnesses.sh
+      78   PRIVATE  LOGDIR="$(mktemp -d /tmp/run_all_harnesses.XXXXXX)"
+
+  tally: {'PRIVATE': 9, 'SCOPED': 2, 'SHARED': 0}
+  [PASS] R1 no harness writes scratch to a fixed path in a shared namespace
+         SHARED rows: []
+  [PASS] R2 every SCOPED row carries a stated reason
+         2 scoped rows
+  [PASS] R3 the sweep actually examined temp-namespace lines (not vacuously clean)
+         tally {'PRIVATE': 9, 'SCOPED': 2, 'SHARED': 0}
+  [PASS] R4 the sweep looked at more than a handful of files
+         57 .sh/.py files
+  [PASS] R5 run_mutation_tests.sh is PRIVATE
+         rows=[(40, 'WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"', 'PRIVATE', '')]
+  [PASS] R6 the resumable sweep is SCOPED, not randomised (randomising it would break resumability and still pass R1)
+         classes=['SCOPED']
+
+==============================================================================
+RESULT: 57 files scanned, 11 with temp-namespace lines, 0 SHARED
+CONTROLS: 16 passed, 0 failed
+==============================================================================

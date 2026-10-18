@@ -50,12 +50,37 @@ phase() {   # phase <workdir> <build-args...>
     done
 }
 
-phase /tmp/pcov
-phase /tmp/pcov2 fifo/P3 fifo/P4 csr/C1 csr/C6 csr/C7 csr/C8 reset/R2 reset/R4
-phase /tmp/pcov3 --gap
+# 2026-10-18: these were /tmp/pcov, /tmp/pcov2, /tmp/pcov3 -- fixed paths in a
+# shared namespace.  Unlike the other harnesses the STABILITY here is
+# load-bearing: each shell is time-limited and background jobs do not survive
+# it, so the sweep is resumable by construction and run_chunk.sh must find the
+# same $RESULTS next time.  Randomising the path would break that.  So the path
+# is scoped by UID instead -- stable within a user, distinct between users --
+# which keeps resumability and removes the cross-session collision.
+#
+# The exposure this closes was worse here than the one that was actually hit on
+# 2026-10-18.  `phase()` begins `rm -rf "$work"`, which FAILS on a directory
+# owned by another user, and report.py then reads $work/results.txt -- so a
+# stale results file from another session would be reported as this run's
+# results, with no error anywhere.  A silent wrong answer, not a loud failure.
+# scratch-shared-exempt: stable path required for cross-shell resumability;
+# scoped by uid so it cannot be inherited from another user.
+PCOV_BASE="${PCOV_BASE:-/tmp/pcov-$(id -u)}"
+for d in "$PCOV_BASE" "$PCOV_BASE-2" "$PCOV_BASE-3"; do
+    if [ -e "$d" ] && [ ! -w "$d" ]; then
+        echo "FATAL: $d exists and is not writable by $(id -un)." >&2
+        echo "       Refusing to run: a sweep that cannot clear its own work" >&2
+        echo "       directory would report another session's results." >&2
+        exit 1
+    fi
+done
 
-python3 "$HERE/report.py"  /tmp/pcov/results.txt /tmp/pcov2/results.txt
-python3 "$HERE/report2.py" /tmp/pcov2/results.txt \
+phase "$PCOV_BASE"
+phase "$PCOV_BASE-2" fifo/P3 fifo/P4 csr/C1 csr/C6 csr/C7 csr/C8 reset/R2 reset/R4
+phase "$PCOV_BASE-3" --gap
+
+python3 "$HERE/report.py"  "$PCOV_BASE/results.txt" "$PCOV_BASE-2/results.txt"
+python3 "$HERE/report2.py" "$PCOV_BASE-2/results.txt" \
         fifo/P3 fifo/P4 csr/C1 csr/C6 csr/C7 csr/C8 reset/R2 reset/R4
-python3 "$HERE/report3.py" /tmp/pcov3/results.txt
+python3 "$HERE/report3.py" "$PCOV_BASE-3/results.txt"
 
