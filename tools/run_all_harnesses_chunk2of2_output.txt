@@ -1,15 +1,15 @@
 ======================================================================
-RUN ALL HARNESSES -- 2026-10-17T11:39:34Z
+RUN ALL HARNESSES -- 2026-10-18T07:44:59Z
 the first caller in this repository that reads a runner's exit code
 ======================================================================
-  repo root : /sessions/rcw-01mc2wujz7qn9lqqz112bgsn/work/Design-Verification-Roadmap
-  logs      : /tmp/run_all_harnesses.YaMK1R
+  repo root : /sessions/rcw-01yjbzptk5n2oaw6cot1pa4j/work/Design-Verification-Roadmap
+  logs      : /tmp/run_all_harnesses.H65e2m
 
 ----------------------------------------------------------------------
 SECTION 1 -- manifest vs repository
 ----------------------------------------------------------------------
-  discovered by rule : 30
-  listed in manifest : 30
+  discovered by rule : 31
+  listed in manifest : 31
   [PASS] every discovered path is declared HARNESS or NOT_A_HARNESS
   [PASS] every declared path exists
 
@@ -17,17 +17,17 @@ SECTION 1 -- manifest vs repository
 SECTION 2 -- every HARNESS, with its exit code read
 ----------------------------------------------------------------------
   tools: harness_file_closure_audit.py                     PASS         0s
-  tools: scoreboard_dut_signal_census.py                   PASS         0s
-  tools: test_mutation_controls.sh                         PASS         0s
-  phase4_ral/run_mutation_tests.sh                         SKIP      (requires cocotb-config)
-  phase4_uvm_milestone/run_phase4_uvm.sh                   SKIP      (requires cocotb-config)
-  phase5_csr_formal/run_reset_formal.sh                    SKIP      (requires sby)
-  phase5_property_coverage/run_property_coverage.sh        SKIP      (requires sby)
-  phase6_baud_error_coverage/run_mutation_tests.sh         PASS        14s
-  phase6_bfm_equivalence/run_mutation_tests.sh             PASS         5s
-  phase6_crv_uart/run_mutation_tests.sh                    PASS         1s
-  phase6_rx_pin_driver/run_mutation_tests.sh               PASS        41s
-  phase6_uvm_crv_uart/run_mutation_tests.sh                SKIP      (requires cocotb-config)
+  tools: open_item_staleness_audit.py                      PASS         0s
+  tools: audit_mutation_anchors.sh                         PASS         0s
+  phase1_mutation/run_mutation_tests.py                    PASS        16s
+  phase4_uvm_milestone/run_axis_audit.py                   PASS         0s
+  phase5_csr_formal/run_csr_formal.sh                      SKIP      (requires sby)
+  phase5_formal_uart/run_formal.sh                         SKIP      (requires sby)
+  phase6_baud_error_coverage/run_baud_cov.sh               PASS         5s
+  phase6_bfm_equivalence/run_bfm_equiv.sh                  PASS         1s
+  phase6_crv_uart/run_crv_cov.sh                           PASS        12s
+  phase6_divisor_window/run_divisor_window.sh              PASS        49s
+  phase6_rx_pin_driver/run_rx_pin.sh                       PASS        25s
 
 ----------------------------------------------------------------------
 SECTION 3 -- the provenance audit as a test, not a report
@@ -38,15 +38,12 @@ SECTION 3 -- the provenance audit as a test, not a report
 ======================================================================
 SUMMARY
 ======================================================================
-  PASS 7   FAIL 0 (of which TIMEOUT 0)   SKIP 5
+  PASS 10   FAIL 0 (of which TIMEOUT 0)   SKIP 2
   skipped (declared prerequisite absent):
-    examples/phase4_ral/run_mutation_tests.sh(needs:cocotb-config)
-    examples/phase4_uvm_milestone/run_phase4_uvm.sh(needs:cocotb-config)
-    examples/phase5_csr_formal/run_reset_formal.sh(needs:sby)
-    examples/phase5_property_coverage/run_property_coverage.sh(needs:sby)
-    examples/phase6_uvm_crv_uart/run_mutation_tests.sh(needs:cocotb-config)
+    examples/phase5_csr_formal/run_csr_formal.sh(needs:sby)
+    examples/phase5_formal_uart/run_formal.sh(needs:sby)
   manifest structure : OK
   ratchet            : OK
-  logs kept at       : /tmp/run_all_harnesses.YaMK1R
+  logs kept at       : /tmp/run_all_harnesses.H65e2m
   exit               : 0
 ======================================================================
