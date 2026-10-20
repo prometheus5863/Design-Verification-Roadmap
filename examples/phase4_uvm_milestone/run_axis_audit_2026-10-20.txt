@@ -1,0 +1,177 @@
+run-axis audit of the LIVE UartCoverage collector
+source: uart_uvm_sim_output_2026-10-08.txt (committed transcript, read offline)
+==============================================================================
+SECTION 1.  The transcript parses, and it is the artefact claimed
+==============================================================================
+    test                                              cells   cov % W verdict
+    test_uart_uvm_milestone                              27   100.0      PASS
+    test_uart_baud_tolerance                             11    47.4      PASS
+    test_uart_scoreboard_timebase_assumption             11    47.4      PASS
+    test_uart_independent_observer                       11    47.4      PASS
+    test_uart_adaptive_observer                          11    47.4      PASS
+  [PASS] R1   all five committed tests are present in the transcript  -- found 5: test_uart_uvm_milestone, test_uart_baud_tolerance, test_uart_scoreboard_timebase_assumption, test_uart_independent_observer, test_uart_adaptive_observer
+  [PASS] R2   every test's own witness audit (W-a to W-e) passed, so the witness data this module reads is internally consistent with the counts printed beside it  -- verdicts: test_uart_uvm_milestone=PASS, test_uart_baud_tolerance=PASS, test_uart_scoreboard_timebase_assumption=PASS, test_uart_independent_observer=PASS, test_uart_adaptive_observer=PASS
+  [PASS] R3   every test emitted a non-empty witness block -- the 2026-09-27 rule, never grep a file for the absence of something without first proving the something could appear  -- cells per test: 27, 11, 11, 11, 11
+
+==============================================================================
+SECTION 2.  Stimulus diversity per cell (PREFIX measurement, first WITNESS_KEEP samples)
+==============================================================================
+  diversity = number of DISTINCT item signatures among the shown
+  witnesses.  A cell with total > 1 and diversity 1 was hit
+  repeatedly by the SAME stimulus: reachable, and exercised once.
+
+    cell                             total   div     tests closing signature(s)
+    bin.cp_parity_mode.even              1     1         1 WR addr=0x0 data=0x03
+    bin.cp_parity_mode.none              5     1         5 WR addr=0x0 data=0x01
+    bin.cp_parity_mode.odd               1     1         1 WR addr=0x0 data=0x0d
+    bin.cp_reg_access.rd_rxdata       1100    11         5 3 distinct: RD addr=0x4 data=0x01; RD addr=0x4 data=0x55; RD addr=0x4 data=0x5a
+    bin.cp_reg_access.rd_status       3204     4         5 2 distinct: RD addr=0x1 data=0x0a; RD addr=0x1 data=0x12
+    bin.cp_reg_access.wr_baud            7     1         5 WR addr=0x2 data=0x00
+    bin.cp_reg_access.wr_ctrl            7     3         5 WR addr=0x0 data=0x01
+    bin.cp_reg_access.wr_int             7     1         5 WR addr=0x5 data=0x03
+    bin.cp_reg_access.wr_txdata         15     4         1 WR addr=0x3 data=0x00
+    bin.cp_rx_error.clean              999    10         5 3 distinct: frame data=0x01 corrupt=None parity_ok=True stop_ok=True; frame data=0x55 corrupt=None parity_ok=True stop_ok=True; frame data=0x5a corrupt=None parity_ok=True stop_ok=True
+    bin.cp_rx_error.frame              137     7         5 3 distinct: frame data=0x01 corrupt=None parity_ok=True stop_ok=False; frame data=0x55 corrupt=None parity_ok=True stop_ok=False; frame data=0xc3 corrupt=None parity_ok=True stop_ok=False
+    bin.cp_rx_error.parity               2     1         1 frame data=0x7e corrupt=None parity_ok=False stop_ok=True
+    bin.cp_stop_bits.one                 6     2         5 WR addr=0x0 data=0x01
+    bin.cp_stop_bits.two                 1     1         1 WR addr=0x0 data=0x0d
+    bin.cp_tx_data.high                  3     1         1 WR addr=0x3 data=0xd2
+    bin.cp_tx_data.low                   3     1         1 WR addr=0x3 data=0x3c
+    bin.cp_tx_data.mid                   3     1         1 WR addr=0x3 data=0xa5
+    bin.cp_tx_data.ones                  3     1         1 WR addr=0x3 data=0xff
+    bin.cp_tx_data.zero                  3     1         1 WR addr=0x3 data=0x00
+    cross.even.clean                     2     2         1 frame data=0x5a corrupt=None parity_ok=True stop_ok=True
+    cross.even.frame                     1     1         1 frame data=0xc3 corrupt=None parity_ok=True stop_ok=False
+    cross.even.parity                    1     1         1 frame data=0x7e corrupt=None parity_ok=False stop_ok=True
+    cross.none.clean                   995    10         5 3 distinct: frame data=0x01 corrupt=None parity_ok=True stop_ok=True; frame data=0x55 corrupt=None parity_ok=True stop_ok=True; frame data=0x5a corrupt=None parity_ok=True stop_ok=True
+    cross.none.frame                   135     7         5 3 distinct: frame data=0x01 corrupt=None parity_ok=True stop_ok=False; frame data=0x55 corrupt=None parity_ok=True stop_ok=False; frame data=0xc3 corrupt=None parity_ok=True stop_ok=False
+    cross.odd.clean                      2     2         1 frame data=0x5a corrupt=None parity_ok=True stop_ok=True
+    cross.odd.frame                      1     1         1 frame data=0xc3 corrupt=None parity_ok=True stop_ok=False
+    cross.odd.parity                     1     1         1 frame data=0x7e corrupt=None parity_ok=False stop_ok=True
+
+  cells with total > 1 and PREFIX diversity 1: 9 of 27
+      bin.cp_parity_mode.none  (closed 5 times by: WR addr=0x0 data=0x01)
+      bin.cp_reg_access.wr_baud  (closed 7 times by: WR addr=0x2 data=0x00)
+      bin.cp_reg_access.wr_int  (closed 7 times by: WR addr=0x5 data=0x03)
+      bin.cp_rx_error.parity  (closed 2 times by: frame data=0x7e corrupt=None parity_ok=False stop_ok=True)
+      bin.cp_tx_data.high  (closed 3 times by: WR addr=0x3 data=0xd2)
+      bin.cp_tx_data.low  (closed 3 times by: WR addr=0x3 data=0x3c)
+      bin.cp_tx_data.mid  (closed 3 times by: WR addr=0x3 data=0xa5)
+      bin.cp_tx_data.ones  (closed 3 times by: WR addr=0x3 data=0xff)
+      bin.cp_tx_data.zero  (closed 3 times by: WR addr=0x3 data=0x00)
+  [PASS] R4   MAGNITUDE: the run axis is NON-TRIVIAL -- cells exist that the counts report as heavily hit and that one stimulus closed every time  -- 9 of 27 cells (33.3 %), aggregating 36 samples -- and the collector reports 100.0 % functional coverage in the milestone test
+
+==============================================================================
+SECTION 2b.  EXACT diversity -- this audit's own top open item, closed
+==============================================================================
+  2026-10-06 ended by naming the repair: a BOUNDED SET OF DISTINCT
+  signatures per cell, kept alongside the first-N witnesses, which
+  makes diversity exact at the same log cost because the set stops
+  growing once the stimulus stops varying.  The collector implements
+  it as of 2026-10-08 and this section reads it.
+
+  A cell is EXACT when the bound refused no distinct signature.
+  A BOUNDED cell is still a lower bound and is still labelled one --
+  2026-10-03: a bound that cannot report hitting itself is not a
+  bound, it is a silent truncation.
+
+    cell                             total  prefix   exact status
+    bin.cp_parity_mode.even              1       1       1 EXACT
+    bin.cp_parity_mode.none              5       1       1 EXACT
+    bin.cp_parity_mode.odd               1       1       1 EXACT
+    bin.cp_reg_access.rd_rxdata       1100      11      22 BOUNDED (+194 refused)
+    bin.cp_reg_access.rd_status       3204       4       5 EXACT
+    bin.cp_reg_access.wr_baud            7       1       1 EXACT
+    bin.cp_reg_access.wr_ctrl            7       3       3 EXACT
+    bin.cp_reg_access.wr_int             7       1       1 EXACT
+    bin.cp_reg_access.wr_txdata         15       4       5 EXACT
+    bin.cp_rx_error.clean              999      10      21 BOUNDED (+158 refused)
+    bin.cp_rx_error.frame              137       7      19 BOUNDED (+41 refused)
+    bin.cp_rx_error.parity               2       1       1 EXACT
+    bin.cp_stop_bits.one                 6       2       2 EXACT
+    bin.cp_stop_bits.two                 1       1       1 EXACT
+    bin.cp_tx_data.high                  3       1       1 EXACT
+    bin.cp_tx_data.low                   3       1       1 EXACT
+    bin.cp_tx_data.mid                   3       1       1 EXACT
+    bin.cp_tx_data.ones                  3       1       1 EXACT
+    bin.cp_tx_data.zero                  3       1       1 EXACT
+    cross.even.clean                     2       2       2 EXACT
+    cross.even.frame                     1       1       1 EXACT
+    cross.even.parity                    1       1       1 EXACT
+    cross.none.clean                   995      10      21 BOUNDED (+158 refused)
+    cross.none.frame                   135       7      19 BOUNDED (+41 refused)
+    cross.odd.clean                      2       2       2 EXACT
+    cross.odd.frame                      1       1       1 EXACT
+    cross.odd.parity                     1       1       1 EXACT
+
+  [PASS] R7   EVERY witness's stimulus appears in its cell's signature set, so the two bookkeepings agree in the committed artefact and not only inside the running collector  -- 0 witness/signature mismatch(es)
+  [PASS] R8   exact diversity is never LESS than the prefix diversity, which it cannot be if the set really is a superset of the witness prefix  -- all 27 cells satisfy exact >= prefix
+  [PASS] R9   REPORTED, not asserted: how much the prefix measurement understated, which is the measured VALUE of the repair  -- 7 of 27 cells had their diversity understated by the prefix; largest gap bin.cp_rx_error.frame 7 -> 19
+  [PASS] R10  the diversity-1 finding SURVIVES becoming exact -- these cells are now known to be closed by one stimulus, not merely observed to be over a prefix  -- 9 of the 9 prefix-diversity-1 cells are CONFIRMED exactly 1: bin.cp_parity_mode.none, bin.cp_reg_access.wr_baud, bin.cp_reg_access.wr_int, bin.cp_rx_error.parity, bin.cp_tx_data.high, bin.cp_tx_data.low ...
+  [PASS] R11  REPORTED: cells the bound refused a signature for are still lower bounds, and SIGNATURE_KEEP is the knob that trades log size against exactness  -- 5 of 27 cells BOUNDED: bin.cp_reg_access.rd_rxdata, bin.cp_rx_error.clean, bin.cp_rx_error.frame, cross.none.clean, cross.none.frame
+
+==============================================================================
+SECTION 3.  Is the CLOSER stable across tests?
+==============================================================================
+  A cell closed by a different sample in every test is being
+  exercised by the test suite as a whole even if each test closes it
+  once.  A cell closed by the SAME sample in every test is not.
+
+    cells appearing in more than one test          : 11
+    of those, closed by the SAME signature in all  : 5
+      bin.cp_parity_mode.none        5 tests, closer WR addr=0x0 data=0x01
+      bin.cp_reg_access.wr_baud      5 tests, closer WR addr=0x2 data=0x00
+      bin.cp_reg_access.wr_ctrl      5 tests, closer WR addr=0x0 data=0x01
+      bin.cp_reg_access.wr_int       5 tests, closer WR addr=0x5 data=0x03
+      bin.cp_stop_bits.one           5 tests, closer WR addr=0x0 data=0x01
+  [PASS] R5   REPORTED, not asserted: the stable-closer count is a property of this directed suite and there is no threshold this repository can defend for it yet  -- 5 of 11 multi-test cells share one closer (45.5 %)
+
+==============================================================================
+SECTION 4.  What this audit CANNOT conclude
+==============================================================================
+  The witness log is bounded (largest 'shown' in the transcript:
+  4), so the diversity in Section 2 is computed over a PREFIX of
+  each cell's samples.  7 of 27 cells are truncated in at least one
+  test, which means their true diversity is >= the number reported.
+  [PASS] R6   the truncation is REAL and is named, so Section 2's numbers are read as lower bounds rather than as measurements  -- 7 of 27 cells truncated in at least one test: bin.cp_reg_access.rd_rxdata, bin.cp_reg_access.rd_status, bin.cp_reg_access.wr_txdata, bin.cp_rx_error.clean, bin.cp_rx_error.frame, cross.none.clean ...
+  THE REPAIR IS DONE (2026-10-08).  The collector keeps a bounded
+  set of distinct signatures per cell and Section 2b reads it, so
+  Section 2's prefix numbers are no longer the best this audit can
+  do -- they are kept because the gap between prefix and exact is
+  itself the measurement of what the repair bought.
+
+  WHAT IS STILL BOUNDED, and it is a different bound.  The
+  signature set is capped at SIGNATURE_KEEP per cell, so a cell
+  whose stimulus keeps varying past the cap is reported BOUNDED and
+  its diversity is still a lower bound.  The difference from the
+  witness prefix is that the cap REPORTS hitting itself, per cell,
+  with a count of what it refused.  That is the whole of the
+  improvement: not an unbounded log, but a bound that cannot be
+  mistaken for a measurement.
+
+  Two things this audit also does NOT claim:
+    - it does not claim the collector is wrong.  Reporting 100.0 %
+      bin coverage for a directed suite that closes each bin with
+      one payload is an ACCURATE report of what was run.  The
+      finding is about what the number licenses a reader to
+      believe, which is the 2026-10-05 fault (a figure printed
+      beside the thing it does not measure) one axis over.
+    - it does not claim a diversity TARGET.  Choosing one is a
+      reviewer's decision of the same kind as F7's goal and the
+      cross-gating decision, and is left open deliberately.
+    - and it does not claim the stimulus is now diverse.  Nothing
+      about the suite changed today; only the measurement did.  The
+      diversity-1 cells are still diversity-1 and are now known to
+      be, which makes constrained-random stimulus from a UVM
+      sequence a better-posed item than it was yesterday rather
+      than a closed one.
+
+==============================================================================
+  cells audited              : 27
+  samples behind them        : 6645
+  prefix-diversity-1 cells   : 9 (36 samples)
+  truncated cells            : 7
+  cells with EXACT diversity : 22 of 27
+  prefix understated         : 7 cell(s)
+RESULT: ALL CHECKS PASS -- 11 checks passed, 0 failed
+==============================================================================

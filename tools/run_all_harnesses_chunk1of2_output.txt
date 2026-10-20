@@ -1,9 +1,9 @@
 ======================================================================
-RUN ALL HARNESSES -- 2026-10-18T07:43:48Z
+RUN ALL HARNESSES -- 2026-10-20T11:31:57Z
 the first caller in this repository that reads a runner's exit code
 ======================================================================
-  repo root : /sessions/rcw-01yjbzptk5n2oaw6cot1pa4j/work/Design-Verification-Roadmap
-  logs      : /tmp/run_all_harnesses.pP71u5
+  repo root : /sessions/rcw-0129twrdmclm3xa9zt9qkqfz/work/Design-Verification-Roadmap
+  logs      : /tmp/run_all_harnesses.cP5eyz
 
 ----------------------------------------------------------------------
 SECTION 1 -- manifest vs repository
@@ -16,7 +16,7 @@ SECTION 1 -- manifest vs repository
 ----------------------------------------------------------------------
 SECTION 2 -- every HARNESS, with its exit code read
 ----------------------------------------------------------------------
-  tools: report_provenance_audit.py                        PASS         1s
+  tools: report_provenance_audit.py                        PASS        27s
   tools: shared_scratch_audit.py                           PASS         0s
   tools: scoreboard_dut_signal_census.py                   PASS         0s
   tools: test_mutation_controls.sh                         PASS         0s
@@ -24,10 +24,10 @@ SECTION 2 -- every HARNESS, with its exit code read
   phase4_uvm_milestone/run_phase4_uvm.sh                   SKIP      (requires cocotb-config)
   phase5_csr_formal/run_reset_formal.sh                    SKIP      (requires sby)
   phase5_property_coverage/run_property_coverage.sh        SKIP      (requires sby)
-  phase6_baud_error_coverage/run_mutation_tests.sh         PASS        16s
-  phase6_bfm_equivalence/run_mutation_tests.sh             PASS         4s
+  phase6_baud_error_coverage/run_mutation_tests.sh         PASS        18s
+  phase6_bfm_equivalence/run_mutation_tests.sh             PASS         5s
   phase6_crv_uart/run_mutation_tests.sh                    PASS         2s
-  phase6_rx_pin_driver/run_mutation_tests.sh               PASS        43s
+  phase6_rx_pin_driver/run_mutation_tests.sh               PASS        47s
   phase6_uvm_crv_uart/run_mutation_tests.sh                SKIP      (requires cocotb-config)
 
 ----------------------------------------------------------------------
@@ -49,6 +49,6 @@ SUMMARY
     examples/phase6_uvm_crv_uart/run_mutation_tests.sh(needs:cocotb-config)
   manifest structure : OK
   ratchet            : OK
-  logs kept at       : /tmp/run_all_harnesses.pP71u5
+  logs kept at       : /tmp/run_all_harnesses.cP5eyz
   exit               : 0
 ======================================================================

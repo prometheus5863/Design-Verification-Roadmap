@@ -1,9 +1,9 @@
 ======================================================================
-RUN ALL HARNESSES -- 2026-10-18T07:44:59Z
+RUN ALL HARNESSES -- 2026-10-20T11:35:51Z
 the first caller in this repository that reads a runner's exit code
 ======================================================================
-  repo root : /sessions/rcw-01yjbzptk5n2oaw6cot1pa4j/work/Design-Verification-Roadmap
-  logs      : /tmp/run_all_harnesses.H65e2m
+  repo root : /sessions/rcw-0129twrdmclm3xa9zt9qkqfz/work/Design-Verification-Roadmap
+  logs      : /tmp/run_all_harnesses.dzDEp4
 
 ----------------------------------------------------------------------
 SECTION 1 -- manifest vs repository
@@ -18,16 +18,16 @@ SECTION 2 -- every HARNESS, with its exit code read
 ----------------------------------------------------------------------
   tools: harness_file_closure_audit.py                     PASS         0s
   tools: open_item_staleness_audit.py                      PASS         0s
-  tools: audit_mutation_anchors.sh                         PASS         0s
+  tools: audit_mutation_anchors.sh                         PASS         1s
   phase1_mutation/run_mutation_tests.py                    PASS        16s
   phase4_uvm_milestone/run_axis_audit.py                   PASS         0s
   phase5_csr_formal/run_csr_formal.sh                      SKIP      (requires sby)
   phase5_formal_uart/run_formal.sh                         SKIP      (requires sby)
-  phase6_baud_error_coverage/run_baud_cov.sh               PASS         5s
-  phase6_bfm_equivalence/run_bfm_equiv.sh                  PASS         1s
-  phase6_crv_uart/run_crv_cov.sh                           PASS        12s
-  phase6_divisor_window/run_divisor_window.sh              PASS        49s
-  phase6_rx_pin_driver/run_rx_pin.sh                       PASS        25s
+  phase6_baud_error_coverage/run_baud_cov.sh               PASS         6s
+  phase6_bfm_equivalence/run_bfm_equiv.sh                  PASS         0s
+  phase6_crv_uart/run_crv_cov.sh                           PASS        13s
+  phase6_divisor_window/run_divisor_window.sh              PASS        55s
+  phase6_rx_pin_driver/run_rx_pin.sh                       PASS        29s
 
 ----------------------------------------------------------------------
 SECTION 3 -- the provenance audit as a test, not a report
@@ -44,6 +44,6 @@ SUMMARY
     examples/phase5_formal_uart/run_formal.sh(needs:sby)
   manifest structure : OK
   ratchet            : OK
-  logs kept at       : /tmp/run_all_harnesses.H65e2m
+  logs kept at       : /tmp/run_all_harnesses.dzDEp4
   exit               : 0
 ======================================================================
