@@ -2345,3 +2345,65 @@ the cheapest content item, now verified live rather than assumed. What changed
 is the instrument layer the content work runs on: a false accusation withdrawn,
 a three-valued verdict where there was a two-valued one, a new repository-wide
 guard, four latent collisions closed, and one suite given a current report.
+
+---
+
+## 2026-10-20 — naming is not invoking, and the dependency was a sentence
+
+**The 2026-10-18 item ranked first is closed, and two of its own claims were
+wrong.**
+
+`tools/report_provenance_audit.py` carried two defects. The first,
+`callers_of()` resolving on **basename**, is repaired by `invocations_of()`,
+which requires a real invocation — an exec verb at a statement boundary, a
+`path|KIND|…` manifest record (the table that drives every run here), or a
+`subprocess` call — and credits a bare basename only when it is unique in the
+repository. Six files share `run_mutation_tests.sh`, so a bare reference to it
+now becomes a third value, `AMBIGUOUS`: reported, never credited.
+`mentions_of()` keeps the old relation as the printed **upper bound**.
+
+The second defect's mechanism was **not** the one 2026-10-18 named. That entry
+attributed the false edge to the caller relation leaking into the closure.
+Measured, it is simpler: `closure_for()` ran `PATH_RE` over the whole text of
+every script in a directory, **comments included**. The edge that forced
+2026-10-18 to re-run the baud bench is a *comment* on line 35 of that bench's
+runner naming `tools/harness_file_closure_audit.py`. **40 comment-only edges
+exist, 17 % of the 235 the audit built closures from.** An edge now has a
+class: `CODE` is a dependency, `PROSE` is held in the DIRECTORY closure and
+kept out of the tight one — demoted and still printed, never deleted, because
+`tools/mutation_controls.sh` names the DUT only in prose and a naive strip
+would drop the DUT from the DUT's own mutation tests.
+
+**`STALE_SUITE_BUDGET` is NOT lowered, against the standing item's explicit
+instruction.** Stale reports move 49 → 48 and the beside-a-RUNNER figure
+48 → 47, but the number the ratchet reads — suites with a runner and no
+current report — is **5 before and 5 after, on the same five directories**.
+Control `P4` pins that equality against the budget parsed from the caller, so
+the two cannot drift. And mechanism (1) turns out to be a **reporting**
+defect, not a verdict one: reachability is 15 under both relations and
+`AMBIGUOUS` is 0, because every sibling cross-reference here sits in a comment
+and the comment fix removes the artefact on its own.
+
+**Controls: 16 passed, 0 failed** (six existing, ten new). **Mutation tested:
+6 injected, 6 detected, 0 escaped** — after `M6` escaped twice, once against
+the tree and once against control `I6`'s first draft, which planted
+`#  bash <runner> --list` and required the comment strip to make a difference
+it does not make. The shapes the strip is load-bearing for carry a shell
+operator before the verb (`| bash X`, `&& bash X`, `; bash X`), and `I6` now
+plants those three *and* requires that all three would be credited unstripped.
+A control that asked a weaker question than the one it was written to ask —
+inside the repair for that very failure mode.
+
+Also surfaced and left alone: three mutation suites whose closures omit the
+DUT or the shared controls, and **all three absences are correct**
+(`phase6_bfm_equivalence` mutates the BFM, not the DUT; `phase6_crv_uart` and
+`phase6_uvm_crv_uart` carry their own controls). The first draft of control
+`P3` asserted that universal and failed on them; it asserts the conditional
+now — every edge a script spells in code survives into its closure.
+
+**Checklist movement.** None. No Phase 4 or Phase 6 content box closes: the
+capstone remainder (b) and (c) are untouched and the `tx_empty` mutant is
+still the cheapest content item. This is the **third consecutive session in
+the instrument layer**, stated plainly rather than left to pass — the
+ranked-first item has been an instrument item three times running while the
+content items age behind it.
