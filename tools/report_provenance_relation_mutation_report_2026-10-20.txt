@@ -1,0 +1,77 @@
+================================================================================
+MUTATION REPORT -- the two corrected relations in tools/report_provenance_audit.py
+2026-10-20
+================================================================================
+
+WHY
+
+2026-10-18 ranked one item first: callers_of() resolves on BASENAME, and the
+dependency closure treats "names the runner" as "is an input to its results".
+Both were repaired today and the repair added ten controls (I1-I6, P1-P4) to
+the six already there.  A control suite that has never been shown to fail
+certifies nothing (this repository, 2026-10-01), so each repair was reverted
+in a COPY of the audit and the suite was required to notice.
+
+METHOD
+
+  $HOME/mut/golden.py holds the post-repair audit.  For each mutant the golden
+  copy is restored, one anchored substring is replaced, the full audit is run,
+  and the controls' pass/fail line and the identifiers of the failing controls
+  are recorded.  The repository tree is never mutated -- only the auditor is,
+  and it is restored from golden after every run.  No mutant was written into
+  a tracked file.
+
+RESULTS -- 6 injected, 6 detected, 0 escaped
+
+  M1  _invokes() reverts to a plain substring test      DETECTED  by I3, I4
+      (the 2026-10-18 relation: naming counts as calling)
+  M2  code_only() strips nothing                        DETECTED  by P2
+      (comments read as code again -- the closure half)
+  M3  every basename deemed unique                      DETECTED  by I5
+      (a bare basename shared by six files attributed anyway)
+  M4  a manifest record is not an invocation            DETECTED  by I1, I4
+      (the table that drives every run in this repository stops counting)
+  M5  prose edges deleted instead of demoted            DETECTED  by P2
+      (the under-report direction: an edge dropped rather than reclassified)
+  M6  the caller relation reads comments again          DETECTED  by I6
+
+M6 ESCAPED TWICE BEFORE IT WAS DETECTED, AND BOTH ESCAPES ARE THE FINDING
+
+  First escape: against the tree, 15 passed / 0 failed.  The reason is
+  measured, not guessed -- the invocation patterns require the exec verb to
+  sit at a statement boundary, and the only exec-verb-inside-prose lines in
+  this repository are the usage block of tools/run_all_harnesses.sh naming
+  ITSELF, which both relations exclude as a self-reference.  So removing the
+  strip changed no credited caller anywhere in the tree.
+
+  Second escape: against control I6's FIRST DRAFT, which planted
+  `#   bash <runner> --list` and required the strip to make the difference.
+  It makes none.  A leading `#` is not a statement boundary, so that line is
+  not an invocation with or without the strip, and the draft would have
+  passed against a predicate that never stripped anything.  The draft asked a
+  weaker question than the one it was written to ask -- which is the failure
+  mode both repositories named on 2026-10-18 -- and the predicate was right.
+
+  What the strip IS load-bearing for, measured:
+
+      shape                                        unstripped   stripped
+      #   bash <runner> --list                        False       False
+      # to re-run: cat seeds | bash <runner>          True        False
+      # then: cd x && bash <runner>                   True        False
+      # note; bash <runner> was removed               True        False
+      bash <runner>            (a real invocation)    True        True
+
+  The operator before the verb is the statement boundary.  I6 now plants
+  those three shapes, requires none of them to be credited, and ALSO requires
+  that all three WOULD be credited unstripped -- so the control cannot pass
+  against a tree or a predicate in which the strip is irrelevant.
+
+WHAT THIS DOES NOT CLAIM
+
+  Six mutants are six, not a coverage figure.  The mutants revert the two
+  repairs and the three mechanisms the repairs rest on (comment class,
+  basename uniqueness, manifest form); they do not probe the invocation
+  regexes shape by shape, which I4's eight-invocation / four-prose planted
+  set does instead, nor the date axis, which C1-C5 cover and which this
+  session did not touch.
+================================================================================

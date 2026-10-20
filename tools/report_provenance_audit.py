@@ -192,6 +192,10 @@ def report_subject(rel_report):
     return sm.group('subject') if sm else None
 
 
+# Populated by closure_for(); read by the table and by control P2.
+_PROSE_EDGES = {}
+
+
 def closure_for(rel_report, files, tight=True):
     """The files the report's suite depends on, plus the unresolved names.
 
@@ -225,23 +229,23 @@ def closure_for(rel_report, files, tight=True):
             keep = inside
         inside = keep
     deps = set(inside)
+    prose = set()
     unresolved = set()
     tracked = set(files)
     for f in inside:
         if not f.endswith(('.sh', '.py')):
             continue
-        try:
-            with open(os.path.join(ROOT, f), errors='replace') as fh:
-                text = fh.read()
-        except OSError:
-            continue
-        for cand in PATH_RE.findall(text):
-            for res in _resolve(cand, d, tracked):
-                deps.add(res)
-                break
-            else:
-                if '/' in cand:
-                    unresolved.add(cand)
+        codep, prosep, unres = named_paths(f, d, tracked)
+        deps |= codep
+        prose |= prosep
+        unresolved |= unres
+    # A PROSE edge is held in the DIRECTORY closure and kept out of the tight
+    # one.  See the note above code_only().  `inside` members are never
+    # demoted: being in the directory is not a claim about naming.
+    prose -= deps
+    if not tight:
+        deps |= prose
+    _PROSE_EDGES[rel_report] = sorted(prose)
     return sorted(deps), sorted(unresolved)
 
 
@@ -281,26 +285,249 @@ def runners_in(rel_report, files):
             if os.path.dirname(f) == d and f.endswith('.sh')]
 
 
-def callers_of(rel_script, files):
-    """What in this repository invokes `rel_script`.
+# ---------------------------------------------------------------------------
+# NAMING IS NOT INVOKING, AND NAMING IS NOT FEEDING  (2026-10-20)
+# ---------------------------------------------------------------------------
+# The 2026-10-18 entry ranked one item first and named two mechanisms in this
+# file.  Both are real; the mechanism of the second one is NOT the one that
+# entry guessed, and the consequence it warned about does not occur.
+#
+#   (1) callers_of() RESOLVED ON BASENAME.  Six harnesses in this repository
+#       are called run_mutation_tests.sh, so each was reported as a caller of
+#       the other five.  They are SIBLINGS.  Visible in the committed output
+#       of 2026-10-18, where one runner's caller list is five sibling runners
+#       plus four tools that only read it.
+#
+#   (2) "NAMES THE RUNNER" WAS TREATED AS "IS AN INPUT TO ITS RESULTS".  The
+#       entry attributed this to the caller relation leaking into the
+#       closure.  Measured, it is simpler and worse: closure_for() ran
+#       PATH_RE over the WHOLE TEXT of every script in the directory,
+#       COMMENTS INCLUDED.  A path named in prose became a dependency.
+#
+#       The exact edge that forced 2026-10-18 to re-run the baud bench is
+#       line 35 of examples/phase6_baud_error_coverage/run_mutation_tests.sh:
+#
+#           # tools/harness_file_closure_audit.py after the first was found
+#
+#       a sentence about an auditor, which made that auditor an input to the
+#       bench's mutation report, which made the report stale the moment the
+#       auditor was edited.  40 such comment-only edges exist, 17 % of the
+#       235 edges this audit was building closures from.  The sibling repo
+#       named resolve-on-spelling its dominant failure mode on the same day:
+#       this is that, with the spelling being "appears in the file".
+#
+# THE FIX IS NOT "STRIP COMMENTS", because that direction is the dangerous
+# one.  tools/mutation_controls.sh names rtl/uart_controller.v ONLY in prose
+# -- its code builds the path from a variable -- so a naive strip would drop
+# the DUT from the dependency set of the DUT's own mutation tests.  That is
+# precisely the under-report fault the comment above _VARPREFIX_RE says the
+# first version of this audit committed, and an under-report here is silent.
+#
+# So an edge gains a CLASS rather than being kept or deleted:
+#
+#     CODE   the path is named outside comments      -> a dependency
+#     PROSE  the path is named ONLY inside comments  -> reported, and held in
+#                                                       the DIRECTORY closure
+#                                                       only, never the tight
+#                                                       one
+#
+# which is the TIGHT / DIRECTORY pattern this file already uses for the other
+# closure, and keeps every demoted edge visible instead of dropping it.
+#
+# Only WHOLE-LINE comments are stripped.  A trailing-# rule would have to
+# decide whether the # in `sed 's/#//'` opens a comment, and a rule that can
+# remove code to protect a metric is the wrong trade here.  Conservative in
+# the direction that cannot under-report: if in doubt, the edge stays CODE.
+#
+# WHAT THE STANDING ITEM GOT WRONG, recorded rather than quietly corrected.
+# 2026-10-18 warned: "repairing this LOWERS the stale count, and the ratchet
+# fails UNDER budget by design -- so STALE_SUITE_BUDGET must be lowered in the
+# same commit."  Measured: the per-report count moves 49 -> 48 and the
+# beside-a-RUNNER figure 48 -> 47, but the number the ratchet actually reads
+# -- suites with a runner and NO CURRENT REPORT -- is 5 before and 5 after,
+# on the same five directories.  STALE_SUITE_BUDGET is NOT lowered, and
+# control P4 pins that equality so that a future change which does move it
+# cannot move it unnoticed.  The warning was about the right risk and the
+# wrong number.
 
-    Its own file is excluded -- a script naming itself is not a caller, and
-    counting it would make every runner look reachable.  That is the
-    2026-10-10 rule: a control must not read the thing it controls for.
+_COMMENT_LINE_RE = re.compile(r'^[ \t]*#')
+
+
+_CODE_CACHE = {}
+
+
+def code_only(text):
+    """`text` with whole-line # comments removed.  See the note above."""
+    if text not in _CODE_CACHE:
+        _CODE_CACHE[text] = '\n'.join(
+            ln for ln in text.splitlines()
+            if not _COMMENT_LINE_RE.match(ln))
+    return _CODE_CACHE[text]
+
+
+_READ_CACHE = {}
+
+
+def _read(rel):
+    """Cached because the relations are computed per (runner, report) pair and
+    re-read the same scripts hundreds of times.  The tree does not change
+    during a run; a run that mutated it would be reading its own output."""
+    if rel not in _READ_CACHE:
+        try:
+            with open(os.path.join(ROOT, rel), errors='replace') as fh:
+                _READ_CACHE[rel] = fh.read()
+        except OSError:
+            _READ_CACHE[rel] = ''
+    return _READ_CACHE[rel]
+
+
+def named_paths(rel, d, tracked):
+    """(code_edges, prose_edges, unresolved) for one script.
+
+    prose_edges are resolved paths this file names ONLY in whole-line
+    comments.  The two sets are disjoint by construction and control P1
+    requires it of the whole repository.
     """
+    txt = _read(rel)
+    def resolve_all(t):
+        out, unres = set(), set()
+        for cand in PATH_RE.findall(t):
+            for res in _resolve(cand, d, tracked):
+                out.add(res)
+                break
+            else:
+                if '/' in cand:
+                    unres.add(cand)
+        return out, unres
+    allp, unres = resolve_all(txt)
+    codep, _ = resolve_all(code_only(txt))
+    return codep, allp - codep, unres
+
+
+# ---------------------------------------------------------------------------
+# THE CALLER RELATION, which now requires an INVOCATION
+# ---------------------------------------------------------------------------
+# A caller is a file that RUNS the script.  Three forms exist here and all
+# three are real:
+#
+#     an exec verb        bash X / sh X / source X / . X / exec X / python3 X
+#                         (timeout 300 bash X reaches it through the verb)
+#     a manifest record   X|KIND|requires|budget|note   -- tools/run_all_
+#                         harnesses.sh drives everything from such a table and
+#                         then runs `bash "$path"`, so the record IS the call
+#     a subprocess call   subprocess.run([... 'X' ...]) and relatives
+#
+# A BARE BASENAME IS CREDITED ONLY WHEN IT IS UNIQUE IN THE REPOSITORY.  When
+# six files share it, `bash run_mutation_tests.sh` does not say which one, and
+# resolving it to all six is mechanism (1).  Such a reference becomes a third
+# value, AMBIGUOUS: reported, never credited.  Guessing would be the sibling
+# repository's resolve-on-spelling again -- a question about identity answered
+# by a test on text.
+#
+# mentions_of() keeps the old relation and is printed as the UPPER BOUND, so
+# the artefact stays visible rather than being replaced by a smaller number
+# nobody can check against the old one.
+
+_EXEC_VERB = r'(?:bash|sh|zsh|ksh|source|\.|exec|python3?|pytest)'
+_SUBPROC = r'subprocess\.(?:run|call|check_call|check_output|Popen)'
+
+
+def _invocation_patterns(spelling):
+    q = re.escape(spelling)
+    return (
+        # an exec verb, possibly via timeout/env, then the path
+        re.compile(r'(?:^|[;&|(]|\&\&|\|\|)\s*'
+                   r'(?:timeout\s+\S+\s+|env\s+\S+\s+)*'
+                   + _EXEC_VERB + r'\s+(?:-\S+\s+)*'
+                   r'["\']?(?:\$\{?(?:ROOT|HERE|REPO|TOP|DIR|BASE)\}?/)?'
+                   + q + r'["\']?(?:\s|$|["\';&|)])', re.M),
+        # ./path or "$DIR"/path executed directly
+        re.compile(r'(?:^|[;&|(]|\&\&|\|\|)\s*'
+                   r'["\']?(?:\./|\$\{?(?:ROOT|HERE|REPO|TOP|DIR|BASE)\}?/)'
+                   + q + r'["\']?(?:\s|$|["\';&|)])', re.M),
+        # a manifest record: the path is the first field of a |-table line
+        re.compile(r'^' + q + r'\|', re.M),
+        # subprocess, anywhere in the call's argument text
+        re.compile(_SUBPROC + r'\s*\((?:[^()]|\([^()]*\))*?' + q,
+                   re.S),
+    )
+
+
+def _invokes(text, spelling):
+    """Does `text`, ALREADY stripped of comments, invoke `spelling`?"""
+    return any(p.search(text) for p in _invocation_patterns(spelling))
+
+
+def _invokes_in(text, spelling):
+    """Does raw `text` invoke `spelling`?
+
+    WHAT THIS STRIP DOES AND DOES NOT CATCH, measured rather than assumed --
+    the first draft of control I6 asserted the wrong case and the predicate
+    was right.
+
+    A plain usage comment, `#   bash tools/run_all_harnesses.sh --list`, is
+    ALREADY not an invocation without this strip: the exec verb must sit at a
+    statement boundary, and a leading `#` is not one.  So I6's first draft
+    required the strip to make the difference on that line, it made no
+    difference, and the draft would have passed against a predicate with no
+    strip at all.
+
+    The strip is load-bearing for a comment that contains a shell operator
+    BEFORE the verb, because the operator is a statement boundary:
+
+        # to re-run: cat seeds | bash examples/.../run_mutation_tests.sh
+        # then: cd x && bash examples/.../run_mutation_tests.sh
+        # note; bash examples/.../run_mutation_tests.sh was removed
+
+    all three of which match the invocation patterns unstripped and none of
+    which runs anything.  Mutant M6 of 2026-10-20 -- dropping this strip --
+    escaped the whole suite twice, first against the tree (no such line
+    exists in it today) and then against I6's first draft.  Those are the
+    three shapes it is pinned on now."""
+    return _invokes(code_only(text), spelling)
+
+
+def basename_is_unique(rel_script, files):
+    base = os.path.basename(rel_script)
+    return len([f for f in files if os.path.basename(f) == base]) == 1
+
+
+def invocations_of(rel_script, files):
+    """Files that actually RUN rel_script.  (callers, ambiguous)
+
+    Its own file is excluded, as before -- the 2026-10-10 rule that a control
+    must not read the thing it controls for.
+    """
+    base = os.path.basename(rel_script)
+    unique = basename_is_unique(rel_script, files)
+    callers, ambiguous = [], []
+    for f in files:
+        if f == rel_script or not f.endswith(('.sh', '.py', '.yml', '.yaml')):
+            continue
+        raw = _read(f)
+        if _invokes_in(raw, rel_script):
+            callers.append(f)
+        elif _invokes_in(raw, base):
+            (callers if unique else ambiguous).append(f)
+    return callers, ambiguous
+
+
+def mentions_of(rel_script, files):
+    """The 2026-10-18 relation, kept as the reported UPPER BOUND."""
     base = os.path.basename(rel_script)
     hits = []
     for f in files:
         if f == rel_script or not f.endswith(('.sh', '.py', '.yml', '.yaml')):
             continue
-        try:
-            with open(os.path.join(ROOT, f), errors='replace') as fh:
-                text = fh.read()
-        except OSError:
-            continue
+        text = _read(f)
         if rel_script in text or base in text:
             hits.append(f)
     return hits
+
+
+def callers_of(rel_script, files):
+    """Back-compatible name: the TIGHT relation's credited callers only."""
+    return invocations_of(rel_script, files)[0]
 
 
 # ---------------------------------------------------------------------------
@@ -309,14 +536,16 @@ def callers_of(rel_script, files):
 
 class Row(object):
     def __init__(self, report, stated, newer, undated, unresolved,
-                 runners, callers):
+                 runners, callers, ambiguous=None, mentions=None):
         self.report = report
         self.stated = stated
         self.newer = newer                # [(rel, date)] committed after stated
         self.undated = undated            # [rel] no datable history
         self.unresolved = unresolved
         self.runners = runners
-        self.callers = callers
+        self.callers = callers            # TIGHT: things that INVOKE
+        self.ambiguous = ambiguous or {}  # bare-basename, not attributable
+        self.mentions = mentions or {}    # UPPER BOUND: things that NAME
 
     @property
     def stale(self):
@@ -324,9 +553,19 @@ class Row(object):
 
     @property
     def unreachable(self):
-        # No runner in the directory, or no runner that anything else calls.
+        # No runner in the directory, or no runner anything INVOKES.  The
+        # tight relation is deliberate: before 2026-10-20 this read the
+        # mention relation, under which six sibling run_mutation_tests.sh
+        # scripts made each other look reachable.
         return not self.runners or not any(self.callers.get(r)
                                            for r in self.runners)
+
+    @property
+    def unreachable_by_mention(self):
+        """The same question under the 2026-10-18 relation, kept so the two
+        numbers can be compared instead of one replacing the other."""
+        return not self.runners or not any(self.mentions.get(r)
+                                          for r in self.runners)
 
 
 def audit(asof=None):
@@ -352,9 +591,13 @@ def audit(asof=None):
         newer_wide = [(dep, dated(dep)) for dep in wide
                       if dated(dep) is not None and dated(dep) > stated]
         runners = runners_in(rel, files)
-        callers = {r: callers_of(r, files) for r in runners}
+        callers, ambiguous = {}, {}
+        for r in runners:
+            callers[r], ambiguous[r] = invocations_of(r, files)
+        mentions = {r: mentions_of(r, files) for r in runners}
         row = Row(rel, stated, sorted(newer, key=lambda t: t[1], reverse=True),
-                  undated, unresolved, runners, callers)
+                  undated, unresolved, runners, callers, ambiguous, mentions)
+        row.prose = _PROSE_EDGES.get(rel, [])
         row.newer_wide = sorted(newer_wide, key=lambda t: t[1], reverse=True)
         row.subject = report_subject(rel)
         rows.append(row)
@@ -374,8 +617,24 @@ def print_table(rows, asof=None):
     print('  STALE on the DIRECTORY closure (upper bound, conflates sibling')
     print('        exercises -- reported, not used as the headline):     %d'
           % len(wide))
-    print('  UNREACHABLE (nothing re-runs the runner): %d' % len(unreach))
+    print('  UNREACHABLE (nothing INVOKES the runner): %d' % len(unreach))
     print('  BOTH: %d   <- the 2026-10-14 failure mode exactly' % len(both))
+
+    # THE TWO CALLER RELATIONS, SIDE BY SIDE.  The tight one is the verdict;
+    # the mention relation is the 2026-10-18 behaviour, reported as the upper
+    # bound so the correction is checkable against the number it replaced
+    # rather than simply appearing as a smaller figure.
+    um = [r for r in rows if r.unreachable_by_mention]
+    print('  UNREACHABLE under the 2026-10-18 MENTION relation (upper bound,')
+    print('        counts a file that merely NAMES the runner): %d' % len(um))
+    amb = sorted({a for r in rows for v in r.ambiguous.values() for a in v})
+    print('  BARE-BASENAME references that name no single script (AMBIGUOUS,')
+    print('        reported and never credited as a caller): %d' % len(amb))
+    prose_all = sorted({e for r in rows for e in getattr(r, 'prose', [])})
+    print('  PROSE dependency edges held out of the tight closure (a path a')
+    print('        script names only in a comment): %d' % len(prose_all))
+    for e in prose_all[:8]:
+        print('        %s' % e)
 
     # THE PER-REPORT COUNT CANNOT REACH ZERO, AND THAT IS NOT THE AUDIT'S
     # FAULT -- added 2026-10-15 after the first run of this tool in anger.
@@ -441,9 +700,18 @@ def print_table(rows, asof=None):
               % (', '.join(os.path.basename(x) for x in r.runners) or 'NONE'))
         for x in r.runners:
             c = r.callers.get(x) or []
+            a = r.ambiguous.get(x) or []
+            m = r.mentions.get(x) or []
             print('           %s <- %s'
                   % (os.path.basename(x),
-                     ', '.join(c) if c else 'NOTHING IN THIS REPOSITORY'))
+                     ', '.join(c) if c else 'NOTHING INVOKES IT'))
+            extra = [f for f in m if f not in c]
+            if extra:
+                print('               names it but does not run it (%d): %s'
+                      % (len(extra), ', '.join(extra[:5])))
+            if a:
+                print('               AMBIGUOUS bare-basename refs: %s'
+                      % ', '.join(a[:5]))
     if unreach:
         print('\n  UNREACHABLE runners (report may be fresh and still unverified):')
         seen = set()
@@ -563,17 +831,228 @@ def controls():
     check('C5 an input with no git history dates to None, not to today',
           nd is None, repr(nd))
 
-    # C6  CALLER DETECTION EXCLUDES THE SCRIPT ITSELF.  Every mutation runner
-    #     names its own path in its usage text, so counting self-references
-    #     would make all of them look reachable -- the 2026-10-10 rule.
-    selfnamers = [f for f in files
-                  if f.endswith('run_mutation_tests.sh')
-                  and f not in callers_of(f, files)]
+    # C6  CALLER DETECTION EXCLUDES THE SCRIPT ITSELF, under BOTH relations.
+    #     Every mutation runner names its own path in its usage text, so
+    #     counting self-references would make all of them look reachable --
+    #     the 2026-10-10 rule.  Checked for the mention relation too, because
+    #     that one is still reported as the upper bound and an upper bound
+    #     that counts self-reference is not a bound on anything.
     allrunners = [f for f in files if f.endswith('run_mutation_tests.sh')]
-    check('C6 caller detection never counts a script as its own caller',
-          len(selfnamers) == len(allrunners),
-          '%d/%d runners excluded from their own caller sets'
-          % (len(selfnamers), len(allrunners)))
+    selfnamers = [f for f in allrunners if f not in callers_of(f, files)]
+    selfmention = [f for f in allrunners if f not in mentions_of(f, files)]
+    check('C6 neither relation counts a script as its own caller',
+          len(selfnamers) == len(allrunners)
+          and len(selfmention) == len(allrunners),
+          'tight %d/%d, mention %d/%d excluded from their own sets'
+          % (len(selfnamers), len(allrunners),
+             len(selfmention), len(allrunners)))
+
+    # -----------------------------------------------------------------------
+    # 2026-10-20: the controls for the two corrected relations
+    # -----------------------------------------------------------------------
+    # I4 plants its cases as TEXT passed to the predicate, not as files in the
+    # tree.  Writing a file containing `bash examples/.../run_mutation_tests.sh`
+    # into this repository would make that file a real caller of a real runner
+    # and would be read by every other audit here -- the sibling repository's
+    # 2026-10-17 item, "a module must not plant the pattern it censuses in the
+    # tree other audits read", which this file can simply avoid.
+
+    # I1  THE MANIFEST IS AN INVOCATION, against an exactly known target: the
+    #     set of HARNESS paths parsed independently out of the shell file.  If
+    #     the new relation cannot see the table that actually drives every run
+    #     in this repository, it reports the entire repository unreachable --
+    #     a failure far worse than the artefact it replaces, so it is pinned
+    #     to the manifest's own contents rather than to a count.
+    man = _read('tools/run_all_harnesses.sh')
+    declared = [ln.split('|')[0] for ln in man.splitlines()
+                if '|HARNESS|' in ln and not ln.lstrip().startswith('#')]
+    declared = [x for x in declared if x in set(files)]
+    seen_by_relation = [x for x in declared
+                        if 'tools/run_all_harnesses.sh' in callers_of(x, files)]
+    check('I1 the manifest in run_all_harnesses.sh is recognised as invoking '
+          'all %d HARNESS paths it declares' % len(declared),
+          len(declared) > 0 and len(seen_by_relation) == len(declared),
+          'missed: %s' % (', '.join(x for x in declared
+                                    if x not in seen_by_relation) or 'none'))
+
+    # I2  THE ARTEFACT IS GONE AND STILL VISIBLE.  Exactly known target: the
+    #     sibling run_mutation_tests.sh scripts.  None may be a caller of
+    #     another under the tight relation, and the mention relation must
+    #     still list them -- otherwise this control would pass equally well
+    #     against a relation that had simply stopped finding anything.
+    sibs = sorted(f for f in files if f.endswith('run_mutation_tests.sh'))
+    cross = [(a, b) for a in sibs for b in sibs
+             if a != b and b in callers_of(a, files)]
+    mention_cross = [(a, b) for a in sibs for b in sibs
+                     if a != b and b in mentions_of(a, files)]
+    check('I2 none of the %d sibling run_mutation_tests.sh scripts is a '
+          'caller of another, while the mention relation still shows %d such '
+          'pairs' % (len(sibs), len(mention_cross)),
+          len(sibs) >= 6 and not cross and len(mention_cross) >= 20,
+          'tight cross-pairs: %s' % (cross[:3] or 'none'))
+
+    # I3  AN AUDITOR READS AND NAMES; IT DOES NOT RUN.  These three name
+    #     harness scripts by construction -- enumerating them is their job --
+    #     and under the 2026-10-18 relation that made them callers of
+    #     everything they enumerate.
+    auditors = ['tools/harness_file_closure_audit.py',
+                'tools/report_provenance_audit.py',
+                'tools/shared_scratch_audit.py']
+    runners = sorted(f for f in files
+                     if os.path.basename(f).startswith('run_')
+                     and f.endswith(('.sh', '.py')))
+    wrong = [(a, r) for r in runners for a in auditors
+             if a in callers_of(r, files)]
+    check('I3 no auditor is credited as a caller of any of the %d runners'
+          % len(runners), not wrong, 'credited: %s' % (wrong[:3] or 'none'))
+
+    # I4  THE PREDICATE FIRES AND REFRAINS, on planted text.  A control that
+    #     cannot fail certifies nothing (2026-10-01).
+    tgt = 'examples/phase6_crv_uart/run_mutation_tests.sh'
+    must_fire = [
+        'bash %s' % tgt,
+        'sh %s\n' % tgt,
+        'source "%s"' % tgt,
+        'timeout 300 bash "$ROOT/%s"' % tgt,
+        './%s --quick' % tgt,
+        '%s|HARNESS|-|300|note' % tgt,
+        "subprocess.run(['bash', '%s'], check=True)" % tgt,
+        'cd x && bash %s' % tgt,
+    ]
+    must_refrain = [
+        '# %s after the first was found by hand' % tgt,
+        'echo "see %s for the method"' % tgt,
+        '# superseded by %s' % tgt,
+        'A report sits beside %s and nothing re-runs it.' % tgt,
+    ]
+    fired = [t for t in must_fire if _invokes(code_only(t), tgt)]
+    refrained = [t for t in must_refrain if not _invokes(code_only(t), tgt)]
+    check('I4 the invocation predicate fires on %d/%d real invocations and '
+          'refrains on %d/%d prose references'
+          % (len(fired), len(must_fire), len(refrained), len(must_refrain)),
+          len(fired) == len(must_fire) and len(refrained) == len(must_refrain),
+          'missed: %r  false: %r'
+          % ([t for t in must_fire if t not in fired],
+             [t for t in must_refrain if t not in refrained]))
+
+    # I5  A BARE BASENAME SHARED BY SIX FILES IS NOT ATTRIBUTED.  The third
+    #     value exists only if it is exercised; an unexercised third value is
+    #     a comment (2026-10-01).
+    shared_base = 'run_mutation_tests.sh'
+    nshare = len([f for f in files if os.path.basename(f) == shared_base])
+    uniq_script = 'tools/report_provenance_audit.py'
+    check('I5 %r is shared by %d tracked files and so is NOT unique, while '
+          'a one-of-a-kind script IS' % (shared_base, nshare),
+          nshare >= 6
+          and not basename_is_unique('examples/phase6_crv_uart/' + shared_base,
+                                     files)
+          and basename_is_unique(uniq_script, files))
+
+    # I6  AN EXEC VERB INSIDE A COMMENT IS NOT A CALL -- on the three shapes
+    #     for which the comment strip is actually load-bearing, which are not
+    #     the shape this control's first draft used.  See _invokes_in() for
+    #     the measurement and for mutant M6's two escapes.  Each of these
+    #     matches the invocation patterns when the comment is NOT stripped,
+    #     so the control fails the moment the strip is removed.
+    prose_calls = [
+        '# to re-run: cat seeds | bash %s' % tgt,
+        '# then: cd x && bash %s' % tgt,
+        '# note; bash %s was removed' % tgt,
+    ]
+    leaks = [c for c in prose_calls if _invokes_in(c, tgt)]
+    unstripped_would_leak = [c for c in prose_calls if _invokes(c, tgt)]
+    real = 'cd "$ROOT" || exit 1\nbash %s\n' % tgt
+    check('I6 none of the %d prose shapes carrying a shell operator is '
+          'credited as a call, while a real invocation is'
+          % len(prose_calls),
+          not leaks and _invokes_in(real, tgt)
+          and len(unstripped_would_leak) == len(prose_calls),
+          'leaked: %r; without the strip %d/%d would leak'
+          % (leaks, len(unstripped_would_leak), len(prose_calls)))
+
+    # P1  CODE AND PROSE EDGES ARE DISJOINT, repository-wide.  Where two
+    #     causes produce the same symptom they are two reported categories
+    #     with a disjointness check between them (2026-10-17).
+    overlap = []
+    tracked = set(files)
+    for f in files:
+        if not f.endswith(('.sh', '.py')):
+            continue
+        c, pr, _u = named_paths(f, os.path.dirname(f), tracked)
+        if c & pr:
+            overlap.append((f, sorted(c & pr)))
+    check('P1 the CODE and PROSE edge sets are disjoint for all %d scripts'
+          % len([f for f in files if f.endswith(('.sh', '.py'))]),
+          not overlap, 'overlapping: %s' % (overlap[:2] or 'none'))
+
+    # P2  THE EXACT EDGE 2026-10-18 CALLED UNREAL IS CLASSIFIED PROSE, and is
+    #     gone from the bench's tight closure while remaining in the
+    #     directory closure.  Exactly known, not a count.
+    bench = 'examples/phase6_baud_error_coverage'
+    auditor = 'tools/harness_file_closure_audit.py'
+    runner = bench + '/run_mutation_tests.sh'
+    c, pr, _u = named_paths(runner, bench, tracked)
+    reps = [(r, d) for r, d in reports(files) if os.path.dirname(r) == bench]
+    newest = max(reps, key=lambda t: t[1])[0] if reps else None
+    tight_deps = set(closure_for(newest, files, tight=True)[0]) if newest else set()
+    wide_deps = set(closure_for(newest, files, tight=False)[0]) if newest else set()
+    check('P2 the baud bench names %s only in prose, and it is out of the '
+          'tight closure and still in the directory closure' % auditor,
+          auditor in pr and auditor not in c
+          and auditor not in tight_deps and auditor in wide_deps,
+          'prose=%s code=%s tight=%s wide=%s'
+          % (auditor in pr, auditor in c,
+             auditor in tight_deps, auditor in wide_deps))
+
+    # P3  THE UNDER-REPORT GUARD, and its FIRST DRAFT ASSERTED A FALSEHOOD.
+    #     The draft required every mutation suite's closure to contain
+    #     rtl/uart_controller.v and tools/mutation_controls.sh.  It FAILED on
+    #     three suites -- and the three absences are CORRECT:
+    #     phase6_bfm_equivalence mutates bfm/uart_rx_pin_bfm.v and not the
+    #     DUT at all, and phase6_crv_uart and phase6_uvm_crv_uart carry their
+    #     own controls and never source the shared ones.  Measured before and
+    #     after the comment-strip, all three absences are IDENTICAL, so the
+    #     change did not cause them.
+    #
+    #     The universal was plausible and wrong; the conditional is the thing
+    #     actually at risk.  Every path a script names IN CODE must survive
+    #     into the closure -- i.e. the strip removed no edge that code spells.
+    missing = []
+    _dirclosure = {}
+    for f in files:
+        if not f.endswith(('.sh', '.py')):
+            continue
+        d = os.path.dirname(f)
+        if d not in _dirclosure:
+            _dirclosure[d] = set(closure_for(f, files, tight=False)[0])
+        c, _pr, _u = named_paths(f, d, tracked)
+        for dep in sorted(c - _dirclosure[d]):
+            missing.append((f, dep))
+    check('P3 every edge a script spells IN CODE survives into its closure '
+          '(the strip cannot under-report)',
+          not missing, 'dropped: %s' % (missing[:3] or 'none'))
+
+    # P4  THE NUMBER THE RATCHET READS DID NOT MOVE, which contradicts the
+    #     2026-10-18 warning that this repair would lower it and force
+    #     STALE_SUITE_BUDGET down.  Pinned as an equality so that a future
+    #     change which does move it cannot move it unnoticed, and so that the
+    #     budget in tools/run_all_harnesses.sh and this file cannot drift.
+    rows_now = audit()
+    bydir = {}
+    for r in rows_now:
+        dd = os.path.dirname(r.report)
+        if dd not in bydir or r.stated > bydir[dd].stated:
+            bydir[dd] = r
+    not_current = [d for d, r in sorted(bydir.items()) if r.runners and r.stale]
+    budget = None
+    m = re.search(r'^STALE_SUITE_BUDGET=(\d+)', man, re.M)
+    if m:
+        budget = int(m.group(1))
+    check('P4 the per-suite headline is %d, equal to STALE_SUITE_BUDGET=%s -- '
+          'the 2026-10-18 warning that this repair lowers it is not borne out'
+          % (len(not_current), budget),
+          budget is not None and len(not_current) == budget,
+          'suites: %s' % ', '.join(not_current))
 
 
 def main():
