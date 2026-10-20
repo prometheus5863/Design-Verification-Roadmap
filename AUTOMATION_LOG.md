@@ -9220,3 +9220,329 @@ latent collisions closed and two opposite fixes; the baud-bench current report
 with the unreal dependency edge recorded in it; the progress.md session note).
 This AUTOMATION_LOG.md entry makes **5**, and the two green chunk transcripts
 make **6**.
+
+---
+
+## 2026-10-20 — naming is not invoking, and the dependency was a sentence
+
+### 1. What was taken, and why this one
+
+The 2026-10-18 entry ranked one item first and named two mechanisms in
+`tools/report_provenance_audit.py`. It was taken as ranked. Both mechanisms
+are real; **the second one's mechanism is not the one that entry guessed, and
+the consequence it warned about does not occur.** Recording both corrections
+is most of this entry.
+
+The audit was run as a **measurement first**, before any edit: 49 STALE on the
+tight closure, 54 on the directory closure, 15 UNREACHABLE, BOTH 1, 48 beside
+a RUNNER, 5 suites with a runner and no current report, controls 6/0.
+
+### 2. The basename half, repaired
+
+`callers_of()` credited any file that contained the runner's **basename**.
+Six harnesses here are called `run_mutation_tests.sh`, so each was reported as
+a caller of the other five — plus four tools that only read them. Visible in
+2026-10-18's own committed output, where one runner's caller list runs to ten
+entries of which exactly one is a caller.
+
+`invocations_of()` replaces it and requires an invocation, in the three forms
+that exist in this repository:
+
+- an **exec verb at a statement boundary** — `bash X`, `sh X`, `source X`,
+  `. X`, `./X`, `python3 X`, reached through `timeout 300 bash X` and `env`;
+- a **manifest record**, `X|HARNESS|requires|budget|note`.
+  `tools/run_all_harnesses.sh` drives every run here from such a table and
+  then calls `bash "$path"`, so the record *is* the call. Control `I1` pins
+  the relation against all **25** HARNESS paths parsed independently out of
+  that file: a relation that cannot see the table reports the whole
+  repository unreachable, which is worse than the artefact it replaces;
+- a **subprocess call** — `subprocess.run([… 'X' …])` and relatives.
+
+A bare basename is credited only when it is **unique** among tracked files.
+When six files share it, `bash run_mutation_tests.sh` names no one script, and
+resolving it to all six *is* the defect. Such a reference becomes a third
+value, `AMBIGUOUS` — reported, never credited. `mentions_of()` keeps the
+2026-10-18 relation and is printed as the **upper bound**, so the correction
+is checkable against the number it replaced rather than merely appearing as a
+smaller figure. The caller lines now read:
+
+```
+run_mutation_tests.sh <- tools/run_all_harnesses.sh
+    names it but does not run it (9): examples/phase6_baud_error_coverage/..., ...
+```
+
+### 3. The second half was a comment, which is not what the item said
+
+2026-10-18 attributed the false closure edge to the caller relation leaking
+into the closure. It does not leak; the closure never read it. Measured, the
+mechanism is simpler and worse: **`closure_for()` ran `PATH_RE` over the whole
+text of every script in a report's directory, comments included.** A path
+named in prose became a dependency.
+
+The exact edge that forced 2026-10-18 to re-run the baud bench is line 35 of
+`examples/phase6_baud_error_coverage/run_mutation_tests.sh`:
+
+```
+# tools/harness_file_closure_audit.py after the first was found by hand in
+```
+
+A sentence about an auditor. That sentence made the auditor an input to the
+bench's mutation report, so editing the auditor made the report stale, so a
+bench whose behaviour had not changed had to be re-run to keep a ratchet
+green. **40 such comment-only edges exist, 17 % of the 235 edges this audit
+was building closures from.** The sibling repository named *resolve-on-
+spelling* its dominant failure mode on 2026-10-18; this is that, with the
+spelling being "appears in the file".
+
+**The fix is not "strip the comments", because that is the dangerous
+direction.** `tools/mutation_controls.sh` names `rtl/uart_controller.v` **only
+in prose** — its code builds the path from a variable — so a naive strip drops
+the DUT from the dependency set of the DUT's own mutation tests. That is
+precisely the under-report fault the comment above `_VARPREFIX_RE` records
+this audit's first version committing, and an under-report here is silent.
+
+So an edge gains a **class** instead of being kept or deleted: `CODE` (named
+outside comments) is a dependency; `PROSE` (named only in whole-line comments)
+is held in the DIRECTORY closure and kept out of the tight one. That is the
+`TIGHT`/`DIRECTORY` pattern this file already uses — demoted and still
+printed, never dropped. Whole-line comments only: a trailing-`#` rule would
+have to decide whether the `#` in `sed 's/#//'` opens a comment, and a rule
+that can delete code to protect a metric is the wrong trade.
+
+### 4. Two corrections to the standing item's own text
+
+**(a) The budget does not move, against an explicit instruction.**
+2026-10-18 warned: *"repairing this LOWERS the stale count, and the ratchet
+fails UNDER budget by design — so `STALE_SUITE_BUDGET` must be lowered in the
+same commit."* Measured:
+
+| figure | before | after |
+|---|---|---|
+| STALE reports, tight closure | 49 | 48 |
+| STALE reports, directory closure | 54 | 54 |
+| stale **and** beside a RUNNER | 48 | 47 |
+| **suites with a runner and NO CURRENT REPORT** | **5** | **5** |
+
+The same five directories: `phase4_ral`, `phase5_csr_formal`,
+`phase5_formal_uart`, `phase5_property_coverage`, `phase6_uvm_crv_uart`.
+`STALE_SUITE_BUDGET` stays at **5** and Section 3 passes *at budget*. Control
+`P4` pins the headline to the budget parsed out of
+`tools/run_all_harnesses.sh`, so a future change that does move it cannot move
+it unnoticed, and the number and the budget cannot drift apart. **The warning
+named a real risk and the wrong number.**
+
+**(b) The basename defect was a REPORTING defect, not a verdict defect.**
+Reachability is **15 under both relations** and `AMBIGUOUS` is **0**. Every
+sibling cross-reference in this repository sits in a comment, so the comment
+fix removes the sibling artefact on its own; the basename rule corrects no
+present miscount. It is a guard against a bare-basename exec that does not
+exist here yet, pinned by planted text (`I4`, `I5`) rather than by the tree.
+Worth stating because the item was ranked first on the strength of a caller
+list that looked badly wrong and was merely noisy.
+
+### 5. Mutation testing, and M6's two escapes
+
+6 injected, **6 detected, 0 escaped** — written up in
+`tools/report_provenance_relation_mutation_report_2026-10-20.txt`. Mutants
+revert the repairs in a **copy** of the auditor; the tree is never mutated.
+
+| mutant | caught by |
+|---|---|
+| `M1` `_invokes()` reverts to a substring test | `I3`, `I4` |
+| `M2` `code_only()` strips nothing | `P2` |
+| `M3` every basename deemed unique | `I5` |
+| `M4` a manifest record is not an invocation | `I1`, `I4` |
+| `M5` prose edges deleted instead of demoted | `P2` |
+| `M6` the caller relation reads comments again | `I6` |
+
+**`M6` escaped twice, and the escapes are worth more than the score.** First
+against the tree, 15/0: the invocation patterns require the exec verb at a
+statement boundary, and the only exec-verb-inside-prose lines here are
+`run_all_harnesses.sh`'s usage block naming *itself*, which both relations
+exclude as a self-reference — so removing the strip changed no credited caller
+anywhere. Then against control `I6`'s **first draft**, which planted
+`#   bash <runner> --list` and required the strip to make the difference. It
+makes none: a leading `#` is not a statement boundary, so that line is not an
+invocation either way, and the draft would have passed against a predicate
+with no strip at all. What the strip is load-bearing for is an operator
+*before* the verb, because the operator is the boundary:
+
+| planted shape | unstripped | stripped |
+|---|---|---|
+| `#   bash <runner> --list` | False | False |
+| `# to re-run: cat seeds \| bash <runner>` | **True** | False |
+| `# then: cd x && bash <runner>` | **True** | False |
+| `# note; bash <runner> was removed` | **True** | False |
+| `bash <runner>` (real) | True | True |
+
+`I6` plants those three, requires none credited, **and** requires that all
+three *would* be credited unstripped — so it cannot pass against a tree or a
+predicate in which the strip is irrelevant.
+
+Planting is done as **text passed to the predicate**, never as files: writing
+`bash examples/.../run_mutation_tests.sh` into this tree would make that file
+a real caller of a real runner and would be read by every other audit here —
+the open item *a module must not plant the pattern it censuses in the tree
+other audits read*, which this file can simply avoid. **First worked instance
+of avoiding that item rather than carrying it.**
+
+### 6. Defects in this session's own work
+
+- **Control `P3`'s first draft asserted a plausible falsehood.** It required
+  every mutation suite's closure to contain `rtl/uart_controller.v` and
+  `tools/mutation_controls.sh`, and FAILED on three. All three absences are
+  **correct**: `phase6_bfm_equivalence` mutates `bfm/uart_rx_pin_bfm.v` and
+  never touches the DUT (confirmed in its runner: `Target: bfm/
+  uart_rx_pin_bfm.v`), and `phase6_crv_uart` and `phase6_uvm_crv_uart` carry
+  their own controls and never source the shared ones. Measured before and
+  after the change, the three absences are **identical**, so the change did
+  not cause them. `P3` now asserts the conditional actually at risk — every
+  edge a script spells **in code** survives into its closure.
+- **Control `I6`'s first draft, as above** — a control that answered a weaker
+  question than the one it was written to ask, *inside the repair for that
+  failure mode*. Third instance in three sessions.
+- **`P3`'s first draft also recomputed a directory closure inside its inner
+  loop**, once per dependency instead of once per directory. Hoisted; a
+  `_read`/`code_only` cache was added for the same reason, since the relations
+  re-read the same scripts hundreds of times.
+
+**That is two of three defects today being a control asserting the wrong
+proposition, both caught by running the control against a tree that
+contradicted it.** The pattern across sessions is not that checks are missing
+but that a check's *proposition* is weaker or wider than its label.
+
+### 7. Environment and automation health
+
+**The session was interrupted and survived, and this is the operational
+finding of the day.** Three commits in, the device bridge dropped mid-call
+while committing the progress.md note, and did not return across ~6 minutes of
+retries. Nothing had been pushed. The three commits were sitting in the
+session's scratch clone under `$HOME/work`, which is invisible to the user and
+dies with the session. When the bridge returned, the clone was intact —
+`git status` clean, the interrupted `progress.md` append had not landed, so
+there was no half-written file to reconcile — and the first action on
+reconnect was `git push`, before any further work.
+
+**The working pattern pushes once at the end, so a machine that sleeps
+mid-session loses the whole session.** Today it cost nothing only because the
+bridge came back. The cheap fix is to push after each commit rather than once
+at the end, which this session did for every commit after the reconnect. It
+is recorded here as a change to how the automation should be driven, and it
+is the second such item (with *make `run_all_harnesses.sh` itself reachable*).
+
+Icarus Verilog 10.3 from the cached `tools/setup_iverilog.sh`; `yosys`/`sby`/
+`cocotb` remain absent, so the seven SKIPs stand. **`run_all_harnesses.sh`
+still does not fit in one call** — chunk 2/2 exceeded the 120 s default and
+needed the 180 s cap — so both halves were run as `--chunk 1/2` and
+`--chunk 2/2`: **18 PASS, 0 FAIL, 7 SKIP, `ratchet: OK` at budget**, identical
+to 2026-10-18. The relations moved this audit's numbers and nothing in any
+suite's behaviour. The audit's transcript is byte-identical across two
+consecutive runs, verified by `diff`. No live web search was used and none was
+needed. Nothing was deleted; the token was used transiently through a
+`GIT_ASKPASS` helper and never written to `.git/config`, a remote URL or any
+tracked file.
+
+**Not yet covered (candidates for future runs):**
+
+- **A MUTANT FOR THE `tx_empty` PREDICTION** — carried from 2026-10-18 where
+  it was ranked second, **now ranked first**, and it is ranked first
+  deliberately: it is *content*, and the last three sessions have all spent
+  their ranked-first item in the instrument layer. No committed mutation
+  report mentions `tx_empty` (checked across all twelve as of 2026-10-18),
+  while the prediction is live in the scoreboard and the signal is read by the
+  RTL and the CRV bench. Prediction, harness and injection machinery all
+  exist. Nothing is blocked on anything.
+- **PUSH AFTER EVERY COMMIT, NOT ONCE AT THE END** — created today, **ranked
+  second**, and it is an automation-driving item rather than a repository one
+  (§7). Today a bridge drop three commits in would have destroyed the whole
+  session's work had the machine not come back. The change is one line per
+  commit in the working pattern; the cost is nothing, and the evidence is one
+  near miss. Same class as *make `run_all_harnesses.sh` itself reachable*,
+  and both are a reviewer's decision about how the automation is driven.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) the SVA protocol checkers
+  bound into the existing UVM environment, and (c)
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage`
+  collector. Still the only genuinely open Phase 4/6 **content** besides the
+  item ranked first, untouched for a **third** session. Both need cocotb.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, untouched for a fourth session. Two suites are
+  known to gate (`phase4_ral`, `phase6_uvm_crv_uart`); **four have never been
+  tested this way**: `phase1_mutation`, `phase6_baud_error_coverage`,
+  `phase6_bfm_equivalence`, `phase6_rx_pin_driver`. A false SKIP is quiet and
+  permanent. Control (5) of the closure audit remains the worked reference.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, and the
+  membership is **unchanged today**, which is itself the result: the
+  ranked-first repair was expected to remove some of them by correcting the
+  relation that marked them stale, and it removed none. The five are
+  `phase4_ral`, `phase5_csr_formal`, `phase5_formal_uart`,
+  `phase5_property_coverage`, `phase6_uvm_crv_uart`; all five need cocotb or
+  sby and none can be given a report from this environment. A toolchain item.
+  `notes/2026-09-06-uvm-python-toolchain-resolution.md` is now **eight**
+  sessions stale.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — created today.
+  They are reported as `PROSE` and held out of the tight closure, which is
+  the right default, but nothing asks whether any of them is a *real*
+  dependency spelled only in prose. `tools/mutation_controls.sh` →
+  `rtl/uart_controller.v` is exactly that case and is covered only because
+  the code also reaches the DUT through a variable. The work: for each PROSE
+  edge, decide whether the naming file reaches that path in code by any
+  spelling, and report the ones that reach it **nowhere** as a third
+  category. Cheapest entry: the audit already computes both sets per file in
+  `named_paths()`.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, untouched for a third session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29, untouched.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`, AND `0x40` IS
+  BORDERLINE** — carried; a reviewer's decision, not a build.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried, untouched, and today adds a second reason to want it: two of this
+  session's three defects were a stated proposition being weaker or wider
+  than its label, which is the same audit applied to prose.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried, ten
+  sessions old; M5 still rests on exactly one check.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; what is missing is a
+  stated expectation with a spread for the 703 / 663 / 387–663 figures.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, and **today is
+  the third consecutive session that exists because a session happened to run
+  the caller.** Read together with the new ranked-second item: both are about
+  how the automation is driven rather than what the repository contains.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING, OR DECIDE NOT TO**
+  — carried from 2026-10-17; one `WORDING` row stands.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, plus
+  `phase6_uvm_crv_uart` whose `cmp -s` was deliberately not bundled into
+  10-16's fix.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13, the census's next schema change.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest
+  exposure argument in the census and never tested.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row: a control that misreports rather than a
+  gap. **Today supplies a third worked reference for the three-valued shape**
+  — `AMBIGUOUS` beside credited/not-credited, with `I5` exercising it —
+  alongside the closure audit's `True`/`False`/`ENV` and
+  `phase6_uvm_crv_uart`'s `VOID`.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, untouched
+  for an eighth session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **eleventh** session untouched); **DERIVE C1's AND C3's
+  DETAIL STRINGS** (10-10); **A diversity TARGET** (a reviewer's decision,
+  deliberately open); apply the three-valued outcome axis to
+  `phase6_crv_uart`'s crosses (09-26); audit every remaining runner for the
+  09-27 pattern; per-property coverage of the Phase 4 UVM environment
+  (09-23); a less greedy steering policy (09-24); two transmitters at once
+  (09-25); `abc pdr` as a second engine (09-23); widen the coverage model
+  (09-24); mutants not yet attempted (interrupt enable combinations, reset
+  asserted mid-frame); a property needing a strengthening invariant; the SVA
+  sequence layer (runnable on neither tool here, open since 09-20); code
+  coverage measurement (Icarus has none, open since 09-18); Phase 6 lint,
+  regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 4 (the corrected relations with their transcript and the
+mutation report; the two green chunk transcripts; today's notes; the
+progress.md session note). This AUTOMATION_LOG.md entry makes **5**. Pushed
+incrementally after each commit following the bridge drop described in §7.
