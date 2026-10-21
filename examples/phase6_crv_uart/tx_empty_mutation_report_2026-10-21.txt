@@ -1,0 +1,130 @@
+==============================================================
+MUTATION TEST -- the tx_empty prediction
+  bench : examples/phase6_crv_uart/uart_crv_cov_tb.v
+  date  : 2026-10-21   seeds: 1 3 5 7   modes: 0 1 (0=random, 1=steered)
+==============================================================
+
+G1  baseline: the suite must PASS on the unmodified RTL, every seed,
+    every mode
+    steer=0  detected 0/4 of the seeds (0 of N is what a
+               clean baseline means here)
+    steer=1  detected 0/4 of the seeds (0 of N is what a
+               clean baseline means here)
+    OK -- the unmodified RTL passes all seeds in both modes.
+
+G2  the two predictions under test are actually IN the bench
+    (naming a check in a report does not make the bench contain it --
+     the 2026-10-20 lesson, applied to this script's own premise)
+    PRESENT  "fill phase starts with tx_empty set"
+    PRESENT  "post-push tx_empty agrees with occupancy"
+
+G3  every mutant must actually CHANGE the file it claims to change
+    (a sed that silently matches nothing reports a PERFECT escape,
+     which is the most flattering possible failure)
+
+--------------------------------------------------------------
+DETECTION MATRIX -- seeds 1 3 5 7, both stimulus modes
+--------------------------------------------------------------
+
+  ID   mutant                                       steer=0      steer=1     
+  --   ------                                       random       cov-driven  
+  T1   STATUS decode: tx_empty stuck CLEAR          4/4          4/4         
+  T2   STATUS decode: tx_empty stuck SET            4/4          4/4         
+  T3   STATUS decode: tx_empty one entry EARLY      4/4          2/4         
+  T4   WIRE: tx_empty one entry early (engine too)  4/4          4/4         
+
+  T3 escaped at steer=1 on seed(s): 1 5
+
+--------------------------------------------------------------
+ADJUDICATION -- detected, or detected BY THE PREDICTION?
+--------------------------------------------------------------
+
+  T1  STATUS decode: tx_empty stuck CLEAR
+      stuck CLEAR can only be seen by the fill-phase check, which is the
+      steer=0  detected 4/4   first failing check: fill phase starts with tx_empty set
+                 ATTRIBUTABLE -- the failing check is a
+                 tx_empty prediction, so the detection is
+                 this prediction's own.
+      steer=1  detected 4/4   first failing check: fill phase starts with tx_empty set
+                 ATTRIBUTABLE -- the failing check is a
+                 tx_empty prediction, so the detection is
+                 this prediction's own.
+
+  T2  STATUS decode: tx_empty stuck SET
+      stuck SET can only be seen by the post-push check, the other one
+      steer=0  detected 4/4   first failing check: post-push tx_empty agrees with occupancy
+                 ATTRIBUTABLE -- the failing check is a
+                 tx_empty prediction, so the detection is
+                 this prediction's own.
+      steer=1  detected 4/4   first failing check: post-push tx_empty agrees with occupancy
+                 ATTRIBUTABLE -- the failing check is a
+                 tx_empty prediction, so the detection is
+                 this prediction's own.
+
+  T3  STATUS decode: tx_empty one entry EARLY
+      one entry early is wrong ONLY at occupancy 1, so it needs a burst
+      steer=0  detected 4/4   first failing check: post-push tx_empty agrees with occupancy
+                 ATTRIBUTABLE -- the failing check is a
+                 tx_empty prediction, so the detection is
+                 this prediction's own.
+      steer=1  detected 2/4   first failing check: post-push tx_empty agrees with occupancy
+                 ATTRIBUTABLE -- the failing check is a
+                 tx_empty prediction, so the detection is
+                 this prediction's own.
+
+  T4  WIRE: tx_empty one entry early (engine too)
+      the control: this one changes what the DUT DOES, so a detection
+      steer=0  detected 4/4   first failing check: burst watchdog: 3 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 NOT ATTRIBUTABLE -- detected, but by a
+                 check that is not a tx_empty prediction.
+      steer=1  detected 4/4   first failing check: burst watchdog: 3 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 NOT ATTRIBUTABLE -- detected, but by a
+                 check that is not a tx_empty prediction.
+
+--------------------------------------------------------------
+WHAT THIS MEASURES, AND THE ONE RESULT THAT WAS NOT EXPECTED
+--------------------------------------------------------------
+
+  T1 and T2 are the two directions of a stuck bit, and between them
+  they exercise BOTH predictions and neither is redundant: the
+  fill-phase check can only ever see tx_empty wrongly CLEAR, and the
+  post-push check can only ever see it wrongly SET, because C4
+  constrains burst_len to [1, 8] so the post-push occupancy is never
+  zero.  Both are caught in both modes on every seed.
+
+  T3 IS THE RESULT.  A decode asserting tx_empty one entry early is
+  correct at occupancy 0 and wrong only at occupancy 1, so it needs a
+  burst that pushed EXACTLY ONE byte.  Measured:
+
+      steer=0 (pure constrained-random)  4/4 seeds detect
+      steer=1 (coverage-driven steering) 2/4 seeds detect
+
+  THE COVERAGE-DRIVEN MODE IS WORSE.  That is the opposite of what
+  this script's first draft asserted -- it claimed steering reached
+  burst_len = 1 'by construction' because pick_config_steered has a
+  branch setting burst_len = 1.  Reading the task rather than the
+  branch: burst_len is drawn randomly from [1, 8] at the TOP of
+  pick_config_steered, and the coverage loops then OVERWRITE it with
+  8 or 3 or 1 to chase an unhit cov_txq bin.  Two of those three
+  values destroy the length-1 bursts this mutant needs, and the
+  burst_len = 1 branch fires only while cov_txq[0] is unhit -- which
+  it is not, since the fill phase observes an empty FIFO immediately.
+  So steering can only ever REMOVE length-1 bursts here, never add
+  one.
+
+  The lesson is not about this mutant.  Coverage closure and defect
+  detection are different objectives, and a generator aimed at the
+  first unhit bin will spend stimulus it was otherwise spending on
+  states no bin happens to name.  Occupancy 1 is such a state: cov_txq
+  bins empty / partial / full, and 'partial' is hit by any burst of
+  2 to 7 just as well as by a burst of 1.  THE COVERAGE MODEL CANNOT
+  SEE THE DISTINCTION THE PREDICTION DEPENDS ON, so steering toward
+  100 % closure is free to walk away from it.
+
+  T4 is deliberately uninformative about the prediction.  It is
+  detected in both modes, by the burst watchdog -- a data-path check
+  -- because mutating the WIRE stops the engine popping the last
+  byte.  Had the adjudication reported only DETECTED, this row would
+  have read as a fourth success for a prediction it never tested.
+
+RESULT: PASS  (all controls green)
