@@ -9546,3 +9546,204 @@ tracked file.
 mutation report; the two green chunk transcripts; today's notes; the
 progress.md session note). This AUTOMATION_LOG.md entry makes **5**. Pushed
 incrementally after each commit following the bridge drop described in §7.
+
+---
+
+## 2026-10-21 — The `tx_empty` prediction holds, and coverage-driven steering detected *less* than pure random
+
+**Ranked-first item worked, and it was a CONTENT item** — the first in four
+sessions. The 2026-10-18 entry ranked *a mutant for the `tx_empty`
+prediction* first deliberately, because the three sessions before it had all
+spent their ranked-first item in the instrument layer. That streak ends here.
+
+### 1. Attributability is the design
+
+Two `tx_empty` predictions are live in the CRV bench and neither had ever
+been mutation-tested; no committed report mentioned `tx_empty` across all
+twelve. The trap is that **`tx_empty` is read in three places** in
+`rtl/uart_controller.v` — the TX engine's pop condition, the IRQ decode and
+the STATUS decode — so mutating the **wire** changes what the DUT *does*, the
+data path catches it, the report says DETECTED, and **nothing has been
+learned about the prediction**. "Detected" and "detected by the prediction
+under test" are different verdicts.
+
+So T1–T3 mutate the **STATUS decode only**, leaving the engine on the true
+`tx_empty`, which makes a detection attributable to a STATUS reader and to
+nothing else. **T4 mutates the wire and is the control for the distinction**,
+not a fourth test. Every row is adjudicated by *which check failed first*.
+
+Confound checked rather than assumed: the RTL's `assert(prdata[1] ==
+tx_empty)` (property C5) would detect T1–T3 on its own, but it is inside
+`ifdef FORMAL` and this flow compiles without `-DFORMAL`, so it is inert.
+
+### 2. The matrix — 4 mutants, 4 seeds, 2 stimulus modes
+
+| ID | mutant | `steer=0` random | `steer=1` cov-driven |
+|---|---|---|---|
+| T1 | STATUS decode: stuck CLEAR | **4/4** | **4/4** |
+| T2 | STATUS decode: stuck SET | **4/4** | **4/4** |
+| T3 | STATUS decode: one entry EARLY | **4/4** | **2/4** (escapes 1, 5) |
+| T4 | WIRE: one entry early | 4/4 | 4/4 |
+
+**Both predictions hold and neither is redundant**, which settles a question
+the signal census left open: T1 and T2 are caught by *different* checks,
+because the fill-phase check can only ever see `tx_empty` wrongly **clear**
+and the post-push check only ever wrongly **set** (C4 constrains `burst_len`
+to [1, 8], so post-push occupancy is never zero).
+
+**T4 is DETECTED in both modes by the burst watchdog** — a data-path check —
+and is reported NOT ATTRIBUTABLE. Had the harness printed only `DETECTED`
+this row would have read as a fourth success for a prediction it never
+tested.
+
+### 3. The result: the coverage-driven mode detects less
+
+T3 is wrong only at occupancy 1, so it needs a burst that pushed **exactly
+one byte**. Mechanism, read out of `pick_config_steered` rather than guessed:
+`burst_len` is drawn randomly from [1, 8] at the **top** of the task; the
+coverage loops then **overwrite** it with 8, 3 or 1 to chase the first unhit
+`cov_txq` bin; and the `burst_len = 1` branch is guarded by `cov_txq[0]`
+("TX FIFO seen empty"), which the fill phase hits on the **first burst**,
+long before `STEER_AFTER = 24`. **Steering can therefore only remove the
+length-1 bursts T3 needs, never add one.**
+
+The general statement, and the reason this belongs in the roadmap rather than
+only in a report: `cov_txq` bins *empty / partial / full*, and "partial" is
+satisfied by a burst of 2–7 exactly as well as by a burst of 1. **The
+coverage model has no bin for the distinction the prediction depends on, so
+steering toward closure is free to walk away from it.** A coverage-driven
+flow reports progress in the one currency it can measure, and nothing in that
+currency is denominated in detection. A closure percentage and a mutation
+score are not two views of one quantity, and when they disagree the closure
+percentage is the one that will be believed, because it is the one on the
+dashboard.
+
+### 4. Two defects in this session's own work
+
+- **The first draft asserted the opposite result**, claiming steering reached
+  `burst_len = 1` "by construction" because `pick_config_steered` *contains*
+  a branch setting it. The branch is guarded by a bin hit on the first burst.
+  **The presence of a line is not the firing of it** — 2026-10-20's *naming
+  is not invoking*, one level down, and the **fourth consecutive session** in
+  which a claim was read off a file's text rather than its behaviour.
+- **The harness was first-failure-wins.** It took the first failing seed,
+  reported `DETECTED`, and ran `steer=1` only — so it would have printed T3
+  **DETECTED** and hidden a 50 % escape rate, **inside the harness written to
+  measure a prediction's reach**. Caught by running T3 by hand across both
+  modes, not by any control in the file. `run_matrix` now reports per seed
+  and per mode and names the escaping seeds.
+
+**Both defects would have produced a green, confident, wrong report, and
+neither would have been visible in it.** With the sibling repository's three
+today, that is five instances in one day of a claim or check answering a
+weaker question than the one it was written to ask.
+
+### 5. Environment and automation health
+
+Icarus Verilog 10.3 from the cached `tools/setup_iverilog.sh`; both
+2026-09-17 gotchas still apply and were respected (do not pipe the `source`;
+call the real `vvp` binary under `timeout`). `yosys` / `sby` / `cocotb`
+remain absent, so the seven SKIPs stand and
+`notes/2026-09-06-uvm-python-toolchain-resolution.md` is now **nine**
+sessions stale. The bridge was stable throughout, unlike 2026-10-20. Every
+commit was pushed immediately after commit — the ranked-second item of
+2026-10-18 adopted in practice for a second session, at no cost. No live web
+search was used and none was needed. Nothing was deleted; the token was used
+transiently through a `GIT_ASKPASS` helper and never written to
+`.git/config`, a remote URL or any tracked file.
+
+**Not yet covered (candidates for future runs):**
+
+- **DO THE OTHER COVERAGE-STEERED BINS SUPPRESS DETECTION TOO?** — created
+  today, **ranked first**, and it is content rather than instrument. Today
+  measured one mutant and found the coverage-driven mode detects it on half
+  the seeds pure random catches. The question that generalises it is cheap
+  and unanswered: **re-run every existing mutant in `phase6_crv_uart` and
+  `phase6_uvm_crv_uart` under `steer=0` as well as `steer=1`.** All twelve
+  committed reports were produced in **one mode only**, so every escape and
+  every detection on record is a statement about that mode and has been read
+  as a statement about the suite. Cheapest entry: the existing runners
+  already take `+steer`; the change is a loop. **If any other mutant moves,
+  the committed scores are mode-conditional and the reports should say so.**
+- **PUSH AFTER EVERY COMMIT, NOT ONCE AT THE END** — carried from 2026-10-18,
+  **now adopted in practice for two consecutive sessions** and recommended
+  for retirement as an open item at the next review: it has cost nothing and
+  the near miss it was created for has not recurred.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) the SVA protocol checkers
+  bound into the existing UVM environment, and (c)
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage`
+  collector. Untouched for a **fourth** session. Both need cocotb.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, untouched for a fifth session. Two suites are
+  known to gate; **four have never been tested this way**
+  (`phase1_mutation`, `phase6_baud_error_coverage`, `phase6_bfm_equivalence`,
+  `phase6_rx_pin_driver`). A false SKIP is quiet and permanent.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, membership
+  unchanged: `phase4_ral`, `phase5_csr_formal`, `phase5_formal_uart`,
+  `phase5_property_coverage`, `phase6_uvm_crv_uart`. All need cocotb or sby.
+- **THE OTHER `tx_empty` PREDICTION, IN `phase4_ral`** — created today. The
+  signal census records a `tx_empty` prediction in
+  `examples/phase4_ral/uart_ral_tb.py` (CHECK 4, STATUS at reset) whose
+  mutant has never been run, and today's work does **not** cover it: it is a
+  different checker in a different suite, predicted against the constant
+  `STATUS_RESET` rather than against an occupancy model. It needs cocotb, so
+  it is blocked, and it is listed so that today's result is not read as
+  having closed it.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, untouched for a fourth session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29, untouched.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried; a
+  reviewer's decision, not a build.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried, untouched.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  eleven sessions old; M5 still rests on exactly one check.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; what is missing is a
+  stated expectation with a spread.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, and today is
+  the **fourth** consecutive session that exists because a session happened
+  to run the caller.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried from
+  2026-10-17; one `WORDING` row stands.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, plus
+  `phase6_uvm_crv_uart`.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13, and **today raises its value**: the census row for
+  `STATUS.tx_empty` in this bench reads `OBSERVED_ONLY`, naming `sample_txq`,
+  while two `PREDICTED` checks on the same signal in the same file are not
+  censused at all. One role per signal per file is why.
+- **EXTEND THE CENSUS TO THE REMAINING CHECKERS** — carried; 5 files censused.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest
+  exposure argument in the census and never tested. **Cheapest remaining
+  content item now that `tx_empty` is closed.**
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row: a control that misreports rather
+  than a gap. Today supplies a fourth worked reference for a non-binary
+  outcome axis — `ATTRIBUTABLE` / `NOT ATTRIBUTABLE` beside detected/escaped.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, ninth
+  session untouched.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT
+  MAKES S-f FIRE** (10-08, **twelfth** session untouched); **DERIVE C1's AND
+  C3's DETAIL STRINGS** (10-10); **A diversity TARGET**; apply the
+  three-valued outcome axis to `phase6_crv_uart`'s crosses (09-26); audit
+  every remaining runner for the 09-27 pattern; per-property coverage of the
+  Phase 4 UVM environment (09-23); a less greedy steering policy (09-24) —
+  **promoted in interest by today's result, since the greed is now measured
+  to cost detection**; two transmitters at once (09-25); `abc pdr` as a
+  second engine (09-23); widen the coverage model (09-24) — **also promoted,
+  since `cov_txq` is now known to have no bin for occupancy 1**; mutants not
+  yet attempted (interrupt enable combinations, reset asserted mid-frame); a
+  property needing a strengthening invariant; the SVA sequence layer (open
+  since 09-20); code coverage measurement (Icarus has none, open since
+  09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+**Commits this run:** 3 (the `tx_empty` mutation suite with its report;
+today's notes; the progress.md session note). This AUTOMATION_LOG.md entry
+makes **4**. Each was pushed immediately after commit.
