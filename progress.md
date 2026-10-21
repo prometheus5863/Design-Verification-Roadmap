@@ -2407,3 +2407,60 @@ still the cheapest content item. This is the **third consecutive session in
 the instrument layer**, stated plainly rather than left to pass — the
 ranked-first item has been an instrument item three times running while the
 content items age behind it.
+
+---
+
+### 2026-10-21 — the `tx_empty` mutant, and a coverage result that went the wrong way
+
+**Ranked-first item closed, and it was a content item** — the first in four
+sessions. The 2026-10-18 entry ranked *a mutant for the `tx_empty` prediction*
+first deliberately, on the grounds that the three sessions before it had all
+spent their ranked-first item in the instrument layer. That streak ends here.
+
+`examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh` — four mutants, four
+seeds, both stimulus modes, with every row adjudicated by **which check failed
+first** rather than by PASS/FAIL.
+
+| ID | mutant | `steer=0` | `steer=1` |
+|---|---|---|---|
+| T1 | STATUS decode: `tx_empty` stuck CLEAR | 4/4 | 4/4 |
+| T2 | STATUS decode: `tx_empty` stuck SET | 4/4 | 4/4 |
+| T3 | STATUS decode: one entry EARLY | **4/4** | **2/4** |
+| T4 | WIRE: one entry early (engine too) | 4/4 | 4/4 |
+
+**Both predictions hold and neither is redundant.** T1 and T2 are caught by
+*different* checks — the fill-phase check can only ever see `tx_empty` wrongly
+clear, the post-push check only ever wrongly set.
+
+**T3 is the result: the coverage-driven mode detects less than pure random.**
+`burst_len` is drawn from [1, 8] at the top of `pick_config_steered` and then
+overwritten with 8, 3 or 1 to chase an unhit `cov_txq` bin; the `= 1` branch
+is guarded by `cov_txq[0]`, which the fill phase hits on the first burst. So
+steering can only **remove** the length-1 bursts T3 needs. The coverage model
+bins *empty / partial / full* and cannot see occupancy 1 as distinct from
+occupancy 2–7 — **the distinction the prediction depends on is one the
+coverage model has no bin for**, so closure is free to walk away from it.
+
+**Attributability is the design, not a flourish.** `tx_empty` is read in three
+places in the RTL, so mutating the **wire** (T4) is caught by the data path
+and says nothing about the prediction. T1–T3 mutate the **STATUS decode
+only**, so a detection is attributable; T4 is retained as the control for the
+distinction and is reported NOT ATTRIBUTABLE — detected in both modes by the
+burst watchdog. The RTL's own `assert(prdata[1] == tx_empty)` is inside
+`ifdef FORMAL` and inert in this flow; stated because it would otherwise be a
+silent confound for exactly T1–T3.
+
+**Two defects in this session's own work, both of which would have produced a
+green and confident wrong report.** (a) The first draft claimed steering
+reached `burst_len = 1` *by construction*, read off the **presence** of a
+branch that is guarded by an already-hit bin — *naming is not invoking* from
+2026-10-20, one level down. (b) The harness was **first-failure-wins** and ran
+`steer=1` only: it would have printed T3 DETECTED and hidden a 50 % escape
+rate, inside the file written to measure a prediction's reach. Caught by hand,
+not by a control; `run_matrix` now reports per seed and per mode.
+
+**Checklist movement.** Phase 4/6: the `tx_empty` mutant box **closes**. The
+capstone remainder (b) SVA protocol checkers and (c) `PayloadAdmissibility
+Coverage` are untouched and both still need cocotb. Twelve committed mutation
+reports become thirteen, and the new one is the first to carry a
+**mode-by-mode** matrix rather than a single verdict.
