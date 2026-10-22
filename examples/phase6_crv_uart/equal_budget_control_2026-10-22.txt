@@ -1,0 +1,47 @@
+==============================================================
+EQUAL-BUDGET CONTROL on the 2026-10-21 mode result
+  mutant: T3  STATUS decode: tx_empty one entry EARLY
+  date  : 2026-10-22   seeds: 1 3 5 7
+==============================================================
+
+G1  T3 changes the RTL and still compiles.
+
+G2  positive control on the classifier: UNMUTATED RTL, truncated to
+    steer=1's budget, must be CLOSURE_ONLY -- never DATA.
+    seed 1   maxtx=54   -> CLOSURE_ONLY
+    seed 3   maxtx=49   -> CLOSURE_ONLY
+    seed 5   maxtx=53   -> CLOSURE_ONLY
+    seed 7   maxtx=52   -> CLOSURE_ONLY
+    G2 holds.
+
+--------------------------------------------------------------
+seed  budget  A steer=0     B steer=1     E equal-budget E caught by
+--------------------------------------------------------------
+1     54      DATA          PASS          DATA           post-push tx_empty agrees with occupancy
+3     49      DATA          DATA          DATA           post-push tx_empty agrees with occupancy
+5     53      DATA          PASS          DATA           post-push tx_empty agrees with occupancy
+7     52      DATA          DATA          CLOSURE_ONLY   -
+--------------------------------------------------------------
+
+  detections: A (full steer=0) 4/4   B (steer=1) 2/4
+              E (steer=0 at B's budget) 3/4
+
+  THE SEEDS THAT DECIDE IT are the ones where steering ESCAPED.
+  On those seeds, steer=0 at steer=1's OWN transaction budget:
+      still DETECTED : 2
+      also escaped   : 0
+
+  VERDICT: volume does NOT explain the escapes.  Every seed on which
+  the coverage-driven mode missed T3 is a seed on which pure random
+  catches it WITHIN THE SAME NUMBER OF TRANSACTIONS.  The 2026-10-21
+  conclusion survives the control that could have overturned it, and
+  its mechanism -- cov_txq has no bin for occupancy 1, so closure is
+  free to walk away from the burst_len = 1 draws T3 needs -- is the
+  surviving explanation.
+
+  NOT CLAIMED: that the aggregate gap is entirely the coverage model.
+  At equal budget pure random scores 3/4 rather than 4/4, so the
+  budget alone can cost a detection on a seed where steering did not
+  escape.  The per-seed reading above is the one that is load-bearing;
+  the aggregate is not.
+==============================================================
