@@ -121,6 +121,34 @@ exist.** That is the worse of the two possibilities: a wrong conclusion gets
 corrected the next time someone looks, and a right conclusion with no evidence
 behind it never gets looked at again.
 
+### The claims are true, and the repository has never held their evidence
+
+`git log -S` dates the malformed sed to the commit that **introduced** the M7
+row (`0a6c9bb`, 2026-10-12). So the committed runner has never done anything
+with M7 but fail to compile it. That commit's message, and the Phase 6
+checklist entry in `progress.md`, both claim M7 "escaped three seeds before,
+is detected by all three now" — a before/after comparison that a compile error
+cannot produce in either direction.
+
+Reproduced today with a correct injection, against the **pre-repair** bench
+(`0a6c9bb~1`):
+
+```
+seed=1 : PASS (escaped)
+seed=3 : PASS (escaped)
+seed=5 : PASS (escaped)
+```
+
+and against the current bench, 5/5 detected in both modes. **Both halves of
+the claim are true.** Neither was ever produced by anything in the repository:
+whatever measured the before/after was not committed, and what was committed
+has only ever emitted a syntax error.
+
+That is the exact failure mode worth naming. A *wrong* claim gets corrected
+the next time someone looks. A *right* claim with absent evidence is stable —
+it survives every review, because every review finds the verdict it expected
+and the reason it expected, and the two were never connected.
+
 ### The guard, and why the existing one is incomplete
 
 `run_mutation_tests.sh` already guards injection — it refuses a sed that
