@@ -448,6 +448,17 @@ measured rather than quietly dropped.
       8 (seed, steer) combinations. Then the repair broke the census's own
       discriminating-power control, which had required a TRUSTED row to
       exist; see the note below.
+      **Annotated 2026-10-22.** The before/after above is **true** and was
+      **never produced by the committed runner**. `run_mutation_tests.sh`
+      has injected M7 with one backslash too many since this very commit
+      (`0a6c9bb`), emitting `4\x27d7`, which is a syntax error — and that
+      runner scores `COMPILE_ERROR` as `DETECT`. So every committed report
+      has recorded M7 as detected without ever compiling it, and a compile
+      error cannot produce a before/after in either direction. Reproduced
+      today with a correct injection: M7 escapes the pre-repair bench 3/3
+      and is detected by the current one 5/5 in both modes. The claim
+      stands; its evidence was not in the repository. See
+      `examples/phase6_crv_uart/run_mutation_tests_bimodal.sh` (G3).
 - [ ] Surrounding flow overview (lint, regression infra, coverage merge,
       waveform debug, bug triage)
 - [ ] CDC verification basics
@@ -2464,3 +2475,65 @@ capstone remainder (b) SVA protocol checkers and (c) `PayloadAdmissibility
 Coverage` are untouched and both still need cocotb. Twelve committed mutation
 reports become thirteen, and the new one is the first to carry a
 **mode-by-mode** matrix rather than a single verdict.
+
+---
+
+### Session note — 2026-10-22: no mutant moves between modes, and two committed claims had no evidence behind them
+
+**Ranked-first item worked:** *do the other coverage-steered bins suppress
+detection too?* — re-run every mutant in `phase6_crv_uart` under both stimulus
+modes, since all twelve committed reports were produced in one mode.
+`phase6_uvm_crv_uart`, the item's other named suite, still needs cocotb and was
+not run.
+
+**The answer is no.** M1–M4 and M7 are 5/5 in both modes; M5 and M6 are 0/5 in
+both, as predicted. The committed one-mode scores are **not** mode-conditional,
+and `tx_empty`'s T3 remains the only known mode-conditional row.
+
+**The mode comparison has a confound, and it is large.** The run loop stops at
+closure, so the modes do not drive the same stimulus: `steer=0` drives **2.1× to
+12.0×** more transactions over five seeds. A mutant needing a rare event is then
+more likely to be caught under `steer=0` for volume alone. The control is
+`+maxtx` — run `steer=0` truncated to `steer=1`'s own transaction count —
+adjudicated by **which check failed**, since the truncated arm can never reach
+closure and a PASS/FAIL score would mark every row detected. G2 is the positive
+control on that classifier.
+
+**Applied where the movement was observed, the 2026-10-21 result survives.** On
+**both** seeds where steering escaped T3, pure random still detects it within
+steer=1's own budget, caught by *post-push tx_empty agrees with occupancy*.
+Volume does not explain the escapes. Not claimed: that the whole aggregate gap
+is the coverage model — at equal budget pure random scores 3/4 rather than 4/4,
+so the budget alone can cost a detection on a seed where steering did not
+escape. The per-seed reading is load-bearing; the aggregate is not.
+
+**M7 has never run.** Its sed carries one backslash too many and emits
+`wire tx_full = (tx_cnt >= 4\x27d7);`, which is not Verilog; the runner scores
+`COMPILE_ERROR` as `DETECT`. The row has read "predicted DETECT, got DETECT (as
+predicted)" since 2026-10-12 with a stated reason naming a check it never
+reached. Injected correctly it **is** detected 5/5 in both modes by exactly that
+check, and it escapes the pre-repair bench 3/3 — so both halves of the
+2026-10-12 claim are **true and were never evidenced by anything committed**.
+That is the stable failure mode: a wrong claim gets corrected the next time
+someone looks; a right claim with absent evidence survives every review.
+
+**M4's stated reason is false.** It is recorded as "caught by the coverage
+criterion, not by any data check"; three data checks fail first. Consequence:
+**no mutant in this suite is detected by the coverage criterion alone**, so the
+bench's decision to make closure a pass criterion rather than a report line
+currently has no mutation evidence behind it, and has been cited as though it
+had.
+
+**The structural repair (G3).** The old runner refuses a sed that matched
+*nothing* — half the guard. The other half is a sed that matched and emitted
+something that is not the language. The complete guard is **the file must
+change AND the result must still compile**, and a compile error is an
+*injection failure*, never a detection.
+
+**Checklist movement.** Phase 4/6: no content box closes — the mode question was
+an audit of existing rows, not new coverage. The Phase 6 DUT-signal-census entry
+is **annotated in place** with the M7 finding rather than rewritten. The
+capstone remainder (b) SVA protocol checkers and (c) `PayloadAdmissibility
+Coverage` are untouched for a fifth session; both still need cocotb. Thirteen
+committed mutation reports become fifteen, and the two new ones are the first to
+carry an **equal-budget control arm**.
