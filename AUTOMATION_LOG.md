@@ -9747,3 +9747,227 @@ transiently through a `GIT_ASKPASS` helper and never written to
 **Commits this run:** 3 (the `tx_empty` mutation suite with its report;
 today's notes; the progress.md session note). This AUTOMATION_LOG.md entry
 makes **4**. Each was pushed immediately after commit.
+
+---
+
+## 2026-10-22 — No mutant moves between modes, and two committed claims had no evidence behind them
+
+**Ranked-first item worked:** *do the other coverage-steered bins suppress
+detection too?* — re-run every mutant in `phase6_crv_uart` under `steer=0` as
+well as `steer=1`, because all twelve committed reports were produced in **one
+mode** and have been read as statements about the suite. The item named two
+suites; `phase6_uvm_crv_uart` still needs cocotb and was **not** run, which is
+stated rather than glossed.
+
+### 1. The answer is no
+
+| mutant | A `steer=0` | B `steer=1` | E equal-budget |
+|---|---|---|---|
+| M1 TX parity polarity swapped | 5/5 | 5/5 | 5/5 |
+| M2 RX data bit inverted | 5/5 | 5/5 | 5/5 |
+| M3 stop_bits ignored by TX | 5/5 | 5/5 | 5/5 |
+| M4 TX FIFO count never increments | 5/5 | 5/5 | 5/5 |
+| M5 BAUD_DIV ignored | 0/5 | 0/5 | 0/5 |
+| M6 STATUS read no longer clears | 0/5 | 0/5 | 0/5 |
+| M7 tx_full one entry early | 5/5 | 5/5 | 5/5 |
+
+**Nothing moves.** The committed one-mode scores are not mode-conditional, and
+`tx_empty`'s T3 remains the only known mode-conditional row. That is the item
+answered, and it is the least interesting of today's three results.
+
+### 2. The mode comparison has a confound, and it is large
+
+The run loop is `while (total_tx < max_tx && bins_hit() < N_BINS && errors ==
+0)` — it stops **at closure**, and steering exists to reach closure sooner. So
+the modes do not drive the same stimulus: `steer=0` drives **2.1× (seed 5) to
+12.0× (seed 1)** more transactions before stopping. A mutant needing a rare
+event is more likely to be caught under `steer=0` **for volume alone**, with
+nothing implied about the coverage model. Two explanations, one observation,
+and the 2026-10-21 experiment could not separate them.
+
+**The control is `+maxtx`**: run `steer=0` truncated to `steer=1`'s own
+transaction count. That arm can never reach closure, so a PASS/FAIL score
+would mark **every** row detected including unmutated RTL; every run is
+classified by **which check failed** (`PASS` / `CLOSURE_ONLY` / `DATA` /
+`DIED`), with G2 as the positive control requiring unmutated truncated RTL to
+come out `CLOSURE_ONLY`.
+
+### 3. Applied where the movement was, 2026-10-21 SURVIVES its control
+
+| seed | budget | A `steer=0` | B `steer=1` | E equal-budget |
+|---|---|---|---|---|
+| 1 | 54 | DATA | **PASS** | **DATA** |
+| 3 | 49 | DATA | DATA | DATA |
+| 5 | 53 | DATA | **PASS** | **DATA** |
+| 7 | 52 | DATA | DATA | CLOSURE_ONLY |
+
+On **both** seeds where steering escaped, pure random still detects T3 within
+steer=1's own budget, caught by *post-push tx_empty agrees with occupancy*.
+**Volume does not explain the escapes**, and 2026-10-21's mechanism — `cov_txq`
+has no bin for occupancy 1, so closure is free to walk away from the
+`burst_len = 1` draws T3 needs — is the surviving explanation.
+
+**Not claimed:** that the aggregate gap is entirely the coverage model. At
+equal budget pure random scores **3/4**, not 4/4; seed 7 shows the budget alone
+can cost a detection on a seed where steering did not escape. The per-seed
+reading is load-bearing and the aggregate is not. Running a control that could
+have falsified yesterday's result and finding that it does not is worth more
+than the original measurement.
+
+### 4. M7 HAS NEVER RUN
+
+`run_mutation_tests.sh` injects it with `.../4\\x27d7);/` — one backslash too
+many. Sed reads `\x27` in a replacement as a hex escape and emits `'`; it reads
+`\\x27` as an escaped backslash and emits `wire tx_full = (tx_cnt >= 4\x27d7);`,
+a syntax error. And that runner scores `COMPILE_ERROR` as `DETECT`.
+
+So the M7 row has read **"predicted DETECT, got DETECT (as predicted)"** in
+every committed report since 2026-10-12, with a stated reason naming a specific
+check — *"the predicted-occupancy check, which names the occupancy"* — that the
+mutant never reached. `git log -S` dates the malformed sed to `0a6c9bb`, **the
+commit that introduced the row**, so it has never worked.
+
+Injected correctly today: M7 is detected **5/5 in both modes** by exactly that
+check, and it escapes the **pre-repair** bench (`0a6c9bb~1`) **3/3**. So both
+halves of the 2026-10-12 claim are **true**, and **neither was ever produced by
+anything in the repository**.
+
+That is the failure mode worth naming. A wrong claim gets corrected the next
+time someone looks. **A right claim with absent evidence is stable** — every
+review finds the verdict it expected and the reason it expected, and the two
+were never connected.
+
+**The structural repair (G3).** The old runner already refuses a sed that
+matched **nothing**, with a comment saying such a row "would otherwise have
+scored as an escape against UNMODIFIED RTL". That is half the guard. The other
+half is a sed that matched and emitted something that is not the language, and
+scoring `COMPILE_ERROR` as `DETECT` turns that into a reported **success**. The
+complete guard is **the file must change AND the result must still compile**;
+a compile error is an injection failure, never a detection. This is 2026-10-20's
+*naming is not invoking*, one level down: the mutant was named in a table, the
+table was believed, and nothing asked whether it had ever been a program.
+
+### 5. M4's stated reason is false
+
+Committed: M4 is "caught by the coverage criterion, **not by any data check**".
+Classified by first failing check, three data checks fire first — post-push
+`tx_empty`, post-push `tx_full`, the burst watchdog — and closure fails too but
+is not the catching mechanism.
+
+M4 was this repository's only worked example of a coverage-caught mutant and
+the justification for "coverage closure is a PASS CRITERION, not a report
+line". **No mutant in this suite is detected by the coverage criterion alone.**
+That does not make the design decision wrong; it makes it **unevidenced**, and
+it has been cited as though it were evidenced.
+
+Both of today's defects are the same shape as §4: a claim about **which check
+does the work**, recorded beside a verdict that did not depend on it. 2026-10-21
+built per-check adjudication for exactly this reason in the `tx_empty` runner;
+the older runner never got it, and both defects are in rows that predate it.
+
+### 6. Environment and automation health
+
+`tools/setup_iverilog.sh` worked, sourced **without a pipe** (2026-09-17
+gotcha). Icarus 10.3. The 180 s per-call limit was handled by running the long
+sweep under `nohup` and polling, which is new this session and worked cleanly.
+Every commit pushed immediately after commit and verified against the GitHub
+API. No live web search used; today's subject is this repository's own
+committed suites measured against themselves. `run_mutation_tests.sh` is left
+**unedited** so its twelve committed reports stay comparable — the repairs live
+in a second runner.
+
+**Not yet covered (candidates for future runs):**
+
+- **AUDIT EVERY RUNNER THAT TREATS `COMPILE_ERROR` AS A DETECTION** — created
+  today, **ranked first**, and it is the generalisation of §4 rather than a
+  repeat of it. Four files mention `COMPILE_ERROR`:
+  `phase6_crv_uart/run_mutation_tests.sh` (**confirmed defective today**),
+  `phase6_crv_uart/run_tx_empty_mutation_tests.sh` (returns `COMPILE_ERROR||`
+  and does **not** obviously score it as a hit — unchecked),
+  `phase1_mutation/run_mutation_tests.py` (reports it as its own verdict class
+  — may already be correct, unchecked), and today's bimodal runner (guarded by
+  G3). **None of the three was audited today and none should be assumed
+  clean.** The work is one question per runner — does a mutant that fails to
+  compile score as detected — plus the G3 repair where the answer is yes.
+  Cheapest entry: `grep -rn "COMPILE_ERROR" examples/ tools/`.
+- **DECIDE WHAT HAPPENS TO `run_mutation_tests.sh`** — created today, **ranked
+  second**. It is left unedited so the committed reports stay comparable, but
+  it now has a known-false M7 row and a known-false M4 reason, and it is the
+  script a reader reaches for first. Repair in place and re-run all twelve
+  reports, or retire it in favour of the bimodal runner and say so in the
+  reports. **A decision, not a build**, which is why it is listed rather than
+  taken.
+- **FIND OR BUILD A MUTANT THAT ONLY CLOSURE CATCHES** — created today,
+  **ranked third**. §5 leaves the bench's closure-as-pass-criterion decision
+  without a single supporting instance. Either one exists and should be
+  written (a mutant that makes a bin unreachable while every data check still
+  passes — M5's baud-divisor family is the obvious place, since loopback is
+  structurally blind to it), or none does and the decision should be recorded
+  as a judgement rather than as an evidenced choice.
+- **RE-RUN THE EQUAL-BUDGET CONTROL ON `phase6_uvm_crv_uart`** — the half of
+  today's item that cocotb blocks. Listed so today is not read as having
+  covered both suites.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) SVA protocol checkers bound
+  into the UVM environment, (c) `PayloadAdmissibilityCoverage` wired into the
+  live `UartCoverage` collector. Untouched for a **fifth** session; both need
+  cocotb.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, sixth session. Two suites gate; four have never been
+  tested this way. A false SKIP is quiet and permanent, and today supplies its
+  sibling: a false DETECT is quiet and permanent too.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, membership
+  unchanged; all need cocotb or sby.
+- **THE OTHER `tx_empty` PREDICTION, IN `phase4_ral`** — carried from
+  2026-10-21, still blocked on cocotb.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; the weakest exposure
+  argument in the census and never tested. **Still the cheapest remaining pure
+  content item.**
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13, and today raises it again: M4's and M7's why-strings are role
+  claims that no census row checks.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row. Today supplies a **fifth** worked reference
+  for a non-binary outcome axis: `PASS` / `CLOSURE_ONLY` / `DATA` / `DIED`.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, fifth session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** — carried.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried, twelve
+  sessions old, and today **changes its content**: M4's own terms are now known
+  not to be the coverage criterion.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; today adds seed 9 to
+  the measured set and still has no stated expectation with a spread.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, **fifth**
+  consecutive session.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, plus
+  `phase6_uvm_crv_uart`.
+- **A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES
+  TRANSCRIPTS** — carried from 10-13.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, tenth
+  session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **thirteenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; the three-valued outcome axis on
+  `phase6_crv_uart`'s crosses (09-26); audit every remaining runner for the
+  09-27 pattern; per-property coverage of the Phase 4 UVM environment (09-23);
+  a less greedy steering policy (09-24) — **still promoted, and today's control
+  strengthens the case by removing volume as the explanation**; widen the
+  coverage model (09-24) — **likewise, since `cov_txq` having no bin for
+  occupancy 1 is now the surviving cause**; two transmitters at once (09-25);
+  `abc pdr` as a second engine (09-23); mutants not yet attempted (interrupt
+  enable combinations, reset asserted mid-frame); a property needing a
+  strengthening invariant; the SVA sequence layer (open since 09-20); code
+  coverage measurement (Icarus has none, open since 09-18); Phase 6 lint,
+  regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 5 (the bimodal runner with its report; the equal-budget
+control with its report; today's notes; the notes amendment dating the M7 bug
+and reproducing both halves of the claim; the progress.md annotation and
+session note). This AUTOMATION_LOG.md entry makes **6**. Each was pushed
+immediately after commit and verified against the GitHub API.
