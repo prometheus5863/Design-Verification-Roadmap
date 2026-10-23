@@ -459,6 +459,22 @@ measured rather than quietly dropped.
       and is detected by the current one 5/5 in both modes. The claim
       stands; its evidence was not in the repository. See
       `examples/phase6_crv_uart/run_mutation_tests_bimodal.sh` (G3).
+      **Annotated again 2026-10-23.** The 2026-10-22 annotation is correct
+      and its scope was too narrow. `run_mutation_tests.sh` is not the only
+      runner that mishandles a mutant which fails to compile -- every runner
+      in the repository does, in one of two ways, and the audit that
+      establishes it is
+      `examples/phase6_compile_error_audit/audit_compile_error_scoring.py`.
+      Two questions were asked of each of the four runners that mention
+      `COMPILE_ERROR`, by injecting a mutant whose edit applies and whose
+      product is not Verilog: does the row score as DETECTED, and does the
+      runner's exit status reflect it. Pre-repair, Q1 split them (A and
+      `phase1_mutation/run_mutation_tests.py` scored DETECT; the tx_empty
+      and bimodal runners refused) and **Q2 was unanimous -- not one of the
+      four exited non-zero**. The bimodal runner's G3, cited just above as
+      the fix, refused to score it and still reported the run green. Three
+      runners repaired in `c178222`; `run_mutation_tests.sh` is left
+      unedited pending the standing decision about its twelve reports.
 - [ ] Surrounding flow overview (lint, regression infra, coverage merge,
       waveform debug, bug triage)
 - [ ] CDC verification basics
@@ -2537,3 +2553,77 @@ capstone remainder (b) SVA protocol checkers and (c) `PayloadAdmissibility
 Coverage` are untouched for a fifth session; both still need cocotb. Thirteen
 committed mutation reports become fifteen, and the two new ones are the first to
 carry an **equal-budget control arm**.
+
+### Session note — 2026-10-23: every runner in the repository passes a mutant that never compiled, and two of them pass it silently
+
+The 2026-10-22 ranked-first item asked whether the M7 fault generalises. It
+does, and the generalisation is larger than the item's own framing.
+
+**Two questions, not one.** The item asked one question per runner — *does a
+mutant that fails to compile score as detected?* Asking only that would have
+cleared two of the four runners. The second question is *does the runner's own
+exit status reflect that anything went wrong?*, and it is the one that matters
+to a regression driver, which reads exit codes and not tables.
+
+| runner | Q1 scores as | Q2 exits non-zero | verdict |
+|---|---|---|---|
+| `phase6_crv_uart/run_mutation_tests.sh` | DETECT | no | false DETECT |
+| `phase6_crv_uart/run_tx_empty_mutation_tests.sh` | COMPILE_ERROR | no | **false PASS** |
+| `phase1_mutation/run_mutation_tests.py` | DETECT | no | false DETECT |
+| `phase6_crv_uart/run_mutation_tests_bimodal.sh` | refused by G3 | no | **false PASS** |
+
+**Q1 splits them; Q2 was unanimous.** The tx_empty runner names
+`COMPILE_ERROR` in its matrix and never folds it into a detection count —
+that half was always honest — and then prints `RESULT: PASS  (all controls
+green)` and exits 0, because `row` never calls `note_fail`. Its G1 *baseline*
+arm does refuse a compile error; only the mutant arm did not. An entire
+mutation suite can fail to build and the regression stays green.
+
+**The 2026-10-22 guess about the Python runner was wrong, and the way it was
+wrong is the lesson.** That session recorded it as "may already be correct ...
+reports it as its own verdict class". It does report the class — in the printed
+`verdict=` field — and then collapses it one line later with
+`got = 'ESCAPE' if r['verdict'] == 'PASS' else 'DETECT'`, with the SUMMARY
+tally using the same test. Measured with an injected probe: `6 of 6 detected,
+6/6 as predicted`, exit 0. **Naming a verdict class is not scoring it** —
+2026-10-20's *naming is not invoking*, one level further down, and the guess
+was built on exactly the kind of evidence (the source looks right) that the
+audit exists to replace.
+
+**The fix shipped on 2026-10-22 fixed Q1 and not Q2.** The bimodal runner's
+G3 refuses to score a non-compiling mutant, exactly as claimed, increments
+`BADINJ`, prints it as "injections that failed" — and then never consults it,
+because the script's last statement is `rm -rf "$WORK"`. The session that
+discovered the fault class built a runner that still reports it as a green run.
+
+**Repaired** (`c178222`): the Python runner folds the row into its existing
+sed-matched-nothing class, so the two injection faults are one class — the
+file changed and the change was never a program; the tx_empty runner calls
+`note_fail` per mode; the bimodal runner exits 1 on `BADINJ != 0`.
+`run_mutation_tests.sh` is **left unedited**, since 2026-10-22 framed its
+disposition as a decision about twelve committed reports rather than a build.
+Verified by re-running the same audit against the repaired tree: A still
+defective, B/C/D clean, with the negative control confirming the repairs are
+not a blanket refusal.
+
+**Three defects in this session's own work**, all found by reading output
+rather than by any control:
+
+1. The runner-D reader first *grepped* for the remembered phrase "must still
+   compile" and reported the guard absent. The guard is at line 258; the
+   wording is different. A reader keyed to a sentence rather than to a
+   mechanism — the standing **resolve-on-spelling** item, committed inside the
+   audit written to catch readers that answer a weaker question than they were
+   asked. That row is now run instead of read.
+2. The closing paragraph was prose asserting "Q2 IS UNANIMOUS ... NOT ONE of
+   the four exits non-zero" — true when written, false one commit later once
+   the repairs landed. 2026-10-21's rule was *derive any number in an
+   annotation from the computation*; what got through was a whole sentence, so
+   the rule now reads: **any claim a report makes about its own results is
+   derived from them.** Third consecutive session in which a report asserted
+   something its data did not say.
+3. The runner-B reader took the first line beginning `T3`, which after the
+   repair is a diagnostic carrying no verdict, and declared its own
+   expectation string missing. Both the B and C readers are now dual-state and
+   print which state of the runner they found, so the audit survives its own
+   success.

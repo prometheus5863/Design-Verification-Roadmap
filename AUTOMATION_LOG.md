@@ -9971,3 +9971,238 @@ control with its report; today's notes; the notes amendment dating the M7 bug
 and reproducing both halves of the claim; the progress.md annotation and
 session note). This AUTOMATION_LOG.md entry makes **6**. Each was pushed
 immediately after commit and verified against the GitHub API.
+
+## 2026-10-23 — Every runner passes a mutant that never compiled, and two of them pass it silently
+
+**Ranked-first item worked:** *audit every runner that treats `COMPILE_ERROR`
+as a detection* — created 2026-10-22 as the generalisation of the M7 finding.
+It is discharged, three runners are repaired, and the generalisation is larger
+than the item's own framing.
+
+### 1. The item asked one question; the exposure needed two
+
+The item's work was stated as "one question per runner — does a mutant that
+fails to compile score as detected — plus the G3 repair where the answer is
+yes." **Asking only that would have cleared two of the four runners.** The
+second question is *does the runner's own exit status reflect that anything
+went wrong?*, which is the question a regression driver asks, since it reads
+exit codes and not tables.
+
+| runner | Q1 scores as | Q2 exits non-zero | verdict |
+|---|---|---|---|
+| A `phase6_crv_uart/run_mutation_tests.sh` | DETECT | no | false DETECT |
+| B `phase6_crv_uart/run_tx_empty_mutation_tests.sh` | COMPILE_ERROR | no | **false PASS** |
+| C `phase1_mutation/run_mutation_tests.py` | DETECT | no | false DETECT |
+| D `phase6_crv_uart/run_mutation_tests_bimodal.sh` | refused by G3 | no | **false PASS** |
+
+**Q1 splits them. Q2 was unanimous.** Not one of the four exited non-zero.
+An entire mutation suite can fail to build and every regression driver that
+reads exit codes still sees green. The item's own question would have found
+two of the four faults — **narrower than the exposure, which is the same shape
+as the fault it was asking about.**
+
+### 2. B's fault is a different shape, and that is why it survived
+
+`run_matrix` reports `COMPILE_ERROR` honestly in the matrix and never folds it
+into a detection count — that half was always right. Then `row` never calls
+`note_fail`, so the script prints `RESULT: PASS  (all controls green)` and
+exits 0. Its **G1 baseline arm does refuse a compile error** (it requires the
+literal string `0/4`); only the mutant arm did not. One runner, two arms, one
+guarded.
+
+### 3. THE 2026-10-22 GUESS ABOUT C WAS WRONG, AND HOW IT WAS WRONG IS THE POINT
+
+Recorded as "may already be correct ... reports it as its own verdict class".
+It does report the class — in the printed `verdict=` field — and then collapses
+it one line later:
+
+```
+got = 'ESCAPE' if r['verdict'] == 'PASS' else 'DETECT'
+```
+
+with the `SUMMARY` tally using the same test. Measured with an injected probe:
+`verdict=COMPILE_ERROR`, then `-> DETECT, as predicted`, then
+`SUMMARY: 6 mutants scored, 6 detected, 6/6 verdicts as predicted`, exit 0.
+
+**Naming a verdict class is not scoring it.** 2026-10-20's *naming is not
+invoking*, one level further down — and the guess rested on exactly the kind of
+evidence the audit exists to replace: the source looked right.
+
+### 4. THE 2026-10-22 REPAIR FIXED Q1 AND NOT Q2
+
+D's G3 refuses to score a non-compiling mutant, exactly as claimed, increments
+`BADINJ`, prints it as "injections that failed" — and never consults it again,
+because the script's last statement is `rm -rf "$WORK"`. **The session that
+discovered this fault class built a runner that still reports it as a green
+run.** Not a wrong guard; a guard whose verdict went nowhere.
+
+### 5. Repairs, and what was deliberately not repaired
+
+C folds the row into its existing sed-matched-nothing class, so the two
+injection faults become **one class** — which is what they always were: the
+file changed and the change was never a program. B calls `note_fail` per mode.
+D exits 1 on `BADINJ != 0` and now prints an explicit `RESULT: PASS` when every
+injection compiled.
+
+**A is left unedited.** 2026-10-22 framed its disposition as a decision about
+twelve committed reports, not a build. Its row is the measurement that decision
+has been waiting for.
+
+### 6. Controls, and the probe is the historical defect
+
+**A1** the probe changes the file *and* fails to compile, asserted before any
+runner verdict is read (iverilog rc=2, syntax error at line 103) — without it a
+silently-compiling probe would have made every runner look clean. **A2**
+negative control: every runner keeps its compiling rows (B's T1/T2/T4 at 4/4 in
+both modes, C's five real mutants, D's six non-probe rows), so "defective" is
+not the audit breaking the runner. **A3** every expected string declared in the
+file *before* the run and asserted, so a stale reader cannot be mistaken for a
+clean runner.
+
+Where a runner injects by sed, the probe emits the literal text `4\x27d7` — the
+**exact malformed escape of the real M7 bug**, not an invented substitute. No
+committed runner was edited to run the audit: A needed no probe at all, B and D
+were copied and the copies patched, C was imported and its mutant list extended
+in memory.
+
+**Verification of the repairs** is the same audit re-run against the repaired
+tree: A still defective, B/C/D clean. Both reports are committed; the
+pre-repair one is reproducible at `git checkout 07cd52f`.
+
+### 7. Three defects in this session's own work, none caught by a control
+
+1. **RESOLVE-ON-SPELLING, inside the audit written to catch weak readers.**
+   The runner-D reader first *grepped* for the remembered phrase "must still
+   compile" and reported the guard **absent**. The guard is at line 258; the
+   script words it differently. A reader keyed to a sentence rather than to a
+   mechanism. Running total **fourteen** across both repositories. That row is
+   now run instead of read, which is also how §4 was found.
+2. **A COMMITTED NARRATIVE THAT THE DATA NO LONGER SAID.** The closing block
+   was prose asserting "Q2 IS UNANIMOUS ... NOT ONE of the four exits
+   non-zero" — true when written, **false one commit later** once the repairs
+   landed. 2026-10-21's prescription was *derive any number in a title or
+   annotation from the computation*; what got through was a **whole sentence**,
+   which that wording does not cover. Generalised: **any claim a report makes
+   about its own results is derived from them.** Every sentence in that block
+   is now computed, including which runners a one-question audit would have
+   cleared. Third consecutive session in which a report asserted something its
+   data did not say.
+3. **A POSITIONAL READER FINDING THE WRONG LINE OF THE RIGHT NAME.** The
+   runner-B reader took the first line beginning `T3`, which after the repair
+   is a per-mode diagnostic carrying no verdict, and declared its own expected
+   string missing. Keyed to the verdict cell instead. B's and C's readers are
+   now explicitly **dual-state** and print which state of the runner they
+   found, so the audit does not go stale the moment it succeeds.
+
+### 8. Environment and automation health
+
+`tools/setup_iverilog.sh` worked, sourced **without a pipe**. Icarus 10.3. A
+UART compile-and-run is ~0.2 s, so the 180 s call limit was handled by `nohup`
+plus polling for the three full audit runs. **`pgrep -f` is unusable in this
+VM** — the agent proxy puts a base64 copy of the running command into
+`HTTP_PROXY`, so `pgrep -f <anything>` matches its own wrapper and always
+reports RUNNING; completion was read from the report file instead. **New
+environment fault, and it blocks the documented working pattern:** the device
+VM's `/sessions` filesystem is **100 % full** (9.3 G of 9.8 G, ~100 stale
+session directories owned by `nobody`, unreadable and undeletable from here),
+so `git clone` into `$HOME/work` fails with *No space left on device*. Cloned
+into `/tmp` instead — a separate filesystem (`/dev/sda1`, 4.4 G free) — which
+works. Every commit pushed immediately and verified against the GitHub API. No
+live web search used; today's subject is this repository's own runners measured
+against themselves.
+
+**Not yet covered (candidates for future runs):**
+
+- **DECIDE WHAT HAPPENS TO `run_mutation_tests.sh`** — carried from
+  2026-10-22, now **ranked first**, and today removes its last excuse. It was
+  ranked second yesterday on the grounds that the generalisation came first;
+  the generalisation is done, three runners are repaired, and A is the only
+  one left defective on **both** questions. It has a known-false M7 row, a
+  known-false M4 reason, and it is the script a reader reaches for first.
+  Repair in place and re-run all twelve reports, or retire it in favour of the
+  bimodal runner and say so in the reports. **Still a decision, not a build** —
+  but it is now the only thing standing between the repository and no false
+  DETECT anywhere.
+- **GIVE THE AUDIT A COSMETIC-EDIT POSITIVE CONTROL** — created today,
+  **ranked second**. A1 proves the probe does not compile; nothing proves the
+  audit would stay quiet about a mutant that compiles and is *neutral*. The
+  existing A2 shows the other rows still score, which is weaker: it says the
+  runner still works, not that the audit does not cry defect on a clean
+  injection. Cheapest entry: a fourth arm injecting a comment-only edit and
+  requiring every runner to come out clean on both questions. This merges with
+  the standing **cosmetic-edit positive control in every runner that compares
+  transcripts** item (10-13), which this audit now gives a worked reference for.
+- **AUDIT WHAT ELSE A RUNNER'S VERDICT NEVER REACHES** — created today,
+  **ranked third**, and it is the generalisation of §4 as §4 was the
+  generalisation of M7. D's `BADINJ` was computed, printed and dropped. The
+  question is not about compile errors: it is **which counters in which runner
+  are printed in a summary and never consulted by an exit path**. Cheapest
+  entry: for each runner, list every variable that appears in a summary `echo`
+  and check whether it appears in any `exit` condition. `fail_count`,
+  `SURPRISES`, `MOVERS`, `notrun`, `BADINJ` are the known population.
+- **RE-RUN THE EQUAL-BUDGET CONTROL ON `phase6_uvm_crv_uart`** — carried from
+  2026-10-22, still blocked on cocotb.
+- **FIND OR BUILD A MUTANT THAT ONLY CLOSURE CATCHES** — carried from
+  2026-10-22, untouched. Still the cheapest way to put an instance under the
+  bench's closure-as-pass-criterion decision, which remains unevidenced after
+  M4's stated reason was found false.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; **still the cheapest
+  remaining pure content item**.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) SVA protocol checkers bound
+  into the UVM environment, (c) `PayloadAdmissibilityCoverage` wired into the
+  live `UartCoverage` collector. **Sixth** session untouched; both need cocotb.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, **seventh** session. Two suites gate, four have
+  never been tested this way. Today supplies a third sibling: a false SKIP is
+  quiet and permanent, a false DETECT is quiet and permanent, and a **false
+  PASS from a dropped counter** is quieter than both.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried; all need
+  cocotb or sby.
+- **THE OTHER `tx_empty` PREDICTION, IN `phase4_ral`** — carried, blocked on
+  cocotb.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row; today supplies a **sixth** worked reference
+  for a non-binary outcome axis (`DETECT` / `refused` / `not scored`).
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, **sixth** session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried, and today raises it: the same failure mode (a committed paragraph
+  the data no longer supports) was found in this session's own report.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  thirteen sessions old.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; still no stated
+  expectation with a spread.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, **sixth**
+  consecutive session, and today is the strongest case it has had: three of the
+  four runners now exit non-zero on a failed injection, which only means
+  anything if something runs them.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`, plus
+  `phase6_uvm_crv_uart`.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, eleventh
+  session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **fourteenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; the three-valued outcome axis on
+  `phase6_crv_uart`'s crosses (09-26); audit every remaining runner for the
+  09-27 pattern; per-property coverage of the Phase 4 UVM environment (09-23);
+  a less greedy steering policy (09-24) — still promoted; widen the coverage
+  model (09-24) — likewise; two transmitters at once (09-25); `abc pdr` as a
+  second engine (09-23); mutants not yet attempted (interrupt enable
+  combinations, reset asserted mid-frame); a property needing a strengthening
+  invariant; the SVA sequence layer (open since 09-20); code coverage
+  measurement (Icarus has none, open since 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 (the audit module with its pre-repair report; the G3
+repairs with the post-repair report; the progress.md annotation and session
+note). This AUTOMATION_LOG.md entry makes **4**. Each was pushed immediately
+after commit and verified against the GitHub API.
