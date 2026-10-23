@@ -1,0 +1,185 @@
+==========================================================================
+AUDIT -- does a mutant that FAILS TO COMPILE score as DETECTED?
+  the 2026-10-22 ranked-first item: generalise the M7 finding
+  date: 2026-10-23
+==========================================================================
+
+A1  the probe changes the file AND does not compile
+    (asserted BEFORE any runner verdict is read)
+      anchor occurrences  : 1 (1 required)
+      probe text          : wire tx_full  = (tx_cnt >= 4\x27d7);
+      file changed        : True (True required)
+      iverilog returncode : 2 (non-zero required)
+      first diagnostic    : /sessions/rcw-013gju9dcdx2nbsjrszraxk3/tmp/ce_a1.8cwjw2ot/probe.v:103: syntax error
+      OK -- it passes every existing no-op guard and reaches the
+      scorer, which is exactly the path under audit.
+
+--------------------------------------------------------------------------
+RUNNER A  examples/phase6_crv_uart/run_mutation_tests.sh
+--------------------------------------------------------------------------
+  Probe: NONE NEEDED.  Its committed M7 sed emits 4\x27d7, so the defect
+  reproduces live from the unmodified repository.  2026-10-22
+  established this by reading the script; this establishes it by
+  running it.
+  A3 declared expectation: the M7 row reads "got DETECT".
+
+  the M7 row, as the committed runner prints it:
+      M7 tx_full asserts one entry early (tx_cnt >= 7)
+      predicted DETECT, got DETECT   (as predicted)
+  summary: detected=5  as-predicted=7/7  surprises=0  exit=0
+
+  Q1 non-compiling mutant scores as DETECTED?  YES -- DEFECTIVE
+  Q2 exit status reflects it?                  NO -- exits 0
+  A2 negative control: 5 rows detected in all (>=2 required,
+     so the compiling mutants were not taken down with the probe)
+
+--------------------------------------------------------------------------
+RUNNER B  examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh
+--------------------------------------------------------------------------
+  Probe: T3's sed replacement is rewritten so that it still CHANGES
+  the file but emits 4\x27d7.  T1, T2 and T4 are untouched and are the
+  negative control.  The committed runner is not edited: the copy
+  sits at the same depth below the repo root so its own
+  $(dirname $0)/../.. still resolves.
+  A3 declared expectation: T3's matrix cells read COMPILE_ERROR.
+
+  the detection matrix and final verdict, as the runner prints them:
+      T1   STATUS decode: tx_empty stuck CLEAR          4/4          4/4
+      T2   STATUS decode: tx_empty stuck SET            4/4          4/4
+      T3   STATUS decode: tx_empty one entry EARLY      COMPILE_ERROR COMPILE_ERROR
+      T4   WIRE: tx_empty one entry early (engine too)  4/4          4/4
+      T1  STATUS decode: tx_empty stuck CLEAR
+      T2  STATUS decode: tx_empty stuck SET
+      T3  STATUS decode: tx_empty one entry EARLY
+      T4  WIRE: tx_empty one entry early (engine too)
+      T1 and T2 are the two directions of a stuck bit, and between them
+      T3 IS THE RESULT.  A decode asserting tx_empty one entry early is
+      T4 is deliberately uninformative about the prediction.  It is
+      RESULT: PASS  (all controls green)
+
+  Q1 non-compiling mutant scores as DETECTED?  no -- reported as COMPILE_ERROR
+  Q2 exit status reflects it?                  NO -- prints "RESULT: PASS" and exits 0
+  A2 negative control: T1/T2/T4 still scored numerically: 4/4, 4/4, 4/4
+
+      NOT the fault that was expected.  The row is reported
+      HONESTLY -- COMPILE_ERROR is printed, not folded into a
+      detection count -- and the harness still exits 0 with
+      "RESULT: PASS".  Its G1 baseline arm DOES refuse a compile
+      error (it requires the literal string 0/4); only the
+      mutant arm does not, because `row` never calls note_fail.
+      So an entire mutation suite can fail to build and the
+      regression stays green.
+
+--------------------------------------------------------------------------
+RUNNER C  examples/phase1_mutation/run_mutation_tests.py
+--------------------------------------------------------------------------
+  2026-10-22 guessed this one "may already be correct ... reports it
+  as its own verdict class".  Probe: the committed module is
+  imported and ONE mutant is appended to MUTANTS in memory, whose
+  injection succeeds (sites=1 on the real anchor) and whose product
+  is not Verilog.  Nothing on disk is touched.  M1-M5 are the
+  negative control.
+  A3 declared expectation: the probe row prints verdict=COMPILE_ERROR.
+
+  the probe row, as the committed runner scores it:
+      P1  PROBE: injection succeeds, product is not Verilog
+      sites injected: 1 (declared 1)
+      verdict=COMPILE_ERROR  errors=None   checks=None   dut $error=0
+      differs_raw=True   differs_norm=True
+      -> DETECT, as predicted
+      why: the audit probe: this row must not be allowed to score as a detection
+      SUMMARY: 6 mutants scored, 6 detected, 0 escaped, 6/6 verdicts as predicted
+
+  Q1 non-compiling mutant scores as DETECTED?  YES -- DEFECTIVE
+  Q2 exit status reflects it?                  NO -- exits 0
+  verdict class NAMED in the row?              yes
+
+      BOTH, AND THAT IS THE RESULT.  The class is named in the
+      `verdict=` field and then collapsed into a detection one
+      line later by
+          got = 'ESCAPE' if r['verdict'] == 'PASS' else 'DETECT'
+      and counted by the same test in the SUMMARY tally.  The
+      2026-10-22 guess was built on the printed field; the
+      scoring never consulted it.  NAMING A VERDICT CLASS IS NOT
+      SCORING IT -- 2026-10-20's "naming is not invoking", one
+      level further down.
+
+  A2 negative control: 6 of 6 rows detected (5 of the 6
+     are M1-M5, which compile and genuinely fail)
+
+--------------------------------------------------------------------------
+RUNNER D  examples/phase6_crv_uart/run_mutation_tests_bimodal.sh
+--------------------------------------------------------------------------
+  2026-10-22 built this one with a G3 guard and described it as "the
+  file must change AND the result must still compile".  That claim
+  had never been exercised against a mutant that fails to compile:
+  the guard was written, not run.
+
+  A DEFECT IN THIS AUDIT'S OWN FIRST READER, recorded rather than
+  quietly fixed.  The first version of this function grepped for
+  "must still compile" and reported the guard ABSENT.  The guard is
+  present at line 258; what is absent is that WORDING -- the comment
+  in the script says "A mutant that does not COMPILE has not been
+  tested by anything".  A reader keyed to a remembered sentence
+  instead of to the mechanism is this repository's standing
+  RESOLVE-ON-SPELLING item, committed inside the audit written to
+  catch readers that answer a weaker question than they were asked.
+  It is why this row is now RUN rather than read.
+
+  Probe: a copy with MUT_SEDS[0] replaced by the historical
+  malformed sed, so M1 becomes the compile-error probe and M2-M7
+  are the negative control.
+  A3 declared expectation: the M1 row reads "DOES NOT COMPILE".
+
+  what the runner printed for the probe row:
+      M1 TX parity polarity swapped (even<->odd)           *** INJECTION FAILED -- DOES NOT COMPILE (not
+      /tmp/uart_bimut.o24BG3/mut.v:103: syntax error
+      (the runner also compiles an m7_committed.v of its own at the
+       end as a demonstration; that diagnostic is not the probe's
+       and is filtered out here)
+  summary line: injections that failed = 1
+  exit code    : 0
+
+  Q1 non-compiling mutant scores as DETECTED?  no -- refused by G3, exactly as claimed
+  Q2 exit status reflects it?                  NO -- reports 1 failed injection(s) and exits 0
+  A2 negative control: 6 of the 6 non-probe mutant rows still
+     scored numerically
+
+      THE G3 REPAIR FIXED Q1 AND NOT Q2.  `BADINJ` is
+      incremented, printed in the summary as "injections that
+      failed", and then never consulted again: the script's
+      last statement is `rm -rf "$WORK"`, so it exits 0.  The
+      session that DISCOVERED this fault class built a runner
+      that still reports it as a green run.
+
+==========================================================================
+RESULT TABLE
+==========================================================================
+
+  runner   Q1 scores as             Q2 exit reflects     verdict
+  ------   ------------             ----------------     -------
+  A  sh    DETECT                   no                   DEFECTIVE (false DETECT)
+  B  sh    refused                  no                   DEFECTIVE (false PASS)
+  C  py    DETECT                   no                   DEFECTIVE (false DETECT)
+  D  sh    refused                  no                   DEFECTIVE (false PASS)
+
+  Q1 SPLITS THE RUNNERS.  A and C fold a compile error into a
+  detection count.  B names it and does not count it.  D refuses it
+  outright, exactly as its G3 claims.
+
+  Q2 IS UNANIMOUS, AND IT IS THE RESULT.  NOT ONE of the four
+  runners exits non-zero when a mutant fails to compile.  B prints
+  "RESULT: PASS".  D prints the failed-injection count and then
+  drops it.  A and C count the row as a win.  Under any regression
+  driver that reads exit codes, an entire mutation suite can fail to
+  build and the run stays green in all four.
+
+  A single-question audit would have cleared B and D and found two
+  of the four faults.  The question 2026-10-22 asked -- "does it
+  score as DETECT?" -- is narrower than the exposure, which is the
+  same shape as the fault it was asking about.
+
+CONTROLS: A1 the probe changes the file and does not compile;
+          A2 every runner kept its compiling rows;
+          A3 every declared expectation string was found.
+==========================================================================
