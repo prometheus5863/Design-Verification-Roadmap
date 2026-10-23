@@ -342,3 +342,20 @@ echo "  5/5 in both modes AND by exactly that check -- see the M7 row above."
 echo "  The conclusion was right; the evidence for it did not exist."
 echo "=============================================================="
 rm -rf "$WORK"
+
+# G3, second half (2026-10-23).  BADINJ was incremented, printed in the
+# summary as "injections that failed", and then never consulted: this
+# script's last statement was the rm above, so it exited 0.  The session
+# that discovered COMPILE_ERROR-scored-as-DETECT built a runner that
+# refused to score it (Q1, correct) and still reported the run as green
+# (Q2).  Measured on 2026-10-23 by injecting a non-compiling mutant.
+if [ "$BADINJ" -ne 0 ]; then
+    echo
+    echo "RESULT: FAIL  ($BADINJ injection(s) did not compile -- those mutants"
+    echo "              were never tested, so this run measures nothing about"
+    echo "              them.  A compile error is an injection failure, never"
+    echo "              a detection and never a pass.)"
+    exit 1
+fi
+echo
+echo "RESULT: PASS  (every injection compiled; G3 green)"

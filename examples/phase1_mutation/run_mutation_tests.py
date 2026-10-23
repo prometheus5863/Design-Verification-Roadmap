@@ -325,6 +325,28 @@ def main():
             continue
         open(DUT, 'w').write(text)
         r = read(run(DUT, work))
+        # G3 (2026-10-23).  A mutant whose edit APPLIED but whose result is
+        # not Verilog has not been tested by anything, so it is an injection
+        # failure and never a detection.  It joins the sed-matched-nothing
+        # class above rather than getting a class of its own, because the two
+        # are the same fault: the file was changed and the change was never a
+        # program.  Before this guard the row scored DETECT -- the verdict
+        # class was NAMED in the printed `verdict=` field below and then
+        # collapsed one line later by
+        #     got = 'ESCAPE' if r['verdict'] == 'PASS' else 'DETECT'
+        # with the SUMMARY tally using the same test.  Naming a verdict class
+        # is not scoring it.  Measured on 2026-10-23 with an injected probe:
+        # the row read "-> DETECT, as predicted" and the run exited 0.
+        if r['verdict'] == 'COMPILE_ERROR':
+            print('    sites injected: %d (declared %d)' % (actual, mut['sites']))
+            print('    INJECTION FAILED -- the edit applied but the result does')
+            print('    not compile, so nothing was tested.  NOT SCORED, and')
+            print('    never a detection (G3).')
+            for ln in r['out'].strip().splitlines()[:2]:
+                print('      %s' % ln.strip())
+            rows.append((mut, None, None))
+            print()
+            continue
         differs = (r['out'] != base['out'])
         differs_norm = (normalise(r['out']) != normalise(base['out']))
         got = 'ESCAPE' if r['verdict'] == 'PASS' else 'DETECT'

@@ -232,11 +232,21 @@ def audit_b():
             print('      %s' % s)
         elif s.startswith('RESULT:'):
             print('      %s' % s)
-    t3 = [l.strip() for l in out.splitlines() if re.match(r'^\s*T3\s', l)]
+    # Select the MATRIX row, not merely the first line beginning T3.  The
+    # repaired runner prints a per-mode diagnostic line that also begins T3
+    # and carries no verdict, and taking the first match read that line and
+    # reported the declared string missing -- a positional reader finding the
+    # wrong line of the right name.  Keyed to the verdict cell instead.
+    t3 = [l.strip() for l in out.splitlines()
+          if re.match(r'^\s*T3\s', l)
+          and ('COMPILE_ERROR' in l or re.search(r'\b[0-4]/4\b', l))]
     t3row = t3[0] if t3 else ''
     shown = 'COMPILE_ERROR' in t3row
     q1 = bool(re.search(r'\b[1-4]/4\b', t3row))
     passed = 'RESULT: PASS' in out
+    print('  runner state detected: %s'
+          % ('UNREPAIRED (honest matrix, green verdict)' if passed
+             else 'REPAIRED (G3 fails the run)'))
     others = re.findall(r'^T[124]\s.*?(\d/4)', '\n'.join(
         l.strip() for l in out.splitlines()), re.M)
     print()
@@ -252,7 +262,14 @@ def audit_b():
         fail('A2 runner B lost its other rows -- the probe broke the run')
     if not shown:
         fail('A3 runner B did not print COMPILE_ERROR for T3')
-    if shown and not q1:
+    if shown and not q1 and not passed:
+        print()
+        print('      REPAIRED.  run_matrix still reports COMPILE_ERROR in the')
+        print('      matrix -- that half was always honest -- and `row` now')
+        print('      calls note_fail for it, once per mode, so the script ends')
+        print('      "RESULT: FAIL" and exits 1 instead of declaring all')
+        print('      controls green.')
+    if shown and not q1 and passed:
         print()
         print('      NOT the fault that was expected.  The row is reported')
         print('      HONESTLY -- COMPILE_ERROR is printed, not folded into a')
@@ -280,7 +297,12 @@ def audit_c():
     print('  injection succeeds (sites=1 on the real anchor) and whose product')
     print('  is not Verilog.  Nothing on disk is touched.  M1-M5 are the')
     print('  negative control.')
-    print('  A3 declared expectation: the probe row prints verdict=COMPILE_ERROR.')
+    print('  A3 declared expectation, stated for BOTH states of the runner so')
+    print('  that this audit keeps working after its own repair lands: the probe')
+    print('  row prints EITHER "verdict=COMPILE_ERROR" (unrepaired, which then')
+    print('  scores it as DETECT) OR "INJECTION FAILED" (repaired, G3 refusing')
+    print('  it).  Finding neither means this reader has gone stale and the row')
+    print('  below is not evidence of anything.')
     print()
     tmp = tempfile.mkdtemp(prefix='ce_c.')
     driver = os.path.join(tmp, 'drive.py')
@@ -316,6 +338,11 @@ def audit_c():
     joined = '\n'.join(block)
     q1 = '-> DETECT' in joined
     named = 'COMPILE_ERROR' in joined
+    refused = 'INJECTION FAILED' in joined
+    print('  runner state detected: %s'
+          % ('UNREPAIRED (names the class, then scores it)' if named and q1
+             else 'REPAIRED (G3 refuses the row)' if refused
+             else 'UNRECOGNISED -- reader stale'))
     m = re.search(r'SUMMARY: (\d+) mutants scored, (\d+) detected', out)
     print()
     print('  Q1 non-compiling mutant scores as DETECTED?  %s'
@@ -345,10 +372,18 @@ def audit_c():
             fail('A2 runner C detected %s rows -- the probe broke it' % m.group(2))
     else:
         fail('A2 runner C printed no SUMMARY line')
-    if not named:
-        fail('A3 runner C did not print COMPILE_ERROR for the probe row')
+    if not (named or refused):
+        fail('A3 runner C printed neither COMPILE_ERROR nor INJECTION FAILED '
+             '-- this reader is stale')
+    if refused and not q1:
+        print()
+        print('      REPAIRED.  The row joins the sed-matched-nothing class as')
+        print('      an injection failure, is excluded from `scored`, and')
+        print('      `notrun != 0` forces a non-zero exit.  The two injection')
+        print('      faults are now one class, which is what they always were:')
+        print('      the file changed and the change was never a program.')
     print()
-    return dict(q1=q1, named=named, exit=r.returncode,
+    return dict(q1=q1, named=(named or refused), exit=r.returncode,
                 false_pass=(r.returncode == 0))
 
 
@@ -493,22 +528,74 @@ def main():
         print('  %-8s %-24s %-20s %s' % ('D  sh', '(probe failed)', '-',
                                          'UNMEASURED'))
     print()
-    print('  Q1 SPLITS THE RUNNERS.  A and C fold a compile error into a')
-    print('  detection count.  B names it and does not count it.  D refuses it')
-    print('  outright, exactly as its G3 claims.')
+    # DERIVED, NOT WRITTEN.  The first version of this block was prose
+    # asserting "Q2 IS UNANIMOUS ... NOT ONE of the four exits non-zero".
+    # That was true when it was written and false one commit later, once the
+    # repairs landed -- a committed narrative asserting something the data no
+    # longer said, which is this repository's recorded dominant failure mode
+    # and the exact thing 2026-10-21's "derive any number in an annotation
+    # from the computation" was prescribed for.  It was caught by reading the
+    # regenerated report, not by any control here.  Every sentence below is
+    # now computed from the four results.
+    res = [('A', ra), ('B', rb), ('C', rc), ('D', rd)]
+    res = [(t, d) for t, d in res if d]
+    q1_bad = [t for t, d in res if d['q1']]
+    q2_bad = [t for t, d in res if d['false_pass']]
+    clean = [t for t, d in res if not d['q1'] and not d['false_pass']]
+
+    print('  Q1 -- scores a non-compiling mutant as a detection: %s'
+          % (', '.join(q1_bad) if q1_bad else 'none of the four'))
+    print('  Q2 -- exits 0 anyway:                               %s'
+          % (', '.join(q2_bad) if q2_bad else 'none of the four'))
+    print('  clean on both:                                      %s'
+          % (', '.join(clean) if clean else 'none of the four'))
     print()
-    print('  Q2 IS UNANIMOUS, AND IT IS THE RESULT.  NOT ONE of the four')
-    print('  runners exits non-zero when a mutant fails to compile.  B prints')
-    print('  "RESULT: PASS".  D prints the failed-injection count and then')
-    print('  drops it.  A and C count the row as a win.  Under any regression')
-    print('  driver that reads exit codes, an entire mutation suite can fail to')
-    print('  build and the run stays green in all four.')
+    if len(q2_bad) == len(res):
+        print('  Q2 IS UNANIMOUS, and it is the result.  Not one of the %d'
+              % len(res))
+        print('  runners exits non-zero when a mutant fails to compile, so an')
+        print('  entire mutation suite can fail to build and every regression')
+        print('  driver that reads exit codes still sees green.')
+    elif q2_bad:
+        print('  Q2 is no longer unanimous: %s still exit%s 0.  On the'
+              % (', '.join(q2_bad), 's' if len(q2_bad) == 1 else ''))
+        print('  pre-repair run (reproducible at `git checkout 07cd52f` --')
+        print('  see the companion report dated the same day) ALL FOUR did,')
+        print('  which is what made Q2 worth asking separately from Q1.')
+
+    else:
+        print('  Q2 is clean across all %d runners.  On the pre-repair run'
+              % len(res))
+        print('  (reproducible at `git checkout 07cd52f`) all four exited 0.')
     print()
-    print('  A single-question audit would have cleared B and D and found two')
-    print('  of the four faults.  The question 2026-10-22 asked -- "does it')
-    print('  score as DETECT?" -- is narrower than the exposure, which is the')
-    print('  same shape as the fault it was asking about.')
-    print()
+    # The runners a ONE-QUESTION audit would have cleared: they refuse to
+    # score a compile error as a detection (Q1 clean) and still exit 0 (Q2
+    # defective).  Computed, because which runners those are changed when
+    # the repairs landed.
+    missed = [t for t, d in res if not d['q1'] and d['false_pass']]
+    if missed:
+        print('  AND THAT IS WHY TWO QUESTIONS.  %s refuse%s to score a compile'
+              % (', '.join(missed), '' if len(missed) > 1 else 's'))
+        print('  error as a detection and still report the run as green, so a')
+        print('  single-question audit ("does it score as DETECT?") would have')
+        print('  cleared %s.  The question 2026-10-22 asked was narrower than'
+              % ('them' if len(missed) > 1 else 'it'))
+        print('  the exposure -- the same shape as the fault it asked about.')
+        print()
+    else:
+        print('  No runner now refuses a compile error and still exits 0, which')
+        print('  is the state the two-question form was built to reach.  On the')
+        print('  pre-repair run B and D were in exactly that state and a')
+        print('  one-question audit would have cleared both.')
+        print()
+    if 'A' in q1_bad:
+        print('  Runner A is left UNREPAIRED deliberately: 2026-10-22 listed')
+        print('  what to do with it as a decision ("repair in place and re-run')
+        print('  all twelve reports, or retire it"), not a build, and editing')
+        print('  it moves twelve committed reports.  Its row above is the')
+        print('  measurement that decision has been waiting for.')
+        print()
+
     if FAILURES:
         print('CONTROLS: %d FAILED' % len(FAILURES))
         for f in FAILURES:

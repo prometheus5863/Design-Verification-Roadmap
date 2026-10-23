@@ -167,6 +167,23 @@ row () {                             # $1 id  $2 description  $3 sed expr
         DET[$id,$st]="${res%%|*}"
         FIRST[$id,$st]="$(cut -d'|' -f2 <<< "$res")"
         ESC[$id,$st]="$(cut -d'|' -f3 <<< "$res")"
+        # G3, second half (2026-10-23).  A sed that matched NOTHING is caught
+        # above.  A sed that matched and emitted something that is not Verilog
+        # was caught by nothing: run_matrix reported COMPILE_ERROR honestly in
+        # the matrix -- it was never folded into a detection count -- and then
+        # fail_count was never touched, so this script printed
+        # "RESULT: PASS  (all controls green)" and exited 0 with an entire
+        # mutation suite that had not built.  Measured on 2026-10-23.
+        # The G1 baseline arm already refuses a compile error (it requires the
+        # literal string 0/4); only the mutant arm did not.
+        if [ "${DET[$id,$st]}" = "COMPILE_ERROR" ]; then
+            echo "  $id  $desc"
+            echo "      INJECTION FAILED -- the edit applied but the result does"
+            echo "      not compile, so nothing was tested at steer=$st."
+            echo "      G3 FAILED.  A compile error is an injection failure,"
+            echo "      never a detection and never a pass."
+            note_fail
+        fi
     done
 }
 
