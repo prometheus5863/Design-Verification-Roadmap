@@ -84,6 +84,11 @@ UART_TB = os.path.join(ROOT, 'examples/phase6_crv_uart/uart_crv_cov_tb.v')
 # The literal text the real malformed sed emits: backslash, x, 2, 7.
 PROBE_TEXT = r'4\x27d7'
 
+# Runner A was repaired on 2026-10-24, which REMOVED the committed defect this
+# audit used as its probe.  Its arm is therefore dual-state like B's and C's:
+# it measures which state the runner is in by compiling what the committed M7
+# sed produces, and injects a probe only when the committed one is gone.
+
 FAILURES = []
 
 
@@ -140,55 +145,165 @@ def control_a1():
 
 
 # ---------------------------------------------------------------------------
-# Runner A -- defect is committed; no probe needed.
+# Runner A -- DUAL-STATE.  Committed defect, or injected probe if repaired.
 # ---------------------------------------------------------------------------
+def _runner_a_m7_sed():
+    """The M7 replacement expression as the committed runner holds it.
+
+    Located by its anchor text; the VERDICT about it comes from compiling what
+    it produces, not from reading it.
+    """
+    for ln in open(os.path.join(ROOT, RUNNER_A)):
+        t = ln.strip()
+        if t.startswith("'s/wire tx_full") and 'tx_cnt >=' in t:
+            return t.strip("'")
+    return None
+
+
+def _m7_state():
+    """(expr, compiles, diagnostic) -- does the committed M7 sed still produce
+    Verilog?
+
+    THIS IS WHY THIS ARM IS DUAL-STATE NOW.  Until 2026-10-24 runner A needed
+    no probe: its committed M7 sed emitted literal `4\\x27d7`, so the
+    non-compiling mutant arrived at the scorer from the unmodified
+    repository.  The 2026-10-24 repair fixed that escaping, which removes the
+    probe -- and this arm, keyed to the pre-repair state, would then have read
+    a GENUINE M7 detection as the fault and reported "DEFECTIVE" for a
+    repaired runner.  Exactly the staleness 2026-10-23 found in the B and C
+    readers, in the one arm that had no probe to make dual-state.
+    """
+    expr = _runner_a_m7_sed()
+    if expr is None:
+        return None, None, 'M7 sed row not found in the committed runner'
+    work = tempfile.mkdtemp(prefix='ce_a_state.')
+    dst = os.path.join(work, 'm7.v')
+    shutil.copyfile(UART_RTL, dst)
+    subprocess.run(['sed', '-i', expr, dst], capture_output=True, text=True)
+    changed = open(dst).read() != open(UART_RTL).read()
+    c = compile_uart(dst, work)
+    diag = (c.stdout + c.stderr).strip().splitlines()
+    shutil.rmtree(work, ignore_errors=True)
+    if not changed:
+        return expr, None, 'the M7 sed matched nothing'
+    return expr, c.returncode == 0, (diag[0] if diag else '(none)')
+
+
 def audit_a():
     rule()
     print('RUNNER A  %s' % RUNNER_A)
     rule()
-    print('  Probe: NONE NEEDED.  Its committed M7 sed emits %s, so the defect'
-          % PROBE_TEXT)
-    print('  reproduces live from the unmodified repository.  2026-10-22')
-    print('  established this by reading the script; this establishes it by')
-    print('  running it.')
-    print('  A3 declared expectation: the M7 row reads "got DETECT".')
+    expr, compiles, diag = _m7_state()
+    print('  State measured, not read: the committed M7 sed is applied to the')
+    print('  RTL and the product is COMPILED.')
+    print('      sed produces Verilog : %s' % compiles)
+    print('      first diagnostic     : %s' % diag)
     print()
-    r = subprocess.run(['bash', os.path.join(ROOT, RUNNER_A)],
-                       capture_output=True, text=True, cwd=ROOT)
+
+    if compiles is False:
+        print('  State: UNREPAIRED.  The defect reproduces live from the')
+        print('  unmodified repository; no probe is needed.')
+        print('  A3 declared expectation: the M7 row reads "got DETECT".')
+        print()
+        runner, cleanup = os.path.join(ROOT, RUNNER_A), None
+    elif compiles is True:
+        print('  State: REPAIRED (2026-10-24).  The committed M7 sed now emits')
+        print('  valid Verilog, so the historical probe is gone and this arm')
+        print('  must INJECT one, as the B arm does.  A copy of the runner has')
+        print('  its M7 replacement rewritten to emit %s -- the exact' % PROBE_TEXT)
+        print('  malformed escape of the real bug -- so what is measured is')
+        print('  still the fault that actually occurred.')
+        print('  A3 declared expectation: the M7 row reads "INJECTION FAILED"')
+        print('  and the run ends "RESULT: FAIL" with a non-zero exit.')
+        print()
+        src = open(os.path.join(ROOT, RUNNER_A)).read()
+        old = "'%s'" % expr
+        if src.count(old) != 1:
+            fail('runner A M7 anchor occurs %d times, expected 1'
+                 % src.count(old))
+            return None
+        bad = old.replace('4\\x27d7', '4\\\\x27d7')
+        if bad == old:
+            fail('runner A probe rewrite changed nothing')
+            return None
+        # Same depth below the repo root as the committed runner, so the
+        # copy's own $(dirname $0)/../.. still resolves to ROOT.  Nesting it
+        # deeper made the copy cd into a directory with no rtl/ or tools/,
+        # and it produced no rows at all -- which the A2 negative control
+        # caught as "detected=-1, the run is broken, not the scorer".
+        pdir = os.path.join(ROOT, 'examples', '_ce_probe_a')
+        os.makedirs(pdir, exist_ok=True)
+        runner = os.path.join(pdir, 'probe_a.sh')
+        open(runner, 'w').write(src.replace(old, bad, 1))
+        cleanup = os.path.join(ROOT, 'examples', '_ce_probe_a')
+    else:
+        fail('A3 runner A state could not be measured: %s' % diag)
+        return None
+
+    r = subprocess.run(['bash', runner], capture_output=True, text=True,
+                       cwd=ROOT)
     out = r.stdout + r.stderr
+    if cleanup:
+        shutil.rmtree(cleanup, ignore_errors=True)
     lines = out.splitlines()
     m7 = ''
     for i, ln in enumerate(lines):
         if ln.strip().startswith('M7 '):
             m7 = '\n'.join(lines[i:i + 2])
             break
-    print('  the M7 row, as the committed runner prints it:')
+    print('  the M7 row, as the runner prints it:')
     for ln in m7.splitlines():
         print('      %s' % ln.strip())
+    for ln in lines:
+        if ln.strip().startswith('RESULT:'):
+            print('      %s' % ln.strip())
     det = re.search(r'detected\s+:\s+(\d+)', out)
     pred = re.search(r'verdict as predicted\s+:\s+(\d+)\s*/\s*(\d+)', out)
     sur = re.search(r'surprises\s+:\s+(\d+)', out)
+    binj = re.search(r'injections that failed\s*:\s+(\d+)', out)
     ndet = int(det.group(1)) if det else -1
-    print('  summary: detected=%s  as-predicted=%s/%s  surprises=%s  exit=%d'
+    print('  summary: detected=%s  as-predicted=%s/%s  badinj=%s  '
+          'surprises=%s  exit=%d'
           % (ndet, pred.group(1) if pred else '?',
              pred.group(2) if pred else '?',
+             binj.group(1) if binj else 'n/a',
              sur.group(1) if sur else '?', r.returncode))
     q1 = 'got DETECT' in m7
+    shown = 'DOES NOT COMPILE' in m7 or 'INJECTION FAILED' in m7
     print()
     print('  Q1 non-compiling mutant scores as DETECTED?  %s'
-          % ('YES -- DEFECTIVE' if q1 else 'no'))
+          % ('YES -- DEFECTIVE' if q1
+             else 'no -- reported as an injection failure' if shown
+             else 'unclear'))
     print('  Q2 exit status reflects it?                  %s'
-          % ('NO -- exits %d' % r.returncode if r.returncode == 0 else 'yes'))
+          % ('NO -- exits %d' % r.returncode if r.returncode == 0
+             else 'yes -- exit %d' % r.returncode))
     print('  A2 negative control: %d rows detected in all (>=2 required,'
           % ndet)
     print('     so the compiling mutants were not taken down with the probe)')
     if ndet < 2:
-        fail('A2 runner A detected %d rows -- the run is broken, not the scorer'
-             % ndet)
-    if not q1:
-        fail('A3 runner A did not print "got DETECT" for M7 -- expectation stale')
+        fail('A2 runner A detected %d rows -- the run is broken, not the '
+             'scorer' % ndet)
+    if compiles is False and not q1:
+        fail('A3 runner A did not print "got DETECT" for M7 -- expectation '
+             'stale')
+    if compiles is True:
+        if q1 or not shown:
+            fail('A3 repaired runner A did not refuse the injected probe: '
+                 'the M7 row reads %r' % m7.strip()[:80])
+        if r.returncode == 0:
+            fail('A3 repaired runner A exited 0 on a failed injection')
+        if not FAILURES:
+            print()
+            print('      REPAIRED.  run_suite returns BADINJ for a compile')
+            print('      failure instead of folding it into DETECT, the row')
+            print('      prints the first two compiler diagnostics, and the')
+            print('      script exits non-zero.  Its G3 preflight arm is the')
+            print('      standing positive control for this, so the scoring')
+            print('      cannot be quietly restored.')
     print()
-    return dict(q1=q1, exit=r.returncode, false_pass=(r.returncode == 0))
+    return dict(q1=q1, shown=shown, exit=r.returncode,
+                false_pass=(r.returncode == 0 and q1))
 
 
 # ---------------------------------------------------------------------------
@@ -512,8 +627,12 @@ def main():
         b = 'no' if false_pass else 'yes'
         print('  %-8s %-24s %-20s %s' % (tag, a, b, verdict))
 
-    row('A  sh', ra['q1'], False, ra['false_pass'],
-        'DEFECTIVE (false DETECT)' if ra['q1'] else 'clean')
+    # `shown` was hard-coded False here while runner A had no probe and
+    # therefore nothing to refuse; since the 2026-10-24 repair it refuses an
+    # injected one, so the cell is read from the arm like every other row.
+    row('A  sh', ra['q1'], ra['shown'], ra['false_pass'],
+        'DEFECTIVE (false DETECT)' if ra['q1'] else
+        'DEFECTIVE (false PASS)' if ra['false_pass'] else 'clean')
     if rb:
         row('B  sh', rb['q1'], rb['shown'], rb['false_pass'],
             'DEFECTIVE (false DETECT)' if rb['q1'] else
