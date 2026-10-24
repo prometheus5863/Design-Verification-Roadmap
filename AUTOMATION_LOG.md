@@ -10206,3 +10206,197 @@ against themselves.
 repairs with the post-repair report; the progress.md annotation and session
 note). This AUTOMATION_LOG.md entry makes **4**. Each was pushed immediately
 after commit and verified against the GitHub API.
+
+---
+
+## 2026-10-24 — M7 had never been injected, and the compile error it caused was scored as its detection
+
+**Subject:** the 2026-10-23 **ranked-first** item — *decide what happens to
+`run_mutation_tests.sh`*. Decided and executed: **repaired in place**, not
+retired. It is the script a reader reaches for first, and the bimodal runner
+answers a different question (two steering modes, equal-budget control) rather
+than a superset of this one. Three commits plus this entry.
+
+### 1. Three faults, and the second is the serious one
+
+| | before | after |
+|---|---|---|
+| mutant that does not compile | scored `DETECT` | `BADINJ` — never a detection, never a pass |
+| exit status | 0 regardless | non-zero if any injection failed |
+| M7's committed sed | emitted literal `4\x27d7` | emits `4'd7` |
+| M7's verdict | **never measured** | DETECT, 3/3 seeds |
+| M4's stated reason | known false since 2026-10-22 | corrected to the measurement |
+| preflight | G1 baseline | G1 + G2 neutrality + G3 injection-failure |
+
+**M7 HAS NEVER BEEN INJECTED SINCE IT WAS ADDED ON 2026-10-12.** The sed had a
+doubled backslash inside single quotes where every other row has one, so it
+wrote eight literal characters into the Verilog; the mutant did not compile;
+the runner scored `COMPILE_ERROR` as `DETECT`. **Every "M7: predicted DETECT,
+got DETECT" this script printed for twelve days was one fault reading
+another**, and the row the 2026-10-12 DUT-signal census was written to close
+was closed by nothing. `cmp -s` — the runner's only injection guard at the
+time — could not catch it, because the file *did* change and what it changed
+into was not a program. The complete guard is both halves: the file must
+change **and** still be Verilog.
+
+Injected correctly, **M7 is detected on all three seeds**, agreeing with the
+bimodal runner's 5/5 in both modes. *The conclusion was right; the evidence
+for it did not exist.* `mutation_test_report_2026-10-12.txt` is **annotated in
+place**, numbers untouched, stating that its "detected: 5" counts a row that
+was never tested and that the honest figure for that run is 4 detected of 6
+injected with M7 not scored.
+
+### 2. The repair would have broken the audit that found it
+
+The runner-A arm of `audit_compile_error_scoring.py` **needed no probe**,
+because the defect reproduced live from the unmodified repository. Repairing
+the runner removes that probe — and the arm, keyed to the pre-repair state,
+would then have read a **genuine** M7 detection as the fault and reported
+DEFECTIVE for a clean runner, **on the very next run**. Nothing in the
+repository would have contradicted it.
+
+The arm is now **dual-state**, and it **measures** which state it is in rather
+than assuming: apply the committed M7 sed to the RTL and compile the product.
+Compiles → inject a probe into a copy (emitting the historical `4\x27d7`, so
+the fault measured is the one that actually occurred); does not compile → the
+defect is still live and no probe is needed. Each state declares its own `A3`
+expectation string *before* the run. **This is the third consecutive session
+to find a check keyed to a pre-repair state**, and runner A's was the last arm
+without a probe to make dual-state.
+
+### 3. Result
+
+`Q1` clean on all four runners, `Q2` clean on all four, **clean on both for A,
+B, C and D**. On the pre-repair run (`git checkout 07cd52f`) all four exited
+0. **No runner in this repository now scores a compile error as a detection,
+and none exits 0 after refusing one** — the state the two-question form was
+built to reach, reached.
+
+### 4. One defect in this session's own work — caught before it was committed
+
+The probe copy of runner A was first written two directories deeper than the
+committed script, so its own `$(dirname $0)/../..` resolved to a directory
+with no `rtl/` or `tools/` and it produced **no rows at all**. The `A2`
+negative control reported `detected=-1` and named it *"the run is broken, not
+the scorer"* — the sentence `A2` exists to be able to say. **This is the first
+control in this repository to catch a defect before it reached a commit**
+rather than in a committed artefact; every previous session's own defects were
+found by reading output after the fact.
+
+### 5. Environment and automation health
+
+`tools/setup_iverilog.sh` sourced **without a pipe** (Icarus 10.3). The three
+full audit runs were started with `nohup` and read from the report file, since
+each is ~100 s against the 180 s call limit and **`pgrep -f` is unusable in
+this VM** — the agent proxy puts a base64 copy of the running command into
+`HTTP_PROXY`, so `pgrep -f <anything>` matches its own wrapper. The device
+VM's `/sessions` filesystem is **still 100 % full** (9.3 G of 9.8 G, other
+sessions' directories, unreadable and undeletable from here), so the
+2026-10-23 workaround was needed again and worked unchanged: clone into
+`/tmp`. **This is now a standing environment fact rather than an incident, and
+a future run should start there rather than discover it.** Every commit pushed
+immediately after commit and verified against the GitHub API. No live web
+search used; today's subject is this repository's own runners measured against
+themselves.
+
+**Not yet covered (candidates for future runs):**
+
+- **A COSMETIC-EDIT POSITIVE CONTROL IN THE OTHER THREE RUNNERS** — carried
+  from 2026-10-23 where it was ranked second, now **ranked first**, and today
+  changes it from a proposal to a port. `G2` in runner A is the worked
+  reference: a comment-only edit must compile and must ESCAPE, asserted before
+  any mutant row is read. B, C and D have no such arm, and a runner that cried
+  detect on a neutral change would make every DETECT it prints
+  unattributable. Cheapest entry: copy runner A's `G2` block. This also
+  discharges the rest of the standing 2026-10-13 item.
+- **AUDIT WHAT ELSE A RUNNER'S VERDICT NEVER REACHES** — carried from
+  2026-10-23, **ranked second**, untouched and now the only generalisation
+  left in that family. D's `BADINJ` was computed, printed and dropped; A's was
+  added today *with* an exit path, so the question is which **other** counters
+  are printed in a summary and never consulted by an exit condition.
+  Population: `fail_count`, `SURPRISES`, `MOVERS`, `notrun`, `BADINJ`.
+  Cheapest entry: for each runner, list every variable appearing in a summary
+  `echo` and check whether it appears in any `exit` condition.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  created today, **ranked third**, and it is the obvious sweep this session
+  did not do. M7's fault was one doubled backslash. `tools/audit_mutation_
+  anchors.sh` checks that anchors MATCH; nothing checks that what a
+  replacement **emits** is still Verilog. Every sed-based mutant in every
+  runner should be applied to its DUT and compiled, once, as a standing
+  check — which is `G3`'s question asked of the committed rows instead of a
+  planted one. Cheapest entry: the `_m7_state()` function added to the audit
+  today generalises to any (runner, sed) pair.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  2026-10-22 as *find or build a mutant that only closure catches*, and today
+  commits the correction into the runner itself rather than leaving it only in
+  a report. "Coverage closure is a pass criterion, not a report line" remains
+  **unevidenced** rather than wrong. Still the cheapest way to put the bench's
+  pass-criterion decision under an instance.
+- **RE-RUN THE EQUAL-BUDGET CONTROL ON `phase6_uvm_crv_uart`** — carried from
+  2026-10-22, still blocked on cocotb.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; **still the
+  cheapest remaining pure content item**, and now the only queued item that
+  adds verification reach rather than auditing existing reach.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) SVA protocol checkers bound
+  into the UVM environment, (c) `PayloadAdmissibilityCoverage` wired into the
+  live `UartCoverage` collector. **Seventh** session untouched; both need
+  cocotb.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, **eighth** session. Two suites gate, four have
+  never been tested this way. Today supplies a fourth sibling to the family: a
+  false SKIP is quiet, a false DETECT is quiet, a false PASS from a dropped
+  counter is quieter — and **an injection that was never a program is quietest
+  of all**, since it looks exactly like a success.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried; all need
+  cocotb or sby.
+- **THE OTHER `tx_empty` PREDICTION, IN `phase4_ral`** — carried, blocked on
+  cocotb.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** — carried
+  from 10-13.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** — still
+  the worst remaining census row; today supplies a **seventh** worked
+  reference for a non-binary outcome axis (`DETECT` / `ESCAPE` / `BADINJ`).
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, **seventh** session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried, and raised again: today found a committed *report* whose headline
+  count included a row that was never tested, which is the same shape one
+  level up.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  fourteen sessions old.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; still no stated
+  expectation with a spread.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, **seventh**
+  consecutive session, and today is the strongest case yet: **all four**
+  runners now exit non-zero on a failed injection, which means precisely
+  nothing until something runs them.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_crv_uart`'s is no longer
+  `cmp -s` alone: it is `cmp -s` **plus a compile**, which is today's finding
+  in one line. `phase6_uvm_crv_uart` is the remaining one.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, twelfth
+  session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **fifteenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; the three-valued outcome axis on
+  `phase6_crv_uart`'s crosses (09-26); audit every remaining runner for the
+  09-27 pattern; per-property coverage of the Phase 4 UVM environment (09-23);
+  a less greedy steering policy (09-24) — still promoted; widen the coverage
+  model (09-24) — likewise; two transmitters at once (09-25); `abc pdr` as a
+  second engine (09-23); mutants not yet attempted (interrupt enable
+  combinations, reset asserted mid-frame); a property needing a strengthening
+  invariant; the SVA sequence layer (open since 09-20); code coverage
+  measurement (Icarus has none, open since 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 (the runner A repair with its first honest report; the
+dual-state audit arm with the all-clean report; the progress.md session note
+and the in-place annotation of the 2026-10-12 report). This AUTOMATION_LOG.md
+entry makes **4**. Each was pushed immediately after commit and verified
+against the GitHub API.
