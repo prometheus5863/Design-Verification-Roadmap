@@ -1,3 +1,30 @@
+ANNOTATED 2026-10-24 -- THE M7 ROW BELOW IS FALSE, AND THE NUMBERS ARE LEFT
+AS THEY WERE PRINTED.
+
+This report's "M7 tx_full asserts one entry early -- predicted DETECT, got
+DETECT" is not a measurement.  The runner's committed M7 sed emitted the
+literal text 4\x27d7 instead of 4'd7 -- a doubled backslash inside single
+quotes where every other row had one -- so the mutant never compiled, and the
+runner of the day scored COMPILE_ERROR as DETECT.  M7 was never injected on
+2026-10-12.  `cmp -s`, the only injection guard this runner then had, could
+not catch it because the file DID change; what changed was not Verilog.
+
+The row's CONCLUSION survives: with the escaping fixed on 2026-10-24, M7 is
+detected on all three seeds, agreeing with the bimodal runner's 5/5 in both
+modes (bimodal_mutation_report_2026-10-22.txt).  The conclusion was right;
+the evidence for it did not exist until
+mutation_test_report_2026-10-24.txt.
+
+Consequently the "detected : 5" line below counts one row that was not
+tested; the honest figure for this run is 4 detected of 6 injected, with M7
+not scored.  The detected counts for M1-M6 are unaffected.
+
+Also annotated: M4's stated reason in this report ("caught by the coverage
+criterion, not by any data check") was measured FALSE on 2026-10-22 -- three
+data checks fire first.  See mutation_test_report_2026-10-24.txt.
+
+===========================================================================
+
 ==============================================================
 MUTATION TEST -- examples/phase6_crv_uart/uart_crv_cov_tb.v
 date: 2026-10-12   seeds: 1 3 5   mode: steer=1

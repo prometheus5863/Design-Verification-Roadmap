@@ -2567,7 +2567,7 @@ to a regression driver, which reads exit codes and not tables.
 
 | runner | Q1 scores as | Q2 exits non-zero | verdict |
 |---|---|---|---|
-| `phase6_crv_uart/run_mutation_tests.sh` | DETECT | no | false DETECT |
+| `phase6_crv_uart/run_mutation_tests.sh` | DETECT | no | false DETECT *(repaired 2026-10-24; see the session note below)* |
 | `phase6_crv_uart/run_tx_empty_mutation_tests.sh` | COMPILE_ERROR | no | **false PASS** |
 | `phase1_mutation/run_mutation_tests.py` | DETECT | no | false DETECT |
 | `phase6_crv_uart/run_mutation_tests_bimodal.sh` | refused by G3 | no | **false PASS** |
@@ -2627,3 +2627,71 @@ rather than by any control:
    expectation string missing. Both the B and C readers are now dual-state and
    print which state of the runner they found, so the audit survives its own
    success.
+
+### Session note — 2026-10-24: M7 had never been injected, and the compile error it caused was its own detection
+
+The 2026-10-23 ranked-first item was a **decision**: repair
+`examples/phase6_crv_uart/run_mutation_tests.sh` in place, or retire it in
+favour of the bimodal runner. **Repaired in place.** It is the script a reader
+reaches for first, and the bimodal runner answers a different question — two
+steering modes and an equal-budget control — rather than a superset of this
+one.
+
+What the repair uncovered is bigger than the fault it was queued for.
+
+| | before 2026-10-24 | after |
+|---|---|---|
+| mutant that does not compile | scored `DETECT` | `BADINJ` — never a detection, never a pass |
+| exit status | 0 regardless | non-zero if any injection failed |
+| M7's committed sed | emitted literal `4\x27d7` | emits `4'd7` |
+| M7's verdict | **never measured** | DETECT, 3/3 seeds |
+| M4's stated reason | "caught by the coverage criterion, not by any data check" | corrected to the 2026-10-22 measurement |
+| preflight controls | G1 baseline only | G1 + G2 neutrality + G3 injection-failure |
+
+**M7 has never been injected since it was added on 2026-10-12.** The sed had a
+doubled backslash inside single quotes where every other row has one, so sed
+wrote eight literal characters into the Verilog. The mutant did not compile,
+and the runner scored `COMPILE_ERROR` as `DETECT` — so *every* "M7: predicted
+DETECT, got DETECT" this script printed for twelve days was **one fault
+reading another**, and the row that the 2026-10-12 DUT-signal census was
+written to close was closed by nothing. `cmp -s`, the only injection guard
+this runner then had, could not catch it: the file *did* change, and what it
+changed into was not a program. The complete guard is both halves.
+
+Injected correctly, **M7 is detected on all three seeds**, agreeing with the
+bimodal runner's 5/5 in both modes. *The conclusion was right; the evidence
+for it did not exist.* `mutation_test_report_2026-10-12.txt` is **annotated in
+place**, numbers untouched, stating that its "detected: 5" counts one row that
+was never tested and that the honest figure is 4 of 6 with M7 not scored.
+
+**The repair would have broken the audit that found it.** The runner-A arm of
+`audit_compile_error_scoring.py` needed no probe, because the defect
+reproduced live from the unmodified repository — so once repaired, that arm
+would have read a *genuine* M7 detection as the fault and reported DEFECTIVE
+for a clean runner, on the very next run. The arm is now **dual-state** like
+B's and C's, and it **measures** which state it is in rather than assuming:
+apply the committed M7 sed to the RTL and compile the product. Compiles →
+inject a probe; does not compile → the historical defect is still live. Each
+state declares its own expectation string before the run. Three sessions in a
+row have now found that a check keyed to a pre-repair state goes stale the
+moment it succeeds, and this was the last arm without a probe to make
+dual-state.
+
+**Result:** `Q1` clean on all four runners, `Q2` clean on all four, **clean on
+both for A, B, C and D**. On the pre-repair run (`git checkout 07cd52f`) all
+four exited 0. No runner in this repository now scores a compile error as a
+detection, and none exits 0 after refusing one.
+
+**One defect in this session's own work**, caught by a control rather than by
+reading: the probe copy of runner A was first written two directories deeper
+than the committed script, so its own `$(dirname $0)/../..` resolved to a
+directory with no `rtl/` or `tools/` and it produced no rows at all. The `A2`
+negative control reported `detected=-1` and named it *"the run is broken, not
+the scorer"* — which is the sentence `A2` exists to be able to say. The first
+control in this repository to catch a defect **before** it was committed
+rather than in a committed artefact.
+
+**Checklist movement.** None; this is an audit of existing rows. `G2`
+discharges the standing 2026-10-13 *cosmetic-edit positive control in every
+runner that compares transcripts* item **for this runner only** — three
+runners still lack one. Committed mutation reports become seventeen.
