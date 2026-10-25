@@ -10400,3 +10400,295 @@ dual-state audit arm with the all-clean report; the progress.md session note
 and the in-place annotation of the 2026-10-12 report). This AUTOMATION_LOG.md
 entry makes **4**. Each was pushed immediately after commit and verified
 against the GitHub API.
+
+---
+
+## 2026-10-25 — the ported control, its own mutation test, and a list claim that was false
+
+**Subject:** the 2026-10-24 **ranked-first** item — port runner A's `G2`
+cosmetic-edit positive control into the runners that lack one. Done, and the
+item's own premise is corrected: it named three runners; two lacked it. Four
+commits plus this entry.
+
+### 1. The arm, and what it is for
+
+Without a cosmetic-edit control, every `DETECT` a runner prints is
+**unattributable**: a runner that cried detect on a change that *cannot* alter
+behaviour would be measuring itself rather than the mutant, and nothing in B
+or D had ever checked that.
+
+| runner | before | after |
+|---|---|---|
+| A `run_mutation_tests.sh` | `G2` (2026-10-24) | unchanged; the worked reference |
+| B `run_tx_empty_mutation_tests.sh` | none | `G2b` — 0/4 detected in **both** modes, **plus its own compile guard** |
+| C `phase1_mutation/run_mutation_tests.py` | **`G0b`, all along** | unchanged |
+| D `run_mutation_tests_bimodal.sh` | none | `G2b` — compiles and classifies `PASS`, both modes, five seeds |
+
+Each ported arm asserts the criterion its *own* runner uses rather than A's: B
+measures a per-seed detection matrix, so `G2b` asserts the literal `0/4` its
+own `G1` baseline asserts; D classifies, so `G2b` asserts `PASS` in both arms.
+Both runners were re-run end to end and **no mutant row in either report
+changes** — the expected result, and the point: the arm makes existing
+verdicts attributable, it does not revise them.
+
+### 2. B's two failure modes were one message
+
+Its first draft folded *the bench is sensitive to a comment* and *the neutral
+mutant did not build* into a single abort naming both possibilities. Those are
+not the same finding, and the second is **`G3`'s failure mode occurring inside
+the control that exists to make `G3`'s verdicts attributable** — the
+2026-10-24 fault one level up. B now has its own `COMPILE_ERROR` guard, as D
+already did, and the two abort with different messages. That separation is
+what made §3 measurable.
+
+### 3. The arms are mutation-tested, not trusted — 8/8
+
+Both arms reported green on their first run, and a control that reports green
+and can never report anything else is not a control. That is this
+repository's recorded dominant failure mode, and the two preceding sessions
+each found an instance. So `tools/test_neutrality_controls.py` injects one
+defect into a **copy** of each runner and requires an abort:
+
+- **N0** negative control: the unmutated copy must reach `G2b`, pass, exit 0.
+- **N1** a *real* behavioural edit replaces the comment-only one — B's own
+  `T1` (tx_empty stuck clear in the STATUS decode), chosen because both
+  benches demonstrably detect it, so a non-abort could not be excused as an
+  undetectable edit. The positive control proper.
+- **N2** the edit is removed, so the "neutral" file is byte-identical — the
+  `cmp -s` guard must refuse.
+- **N3** the edit emits non-Verilog — the arm must refuse rather than read
+  the compile failure as a clean escape.
+
+**8/8 on both runners, N0 clean on both.** *The first draft's needle was the
+fault it was written to catch:* `N1` and `N3` matched the bare string
+`ABORT`, which **every** abort in these runners prints, `G1`'s included — so
+it would have passed on a mutant aborting for an unrelated reason and, worse,
+could not tell one indistinguishable message from two correct ones. **It
+scored 8/8 in that state.** Each needle is now a sentence only the intended
+arm prints.
+
+Written in Python after the shell draft's injection `sed`s needed four levels
+of backslash escaping to match a `printf` containing `\n`: plain string
+replacement cannot silently fail to match, and a failed match is reported as
+`BADINJ` rather than as a pass.
+
+### 4. The list that chose this work was wrong about a third of it
+
+The 2026-10-24 item read *"`G2` in runner A is the worked reference … **B, C
+and D have no such arm**"*. **C has had one all along, and a stronger one.**
+`G0b` requires the cosmetic edit to pass the bench, to change the **raw**
+transcript (so it would fool a byte-comparison criterion) and **not** to
+change the normalised one; A's `G2` asks only for compile-and-escape. A
+session acting on the item as written would have built a weaker duplicate in
+a file that already had the better version.
+
+This is the fault that created `tools/open_item_staleness_audit.py` one level
+in: there the claim was *"untouched for twelve sessions"* about a finished
+component; here it is *"has no such arm"* about a file that has one. **`S1`
+could not catch it** — `S1` asks whether a path an item names *exists*, never
+whether what the item *says about that file* is true.
+
+**The durable repair is `S6`**, in the retired-wording form the graphene
+repository's standing-list audit uses: it asserts **both** that the false
+phrase is gone from the current list **and** that the fact which justified
+retiring it — C still carrying `G0b` — still holds. Two assertions, because
+either alone is satisfiable the wrong way: a phrase can vanish because the
+item was dropped rather than corrected, and the justifying fact can survive
+while the phrase is revived. A row that merely restated the false claim would
+be **permanently red**, which carries no information.
+
+### 5. And the audit had been red for at least four days behind a transcript eight days stale
+
+`tools/open_item_staleness_audit_output.txt` is committed at **17 passed / 0
+failed** and was **last regenerated 2026-10-17** — eight sessions ago.
+Running it today, before any of today's edits, gave **two `S4` failures**:
+
+- two items at or above the reporting cut with no adjudication entry
+  (`GIVE THE FIVE SUITES … ONE`, `THE 40 COMMENT-ONLY EDGES`);
+- **three** orphaned `OPEN` entries, not one — entries whose item has left
+  the list entirely.
+
+**How long it has been red is datable to at least 2026-10-21**, because one of
+the orphans is `A MUTANT FOR THE NEW tx_empty PREDICTION`, whose item left the
+list when that mutant was built on 10-21. The first draft of this entry said
+*"red for a day"* and attributed all of it to the 2026-10-24 session; that was
+a guess, and it was wrong. Without bisecting there is no evidence for a
+sharper date than *somewhere between 10-17 and 10-21*, and the honest
+statement is the range.
+
+The three orphans have three different dispositions, and lumping them would
+repeat the fault:
+
+| orphan | disposition |
+|---|---|
+| `A MUTANT FOR THE NEW tx_empty PREDICTION` | **STALE** — built 2026-10-21 (`run_tx_empty_mutation_tests.sh`, rows T1–T4), so the entry outlived its work |
+| `EXTEND THE CENSUS TO THE REMAINING CHECKERS` | **restored to the list** — still genuinely open; its own adjudication quotes the census's stated scope limit, and the item had simply fallen out of the wording |
+| the three-valued axis / "greps a file it did not just write" | **restored to the list** — live, but compressed into a prose tail sentence, which hides an item from the ranker entirely |
+
+That last one is the standing *ALIGN THE ADJUDICATION HEADINGS WITH THE LIST
+WORDING* item biting, and it sharpens into a rule: **an item compressed into a
+prose tail sentence is invisible to `S3`**, so compressing is not a neutral
+formatting choice. Both restored items are first-class bullets below.
+
+This repository's own rule, written in `open_item_adjudication.md`, is that
+**a new list and a refreshed adjudication belong in the same commit**, which
+is why the adjudication, the `S6` arm and the refreshed transcript are in the
+same commit as this entry.
+
+**The sibling graphene repository found the identical pattern on the same
+day** — a committed transcript six days stale, hiding a new dead name behind
+an unchanged 6/2 score. Two repositories, one day, the same shape: *a suite's
+score is not its content, and a transcript regenerated only when its own
+subject changes goes stale silently.* That is the cross-repository form of
+**an instrument built in one place does not protect the other**, and it is now
+the second time that generalisation has been earned.
+
+### 6. Environment and automation health
+
+`tools/setup_iverilog.sh` sourced **without a pipe** (Icarus 10.3). Cloned
+straight into `/tmp` as the 2026-10-24 entry asked — the device VM's
+`/sessions` filesystem is **still 100 % full** (9.3 G of 9.8 G, other
+sessions' directories, unreadable and undeletable from here), and the first
+clone attempt elsewhere failed with *"No space left on device"* after a
+partial checkout. **New operational fact, and it corrects the 2026-10-24
+note: background processes do NOT survive a `device_bash` call.** That entry
+recorded starting long runs with `nohup` and reading the report file in a
+later call; today a `nohup`ed selftest left an empty file when read from the
+next call, and only runs that *completed inside* their own call were
+recovered. The working pattern is a `--runner`-style argument that splits the
+work into sub-180 s pieces, which is why the selftest takes a runner letter.
+Live web search was not used; today's subject is this repository's own runners
+measured against themselves. Every commit pushed immediately and verified
+against the GitHub API.
+
+**Not yet covered (candidates for future runs):**
+
+- **A COSMETIC-EDIT CONTROL IN THE REMAINING TRANSCRIPT-COMPARING RUNNERS** —
+  created today, **ranked first**, and it is what is actually left of the
+  2026-10-13 item now that the four mutation runners are done. The original
+  item said *ten* runners compare transcripts; four now carry the arm. The
+  rest (`phase6_bfm_equivalence`, `phase6_baud_error_coverage`,
+  `phase6_rx_pin_driver`, `phase4_ral`, `phase6_uvm_crv_uart`) have not been
+  checked for one. **Check before porting** — today's whole §4 is what
+  happens when that step is skipped — and `S6` is where each answer should be
+  recorded so the next session does not re-ask.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — created today,
+  **ranked second**, and the generalisation of the repair rather than the
+  repair. `S6` currently holds one retired wording and four content rows, all
+  hand-written from today's finding. The mechanical form is: for every item on
+  the current list, extract the claims it makes about named files and ask
+  which are checkable. Cheapest entry: the items already go through
+  `BACKTICK.findall` for `S1`, so the parse exists.
+- **AUDIT WHAT ELSE A RUNNER'S VERDICT NEVER REACHES** — carried from
+  2026-10-23, **ranked third**, untouched. Population: `fail_count`,
+  `SURPRISES`, `MOVERS`, `notrun`, `BADINJ`. Cheapest entry: for each runner,
+  list every variable appearing in a summary `echo` and check whether it
+  appears in any `exit` condition. **Today adds `neu_ok` and `neu_built` to
+  that population** — both are consulted, but by a check written today and
+  not by anything that would notice if they stopped being.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried from 2026-10-24, and today is an argument for it from the other
+  side: writing the selftest's injections in shell required four levels of
+  backslash escaping and was abandoned for Python precisely because a
+  mis-escaped `sed` fails silently. Every sed-based mutant in every runner
+  should be applied and compiled once as a standing check.
+- **REGENERATE EVERY COMMITTED TRANSCRIPT EACH SESSION, NOT ONLY THE ONES
+  THE SESSION TOUCHED** — created today from §5, and cheap. Both
+  repositories hid a live failure behind a stale transcript this week. The
+  stronger form is **pin each permanently-red suite's failing MEMBERSHIP, not
+  its count**, which is the graphene repository's ranked-third item today;
+  the two are the same repair and should be done in the same idiom.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  2026-10-22. "Coverage closure is a pass criterion, not a report line"
+  remains **unevidenced** rather than wrong.
+- **RE-RUN THE EQUAL-BUDGET CONTROL ON `phase6_uvm_crv_uart`** — carried,
+  blocked on cocotb.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; **still the
+  cheapest remaining pure content item**, and still the only queued item that
+  adds verification reach rather than auditing existing reach.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20 and **adjudicated today** (it was one of the two items above the
+  cut with no entry). The adjudication makes the case for ranking it **above**
+  the blocked items: it needs no toolchain, the edges are already enumerated
+  in a committed report, and a comment that contradicts its code is this
+  repository's most-recorded fault.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried and
+  **adjudicated today**; all five need cocotb or sby, which do not install
+  under the current egress allowlist. The honest form is *"five suites cannot
+  be reported on until the toolchain question is settled"*, and the toolchain
+  question is the real item behind it. It should not rank as available work.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) SVA protocol checkers bound
+  into the UVM environment, (c) `PayloadAdmissibilityCoverage` wired into the
+  live `UartCoverage` collector. **Eighth** session untouched; both need
+  cocotb.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, **ninth** session. Two suites gate, four have never
+  been tested this way.
+- **THE OTHER `tx_empty` PREDICTION, IN `phase4_ral`** — carried, blocked on
+  cocotb.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row; today supplies an **eighth** worked
+  reference for a non-binary outcome axis (`N0`/`N1`/`N2`/`N3` with `BADINJ`
+  distinct from both pass and fail).
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, **eighth** session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried, and raised again by §4: a paragraph asserting what a change does
+  not affect is a claim about file content, which is exactly the class `S6`
+  was built for.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  fifteen sessions old.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; still no stated
+  expectation with a spread.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — **restored to
+  the list today** after §5 found its adjudication entry orphaned. It is not a
+  gap in the instrument but the instrument's stated scope limit: the census is
+  complete *within* its five files and says so in its own words ("13 reads
+  extracted across 5 files, 13 covered, 0 omitted … complete only WITHIN a
+  censused file"). The file list is the part no check can grow by itself.
+  Worth pairing with the `cmp -s` item, since both are *enumerate the
+  population before trusting a count*.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'s CROSSES, AND
+  AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — created 09-26/09-27, **restored to the list today** as a
+  first-class bullet. It was live all along but compressed into the tail
+  sentence, where `S3` cannot rank it and its adjudication entry reads as an
+  orphan.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, **eighth**
+  consecutive session, and today strengthens it again: all four runners exit
+  non-zero on a failed injection *and* now refuse a non-neutral neutrality
+  control, which means precisely nothing until something runs them.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried, and
+  today is the first session to pay its cost: a re-wording in the 2026-10-24
+  list orphaned an `OPEN` entry and left `S4` red for a day.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_uvm_crv_uart`.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11,
+  thirteenth session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **sixteenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; per-property coverage of the
+  Phase 4 UVM environment (09-23);
+  a less greedy steering policy (09-24) — still promoted; widen the coverage
+  model (09-24) — likewise; two transmitters at once (09-25); `abc pdr` as a
+  second engine (09-23); mutants not yet attempted (interrupt enable
+  combinations, reset asserted mid-frame); a property needing a strengthening
+  invariant; the SVA sequence layer (open since 09-20); code coverage
+  measurement (Icarus has none, open since 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Two items were restored to the list from orphaned adjudication entries**
+(§5) — live work recovered from this repository's own audit trail rather than
+from memory.
+
+**Commits this run:** 4 (the two runner ports with their regenerated reports;
+the selftest with its 8/8 transcript; the progress.md session note and the
+in-place annotation of the false count; the `S6` audit arm with the three
+adjudication entries and the refreshed transcript). This AUTOMATION_LOG.md
+entry makes **5**. Each was pushed immediately after commit and verified
+against the GitHub API.

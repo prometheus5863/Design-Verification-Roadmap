@@ -444,6 +444,132 @@ def s5_controls():
 
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# S6 -- an open item's claim about a FILE'S CONTENT (added 2026-10-25)
+# ---------------------------------------------------------------------------
+#
+# WHY S1 WAS NOT ENOUGH.  S1 checks that a path an item names EXISTS.  It
+# says nothing about what is IN that file, and on 2026-10-25 the list was
+# wrong in exactly that way: the ranked-first item read
+#
+#     "`G2` in runner A is the worked reference ... B, C and D have no such
+#      arm, and a runner that cried detect on a neutral change would make
+#      every DETECT it prints unattributable."
+#
+# `examples/phase1_mutation/run_mutation_tests.py` -- runner C -- has carried
+# `G0b`, "positive control for the false DETECTED: a COSMETIC edit", since
+# before the item was written, and `G0b` is STRONGER than runner A's `G2`:
+# it requires the cosmetic edit to pass the bench, to change the raw
+# transcript (so it would fool a byte-comparison criterion) and NOT to change
+# the normalised one.  So a third of the ranked-first item was a request to
+# build something that existed, and the session that acted on it would have
+# built a weaker duplicate had it not read the file first.
+#
+# This is the same shape as the fault that created this module -- an item
+# asserting a tree state the tree denies -- one level in: there the claim was
+# "untouched for twelve sessions" about a finished component, here it is
+# "has no such arm" about a file that has one.  The fix is the same fix: make
+# the claim checkable.  Each row below is (claim, path, predicate, why), the
+# predicate is a plain substring test against the file, and a row whose
+# predicate FAILS means the open-items list is making a false claim, not that
+# the code is broken.
+#
+# A row is retired by deleting it only when the claim is gone from the list.
+# The graphene repository's standing-list audit keeps RETIRED rows that
+# assert both that a wording stays gone and that the fact justifying its
+# retirement still holds; that is the stronger form and this list should grow
+# into it.
+
+# A RETIRED WORDING, in the form the graphene repository's standing-list
+# audit uses: the row asserts BOTH that the false phrase is gone from the
+# most recent list AND that the fact which justified retiring it still holds.
+# Two assertions, because either alone is satisfiable the wrong way -- a
+# phrase can vanish because the item was dropped rather than corrected, and
+# the justifying fact can survive while the phrase is revived.  A row that
+# simply restated the false claim would be PERMANENTLY RED, which is the
+# anti-pattern the sibling repository measured on the same day: a red row
+# carries no information, and a suite that is always red hides its new
+# members behind an unchanged score.
+RETIRED_WORDINGS = (
+    ('"B, C and D have no such arm" (2026-10-24 ranked-first item)',
+     'have no such arm',
+     'examples/phase1_mutation/run_mutation_tests.py',
+     'G0b positive control for the false DETECTED: a COSMETIC edit',
+     'runner C has carried G0b since before the item was written, and G0b is '
+     'STRONGER than runner A\'s G2: it requires the cosmetic edit to pass '
+     'the bench, to change the RAW transcript and NOT to change the '
+     'normalised one.  A session acting on the item as written would have '
+     'built a weaker duplicate.'),
+)
+
+
+def s6_retired_wordings(items):
+    """[(ok, label, detail)] for each retired wording: gone from the list,
+    and the fact that justified retiring it still true."""
+    listed = '\n'.join(items)
+    out = []
+    for label, phrase, path, needle, why in RETIRED_WORDINGS:
+        gone = phrase not in listed
+        full = os.path.join(ROOT, path)
+        holds = (os.path.exists(full)
+                 and needle in open(full, encoding='utf-8').read())
+        out.append((gone, 'the retired wording %s stays gone from the list'
+                    % label,
+                    'phrase %s the current list' % ('is absent from' if gone
+                                                    else 'HAS RETURNED TO')))
+        out.append((holds, 'and the fact that justified retiring it still '
+                    'holds', '%s %s "%s"  --  %s'
+                    % (path, 'still contains' if holds else 'NO LONGER '
+                       'contains', needle[:38], why)))
+    return out
+
+
+CONTENT_CLAIMS = (
+    ('runner B now HAS a cosmetic-edit positive control',
+     'examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh',
+     'G2b neutrality control',
+     True,
+     'ported 2026-10-25; this row goes red if the port is ever reverted '
+     'while the list still claims it was done.'),
+    ('runner D now HAS a cosmetic-edit positive control',
+     'examples/phase6_crv_uart/run_mutation_tests_bimodal.sh',
+     'G2b neutrality control',
+     True,
+     'ported 2026-10-25, same reason.'),
+    ('runner A still has the G2 arm the port was modelled on',
+     'examples/phase6_crv_uart/run_mutation_tests.sh',
+     'G2  neutrality control',
+     True,
+     'the worked reference.  If this disappears, the three ports above are '
+     'no longer ports of anything and the family has no stated original.'),
+    ('the new arms are mutation-tested rather than trusted',
+     'tools/test_neutrality_controls.py',
+     'N1 a REAL behavioural edit',
+     True,
+     'a control that reports green and can never report anything else is '
+     'not a control; this row ties the arms to the suite that proves them '
+     'reachable.'),
+)
+
+
+def s6_content_claims():
+    """[(ok, claim, detail)] -- is each recorded claim about a file's content
+    still true?  `expect` False means the substring must be ABSENT."""
+    out = []
+    for claim, path, needle, expect, why in CONTENT_CLAIMS:
+        full = os.path.join(ROOT, path)
+        if not os.path.exists(full):
+            out.append((False, claim,
+                        'the file named does not exist: %s' % path))
+            continue
+        found = needle in open(full, encoding='utf-8').read()
+        out.append((found == expect, claim,
+                    '%s  %s "%s"  --  %s'
+                    % (path, 'contains' if found else 'lacks',
+                       needle[:40], why)))
+    return out
+
+
 def main():
     n_pass = n_fail = 0
 
@@ -577,6 +703,22 @@ def main():
     print('-' * 78)
     for tag, text, ok, detail in s5_controls():
         report(ok, '%s  %s   [%s]' % (tag, text, detail))
+
+    print('\n' + '-' * 78)
+    print("S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)")
+    print('-' * 78)
+    print('  S1 asks whether a path an item names EXISTS.  It cannot ask')
+    print('  whether what the item SAYS about that file is true, and on')
+    print('  2026-10-25 the ranked-first item was wrong in exactly that way:')
+    print('  it said runners "B, C and D have no such arm" while runner C')
+    print('  had carried a stronger one since before the item was written.')
+    print()
+    for ok, claim, detail in s6_retired_wordings(items):
+        report(ok, claim)
+        print('         %s' % detail)
+    for ok, claim, detail in s6_content_claims():
+        report(ok, '%s' % claim)
+        print('         %s' % detail)
 
     print('\n' + '=' * 78)
     print('RESULT: %d passed, %d failed' % (n_pass, n_fail))

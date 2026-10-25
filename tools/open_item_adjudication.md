@@ -196,7 +196,7 @@ is built to refuse. The matcher is split in the same session: see
 
 ---
 
-## OPEN: A MUTANT FOR THE NEW tx_empty PREDICTION
+## STALE: A MUTANT FOR THE NEW tx_empty PREDICTION
 
 **Score 0.750, rank 1. Verdict: OPEN.** The highest score on the list and it
 is a text artefact of the usual kind — "mutant", "prediction", "tx" and
@@ -208,6 +208,17 @@ and the CRV bench. So the prediction is live and unmutated. Created 10-12,
 carried five sessions, and it is the cheapest remaining mutant to write:
 the prediction exists, the harness exists, and the only missing piece is the
 injection.
+
+> **Re-adjudicated 2026-10-25: STALE.** The mutant was built on 2026-10-21 —
+> `examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh`, rows `T1`–`T4`,
+> with `T4` included deliberately as the attributability control rather than as
+> a fourth test of the prediction. The item left the list that day and this
+> entry was not updated, which made it one of the three orphaned `OPEN`
+> entries failing `S4` behind a transcript last regenerated 2026-10-17.
+> **NO-SUCCESSOR:** the prediction now has its mutants; the separate
+> `rx_avail` SYNC_ONLY row is a different mutant, carried on its own.
+
+---
 
 ## OPEN: A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS
 
@@ -406,13 +417,123 @@ of open item: the file list is the part no check can grow by itself. Worth
 pairing with the `cmp -s` item above, since both are "enumerate the population
 before trusting a count".
 
-## OPEN: A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES TRANSCRIPTS
+## STALE: A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES TRANSCRIPTS
 
-**Verdict: OPEN, and today raises its priority rather than its age.** Ten
-runners compare transcripts; the control that proves a comparison can *fail*
-on a change that does not matter (whitespace, a reordered line) exists in only
-a few. Today's own `W4` is the argument for it in miniature: a first draft of
-`stems()` changed the audit's behaviour in a way its output could not
+**Verdict: STALE as of 2026-10-25 — the work is done, and a third of the
+item's own premise was false.** Created 10-13, re-worded by the 2026-10-24
+entry as *"A COSMETIC-EDIT POSITIVE CONTROL IN THE OTHER THREE RUNNERS"*,
+which is the wording change that orphaned this entry and left `S4` red for a
+day.
+
+Original reasoning, kept: ten runners compare transcripts; the control that
+proves a comparison can *fail* on a change that does not matter exists in only
+a few. The 10-13 session's own `W4` was the argument in miniature — a first
+draft of `stems()` changed the audit's behaviour in a way its output could not
 distinguish from the intended change, and only a control aimed at the
-mechanism caught it. A runner whose transcript comparison has never been shown
-to fire is in the same position. Created 10-13.
+mechanism caught it.
+
+What 2026-10-25 found and did:
+
+| runner | state before | state after |
+|---|---|---|
+| A `run_mutation_tests.sh` | `G2`, added 2026-10-24 | unchanged; the worked reference |
+| B `run_tx_empty_mutation_tests.sh` | none | `G2b`, plus its own compile guard so "not neutral" and "did not build" are distinct findings |
+| C `phase1_mutation/run_mutation_tests.py` | **`G0b`, all along** | unchanged |
+| D `run_mutation_tests_bimodal.sh` | none | `G2b` |
+
+**The 2026-10-24 item said "B, C and D have no such arm". C had one, and a
+stronger one** — `G0b` requires the cosmetic edit to pass the bench, to change
+the *raw* transcript (so it would fool a byte-comparison criterion) and *not*
+to change the normalised one, where A's `G2` asks only for compile-and-escape.
+A session acting on the item as written would have built a weaker duplicate in
+a file that already had the better version. `S6` was added to this audit so
+that a claim of this shape — an item asserting what is *inside* a file, which
+`S1` cannot check — is re-verified against the tree.
+
+**NO-SUCCESSOR:** the four runners the item names now each carry the arm, and
+`tools/test_neutrality_controls.py` proves the two new ones are reachable
+(8/8: a real behavioural edit, a no-op edit and a non-compiling edit are each
+refused, by arm-specific messages, with an unmutated-copy negative control).
+The broader "ten runners compare transcripts" ambition is **not** retired by
+this entry and is carried separately as the standing sweep over the remaining
+runners.
+
+---
+
+## OPEN: GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE
+
+**Verdict: OPEN, and blocked rather than neglected.** Adjudicated 2026-10-25,
+having been at or above the reporting cut without an entry since the
+2026-10-24 list was written — which is one of the two gaps that left `S4` red
+for a day.
+
+The item is real: a suite with a runner and no current committed report is a
+suite whose last measured state is unknown, and this repository has twice
+found a committed report that outlived the code it described. It is not
+actionable in this environment, because all five need `cocotb` or `sby`, and
+neither installs under the current egress allowlist. Every session that has
+touched it has recorded the same block.
+
+The honest form of the item is therefore *"five suites cannot be reported on
+until the toolchain question is settled"*, and the toolchain question is the
+real open item behind it. It stays OPEN rather than STALE because nothing has
+been done and the need has not lapsed — but it should not rank as if it were
+available work, and a future session that ranks it first will find it blocked
+within one command.
+
+## OPEN: THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ
+
+**Verdict: OPEN, and it is the cheapest unblocked content item on the list.**
+Adjudicated 2026-10-25, the second of the two gaps that left `S4` red.
+
+Created 2026-10-20, when the report-provenance relation classified 40 edges as
+comment-only. Classified is not read: the classification says the edit touched
+no executable line, and says nothing about whether the comment it changed
+still describes the code beneath it. A comment that contradicts its code is
+this repository's most-recorded fault — three docstring instances and one
+transcript instance to date — and 40 unread edges is the largest untouched
+population of candidates for it anywhere in the tree.
+
+Unlike most of the list this needs no toolchain: the edges are already
+enumerated in a committed report, and reading them is a matter of judgement
+rather than simulation. It stays OPEN and is worth ranking **above** the
+blocked items, which is the opposite of how a text-similarity score ranks it.
+
+---
+
+## OPEN: NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE
+
+**Verdict: OPEN, and it is unevidenced rather than wrong.** Adjudicated
+2026-10-25, having reached the reporting cut without an entry.
+
+The claim under it — *"coverage closure is a pass criterion, not a report
+line"* — is the bench's own stated design. What is missing is an instance: no
+mutant in the suite is detected by the closure criterion and by nothing else,
+so the criterion has never been shown to carry a detection on its own. The
+2026-10-22 session looked for such a mutant and did not find one; that is a
+negative result about the search, not about the criterion.
+
+It stays OPEN because it is the cheapest way to put the bench's pass-criterion
+decision under an instance, and because the alternative — removing closure
+from the pass criterion — would change what the bench claims and should not be
+done on the strength of an absent example. Needs no toolchain beyond Icarus,
+which makes it one of the few unblocked items above the cut.
+
+## OPEN: RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED
+
+**Verdict: OPEN, and the family it belongs to grew again today.** Adjudicated
+2026-10-25, having reached the reporting cut without an entry. Created
+2026-10-16; two suites gate on a missing toolchain, four have never been
+tested that way.
+
+The question is what a suite prints when the thing it needs is absent. This
+repository has now recorded four ways that goes wrong quietly: a false SKIP is
+quiet, a false DETECT is quiet, a false PASS from a counter nobody reads is
+quieter, and an injection that was never a program is quietest of all, because
+it looks exactly like a success. Today adds a fifth that is adjacent rather
+than identical: **a control that cannot fail reports green indefinitely**, and
+`tools/test_neutrality_controls.py` exists because two such controls were
+written this session.
+
+Unblocked — removing a toolchain needs no toolchain — and it pays off across
+every suite at once rather than one.

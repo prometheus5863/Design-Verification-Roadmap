@@ -2,7 +2,7 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 36 "Not yet covered" lists; the most recent has 21 items
+  AUTOMATION_LOG.md: 43 "Not yet covered" lists; the most recent has 29 items
   progress.md: 32 completed checkboxes, 4 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
@@ -10,7 +10,7 @@ consistent with the file that records what is finished?  (2026-10-03)
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 8   resolved: 8   unresolved: 0
+  paths named: 3   resolved: 3   unresolved: 0
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
   [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
@@ -18,7 +18,7 @@ S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
 S2 -- every "created <date>" parses and is not in the future
 ------------------------------------------------------------------------------
-  dates found: 1   ok: 1   bad: 0
+  dates found: 3   ok: 3   bad: 0
   [PASS] no open item carries an unparseable or future creation date
 
 ------------------------------------------------------------------------------
@@ -28,16 +28,16 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
   COMPLETED checkbox also contains.  A RANKING, not a verdict.
 
     score  open item
-    0.333  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — restored today. muta...  <-- adjudicate
-    0.308  - THE ONE REMAINING cmp -s RUNNER — phase6_crv_uart, plus phase6_uvm_crv_uart whose cm...  <-- adjudicate
-    0.300  - A MUTANT FOR THE rx_avail SYNC_ONLY ROW — carried; the weakest exposure argument in ...  <-- adjudicate
-    0.286  - EXTEND THE CENSUS TO THE REMAINING CHECKERS — carried; 5 files censused.  <-- adjudicate
-    0.286  - A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMPARES TRANSCRIPTS — carried...  <-- adjudicate
-    0.250  - A MUTANT FOR THE NEW tx_empty PREDICTION — adjudicated OPEN today and now the cheape...  <-- adjudicate
-    0.227  - THE CAPSTONE BOX'S LETTERED REMAINDER — (b) the SVA protocol checkers bound into the...
-    0.222  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — restored today. v13...
-    0.222  - RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE — carried from 10-13,...
-    0.200  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — adjudicated OPEN today, with...
+    0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
+    0.600  - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carried.  <-- adjudicate
+    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 2026-10-22. "C...  <-- adjudicate
+    0.455  - RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED — carried from 2026...  <-- adjudicate
+    0.429  - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no stated expectation with a...  <-- adjudicate
+    0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, fifteen sessions ol...  <-- adjudicate
+    0.333  - THE OTHER tx_empty PREDICTION, IN phase4_ral — carried, blocked on cocotb.
+    0.333  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 2026-10-17, eighth se...
+    0.333  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried, and raised...
+    0.333  - THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart.
 
   top match for the highest-ranked item:
     - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
@@ -45,15 +45,15 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
-  adjudication entries on disk: 18
+  adjudication entries on disk: 22
     OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
-    OPEN    - THE ONE REMAINING cmp -s RUNNER — phase6_crv_uart, plus ph...
-    OPEN    - A MUTANT FOR THE rx_avail SYNC_ONLY ROW — carried; the wea...
-    OPEN    - EXTEND THE CENSUS TO THE REMAINING CHECKERS — carried; 5 f...
-    OPEN    - A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT COMP...
-    OPEN    - A MUTANT FOR THE NEW tx_empty PREDICTION — adjudicated OPE...
+    OPEN    - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carri...
+    OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
+    OPEN    - RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY R...
+    OPEN    - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no...
+    OPEN    - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — ca...
     WORDING Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
-            still on the list as: - THE CAPSTONE BOX'S LETTERED REMAINDER — (b) the SVA protocol...
+            still on the list as: - THE CAPSTONE BOX'S LETTERED REMAINDER — (b) SVA protocol che...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
   [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
   [PASS] the RETIRED and WORDING categories are disjoint
@@ -62,7 +62,7 @@ S4 -- the committed adjudication of the top 6
         moved is the list.  Each is named above with the item it matches, so a
         reviewer can align the two without re-deciding the verdict.
   [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
-  verdicts: 3 STALE, 15 OPEN
+  verdicts: 5 STALE, 17 OPEN
 
 ------------------------------------------------------------------------------
 S5 -- controls on the ranker, and its mutation test
@@ -82,6 +82,28 @@ S5 -- controls on the ranker, and its mutation test
         it fixed wire/wired, left all six 2026-10-17 entries RETIRED, and so changed
         nothing the check reported.]
 
+------------------------------------------------------------------------------
+S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
+------------------------------------------------------------------------------
+  S1 asks whether a path an item names EXISTS.  It cannot ask
+  whether what the item SAYS about that file is true, and on
+  2026-10-25 the ranked-first item was wrong in exactly that way:
+  it said runners "B, C and D have no such arm" while runner C
+  had carried a stronger one since before the item was written.
+
+  [PASS] the retired wording "B, C and D have no such arm" (2026-10-24 ranked-first item) stays gone from the list
+         phrase is absent from the current list
+  [PASS] and the fact that justified retiring it still holds
+         examples/phase1_mutation/run_mutation_tests.py still contains "G0b positive control for the false DET"  --  runner C has carried G0b since before the item was written, and G0b is STRONGER than runner A's G2: it requires the cosmetic edit to pass the bench, to change the RAW transcript and NOT to change the normalised one.  A session acting on the item as written would have built a weaker duplicate.
+  [PASS] runner B now HAS a cosmetic-edit positive control
+         examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh  contains "G2b neutrality control"  --  ported 2026-10-25; this row goes red if the port is ever reverted while the list still claims it was done.
+  [PASS] runner D now HAS a cosmetic-edit positive control
+         examples/phase6_crv_uart/run_mutation_tests_bimodal.sh  contains "G2b neutrality control"  --  ported 2026-10-25, same reason.
+  [PASS] runner A still has the G2 arm the port was modelled on
+         examples/phase6_crv_uart/run_mutation_tests.sh  contains "G2  neutrality control"  --  the worked reference.  If this disappears, the three ports above are no longer ports of anything and the family has no stated original.
+  [PASS] the new arms are mutation-tested rather than trusted
+         tools/test_neutrality_controls.py  contains "N1 a REAL behavioural edit"  --  a control that reports green and can never report anything else is not a control; this row ties the arms to the suite that proves them reachable.
+
 ==============================================================================
-RESULT: 17 passed, 0 failed
+RESULT: 23 passed, 0 failed
 ==============================================================================
