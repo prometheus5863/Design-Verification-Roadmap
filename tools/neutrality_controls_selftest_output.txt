@@ -1,0 +1,37 @@
+==============================================================
+IS THE G2b NEUTRALITY ARM REACHABLE?
+==============================================================
+
+--------------------------------------------------------------
+RUNNER B  examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh
+--------------------------------------------------------------
+  PASS N0 negative control: the UNMUTATED copy reaches G2b, passes and exits 0
+       rc=0  reached-G2b=True
+       (so the probe harness is not the perturbation)
+  PASS N1 a REAL behavioural edit in place of the comment is refused
+       rc=1  message-matched=True
+  PASS N2 an edit that changes NOTHING is refused
+       rc=1  message-matched=True
+  PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
+       rc=1  message-matched=True
+
+==============================================================
+TOTAL: 4 passed, 0 failed
+==============================================================
+
+--------------------------------------------------------------
+RUNNER D  examples/phase6_crv_uart/run_mutation_tests_bimodal.sh
+--------------------------------------------------------------
+  PASS N0 negative control: the UNMUTATED copy reaches G2b, passes and exits 0
+       rc=0  reached-G2b=True
+       (so the probe harness is not the perturbation)
+  PASS N1 a REAL behavioural edit in place of the comment is refused
+       rc=1  message-matched=True
+  PASS N2 an edit that changes NOTHING is refused
+       rc=1  message-matched=True
+  PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
+       rc=1  message-matched=True
+
+==============================================================
+TOTAL: 4 passed, 0 failed
+==============================================================
