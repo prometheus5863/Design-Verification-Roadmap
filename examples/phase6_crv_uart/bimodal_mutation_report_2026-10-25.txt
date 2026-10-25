@@ -1,0 +1,107 @@
+==============================================================
+BIMODAL MUTATION TEST -- examples/phase6_crv_uart/uart_crv_cov_tb.v
+date: 2026-10-25   seeds: 1 3 5 7 9
+arms: A steer=0 | B steer=1 | E steer=0 truncated to B's budget
+==============================================================
+
+G1  baseline: the suite must PASS on unmodified RTL in BOTH modes
+    seed   A steer=0      B steer=1      B budget    
+    1      PASS (648 tx)  PASS (54 tx)   54          
+    3      PASS (258 tx)  PASS (49 tx)   49          
+    5      PASS (110 tx)  PASS (53 tx)   53          
+    7      PASS (360 tx)  PASS (52 tx)   52          
+    9      PASS (457 tx)  PASS (40 tx)   40          
+    baseline verdict: PASS in both modes on all seeds
+
+G2  positive control on the arm-E classifier: unmodified RTL,
+    truncated to arm B's budget, must be CLOSURE_ONLY -- never DATA.
+    seed 1    maxtx=54    -> CLOSURE_ONLY
+    seed 3    maxtx=49    -> CLOSURE_ONLY
+    seed 5    maxtx=53    -> CLOSURE_ONLY
+    seed 7    maxtx=52    -> CLOSURE_ONLY
+    seed 9    maxtx=40    -> CLOSURE_ONLY
+    G2 holds: truncation alone is never scored as a detection.
+
+G2b neutrality control: a COMMENT-ONLY edit must compile and PASS in
+    BOTH modes.  (Ported from run_mutation_tests.sh's G2, 2026-10-24.
+     G2 above controls the arm-E CLASSIFIER; nothing here had ever
+     controlled the runner's attributability -- that a detection is
+     caused by the mutant and not by the act of editing the file.)
+    seed 1    A steer=0 -> PASS          B steer=1 -> PASS
+    seed 3    A steer=0 -> PASS          B steer=1 -> PASS
+    seed 5    A steer=0 -> PASS          B steer=1 -> PASS
+    seed 7    A steer=0 -> PASS          B steer=1 -> PASS
+    seed 9    A steer=0 -> PASS          B steer=1 -> PASS
+    G2b holds: a change that cannot alter behaviour is never scored
+    as a detection in either mode.
+
+mutant                                               A st=0    B st=1    E equal  
+---------------------------------------------------- -------   -------   -------  
+M1 TX parity polarity swapped (even<->odd)           5/5       5/5       5/5      
+   per seed (1 3 5 7 9)                               D D D D D  D D D D D  D D D D D
+   caught first by (arm A, distinct over seeds):
+       drain-phase status error bits clear
+
+M2 RX data bit inverted at the mid-bit sample        5/5       5/5       5/5      
+   per seed (1 3 5 7 9)                               D D D D D  D D D D D  D D D D D
+   caught first by (arm A, distinct over seeds):
+       loopback byte matches reference model
+
+M3 CTRL.stop_bits ignored by TX (always one stop bit 5/5       5/5       5/5      
+   per seed (1 3 5 7 9)                               D D D D D  D D D D D  D D D D D
+   caught first by (arm A, distinct over seeds):
+       drain-phase status error bits clear
+
+M4 TX FIFO count never increments on a lone push     5/5       5/5       5/5      
+   per seed (1 3 5 7 9)                               D D D D D  D D D D D  D D D D D
+   caught first by (arm A, distinct over seeds):
+       post-push tx_empty agrees with occupancy
+       post-push tx_full agrees with occupancy
+
+M5 BAUD_DIV ignored by the baud generator (always di 0/5       0/5       0/5      
+   per seed (1 3 5 7 9)                               P P P P P  P P P P P  C C C C C
+
+M6 STATUS read no longer clears the sticky error bit 0/5       0/5       0/5      
+   per seed (1 3 5 7 9)                               P P P P P  P P P P P  C C C C C
+
+M7 tx_full asserts one entry early (tx_cnt >= 7)     5/5       5/5       5/5      
+   per seed (1 3 5 7 9)                               D D D D D  D D D D D  D D D D D
+   caught first by (arm A, distinct over seeds):
+       post-push tx_full agrees with occupancy
+       tx_full agrees with predicted occupancy
+
+==============================================================
+  mutants injected          : 7
+  injections that failed    : 0   (G3; never scored as detections)
+  mutants whose detection   : 0
+    count differs by mode
+
+  KEY  P=PASS (escaped)  D=DATA check failed  C=closure only  X=died
+  Arm A/B count C as a detection, since closure IS a pass criterion of
+  this bench.  Arm E does NOT, because arm E fails closure by
+  construction -- see G2.
+==============================================================
+
+==============================================================
+M7 AS THE COMMITTED RUNNER INJECTS IT
+==============================================================
+
+  run_mutation_tests.sh injects M7 with
+      s/.../wire tx_full  = (tx_cnt >= 4\\x27d7);/
+  One backslash too many: sed turns the doubled backslash into a
+  literal one and emits
+      wire tx_full  = (tx_cnt >= 4\x27d7);
+  which is not Verilog:
+      /tmp/uart_bimut.HPPTfI/m7_committed.v:103: syntax error
+      /tmp/uart_bimut.HPPTfI/m7_committed.v:104: error: invalid module item.
+
+  That runner scores COMPILE_ERROR as DETECT, so this row has read
+  "predicted DETECT, got DETECT (as predicted)" in every committed
+  report since 2026-10-12, with a stated reason naming a check
+  ("the predicted-occupancy check, which names the occupancy") that
+  this mutant has never reached.  Injected correctly, M7 IS detected
+  5/5 in both modes AND by exactly that check -- see the M7 row above.
+  The conclusion was right; the evidence for it did not exist.
+==============================================================
+
+RESULT: PASS  (every injection compiled; G3 green)

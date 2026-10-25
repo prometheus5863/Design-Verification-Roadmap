@@ -145,6 +145,46 @@ for c in "fill phase starts with tx_empty set" \
 done
 echo
 
+echo "G2b neutrality control: a COMMENT-ONLY edit must compile and ESCAPE"
+echo "    (ported from run_mutation_tests.sh's G2, 2026-10-24.  Without it,"
+echo "     every DETECT below is unattributable: a runner that cries detect"
+echo "     on a change that CANNOT alter behaviour is measuring itself.)"
+cp "$RTL" "$WORK/neutral.v"
+printf '\n// G2b cosmetic-edit control, injected by run_tx_empty_mutation_tests.sh\n' \
+    >> "$WORK/neutral.v"
+if cmp -s "$RTL" "$WORK/neutral.v"; then
+    echo "    ABORT -- the neutral control did not change the file, so it"
+    echo "    controls nothing."
+    exit 1
+fi
+neu_ok=1
+neu_built=1
+for st in $MODES; do
+    NEU="$(run_matrix "$WORK/neutral.v" "$st")"
+    echo "    steer=$st  detected ${NEU%%|*} of the seeds   (must be 0/4)"
+    if [ "${NEU%%|*}" = "COMPILE_ERROR" ]; then neu_built=0; fi
+    [ "${NEU%%|*}" = "0/4" ] || neu_ok=0
+done
+# The two ways this arm can fail are NOT the same finding, and a single
+# message for both would be the weak-question fault this repository keeps
+# finding in its own verdicts.  Runner D separates them with its own compile
+# guard; B did not until 2026-10-25.
+if [ "$neu_built" -ne 1 ]; then
+    echo "    ABORT -- the comment-only mutant DOES NOT COMPILE, so the"
+    echo "    control measured nothing.  This is G3's failure mode inside"
+    echo "    the control that exists to make G3's verdicts attributable."
+    exit 1
+fi
+if [ "$neu_ok" -ne 1 ]; then
+    echo "    ABORT -- a comment-only edit was not a clean escape in every"
+    echo "    mode, so the bench is sensitive to a change that cannot alter"
+    echo "    behaviour and no DETECT below is attributable to the mutant"
+    echo "    that carries it."
+    exit 1
+fi
+echo "    OK -- a comment-only edit escapes in both modes."
+echo
+
 echo "G3  every mutant must actually CHANGE the file it claims to change"
 echo "    (a sed that silently matches nothing reports a PERFECT escape,"
 echo "     which is the most flattering possible failure)"

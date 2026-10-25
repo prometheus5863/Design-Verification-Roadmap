@@ -178,6 +178,44 @@ fi
 echo "    G2 holds: truncation alone is never scored as a detection."
 echo
 
+echo "G2b neutrality control: a COMMENT-ONLY edit must compile and PASS in"
+echo "    BOTH modes.  (Ported from run_mutation_tests.sh's G2, 2026-10-24."
+echo "     G2 above controls the arm-E CLASSIFIER; nothing here had ever"
+echo "     controlled the runner's attributability -- that a detection is"
+echo "     caused by the mutant and not by the act of editing the file.)"
+cp "$RTL" "$WORK/neutral.v"
+printf '\n// G2b cosmetic-edit control, injected by run_mutation_tests_bimodal.sh\n' \
+    >> "$WORK/neutral.v"
+if cmp -s "$RTL" "$WORK/neutral.v"; then
+    echo "    ABORT -- the neutral control did not change the file, so it"
+    echo "    controls nothing."
+    exit 1
+fi
+if ! compile "$WORK/neutral.v" "$WORK/sim_neutral"; then
+    echo "    ABORT -- the comment-only mutant does not COMPILE, so the"
+    echo "    control measured nothing.  This is G3's failure mode inside"
+    echo "    the control that exists to make G3's verdicts attributable."
+    head -2 "$WORK/compile.log" | sed 's/^/        /'
+    exit 1
+fi
+G2B_OK=1
+for s in $SEEDS; do
+    cna="$(classify "$(run_one "$WORK/sim_neutral" "$s" 0)")"
+    cnb="$(classify "$(run_one "$WORK/sim_neutral" "$s" 1)")"
+    printf "    seed %-4s A steer=0 -> %-13s B steer=1 -> %s\n" \
+           "$s" "$cna" "$cnb"
+    [ "$cna" = PASS ] && [ "$cnb" = PASS ] || G2B_OK=0
+done
+if [ "$G2B_OK" -ne 1 ]; then
+    echo "    ABORT -- a comment-only edit was not a clean PASS in both"
+    echo "    modes, so every DETECT below is unattributable: it could be"
+    echo "    caused by the mutant or by the editing."
+    exit 1
+fi
+echo "    G2b holds: a change that cannot alter behaviour is never scored"
+echo "    as a detection in either mode."
+echo
+
 MUT_NAMES=(
   "M1 TX parity polarity swapped (even<->odd)"
   "M2 RX data bit inverted at the mid-bit sample"
