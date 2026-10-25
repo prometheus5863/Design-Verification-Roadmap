@@ -2695,3 +2695,82 @@ rather than in a committed artefact.
 discharges the standing 2026-10-13 *cosmetic-edit positive control in every
 runner that compares transcripts* item **for this runner only** — three
 runners still lack one. Committed mutation reports become seventeen.
+
+> **Annotated 2026-10-25. "Three runners still lack one" was wrong: two did.**
+> `examples/phase1_mutation/run_mutation_tests.py` has carried `G0b`,
+> *"positive control for the false DETECTED: a COSMETIC edit"*, since before
+> this sentence was written, and `G0b` is **stronger** than this `G2` — it
+> requires the cosmetic edit to pass the bench, to change the **raw**
+> transcript (so it would fool a byte-comparison criterion) and **not** to
+> change the normalised one, where `G2` asks only for compile-and-escape. The
+> count here, and the "B, C and D have no such arm" in the matching
+> `AUTOMATION_LOG.md` item, are both corrected in place rather than deleted.
+> The arm now exists in all four runners and `tools/open_item_staleness_audit.py`
+> gained an `S6` section so that a claim of this shape — about what is
+> *inside* a file, which `S1` cannot check — is re-verified against the tree.
+
+---
+
+## 2026-10-25 — the ported control, its own mutation test, and a list claim that was false
+
+**Subject:** the 2026-10-24 **ranked-first** item — port runner A's `G2`
+cosmetic-edit positive control into the runners that lack one. Done for the
+two that lacked one, and the item's own premise is corrected: it named three.
+
+**What the arm is for.** Without it, every `DETECT` a runner prints is
+unattributable — a runner that cried detect on a change that *cannot* alter
+behaviour would be measuring itself rather than the mutant, and nothing in B
+or D had ever checked that.
+
+| runner | before | after |
+|---|---|---|
+| A `run_mutation_tests.sh` | `G2` (2026-10-24) | unchanged; the worked reference |
+| B `run_tx_empty_mutation_tests.sh` | none | `G2b` (0/4 detected in both modes) **plus its own compile guard** |
+| C `phase1_mutation/run_mutation_tests.py` | **`G0b`, all along** | unchanged |
+| D `run_mutation_tests_bimodal.sh` | none | `G2b` (compiles and classifies `PASS`, both modes, five seeds) |
+
+**B's two failure modes were one message.** Its first draft folded *the bench
+is sensitive to a comment* and *the neutral mutant did not build* into a
+single abort naming both. Those are not the same finding — the second is
+`G3`'s failure mode occurring **inside** the control that exists to make
+`G3`'s verdicts attributable, i.e. the 2026-10-24 fault one level up. B now
+has its own `COMPILE_ERROR` guard, as D already did, and they abort
+differently.
+
+**The arms are mutation-tested, not trusted** —
+`tools/test_neutrality_controls.py`, **8/8**. A real behavioural edit (B's own
+`T1`, chosen because both benches demonstrably detect it), a no-op edit and a
+non-compiling edit are each refused, by **arm-specific** messages, with an
+unmutated-copy negative control run first. *The first draft's needle was the
+fault it was written to catch*: `N1` and `N3` matched the bare string
+`ABORT`, which every abort in these runners prints, so it could not tell one
+indistinguishable message from two correct ones — and it scored 8/8 in that
+state. Separating the needles is what required B's compile guard.
+
+**Two reports regenerated end to end, and no mutant row in either changes.**
+That is the expected result and the point: the arm makes existing verdicts
+attributable, it does not revise them.
+
+**And the list that chose this work was wrong about a third of it** (above).
+`S6` in `tools/open_item_staleness_audit.py` is the durable repair, in the
+retired-wording form: it asserts both that the false phrase is **gone** from
+the current list and that the fact which justified retiring it — C still
+carrying `G0b` — **still holds**. Two assertions, because either alone is
+satisfiable the wrong way, and a row that merely restated the false claim
+would be permanently red, which carries no information.
+
+**The audit had been red for a day behind a stale transcript.**
+`tools/open_item_staleness_audit_output.txt` was committed at 17 passed / 0
+failed; running it today gave **two `S4` failures** — the 2026-10-24 session
+added two items above the reporting cut without adjudicating them, and
+re-worded a third, orphaning its `OPEN` entry. The repository's own rule is
+that *a new list and a refreshed adjudication belong in the same commit*.
+Both gaps are now adjudicated, the orphan is retired with its disposition,
+and the transcript is refreshed. The sibling graphene repository found the
+**identical** pattern on the same day — a stale committed transcript hiding a
+new failure behind an unchanged score — which is the cross-repository form of
+*an instrument built in one place does not protect the other*.
+
+**Checklist movement.** The standing 2026-10-13 *cosmetic-edit positive
+control* item is **discharged** for the four mutation runners it names.
+Committed mutation reports become nineteen.
