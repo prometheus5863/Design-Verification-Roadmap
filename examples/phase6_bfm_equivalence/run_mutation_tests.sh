@@ -135,6 +135,66 @@ run_case() {
   rm -f "${WORK}/mut_sim"
 }
 
+# G2b NEUTRALITY CONTROL, added 2026-10-26; this runner had none either.
+# Its criterion is errors > 0 => DETECTED, so the neutral copy must come back
+# with errors == 0, and the arm asserts that number rather than a verdict
+# borrowed from another runner.  Note what is mutated here is the BFM, not the
+# RTL -- this is the only one of the three ported today whose target is not
+# rtl/uart_controller.v, which is exactly why the shared helper takes a path.
+{
+  echo "G2b NEUTRALITY CONTROL: a comment-only edit to the BFM must compile"
+  echo "and come back with errors == 0.  Without it every DETECTED row below"
+  echo "is unattributable: a zero-tolerance picosecond comparison that fires"
+  echo "on a change which cannot alter behaviour is measuring itself."
+} >> "${report}"
+NEU_SRC="${WORK}/golden.v"
+NEU_TAG=examples/phase6_bfm_equivalence/run_mutation_tests.sh
+# G2b-INJECT -- tools/test_neutrality_controls.py replaces THIS LINE
+# with an override of mc_neutral_copy, which is how the arm below is
+# mutation-tested without editing the committed runner or the shared
+# helper.  A single-line, single-purpose injection point: the 2026-10-25
+# selftest could only reach runners whose arm inlined its own `cp`.
+if ! mc_neutral_copy "$NEU_SRC" "${WORK}/neutral.v" "$NEU_TAG"; then
+  echo "  ABORT -- the neutral copy is byte-identical; it controls nothing." \
+      >> "${report}"
+  cat "${report}"
+  exit 1
+fi
+( cd "${WORK}" && "${IVERILOG}" -B "${IVL_LIB}" -g2012 -o neutral_sim \
+      "${HERE}/bfm_equiv_tb.v" neutral.v \
+      "${ROOT}/bfm/uart_rx_pin_legacy_ref.v" ) 2> "${WORK}/neutral_c.log"
+if [ ! -f "${WORK}/neutral_sim" ]; then
+  {
+    echo "  ABORT -- the comment-only mutant DOES NOT COMPILE, so the control"
+    echo "  measured nothing.  That is the void branch's failure mode inside"
+    echo "  the control written to make the void branch attributable."
+    sed 's/^/        /' "${WORK}/neutral_c.log" | head -3
+  } >> "${report}"
+  cat "${report}"
+  exit 1
+fi
+timeout 170 "${VVP}" -M "${IVL_LIB}" "${WORK}/neutral_sim" \
+    > "${WORK}/neutral_out.log" 2>&1
+neu_errs="$(grep -oE '^ errors : [0-9]+' "${WORK}/neutral_out.log" \
+    | grep -oE '[0-9]+' | tail -1)"
+neu_errs="${neu_errs:-missing}"
+if [ "${neu_errs}" != "0" ]; then
+  {
+    echo "  ABORT -- a comment-only edit reported errors = ${neu_errs}, not 0."
+    echo "  The equivalence bench is sensitive to a change that cannot alter"
+    echo "  behaviour, so no DETECTED row below is attributable to its mutant."
+    grep -m1 'FAIL' "${WORK}/neutral_out.log" | sed 's/^/        /'
+  } >> "${report}"
+  cat "${report}"
+  exit 1
+fi
+{
+  echo "  OK -- errors = 0 on the comment-only edit, which is exactly the"
+  echo "  number every ESCAPED row below is scored by."
+  echo
+} >> "${report}"
+rm -f "${WORK}/neutral_sim"
+
 run_case "bit_ps_off_by_one_ps" \
   's/#(bit_ps);/#(bit_ps + 1);/g' \
   6 \

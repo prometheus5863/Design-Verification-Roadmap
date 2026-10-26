@@ -1,0 +1,22 @@
+========================================================================
+ Mutation test: examples/phase6_bfm_equivalence/bfm_equiv_tb.v
+ Target: bfm/uart_rx_pin_bfm.v (a COPY is mutated; the real file is not)
+ Date (UTC): 2026-10-26
+========================================================================
+
+A mutant is DETECTED when the equivalence bench reports errors > 0.
+The checker compares transition timestamps against an independent
+implementation at picosecond resolution with ZERO tolerance, so there
+is no slack for a mutant to hide in.  Compare with the 2026-09-26 run
+in examples/phase6_baud_error_coverage/, where the coverage model
+detected 0 of 5 and every detection came from a check instead.
+
+G2b NEUTRALITY CONTROL: a comment-only edit to the BFM must compile
+and come back with errors == 0.  Without it every DETECTED row below
+is unattributable: a zero-tolerance picosecond comparison that fires
+on a change which cannot alter behaviour is measuring itself.
+  ABORT -- the comment-only mutant DOES NOT COMPILE, so the control
+  measured nothing.  That is the void branch's failure mode inside
+  the control written to make the void branch attributable.
+        neutral.v:175: syntax error
+        I give up.

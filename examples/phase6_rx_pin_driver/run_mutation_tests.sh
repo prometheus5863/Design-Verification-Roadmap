@@ -121,6 +121,48 @@ else
 fi
 echo
 
+# G2b NEUTRALITY CONTROL, added 2026-10-26.  Checked first: this runner had
+# no such arm, so until today every "detected" row below was unattributable.
+# The two ways this arm can fail are NOT the same finding and get different
+# messages -- the 2026-10-25 lesson from runner B, which folded them into one.
+echo "G2b neutrality control: a COMMENT-ONLY edit must compile and ESCAPE"
+echo "    (a bench that fails on a change which CANNOT alter behaviour is"
+echo "     measuring itself rather than the mutant, and every row below"
+echo "     would then be unattributable)"
+NEU_SRC=rtl/uart_controller.v
+NEU_TAG=examples/phase6_rx_pin_driver/run_mutation_tests.sh
+# G2b-INJECT -- tools/test_neutrality_controls.py replaces THIS LINE
+# with an override of mc_neutral_copy, which is how the arm below is
+# mutation-tested without editing the committed runner or the shared
+# helper.  A single-line, single-purpose injection point: the 2026-10-25
+# selftest could only reach runners whose arm inlined its own `cp`.
+if ! mc_neutral_copy "$NEU_SRC" "${WORK}/neutral.v" "$NEU_TAG"; then
+    echo "    ABORT -- the neutral copy is byte-identical to the original, so"
+    echo "    it controls nothing."
+    exit 1
+fi
+if ! "$IVL_BIN/iverilog" -B "$IVL_LIB" -g2012 -o "$WORK/neutral" \
+        "$WORK/neutral.v" "$BFM" "$TB" 2> "$WORK/neutral_c.log"; then
+    echo "    ABORT -- the comment-only mutant DOES NOT COMPILE, so the control"
+    echo "    measured nothing.  This is the void branch's own failure mode"
+    echo "    occurring inside the control that exists to make the void branch"
+    echo "    attributable."
+    sed 's/^/      /' "$WORK/neutral_c.log" | head -3
+    exit 1
+fi
+NEU_OUT="$(timeout 170 "$IVL_BIN/vvp" -M "$IVL_LIB" "$WORK/neutral" \
+    +seed=1 +frames=20 2>&1)"
+if ! grep -q "RESULT: PASS" <<< "$NEU_OUT"; then
+    echo "    ABORT -- a comment-only edit was NOT a clean escape, so this bench"
+    echo "    is sensitive to a change that cannot alter behaviour and no"
+    echo "    detection below is attributable to the mutant carrying it."
+    grep -m1 '\*\* FAIL' <<< "$NEU_OUT" | sed 's/^/      /'
+    exit 1
+fi
+echo "    OK -- compiles and escapes on RESULT: PASS, which is the same"
+echo "    criterion every row below is scored by."
+echo
+
 DETECTED=0; ESCAPED=0; BROKEN=0
 for i in "${!names[@]}"; do
     SRC="$WORK/mut_$i.v"

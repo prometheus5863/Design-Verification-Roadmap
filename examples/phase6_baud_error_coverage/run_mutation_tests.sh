@@ -94,6 +94,46 @@ else
 fi
 echo
 
+# G2b NEUTRALITY CONTROL, added 2026-10-26; this runner had none.  Its own
+# criterion is asserted, not a shared one: a row here escapes on
+# "RESULT: PASS" with +budget=250, so that is what the neutral copy must do.
+echo "G2b neutrality control: a COMMENT-ONLY edit must compile and ESCAPE"
+echo "    (without it, this bench's detections are unattributable -- and this"
+echo "     bench is the one whose whole point is that the COVERAGE MODEL"
+echo "     detects nothing and only a check does, which makes the question"
+echo "     of what the check is actually sensitive to the load-bearing one)"
+NEU_SRC=rtl/uart_controller.v
+NEU_TAG=examples/phase6_baud_error_coverage/run_mutation_tests.sh
+# G2b-INJECT -- tools/test_neutrality_controls.py replaces THIS LINE
+# with an override of mc_neutral_copy, which is how the arm below is
+# mutation-tested without editing the committed runner or the shared
+# helper.  A single-line, single-purpose injection point: the 2026-10-25
+# selftest could only reach runners whose arm inlined its own `cp`.
+if ! mc_neutral_copy "$NEU_SRC" "${WORK}/neutral.v" "$NEU_TAG"; then
+    echo "    ABORT -- the neutral copy is byte-identical to the original, so"
+    echo "    it controls nothing."
+    exit 1
+fi
+if ! "$IVL_BIN/iverilog" -B "$IVL_LIB" -g2012 -o "$WORK/neutral" \
+        "$WORK/neutral.v" "$BFM" "$TB" 2> "$WORK/neutral_c.log"; then
+    echo "    ABORT -- the comment-only mutant DOES NOT COMPILE, so the control"
+    echo "    measured nothing rather than measuring a clean escape."
+    sed 's/^/      /' "$WORK/neutral_c.log" | head -3
+    exit 1
+fi
+NEU_OUT="$(timeout 170 "$IVL_BIN/vvp" -M "$IVL_LIB" "$WORK/neutral" \
+    +seed=1 +budget=250 2>&1)"
+if ! grep -q "RESULT: PASS" <<< "$NEU_OUT"; then
+    echo "    ABORT -- a comment-only edit was NOT a clean escape, so the"
+    echo "    anchored cross-check is sensitive to a change that cannot alter"
+    echo "    behaviour and no detection below is attributable."
+    grep -m1 'ERROR:' <<< "$NEU_OUT" | sed 's/^/      /'
+    exit 1
+fi
+echo "    OK -- compiles and escapes on RESULT: PASS, the same criterion"
+echo "    every row below is scored by."
+echo
+
 DETECTED=0; ESCAPED=0; BROKEN=0; UNEXPECTED=0
 for i in "${!names[@]}"; do
     SRC="$WORK/mut_$i.v"

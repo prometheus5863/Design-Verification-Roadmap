@@ -339,3 +339,43 @@ mc_require_sites() {
     mc__detail "SITES_OK:${n}"
     echo "SITES_OK:${n}"; return 0
 }
+
+# ----------------------------------------------------------------------------
+# CONTROL G2b (NEUTRALITY), added 2026-10-26
+# ----------------------------------------------------------------------------
+# Controls A, B and C above all ask whether the INJECTION arrived.  None asks
+# the opposite question, and without it every detection a runner prints is
+# unattributable: a bench that fails on a change which CANNOT alter behaviour
+# is measuring itself rather than the mutant.  2026-10-24 added that arm to
+# one runner as G2 and 2026-10-25 ported it to two more as G2b; the five
+# remaining transcript-comparing runners were CHECKED on 2026-10-26 and none
+# of them had one -- unlike the 2026-10-25 item's premise, where one of the
+# three named runners turned out to have a stronger arm already.
+#
+#   mc_neutral_copy SRC DEST TAG
+#
+# Writes a COMMENT-ONLY copy of SRC to DEST and returns non-zero if the copy
+# is byte-identical to SRC, in which case the arm would control nothing.
+#
+# IT DELIBERATELY DOES NOT JUDGE THE RESULT.  The caller compiles the copy and
+# runs it and asserts ITS OWN pass criterion.  2026-10-25 established that a
+# ported arm must assert the criterion its own runner scores rows by -- B
+# asserts a per-seed detection matrix, D asserts a classification -- and a
+# helper that also judged would silently give several runners one criterion
+# none of them actually uses.  That is the "an instrument built in one place
+# does not protect the other" rule applied to this helper itself: what is
+# shared here is the EDIT, which is identical everywhere, and not the
+# VERDICT, which is not.
+#
+# The comment text is also the needle tools/test_neutrality_controls.py
+# greps for, so changing it breaks that selftest loudly rather than quietly.
+mc_neutral_copy () {
+    local src="$1" dest="$2" tag="$3"
+    [ -f "$src" ] || return 1
+    cp "$src" "$dest" || return 1
+    printf '\n// G2b cosmetic-edit control, injected by %s\n' "$tag" >> "$dest"
+    if cmp -s "$src" "$dest"; then
+        return 1
+    fi
+    return 0
+}
