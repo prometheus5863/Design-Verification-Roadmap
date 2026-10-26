@@ -2774,3 +2774,86 @@ new failure behind an unchanged score — which is the cross-repository form of
 **Checklist movement.** The standing 2026-10-13 *cosmetic-edit positive
 control* item is **discharged** for the four mutation runners it names.
 Committed mutation reports become nineteen.
+
+---
+
+## 2026-10-26 — the CHECK that came before the port, and a positive control planted where it could not fire
+
+**Subject:** the 2026-10-25 **ranked-first** item — a cosmetic-edit control in
+the five remaining transcript-comparing runners, *with the check-before-porting
+step that item insisted on*. Three commits.
+
+### 1. The check, first, and recorded as verdicts rather than prose
+
+The 2026-10-25 item named five runners and said **"check before porting —
+today's whole §4 is what happens when that step is skipped, and `S6` is where
+each answer should be recorded so the next session does not re-ask."** All five
+were read before anything was written:
+
+| runner | controls it already had | neutral arm? |
+|---|---|---|
+| `phase6_bfm_equivalence` | A/B/C + `cmp -s` | **no** |
+| `phase6_baud_error_coverage` | C + `cmp -s` | **no** |
+| `phase6_rx_pin_driver` | C + `cmp -s` + a structural guard for M7 | **no** |
+| `phase4_ral` | A/B/C + the `MC_SELFTEST=1` positive control | **no** |
+| `phase6_uvm_crv_uart` | an unmutated `control` **row** | **no** |
+
+Unlike 2026-10-25 — where one of three named runners already carried a
+*stronger* arm — the premise held for all five. Every answer is now an `S6`
+row, so the next session reads a verdict instead of repeating the reading.
+
+**The `phase6_uvm_crv_uart` answer is the one worth keeping.** It has an
+unmutated `control` row, which is a **baseline**, not a neutrality control: a
+baseline asks whether the bench passes on *good* RTL; a neutrality arm asks
+whether it passes on RTL that is *different but cannot behave differently*.
+Conflating the two is how a runner looks controlled and is not.
+
+### 2. Three ported; two recorded and left
+
+`phase4_ral` and `phase6_uvm_crv_uart` both need cocotb, which does not
+install under the current egress allowlist, so they keep their answer and no
+arm. The three Icarus runners gained one:
+
+- `mc_neutral_copy` in `tools/mutation_controls.sh` performs the comment-only
+  edit and refuses a byte-identical copy.
+- It **deliberately does not judge the result**. 2026-10-25 established that a
+  ported arm must assert the criterion its *own* runner scores rows by, so
+  each runner compiles and runs the copy itself: E and F require
+  `RESULT: PASS` with their own `+frames=20` / `+budget=250` plumbing, G
+  requires `errors = 0`, the figure every `ESCAPED` row there is scored by.
+  What is shared is the **edit**, which is identical everywhere; not the
+  **verdict**, which is not.
+- G is the only one of the five whose mutation target is the **BFM** rather
+  than `rtl/uart_controller.v`, which is why the helper takes a path.
+- Each separates *the copy did not compile* from *the bench is sensitive to a
+  comment* into different messages — the 2026-10-25 lesson from runner B.
+
+**No mutant row in any of the three reports changes**: rx_pin 7/0/0, baud
+5 detected + 1 expected escape + 0 unexpected, bfm 7 detected + 1 expected
+void. Expected, and the point: the arm makes existing verdicts attributable,
+it does not revise them.
+
+### 3. The arms are mutation-tested, and the selftest caught its own first draft
+
+`tools/test_neutrality_controls.py` goes from two runners to five. **Two
+faults in today's first draft, both found by running it:**
+
+- **`N1` for runner E reused runner B's STATUS-decode `tx_empty` edit.** E is
+  the RX-pin bench and does not look at that field at all, so the "real"
+  behavioural edit was one E *cannot see*, the arm correctly did not abort,
+  and **E scored 3/4 with `N1` passing silently** — precisely the
+  "a control that can never fire" shape this file exists to catch, found in
+  this file. Each runner's `N1` is now one of its *own* detected rows: M1
+  (BAUD_DIV ignored) for E and F, row 8 (the BFM's return-to-idle assignment
+  dropped, 968 errors) for G. **Second session running in which a positive
+  control was planted somewhere it could not reach.**
+- **Refactoring the override table deleted `CP_LINE`, `COMMENT_TEXT`,
+  `REAL_SED` and `REAL_LINE`**, which runners B and D still need. B aborted
+  with a `NameError` rather than a verdict. Loud and immediate — and the
+  reason B and D were both re-run rather than assumed unaffected: *an
+  instrument extended in one place does not protect the other*, and this time
+  "the other" was the two runners the file already covered.
+
+Final: **B 4/4, D 4/4, E 4/4, F 4/4, G 4/4 — 20/20**, every `N0` clean.
+
+- [x] **Cosmetic-edit neutrality control in every runnable transcript-comparing runner** — COMPLETE 2026-10-26 for the three Icarus runners (`phase6_rx_pin_driver`, `phase6_baud_error_coverage`, `phase6_bfm_equivalence`); `phase4_ral` and `phase6_uvm_crv_uart` checked, recorded in `S6`, and blocked on cocotb. 20/20 on `tools/test_neutrality_controls.py` across all five runners carrying an arm.

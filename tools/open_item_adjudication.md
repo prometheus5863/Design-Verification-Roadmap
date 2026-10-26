@@ -373,7 +373,15 @@ not an accident, and today is the second recorded instance, which makes it a
 pattern rather than a one-off:** any session that changes the item list owes
 the audit a re-adjudication before the caller can be green.
 
-## OPEN: THE ONE REMAINING cmp -s RUNNER — phase6_crv_uart
+## OPEN: THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart
+
+**Heading corrected 2026-10-26.** It read `phase6_crv_uart`, which is a
+DIFFERENT directory and the one whose runners A, B and D are fully
+controlled; the runner this entry is about is `phase6_uvm_crv_uart`. The
+mismatch was invisible while the list's wording happened to be similar
+enough for the ranker to match the two, and it surfaced the moment the
+list bullet was re-worded. That is the standing *align the adjudication
+headings with the list wording* item, paid again.
 
 **Verdict: OPEN, and the item's own COUNT is unverified — which is the more
 useful finding.** The item says one remains, down from four, plus
@@ -537,3 +545,58 @@ written this session.
 
 Unblocked — removing a toolchain needs no toolchain — and it pays off across
 every suite at once rather than one.
+
+---
+
+## STALE for the three runnable runners, OPEN and blocked for two: A COSMETIC-EDIT CONTROL IN THE REMAINING TRANSCRIPT-COMPARING RUNNERS
+
+**Verdict: the work is done where it can be done, and the item's premise held
+this time.** Created 2026-10-25 as that session's ranked-first item, after the
+2026-10-24 wording of its predecessor turned out to be false about one of the
+three runners it named.
+
+The item's own instruction was the valuable part: *"CHECK BEFORE PORTING —
+today's whole §4 is what happens when that step is skipped, and `S6` is where
+each answer should be recorded so the next session does not re-ask."* All five
+runners were read on 2026-10-26 before anything was written, and **none
+carried a neutral arm**, so unlike the 2026-10-24 item this one was not
+asserting a tree state the tree denied.
+
+| runner | controls before | neutral arm? | 2026-10-26 |
+|---|---|---|---|
+| `phase6_bfm_equivalence` | A/B/C + `cmp -s` | no | **ported** |
+| `phase6_baud_error_coverage` | C + `cmp -s` | no | **ported** |
+| `phase6_rx_pin_driver` | C + `cmp -s` + M7 structural guard | no | **ported** |
+| `phase4_ral` | A/B/C + `MC_SELFTEST=1` | no | recorded, blocked on cocotb |
+| `phase6_uvm_crv_uart` | an unmutated `control` ROW | no | recorded, blocked on cocotb |
+
+**The distinction the `phase6_uvm_crv_uart` row turns on is worth stating
+once.** An unmutated `control` row is a **baseline**: it asks whether the
+bench passes on *good* RTL. A neutrality arm asks whether it passes on RTL
+that is *different but cannot behave differently*. The two look alike in a
+report and answer opposite questions, and conflating them is how a runner
+looks controlled and is not.
+
+**What is shared, and what deliberately is not.** `mc_neutral_copy` in
+`tools/mutation_controls.sh` performs the comment-only edit and refuses a
+byte-identical copy. It does **not** judge the result: each runner asserts the
+criterion its own rows are scored by (`RESULT: PASS` for E and F with their
+own plumbing, `errors = 0` for G). That split is the 2026-10-25 rule applied
+to the helper itself — the *edit* is identical everywhere, the *verdict* is
+not, and a helper that judged would silently hand several runners one
+criterion none of them uses.
+
+**NO-SUCCESSOR for the three ported runners.** `S6` now carries seven rows
+recording the five answers plus the shared-edit/own-verdict split and the
+selftest's coverage, and `tools/test_neutrality_controls.py` proves all five
+arms reachable (20/20). **The two blocked runners are carried by the standing
+toolchain item**, not by a revival of this one: the real obstacle there is
+that cocotb does not install under the current egress allowlist, which is a
+single item behind five separate symptoms and should be ranked as one.
+
+**And this entry records a fault in its own session's first draft**, because
+it is the same fault the entry above records: `N1` for runner E was planted
+with runner B's STATUS-decode edit, which the RX-pin bench cannot see, so the
+positive control could not fire and scored green. Second session running in
+which a positive control was planted somewhere it could not reach, and the
+first in which the file that exists to catch that shape contained it.

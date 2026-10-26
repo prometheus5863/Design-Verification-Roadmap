@@ -10692,3 +10692,289 @@ in-place annotation of the false count; the `S6` audit arm with the three
 adjudication entries and the refreshed transcript). This AUTOMATION_LOG.md
 entry makes **5**. Each was pushed immediately after commit and verified
 against the GitHub API.
+
+## 2026-10-26 — the check that came before the port, and a positive control planted where it could not fire
+
+**Subject:** the 2026-10-25 **ranked-first** item — a cosmetic-edit neutrality
+control in the five remaining transcript-comparing runners — *with the
+check-before-porting step that item insisted on*. Three commits plus this
+entry.
+
+### 1. The check, and this time the premise held
+
+The item's valuable part was its instruction: *"CHECK BEFORE PORTING — today's
+whole §4 is what happens when that step is skipped, and `S6` is where each
+answer should be recorded so the next session does not re-ask."* All five
+runners were read before anything was written:
+
+| runner | controls it already had | neutral arm? |
+|---|---|---|
+| `phase6_bfm_equivalence` | A/B/C + `cmp -s` | **no** |
+| `phase6_baud_error_coverage` | C + `cmp -s` | **no** |
+| `phase6_rx_pin_driver` | C + `cmp -s` + a structural guard for M7 | **no** |
+| `phase4_ral` | A/B/C + the `MC_SELFTEST=1` positive control | **no** |
+| `phase6_uvm_crv_uart` | an unmutated `control` **row** | **no** |
+
+Unlike 2026-10-25 — where one of three named runners carried a *stronger* arm
+already — this item was not asserting a tree state the tree denies. All five
+answers are now `S6` rows rather than prose, so the next session reads a
+verdict instead of repeating the reading. `S6` goes from 1 retired wording + 4
+content rows to 1 + 11.
+
+**The `phase6_uvm_crv_uart` answer is the one worth keeping.** It has an
+unmutated `control` row, which is a **baseline**, not a neutrality control: a
+baseline asks whether the bench passes on *good* RTL; a neutrality arm asks
+whether it passes on RTL that is *different but cannot behave differently*.
+The two look alike in a report and answer opposite questions, and conflating
+them is how a runner looks controlled and is not. That is a distinction this
+repository had not written down.
+
+### 2. Three ported, two recorded and left
+
+`phase4_ral` and `phase6_uvm_crv_uart` both need cocotb, which does not
+install under the current egress allowlist. The three Icarus runners gained
+the arm:
+
+- `mc_neutral_copy` in `tools/mutation_controls.sh` performs the comment-only
+  edit and refuses a byte-identical copy.
+- **It deliberately does not judge the result.** Each runner compiles and runs
+  the copy itself and asserts the criterion *its own rows are scored by*: E
+  and F require `RESULT: PASS` with their own `+frames=20` / `+budget=250`
+  plumbing, G requires `errors = 0`, the number every `ESCAPED` row there is
+  scored by. The 2026-10-25 rule applied to the helper itself — **the edit is
+  identical everywhere, the verdict is not**, and a helper that judged would
+  hand several runners one criterion none of them uses.
+- G is the only one of the five whose mutation target is the **BFM** rather
+  than `rtl/uart_controller.v`, which is why the helper takes a path.
+- Each runner separates *the copy did not compile* from *the bench is
+  sensitive to a comment* into different messages — the 2026-10-25 lesson
+  from runner B, which folded them into one.
+
+**No mutant row in any of the three reports changes.** rx_pin 7 detected / 0
+escaped / 0 voided; baud 5 detected / 1 expected escape / 0 unexpected / 0
+voided; bfm 7 detected / 0 escaped / 1 expected void — row for row identical
+to the pre-port runs, which were taken first for exactly this comparison.
+Expected, and the point: the arm makes existing verdicts attributable, it does
+not revise them.
+
+### 3. The arms are mutation-tested — and the selftest caught its own first draft twice
+
+`tools/test_neutrality_controls.py` goes from two runners to five, asking the
+same four questions of each (`N0` unmutated must reach the arm and exit 0;
+`N1` a real behavioural edit must abort; `N2` a byte-identical copy must
+abort; `N3` a non-Verilog edit must abort rather than read the compile failure
+as a clean escape), each with a needle only the intended arm prints.
+
+**Two faults in today's own first draft, both found by running it:**
+
+- **`N1` for runner E reused runner B's STATUS-decode `tx_empty` edit.** E is
+  the RX-pin bench and does not read that field at all, so the "real"
+  behavioural edit was one E *cannot see*, the arm correctly did not abort,
+  and **E scored 3/4 with `N1` passing silently.** That is exactly the "a
+  control that reports green and can never report anything else" shape this
+  file exists to catch — found *in this file*. Each runner's `N1` is now one
+  of its own detected rows: M1 (BAUD_DIV ignored by the baud generator) for E
+  and F, row 8 (the BFM's return-to-idle assignment dropped, 968 errors
+  there) for G. **Second session running in which a positive control was
+  planted somewhere it could not reach**, and the first in which the
+  instrument built to catch that shape contained it.
+- **Refactoring the override table deleted `CP_LINE`, `COMMENT_TEXT`,
+  `REAL_SED` and `REAL_LINE`**, which runners B and D still need. B aborted
+  with a `NameError` instead of a verdict. Loud and immediate — and the reason
+  B and D were both re-run rather than assumed unaffected: *an instrument
+  extended in one place does not protect the other*, and this time "the other"
+  was the two runners the file already covered.
+
+Final: **B 4/4, D 4/4, E 4/4, F 4/4, G 4/4 — 20/20**, every `N0` clean. The
+committed transcript is the concatenation of five per-runner runs, each
+printing its own TOTAL, so a partial report cannot pass as a complete one.
+
+### 4. Environment and automation health
+
+Icarus 10.3 was **already installed in `/tmp/iverilog_install` from an earlier
+session** — `/tmp` survives between sessions on this VM — so
+`tools/setup_iverilog.sh` was sourced (without a pipe) but installed nothing.
+**Cloned straight into `/tmp`**: the device VM's `/sessions` filesystem is
+still 100 % full (9.3 G of 9.8 G, other sessions' directories, unreadable and
+undeletable from here) and the first clone attempt elsewhere failed with *"No
+space left on device"* after a partial checkout.
+
+**New operational fact, and it is the same one the sibling graphene
+repository hit today from the other side: `export TMPDIR=/tmp`.** Anything
+that calls `mktemp -d` — which is every runner here — puts its work directory
+on `/sessions` by default, and on a full filesystem that fails mid-run rather
+than refusing cleanly. The graphene repository's pristine-transcript audit
+aborted with *"fatal: sha1 file … index.lock write error. Out of diskspace"*
+for precisely this reason and recorded a traceback where a verdict should have
+been. **Two repositories, one day, one environment fault, two different
+symptoms** — which is the third earned instance of *an instrument built in one
+place does not protect the other*, here with the environment in the role of
+the instrument.
+
+The runners must be invoked with `bash`, not `sh`: they are `#!/usr/bin/env
+bash` scripts using arrays and `<<<`, and `sh run_mutation_tests.sh` fails at
+`source: not found`. Live web search was not used; today's subject is this
+repository's own runners measured against themselves. Every commit pushed
+immediately and verified against the GitHub API.
+
+**Not yet covered (candidates for future runs):**
+
+- **MAKE cocotb INSTALLABLE, OR DECIDE IT IS NOT** — created today, **ranked
+  first**, and it is one item behind at least five separate symptoms, every
+  one of which this list currently carries as its own bullet: the two
+  un-ported neutrality arms (`phase4_ral`, `phase6_uvm_crv_uart`), the five
+  suites without a current report, the equal-budget control re-run, the other
+  `tx_empty` prediction, and the capstone box's lettered remainder (b) and
+  (c). Ranking them separately makes the list look like six pieces of
+  available work when it is one blocked decision.
+  `notes/2026-09-06-uvm-python-toolchain-resolution.md` has the recipe that
+  worked when the egress allowlist was wider (`python-constraint` needs
+  `--use-pep517`; `uvm-python` 0.4.0 requires `cocotb<2.0`). The honest
+  outcomes are: it installs under the current allowlist, or the five symptoms
+  are retired together as out of scope and the list stops ranking them.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  2026-10-25, **ranked second**, and today is an argument for it rather than
+  progress on it: `S6` grew from 5 rows to 12, all still hand-written from
+  the day's finding. The mechanical form is unchanged — for every item on the
+  current list, extract the claims it makes about named files and ask which
+  are checkable; the items already go through `BACKTICK.findall` for `S1`, so
+  the parse exists.
+- **A POSITIVE CONTROL MUST BE PLANTED WHERE IT CAN FIRE, AND THAT IS NOW
+  MEASURABLE** — created today, **ranked third**. Two sessions running have
+  found a positive control planted somewhere it could not reach: 2026-10-25's
+  `G6`-equivalent in the graphene repository behind an earlier refusal, and
+  today's `N1` for runner E using a defect that bench cannot see. Both were
+  found by mutating the suite, which is expensive. The cheap standing check
+  is narrower: **for every positive control that injects a named defect,
+  assert that the runner under test has a committed report row DETECTING that
+  same defect.** Today's repair is exactly that assertion made by hand three
+  times; mechanising it needs only the report files, which are committed.
+- **AUDIT WHAT ELSE A RUNNER'S VERDICT NEVER REACHES** — carried from
+  2026-10-23, untouched. Population: `fail_count`, `SURPRISES`, `MOVERS`,
+  `notrun`, `BADINJ`, and from 2026-10-25 `neu_ok` and `neu_built`. Today
+  adds `neu_errs` in runner G and the three `NEU_OUT` greps in E and F to the
+  same population. Cheapest entry unchanged: for each runner, list every
+  variable appearing in a summary `echo` and check whether it appears in any
+  `exit` condition.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried from 2026-10-24, and today is a third argument for it: the
+  selftest's `N1` overrides are `sed` programs embedded in a shell function
+  embedded in a Python string literal, and getting the quoting wrong there
+  produces a mutant that changes nothing — which `mc_neutral_copy`'s own
+  `cmp -s` tail catches, but only because that tail was written in.
+- **REGENERATE EVERY COMMITTED TRANSCRIPT EACH SESSION, NOT ONLY THE ONES THE
+  SESSION TOUCHED** — carried from 2026-10-25, and **the sibling graphene
+  repository discharged it today and found six stale transcripts describing a
+  repository with eleven fewer files than the current one**, hiding five
+  `MIXED` names and twelve frozen-vs-live numeric literals for six sessions.
+  That is strong evidence for doing it here, where the committed reports are
+  dated files rather than a single refreshed transcript, so staleness is
+  *invisible by design*: an old `mutation_test_report_2026-09-25.txt` sitting
+  beside a new one looks like history rather than like a claim. The stronger
+  form remains **pin each permanently-red suite's failing MEMBERSHIP, not its
+  count**.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  2026-10-22. "Coverage closure is a pass criterion, not a report line"
+  remains **unevidenced** rather than wrong. Today's runner F is the nearest
+  worked reference: its own report says the coverage model detects none of its
+  mutants and every detection comes from an anchored check.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; **still the
+  cheapest remaining pure content item**, and still the only queued item that
+  adds verification reach rather than auditing existing reach.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20, adjudicated 2026-10-25, and it should rank **above** the blocked
+  items: it needs no toolchain, the edges are already enumerated in a
+  committed report, and a comment that contradicts its code is this
+  repository's most-recorded fault. Today adds roughly thirty lines of new
+  comment to three runners and one tool, every line of which is an assertion
+  about why an arm exists, so the population it audits grew.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row; today supplies a **ninth** worked
+  reference for a non-binary outcome axis (`N0`/`N1`/`N2`/`N3` with the
+  injection-failed case distinct from both pass and fail), and the sibling
+  repository supplies a tenth today with its four-valued dependence axis.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, **ninth** session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried; a paragraph asserting what a change does not affect is a claim
+  about file content, the class `S6` exists for.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  sixteen sessions old.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; still no stated
+  expectation with a spread.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried; the
+  census is complete *within* its five files and says so, and the file list is
+  the part no check can grow by itself. Pairs with the `cmp -s` item: both are
+  *enumerate the population before trusting a count*.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'s CROSSES, AND
+  AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — carried from 09-26/09-27.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, **ninth**
+  consecutive session, and today strengthens it yet again: three more runners
+  now refuse a non-neutral neutrality control, which means precisely nothing
+  until something runs them. Three of today's three ports were verified by
+  hand, one `device_bash` call each.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried.
+- **THE ONE REMAINING `cmp -s` RUNNER** — `phase6_uvm_crv_uart`. Today's
+  check adds that its `cmp -s` sits beside a `control` row which is a
+  baseline and not a neutrality arm, so the two gaps there are one session's
+  work once cocotb is settled.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, **tenth** session. Two suites gate, four have never
+  been tested this way, and today adds three more arms that call `iverilog`
+  and `vvp` directly and would fail in some unexamined manner without them.
+  **Restored to this list after the staleness audit reported its adjudication
+  entry orphaned**: it was dropped from the first draft of today's list, which
+  is the same fault 2026-10-25 recovered two items from.
+- **THE CAPSTONE BOX'S LETTERED REMAINDER** — (b) SVA protocol checkers bound
+  into the UVM environment, (c) `PayloadAdmissibilityCoverage` wired into the
+  live `UartCoverage` collector. **Ninth** session untouched; both need
+  cocotb. **Also restored today from an orphaned adjudication entry**: the
+  first draft of this list compressed it into the ranked-first cocotb item,
+  and the 2026-10-25 entry had already recorded that an item compressed into
+  another bullet is invisible to `S3` — so the warning was one session old and
+  was ignored by the session that wrote it down.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11,
+  fourteenth session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **seventeenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; per-property coverage of the
+  Phase 4 UVM environment (09-23); a less greedy steering policy (09-24) —
+  still promoted; widen the coverage model (09-24) — likewise; two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants
+  not yet attempted (interrupt enable combinations, reset asserted mid-frame);
+  a property needing a strengthening invariant; the SVA sequence layer (open
+  since 09-20); code coverage measurement (Icarus has none, open since
+  09-18); Phase 6 lint, regression infra, coverage merge, CDC basics,
+  interview prep.
+
+### 5. And the staleness audit caught two live items dropped from this list
+
+Run before committing, as this repository's own rule requires a new list and a
+refreshed adjudication in the same commit, it reported **two orphaned `OPEN`
+adjudication entries** — *RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN
+DELIBERATELY REMOVED*, simply dropped from the first draft of the list above,
+and *THE CAPSTONE BOX'S LETTERED REMAINDER*, compressed into the ranked-first
+cocotb item. **The 2026-10-25 entry recorded both failure modes explicitly**,
+one of them in the words *"an item compressed into a prose tail sentence is
+invisible to `S3`, so compressing is not a neutral formatting choice"* — a
+warning one session old, written down, and then ignored by the next session.
+Both are restored as first-class bullets. It also reported the `cmp -s` item
+`MISSING` as soon as its bullet was re-worded, which exposed that the matching
+adjudication heading had named **`phase6_crv_uart`** where the runner is
+**`phase6_uvm_crv_uart`** — a wrong directory the ranker had been papering
+over by text similarity. Corrected in place with the correction stated.
+**Twice now this audit has recovered live work from its own trail rather than
+from memory, in consecutive sessions.** 30/30 after the repairs.
+
+**Commits this run:** 3 (the three ports with the shared helper and their
+regenerated reports; the extended selftest with its 20/20 transcript; this
+entry with the refreshed list, the seven new `S6` rows, the adjudication entry
+and heading correction, and the progress.md session note). Each was pushed
+immediately after commit and verified against the GitHub API.

@@ -2,15 +2,15 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 43 "Not yet covered" lists; the most recent has 29 items
-  progress.md: 32 completed checkboxes, 4 unchecked
+  AUTOMATION_LOG.md: 44 "Not yet covered" lists; the most recent has 27 items
+  progress.md: 33 completed checkboxes, 4 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 3   resolved: 3   unresolved: 0
+  paths named: 5   resolved: 5   unresolved: 0
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
   [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
@@ -18,7 +18,7 @@ S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
 S2 -- every "created <date>" parses and is not in the future
 ------------------------------------------------------------------------------
-  dates found: 3   ok: 3   bad: 0
+  dates found: 2   ok: 2   bad: 0
   [PASS] no open item carries an unparseable or future creation date
 
 ------------------------------------------------------------------------------
@@ -30,14 +30,14 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
     score  open item
     0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
     0.600  - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carried.  <-- adjudicate
-    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 2026-10-22. "C...  <-- adjudicate
-    0.455  - RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED — carried from 2026...  <-- adjudicate
     0.429  - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no stated expectation with a...  <-- adjudicate
-    0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, fifteen sessions ol...  <-- adjudicate
-    0.333  - THE OTHER tx_empty PREDICTION, IN phase4_ral — carried, blocked on cocotb.
-    0.333  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 2026-10-17, eighth se...
-    0.333  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried, and raised...
-    0.333  - THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart.
+    0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, sixteen sessions ol...  <-- adjudicate
+    0.370  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 2026-10-22. "C...  <-- adjudicate
+    0.333  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 2026-10-17, ninth ses...  <-- adjudicate
+    0.333  - THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart. Today's check adds that its c...  <-- adjudicate
+    0.286  - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such tool exists.
+    0.281  - AUDIT WHAT ELSE A RUNNER'S VERDICT NEVER REACHES — carried from 2026-10-23, untouche...
+    0.265  - RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED — carried from 2026...
 
   top match for the highest-ranked item:
     - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
@@ -48,10 +48,10 @@ S4 -- the committed adjudication of the top 6
   adjudication entries on disk: 22
     OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
     OPEN    - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carri...
-    OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
-    OPEN    - RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY R...
     OPEN    - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no...
     OPEN    - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — ca...
+    OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
+    OPEN    - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried ...
     WORDING Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
             still on the list as: - THE CAPSTONE BOX'S LETTERED REMAINDER — (b) SVA protocol che...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
@@ -103,7 +103,21 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          examples/phase6_crv_uart/run_mutation_tests.sh  contains "G2  neutrality control"  --  the worked reference.  If this disappears, the three ports above are no longer ports of anything and the family has no stated original.
   [PASS] the new arms are mutation-tested rather than trusted
          tools/test_neutrality_controls.py  contains "N1 a REAL behavioural edit"  --  a control that reports green and can never report anything else is not a control; this row ties the arms to the suite that proves them reachable.
+  [PASS] runner E (phase6_rx_pin_driver) HAS a cosmetic-edit control
+         examples/phase6_rx_pin_driver/run_mutation_tests.sh  contains "G2b NEUTRALITY CONTROL"  --  checked 2026-10-26: it had controls A/B/C and cmp -s and no neutral arm, and was ported the same day.  Red if the port is reverted while the list still claims it.
+  [PASS] runner F (phase6_baud_error_coverage) HAS a cosmetic-edit control
+         examples/phase6_baud_error_coverage/run_mutation_tests.sh  contains "G2b NEUTRALITY CONTROL"  --  checked 2026-10-26, same answer and same day.  This is the bench whose stated point is that the coverage model detects nothing and only a check does, so what the check is sensitive to is load-bearing there.
+  [PASS] runner G (phase6_bfm_equivalence) HAS a cosmetic-edit control
+         examples/phase6_bfm_equivalence/run_mutation_tests.sh  contains "G2b NEUTRALITY CONTROL"  --  checked 2026-10-26, same answer and same day.  The only one of the five whose mutation target is the BFM rather than the RTL, which is why mc_neutral_copy takes a path.
+  [PASS] the neutral EDIT is shared and the VERDICT is not
+         tools/mutation_controls.sh  contains "IT DELIBERATELY DOES NOT JUDGE THE RESUL"  --  mc_neutral_copy performs the comment-only edit and refuses a byte-identical copy; each runner asserts its own pass criterion.  If this comment goes, the next port is liable to give several runners one criterion none of them uses.
+  [PASS] phase4_ral still has NO cosmetic-edit control -- CHECKED, not assumed
+         examples/phase4_ral/run_mutation_tests.sh  lacks "G2b"  --  checked 2026-10-26: controls A/B/C via tools/mutation_controls.sh plus the MC_SELFTEST=1 positive control, and no neutral arm.  NOT ported because the bench needs cocotb, which does not install under the current egress allowlist.  This row is a REMINDER and not a permanently-red one: it is green while the gap is open and goes red on the day the arm lands, which is the day the list must be updated.
+  [PASS] phase6_uvm_crv_uart still has NO cosmetic-edit control -- CHECKED
+         examples/phase6_uvm_crv_uart/run_mutation_tests.sh  lacks "G2b"  --  checked 2026-10-26: it has an unmutated `control` ROW, which is a BASELINE and not a neutrality control -- a baseline asks whether the bench passes on good RTL, a neutrality arm asks whether it passes on RTL that is different but cannot behave differently.  Conflating the two is how a runner looks controlled and is not.  Blocked on cocotb, same as the row above.
+  [PASS] the selftest covers all FIVE runners, not the original two
+         tools/test_neutrality_controls.py  contains "MARKER_RUNNERS = ('E', 'F', 'G')"  --  extended 2026-10-26.  Two runners inline their own cp and three are injected at a declared marker; if this goes, three arms are untested again while the file still claims five.
 
 ==============================================================================
-RESULT: 23 passed, 0 failed
+RESULT: 30 passed, 0 failed
 ==============================================================================

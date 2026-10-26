@@ -549,6 +549,72 @@ CONTENT_CLAIMS = (
      'a control that reports green and can never report anything else is '
      'not a control; this row ties the arms to the suite that proves them '
      'reachable.'),
+
+    # ----------------------------------------------------------------------
+    # THE 2026-10-26 CHECK, RECORDED SO THE NEXT SESSION DOES NOT RE-ASK.
+    # The 2026-10-25 ranked-first item named five runners and said "CHECK
+    # BEFORE PORTING -- today's whole Section 4 is what happens when that
+    # step is skipped, and S6 is where each answer should be recorded".  All
+    # five were read on 2026-10-26 and none carried a neutral arm, so this
+    # time the premise held; the answers are below rather than in prose, so
+    # a future session reads a verdict instead of repeating the reading.
+    # ----------------------------------------------------------------------
+    ('runner E (phase6_rx_pin_driver) HAS a cosmetic-edit control',
+     'examples/phase6_rx_pin_driver/run_mutation_tests.sh',
+     'G2b NEUTRALITY CONTROL',
+     True,
+     'checked 2026-10-26: it had controls A/B/C and cmp -s and no neutral '
+     'arm, and was ported the same day.  Red if the port is reverted while '
+     'the list still claims it.'),
+    ('runner F (phase6_baud_error_coverage) HAS a cosmetic-edit control',
+     'examples/phase6_baud_error_coverage/run_mutation_tests.sh',
+     'G2b NEUTRALITY CONTROL',
+     True,
+     'checked 2026-10-26, same answer and same day.  This is the bench whose '
+     'stated point is that the coverage model detects nothing and only a '
+     'check does, so what the check is sensitive to is load-bearing there.'),
+    ('runner G (phase6_bfm_equivalence) HAS a cosmetic-edit control',
+     'examples/phase6_bfm_equivalence/run_mutation_tests.sh',
+     'G2b NEUTRALITY CONTROL',
+     True,
+     'checked 2026-10-26, same answer and same day.  The only one of the '
+     'five whose mutation target is the BFM rather than the RTL, which is '
+     'why mc_neutral_copy takes a path.'),
+    ('the neutral EDIT is shared and the VERDICT is not',
+     'tools/mutation_controls.sh',
+     'IT DELIBERATELY DOES NOT JUDGE THE RESULT',
+     True,
+     'mc_neutral_copy performs the comment-only edit and refuses a '
+     'byte-identical copy; each runner asserts its own pass criterion.  If '
+     'this comment goes, the next port is liable to give several runners one '
+     'criterion none of them uses.'),
+    ('phase4_ral still has NO cosmetic-edit control -- CHECKED, not assumed',
+     'examples/phase4_ral/run_mutation_tests.sh',
+     'G2b',
+     False,
+     'checked 2026-10-26: controls A/B/C via tools/mutation_controls.sh plus '
+     'the MC_SELFTEST=1 positive control, and no neutral arm.  NOT ported '
+     'because the bench needs cocotb, which does not install under the '
+     'current egress allowlist.  This row is a REMINDER and not a '
+     'permanently-red one: it is green while the gap is open and goes red on '
+     'the day the arm lands, which is the day the list must be updated.'),
+    ('phase6_uvm_crv_uart still has NO cosmetic-edit control -- CHECKED',
+     'examples/phase6_uvm_crv_uart/run_mutation_tests.sh',
+     'G2b',
+     False,
+     'checked 2026-10-26: it has an unmutated `control` ROW, which is a '
+     'BASELINE and not a neutrality control -- a baseline asks whether the '
+     'bench passes on good RTL, a neutrality arm asks whether it passes on '
+     'RTL that is different but cannot behave differently.  Conflating the '
+     'two is how a runner looks controlled and is not.  Blocked on cocotb, '
+     'same as the row above.'),
+    ('the selftest covers all FIVE runners, not the original two',
+     'tools/test_neutrality_controls.py',
+     "MARKER_RUNNERS = ('E', 'F', 'G')",
+     True,
+     'extended 2026-10-26.  Two runners inline their own cp and three are '
+     'injected at a declared marker; if this goes, three arms are untested '
+     'again while the file still claims five.'),
 )
 
 
