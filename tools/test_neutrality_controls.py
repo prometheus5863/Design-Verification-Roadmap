@@ -12,6 +12,15 @@ that had never been injected and whose compile error was scored as its
 detection.  So the new arm is mutation-tested before it is trusted, and the
 port is not claimed to work merely because it printed OK.
 
+EXTENDED 2026-10-26 to runners E, F and G -- the three transcript-comparing
+runners that gained the arm that day.  All five of the runners the 2026-10-25
+item named were CHECKED FIRST and none had one, so unlike that session's item
+(which named three runners of which one already carried a STRONGER arm) the
+premise held.  E and F carry the arm over rtl/uart_controller.v; G carries it
+over bfm/uart_rx_pin_bfm.v, the only one of the five whose mutation target is
+not the RTL, which is why the shared helper takes a path rather than reading a
+fixed one.
+
 THE QUESTION, asked identically of each runner carrying a G2b arm:
 
     Inject one defect into a COPY of the runner, run it, and require the copy
@@ -47,7 +56,7 @@ the runner it copies, at the same depth, and removed afterwards.
 
 NO COMMITTED RUNNER IS EDITED.
 
-Usage:  python3 tools/test_neutrality_controls.py [B|D]
+Usage:  python3 tools/test_neutrality_controls.py [B|D|E|F|G]
 Run from the repo root.  With no argument every runner is tested; with a
 runner letter only that one, because a full pass is ~6 minutes and the
 automation environment caps a single call at 180 s.  The committed report is
@@ -66,36 +75,105 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUNNERS = (
     ('B', 'examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh'),
     ('D', 'examples/phase6_crv_uart/run_mutation_tests_bimodal.sh'),
+    # Added 2026-10-26 with the three ports.  These three carry the arm via
+    # `mc_neutral_copy` in tools/mutation_controls.sh rather than an inlined
+    # `cp`, so they are injected at a declared `# G2b-INJECT` marker with a
+    # shell-function OVERRIDE instead of by rewriting a `cp` line.  Overriding
+    # inside the COPY, not in the shared helper, is deliberate: the helper is
+    # read by three runners and mutating it would test them all at once and
+    # name none of them.
+    ('E', 'examples/phase6_rx_pin_driver/run_mutation_tests.sh'),
+    ('F', 'examples/phase6_baud_error_coverage/run_mutation_tests.sh'),
+    ('G', 'examples/phase6_bfm_equivalence/run_mutation_tests.sh'),
 )
 
-# The two lines of the committed arm, as every runner carrying it holds them.
+# The runners whose arm is injected at the marker rather than at a `cp` line.
+MARKER = '# G2b-INJECT -- tools/test_neutrality_controls.py replaces THIS LINE'
+MARKER_RUNNERS = ('E', 'F', 'G')
+
+# One override per defect, substituted for the marker line inside the COPY.
+# N1 is a REAL behavioural edit, and for E/F it is the same STATUS-decode
+# defect runner B's T1 uses, for the same reason: both benches demonstrably
+# detect it, so a non-abort cannot be excused as an undetectable edit.  G
+# mutates the BFM rather than the RTL, so its N1 edit has to be a BFM one --
+# dropping the return-to-idle assignment, which is G's own row 8 and is
+# DETECTED there with 968 errors.
+# The two lines of the committed arm, as runners B and D hold it inline.
 CP_LINE = 'cp "$RTL" "$WORK/neutral.v"'
 COMMENT_TEXT = '// G2b cosmetic-edit control'
 
-# A REAL behavioural change: tx_empty stuck clear in the STATUS decode.  This
-# is runner B's own T1 mutant, chosen because both benches are known to detect
-# it, so an N1 that does not abort cannot be excused as an undetectable edit.
+# A REAL behavioural change for B and D: tx_empty stuck clear in the STATUS
+# decode.  This is runner B's own T1 mutant, chosen because both benches are
+# known to detect it, so an N1 that does not abort cannot be excused as an
+# undetectable edit.  E, F and G need their OWN rows -- see OVERRIDES below
+# and the fault that comment records.
 REAL_SED = ("s/rx_avail, rx_full, tx_empty, tx_full};"
             "/rx_avail, rx_full, 1'b0, tx_full};/")
 REAL_LINE = ('sed "%s" "$RTL" > "$WORK/neutral.v"'
              % REAL_SED.replace('"', '\\"'))
 
-# THE NEEDLE IS ARM-SPECIFIC, AND THAT IS THE POINT.  The first draft of this
-# file matched the bare string "ABORT" for N1 and N3.  Every abort in these
-# runners prints "ABORT", G1's included, so that needle would have passed on a
-# mutant that aborted for an unrelated reason and on a mutant whose two
-# distinct failure modes produced one indistinguishable message -- the
-# weak-question fault this repository has now found in seven of its own
-# verdicts.  Each needle below is a sentence only the intended arm prints, and
-# N1's and N3's differ, which is what makes "refused for the right reason"
-# measurable rather than assumed.  Separating them required giving runner B
-# its own compile guard; runner D already had one.
+OVERRIDES = {}
+
+# N1 must be a defect the runner under test DEMONSTRABLY DETECTS, or a
+# non-abort could be excused as an undetectable edit rather than read as a
+# dead arm.  THE FIRST DRAFT GOT THIS WRONG AND THIS FILE SAID SO: it reused
+# runner B's STATUS-decode `tx_empty` edit for E, the RX-pin bench, which
+# does not look at that field at all.  E scored 3/4 with N1 passing SILENTLY
+# -- the very "a control that can never fire" shape this file exists to
+# catch, found in this file.  Each runner's N1 is now one of its OWN detected
+# rows: M1 (BAUD_DIV ignored by the baud generator) for E and F, and row 8
+# (the BFM's return-to-idle assignment dropped, 968 errors there) for G,
+# which mutates the BFM and not the RTL.
+_NEU_TAIL = 'cmp -s "$1" "$2" && return 1; return 0; }'
+_N1_SED_RTL = "s|else if (baud_cnt == 8'd0) baud_cnt <= baud_div;|else if (baud_cnt == 8'd0) baud_cnt <= 8'd0;|"
+_N1_SED_BFM = 's/rx = 1.b1;                       \\/\\/ return to idle//g'
+_N1_RTL = ('mc_neutral_copy () { sed "' + _N1_SED_RTL
+           + '" "$1" > "$2"; ' + _NEU_TAIL)
+_N1_BFM = ('mc_neutral_copy () { sed "' + _N1_SED_BFM
+           + '" "$1" > "$2"; ' + _NEU_TAIL)
+_N2 = 'mc_neutral_copy () { cp "$1" "$2"; ' + _NEU_TAIL
+_N3 = ('mc_neutral_copy () { cp "$1" "$2"; '
+       'printf "\\nthis is not verilog\\n" >> "$2"; return 0; }')
+for _r in ('E', 'F'):
+    OVERRIDES[_r] = {'n1': _N1_RTL, 'n2': _N2, 'n3': _N3}
+OVERRIDES['G'] = {'n1': _N1_BFM, 'n2': _N2, 'n3': _N3}
+
 NEEDLES = {
     'B': {'n1': 'was not a clean escape in every',
+          'n2': 'controls nothing',
           'n3': 'DOES NOT COMPILE, so the'},
     'D': {'n1': 'was not a clean PASS in both',
+          'n2': 'controls nothing',
           'n3': 'does not COMPILE, so the'},
+    # E and F share the N1 and N3 wording with each other but not within
+    # themselves, which is the property that matters: a needle has to tell
+    # THIS runner's arms apart, not tell runners apart.
+    'E': {'n1': 'was NOT a clean escape, so this bench',
+          'n2': 'byte-identical to the original',
+          'n3': "void branch's own failure mode"},
+    'F': {'n1': 'was NOT a clean escape, so the',
+          'n2': 'byte-identical to the original',
+          'n3': 'measured nothing rather than measuring a clean escape'},
+    'G': {'n1': 'reported errors = ',
+          'n2': 'byte-identical; it controls nothing',
+          'n3': 'void branch\'s failure mode inside'},
 }
+
+
+def mutate_marker(src, name, tag):
+    """Replace the declared `# G2b-INJECT` marker line with an override.
+
+    Returns None if the marker is absent -- reported as a failed injection and
+    never as a pass, which is the `BADINJ` distinction 2026-10-25 established.
+    """
+    if tag == 'n0':
+        return src
+    lines = src.splitlines(True)
+    hit = [i for i, l in enumerate(lines) if l.startswith(MARKER)]
+    if len(hit) != 1:
+        return None
+    lines[hit[0]] = OVERRIDES[name][tag] + '\n'
+    return ''.join(lines)
 
 
 def mutate(src, tag):
@@ -127,11 +205,12 @@ def mutate(src, tag):
     raise AssertionError(tag)
 
 
-def run_probe(runner, tag):
+def run_probe(runner, tag, name=None):
     """(returncode, output) for a mutated copy placed BESIDE the runner."""
     path = os.path.join(ROOT, runner)
     src = io.open(path, encoding='utf-8').read()
-    mut = mutate(src, tag)
+    mut = (mutate_marker(src, name, tag) if name in MARKER_RUNNERS
+           else mutate(src, tag))
     if mut is None:
         return None, 'anchor not found'
     if tag != 'n0' and mut == src:
@@ -172,8 +251,10 @@ def main():
         print('RUNNER %s  %s' % (name, runner))
         print('-' * 62)
 
-        rc, out = run_probe(runner, 'n0')
-        reached = ('G2b holds' in out) or ('comment-only edit escapes' in out)
+        rc, out = run_probe(runner, 'n0', name)
+        reached = ('G2b holds' in out) or ('comment-only edit escapes' in out) \
+            or ('compiles and escapes on RESULT: PASS' in out) \
+            or ('errors = 0 on the comment-only edit' in out)
         check(rc == 0 and reached,
               'N0 negative control: the UNMUTATED copy reaches G2b, passes '
               'and exits 0',
@@ -188,11 +269,11 @@ def main():
             ('n1', 'N1 a REAL behavioural edit in place of the comment is '
                    'refused', NEEDLES[name]['n1']),
             ('n2', 'N2 an edit that changes NOTHING is refused',
-             'controls nothing'),
+             NEEDLES[name]['n2']),
             ('n3', 'N3 an edit that emits non-Verilog is refused, and by a '
                    'DIFFERENT message than N1', NEEDLES[name]['n3']),
         ):
-            rc, out = run_probe(runner, tag)
+            rc, out = run_probe(runner, tag, name)
             if rc is None:
                 check(False, label,
                       'the injection itself failed (%s), so nothing was '
