@@ -1,0 +1,22 @@
+========================================================================
+FREE-NAME AUDIT -- names that raise NameError when reached
+========================================================================
+
+  root           : /tmp/dvr
+  python files   : 36
+
+  CLEAN          : 35
+  FINDING        : 1
+  UNSOUND        : 0  (star import -- cannot be cleared)
+  UNPARSEABLE    : 0
+
+------------------------------------------------------------------------
+
+  examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py  [FINDING]
+      scope UartCrvTest._tail
+      name  line
+      why   referenced, resolves to global scope, bound nowhere at module level
+
+------------------------------------------------------------------------
+  RESULT         : FAIL  (1 file(s) not clean)
+========================================================================

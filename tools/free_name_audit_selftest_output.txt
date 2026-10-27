@@ -1,0 +1,26 @@
+========================================================================
+FREE-NAME AUDIT SELFTEST -- can this check fail at all?
+========================================================================
+
+  POSITIVE CONTROLS (the audit MUST report each defect)
+    PASS P1 extracted method keeps caller's local (the real 2026-10-11 defect)
+    PASS P2 name deleted by a refactor but still referenced (2026-10-26's fault)
+    PASS P3 typo in a module-level constant's name
+    PASS P4 nested function referencing an undefined global
+    PASS P5 class body referencing an undefined global
+
+  NEGATIVE CONTROLS (the audit MUST stay silent -- no false alarms)
+    PASS N1 closure over an enclosing function's local must NOT be reported
+    PASS N2 module global defined AFTER the function must NOT be reported
+    PASS N3 `global` + assignment inside a function must NOT be reported
+    PASS N4 builtins and dunders must NOT be reported
+    PASS N5 imported name must NOT be reported
+    PASS N6 comprehension variable must NOT be reported
+    PASS N7 method referring to another method via self must NOT be reported
+
+  SOUNDNESS CONTROLS (the audit MUST refuse to clear these)
+    PASS U1 a star import must be reported UNSOUND, never CLEAN
+    PASS U2 a file that does not parse must be reported UNPARSEABLE, never CLEAN
+
+  TOTAL: 14 passed, 0 failed
+========================================================================
