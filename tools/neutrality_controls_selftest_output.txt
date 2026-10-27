@@ -15,9 +15,16 @@ RUNNER B  examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh
   PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
        rc=1  message-matched=True
 
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+  PASS N4 every file the probes created in a runner directory was removed
+       the probes created no file in any runner directory on this run
+
 ==============================================================
-TOTAL: 4 passed, 0 failed
+TOTAL: 5 passed, 0 failed
 ==============================================================
+
 ==============================================================
 IS THE G2b NEUTRALITY ARM REACHABLE?
 ==============================================================
@@ -35,9 +42,16 @@ RUNNER D  examples/phase6_crv_uart/run_mutation_tests_bimodal.sh
   PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
        rc=1  message-matched=True
 
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+  PASS N4 every file the probes created in a runner directory was removed
+       the probes created no file in any runner directory on this run
+
 ==============================================================
-TOTAL: 4 passed, 0 failed
+TOTAL: 5 passed, 0 failed
 ==============================================================
+
 ==============================================================
 IS THE G2b NEUTRALITY ARM REACHABLE?
 ==============================================================
@@ -55,9 +69,16 @@ RUNNER E  examples/phase6_rx_pin_driver/run_mutation_tests.sh
   PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
        rc=1  message-matched=True
 
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+  PASS N4 every file the probes created in a runner directory was removed
+       the probes created no file in any runner directory on this run
+
 ==============================================================
-TOTAL: 4 passed, 0 failed
+TOTAL: 5 passed, 0 failed
 ==============================================================
+
 ==============================================================
 IS THE G2b NEUTRALITY ARM REACHABLE?
 ==============================================================
@@ -75,9 +96,16 @@ RUNNER F  examples/phase6_baud_error_coverage/run_mutation_tests.sh
   PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
        rc=1  message-matched=True
 
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+  PASS N4 every file the probes created in a runner directory was removed
+       the probes created no file in any runner directory on this run
+
 ==============================================================
-TOTAL: 4 passed, 0 failed
+TOTAL: 5 passed, 0 failed
 ==============================================================
+
 ==============================================================
 IS THE G2b NEUTRALITY ARM REACHABLE?
 ==============================================================
@@ -95,6 +123,78 @@ RUNNER G  examples/phase6_bfm_equivalence/run_mutation_tests.sh
   PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
        rc=1  message-matched=True
 
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+       removed: examples/phase6_bfm_equivalence/mutation_test_report_2026-10-27.txt
+       removed: examples/phase6_bfm_equivalence/mutation_test_report_2026-10-27.txt
+       removed: examples/phase6_bfm_equivalence/mutation_test_report_2026-10-27.txt
+       removed: examples/phase6_bfm_equivalence/mutation_test_report_2026-10-27.txt
+  PASS N4 every file the probes created in a runner directory was removed
+       4 file(s) removed; each was written by a DELIBERATELY SABOTAGED
+       copy of the runner and is named like a real dated report.
+       examples/phase6_bfm_equivalence/mutation_test_report_2026-10-26.txt
+       is one of these, committed, and has no mutant rows at all.
+
 ==============================================================
-TOTAL: 4 passed, 0 failed
+TOTAL: 5 passed, 0 failed
 ==============================================================
+
+==============================================================
+IS THE G2b NEUTRALITY ARM REACHABLE?
+==============================================================
+
+--------------------------------------------------------------
+RUNNER H  examples/phase4_ral/run_mutation_tests.sh
+--------------------------------------------------------------
+  PASS N0 negative control: the UNMUTATED copy reaches G2b, passes and exits 0
+       rc=0  reached-G2b=True
+       (so the probe harness is not the perturbation)
+  PASS N1 a REAL behavioural edit in place of the comment is refused
+       rc=1  message-matched=True
+  PASS N2 an edit that changes NOTHING is refused
+       rc=1  message-matched=True
+  PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
+       rc=1  message-matched=True
+
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+       removed: examples/phase4_ral/sim_build
+  PASS N4 every file the probes created in a runner directory was removed
+       1 file(s) removed; each was written by a DELIBERATELY SABOTAGED
+       copy of the runner and is named like a real dated report.
+       examples/phase6_bfm_equivalence/mutation_test_report_2026-10-26.txt
+       is one of these, committed, and has no mutant rows at all.
+
+==============================================================
+TOTAL: 5 passed, 0 failed
+==============================================================
+
+==============================================================
+IS THE G2b NEUTRALITY ARM REACHABLE?
+==============================================================
+
+--------------------------------------------------------------
+RUNNER I  examples/phase6_uvm_crv_uart/run_mutation_tests.sh
+--------------------------------------------------------------
+  PASS N0 negative control: the UNMUTATED copy reaches G2b, passes and exits 0
+       rc=0  reached-G2b=True
+       (so the probe harness is not the perturbation)
+  PASS N1 a REAL behavioural edit in place of the comment is refused
+       rc=1  message-matched=True
+  PASS N2 an edit that changes NOTHING is refused
+       rc=1  message-matched=True
+  PASS N3 an edit that emits non-Verilog is refused, and by a DIFFERENT message than N1
+       rc=1  message-matched=True
+
+--------------------------------------------------------------
+PROBE HYGIENE
+--------------------------------------------------------------
+  PASS N4 every file the probes created in a runner directory was removed
+       the probes created no file in any runner directory on this run
+
+==============================================================
+TOTAL: 5 passed, 0 failed
+==============================================================
+

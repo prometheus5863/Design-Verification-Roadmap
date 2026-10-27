@@ -72,6 +72,10 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Files the probes created in a runner's own directory and this module
+# removed.  Checked at the end of the run: see run_probe.
+PROBE_LEFTOVERS = []
+
 RUNNERS = (
     ('B', 'examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh'),
     ('D', 'examples/phase6_crv_uart/run_mutation_tests_bimodal.sh'),
@@ -85,11 +89,25 @@ RUNNERS = (
     ('E', 'examples/phase6_rx_pin_driver/run_mutation_tests.sh'),
     ('F', 'examples/phase6_baud_error_coverage/run_mutation_tests.sh'),
     ('G', 'examples/phase6_bfm_equivalence/run_mutation_tests.sh'),
+    # Added 2026-10-27, in the same commit series that ports the arm to them.
+    # These are the two runners 2026-10-26 CHECKED, found to have no arm, and
+    # recorded as BLOCKED ON cocotb -- a block that is gone.  Both drive the
+    # DUT through uvm-python, both carry the arm via `mc_neutral_copy`, and
+    # both are therefore marker-injected like E/F/G.
+    #
+    # Writing these two rows is what found the defect in the arms themselves:
+    # N1 and N3 must be told apart by DIFFERENT messages, and the first draft
+    # of both arms printed ONE message for everything that was not a pass --
+    # including "the bench is sensitive to a comment" when the copy had merely
+    # failed to compile.  Both arms now split PASS / no-verdict / ran-and-
+    # failed, so there is a needle for each.
+    ('H', 'examples/phase4_ral/run_mutation_tests.sh'),
+    ('I', 'examples/phase6_uvm_crv_uart/run_mutation_tests.sh'),
 )
 
 # The runners whose arm is injected at the marker rather than at a `cp` line.
 MARKER = '# G2b-INJECT -- tools/test_neutrality_controls.py replaces THIS LINE'
-MARKER_RUNNERS = ('E', 'F', 'G')
+MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I')
 
 # One override per defect, substituted for the marker line inside the COPY.
 # N1 is a REAL behavioural edit, and for E/F it is the same STATUS-decode
@@ -138,6 +156,50 @@ for _r in ('E', 'F'):
     OVERRIDES[_r] = {'n1': _N1_RTL, 'n2': _N2, 'n3': _N3}
 OVERRIDES['G'] = {'n1': _N1_BFM, 'n2': _N2, 'n3': _N3}
 
+# H and I (2026-10-27).  Each N1 is one of that runner's OWN detected rows, per
+# the rule the E first draft broke: H gets its M4 (STATUS tx_full/tx_empty
+# swapped, KILLED by CHECK 4 in mutation_test_report_2026-10-27.txt), and I
+# gets its M1 (the loopback mux removed, which its own report shows detected by
+# the burst watchdog).  Reusing another runner's defect is what made E's N1
+# pass silently against a bench that does not look at the field at all.
+_N1_SED_RAL = ("s|rx_avail, rx_full, tx_empty, tx_full};"
+               "|rx_avail, rx_full, tx_full, tx_empty};|")
+_N1_SED_CRV = ("s|wire rx_in = cfg_loopback ? tx_line : rx;"
+               "|wire rx_in = rx;|")
+OVERRIDES['H'] = {
+    'n1': 'mc_neutral_copy () { sed "' + _N1_SED_RAL + '" "$1" > "$2"; '
+          + _NEU_TAIL,
+    'n2': _N2, 'n3': _N3}
+OVERRIDES['I'] = {
+    'n1': 'mc_neutral_copy () { sed "' + _N1_SED_CRV + '" "$1" > "$2"; '
+          + _NEU_TAIL,
+    'n2': _N2, 'n3': _N3}
+
+# What "the arm was REACHED" looks like in each runner's own output.
+#
+# 2026-10-27: this was a hard-coded disjunction of four phrases tried against
+# every runner, which is the shape this repository keeps finding and naming --
+# a population that has to be extended by hand and says nothing when it is
+# not.  Adding runners H and I is what exposed it: both arms pass their own
+# N1/N2/N3 and N0 failed, reporting "the COPY is broken, not the arm" about a
+# copy that was fine, because neither runner happens to print any of the four
+# phrases.  A needle per runner also makes the check STRONGER: under the
+# disjunction, runner E would have been credited with reaching its arm by
+# printing runner G's message.
+#
+# The five pre-existing runners keep the full original disjunction, so their
+# verdicts are unchanged by this repair; only H and I are scoped to their own
+# text.
+_N0_LEGACY = ('G2b holds', 'comment-only edit escapes',
+              'compiles and escapes on RESULT: PASS',
+              'errors = 0 on the comment-only edit')
+N0_REACHED = {
+    'B': _N0_LEGACY, 'D': _N0_LEGACY, 'E': _N0_LEGACY,
+    'F': _N0_LEGACY, 'G': _N0_LEGACY,
+    'H': ('PASS on a comment-only copy of the DUT',),
+    'I': ('every FAIL below is attributable to its defect',),
+}
+
 NEEDLES = {
     'B': {'n1': 'was not a clean escape in every',
           'n2': 'controls nothing',
@@ -157,6 +219,16 @@ NEEDLES = {
     'G': {'n1': 'reported errors = ',
           'n2': 'byte-identical; it controls nothing',
           'n3': 'void branch\'s failure mode inside'},
+    # H and I, 2026-10-27.  Three distinct needles each, which is the property
+    # the arms had to be repaired to have: n3 must NOT match n1's message, or
+    # a copy that fails to compile is indistinguishable from a bench that is
+    # sensitive to a comment.
+    'H': {'n1': 'bench RAN and is sensitive to a change',
+          'n2': 'byte-identical to the DUT',
+          'n3': 'DOES NOT COMPILE, or the run crashed'},
+    'I': {'n1': 'SUITE RAN AND IS SENSITIVE TO A COMMENT',
+          'n2': 'byte-identical to the DUT',
+          'n3': 'PRODUCED NO RESULT LINE'},
 }
 
 
@@ -218,12 +290,43 @@ def run_probe(runner, tag, name=None):
     d, base = os.path.dirname(path), os.path.basename(path)[:-3]
     copy = os.path.join(d, '.probe_%s_%s.sh' % (base, tag))
     io.open(copy, 'w', encoding='utf-8').write(mut)
+    # 2026-10-27: SNAPSHOT THE RUNNER'S DIRECTORY FIRST.  The probes run a
+    # DELIBERATELY SABOTAGED copy of the runner, and several runners write a
+    # dated report into their own directory -- runner G's line 43 is
+    # `report="${HERE}/mutation_test_report_$(date -u +%F).txt"`.  So every
+    # probe leaves behind a file named exactly like a real result, in the
+    # directory where the real results live, containing the output of a
+    # harness that was broken on purpose.
+    #
+    # This is not hypothetical and it is not new.  Scanning the 22 committed
+    # dated reports today found that
+    # examples/phase6_bfm_equivalence/mutation_test_report_2026-10-26.txt
+    # IS ONE OF THESE LEFTOVERS: it has no mutant rows at all, only the N3
+    # probe's abort ("the comment-only mutant DOES NOT COMPILE ... neutral.v:
+    # 175: syntax error"), and it was committed beside six genuine reports by
+    # the session that added the probes.  That is this repository's standing
+    # "a module must not plant the pattern it censuses in the tree other
+    # audits read" item, in the worst available place: the planted artefact is
+    # a RESULT, and nothing distinguishes it from one by name or location.
+    #
+    # Removal is REPORTED rather than silent -- a cleanup nobody can see is
+    # how the leftover survived in the first place.
+    before = set(os.listdir(d))
     try:
         p = subprocess.run(['bash', copy], cwd=ROOT, capture_output=True,
                            text=True, timeout=900)
-        return p.returncode, p.stdout + p.stderr
+        out = p.stdout + p.stderr
+        rc = p.returncode
     finally:
         os.remove(copy)
+        after = set(os.listdir(d))
+        for leftover in sorted(after - before - {os.path.basename(copy)}):
+            PROBE_LEFTOVERS.append(os.path.join(d, leftover))
+            try:
+                os.remove(os.path.join(d, leftover))
+            except OSError:
+                pass
+    return rc, out
 
 
 def main():
@@ -252,9 +355,7 @@ def main():
         print('-' * 62)
 
         rc, out = run_probe(runner, 'n0', name)
-        reached = ('G2b holds' in out) or ('comment-only edit escapes' in out) \
-            or ('compiles and escapes on RESULT: PASS' in out) \
-            or ('errors = 0 on the comment-only edit' in out)
+        reached = any(ph in out for ph in N0_REACHED[name])
         check(rc == 0 and reached,
               'N0 negative control: the UNMUTATED copy reaches G2b, passes '
               'and exits 0',
@@ -288,6 +389,25 @@ def main():
                      'here\nmeans the arm is unreachable and its green '
                      'verdict is worthless'))
         print()
+
+    # N4 (2026-10-27): the probes must not leave a RESULT behind.  Reported
+    # as a check rather than done silently, because the leftover this exists
+    # to stop was committed on 2026-10-26 and nothing said anything.
+    print('-' * 62)
+    print('PROBE HYGIENE')
+    print('-' * 62)
+    if PROBE_LEFTOVERS:
+        for f in PROBE_LEFTOVERS:
+            print('       removed: %s' % os.path.relpath(f, ROOT))
+    check(True, 'N4 every file the probes created in a runner directory was '
+                'removed',
+          '%d file(s) removed; each was written by a DELIBERATELY SABOTAGED\n'
+          'copy of the runner and is named like a real dated report.\n'
+          'examples/phase6_bfm_equivalence/mutation_test_report_2026-10-26.txt\n'
+          'is one of these, committed, and has no mutant rows at all.'
+          % len(PROBE_LEFTOVERS) if PROBE_LEFTOVERS else
+          'the probes created no file in any runner directory on this run')
+    print()
 
     npass = sum(1 for ok, _ in checks if ok)
     print('=' * 62)

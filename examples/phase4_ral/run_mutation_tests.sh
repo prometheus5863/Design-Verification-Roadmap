@@ -161,6 +161,7 @@ fi
 # runner B: "the copy would control nothing" and "the bench is sensitive to a
 # comment" are different faults with different repairs.
 neu="$WORK/uart_controller_NEU.v"
+# G2b-INJECT -- tools/test_neutrality_controls.py replaces THIS LINE
 if ! mc_neutral_copy "$RTL" "$neu" "phase4_ral/run_mutation_tests.sh"; then
     echo ""
     echo "NEUTRALITY CONTROL: *** COULD NOT BE FORMED"
@@ -172,17 +173,38 @@ fi
 rm -rf "$HERE/sim_build"
 (cd "$HERE" && make RTL_SRC="$neu" > "$WORK/neutral.log" 2>&1)
 neu_v="$(verdict_of "$WORK/neutral.log")"
-if [ "$neu_v" = "PASS" ]; then
+# THREE outcomes, not two.  The first draft of this arm, written earlier the
+# same day, printed ONE message for everything that was not PASS -- and that
+# message said "the bench is sensitive to a change that cannot alter
+# behaviour", which is FALSE when the copy simply did not compile.  That is
+# the 2026-10-25 runner-B fault (two faults folded into one message) repeated
+# by the session that cited it, and it was found by trying to write the
+# selftest needles for this arm: N1 and N3 must be told apart by DIFFERENT
+# messages, and they could not be.  `verdict_of` already distinguishes the
+# two -- NORESULT means no verdict line was printed at all -- so the
+# information was there and only the reporting threw it away.
+case "$neu_v" in
+PASS)
     echo "NEUTRALITY: PASS on a comment-only copy of the DUT  (required)"
     echo "            so every kill below is attributable to its defect and"
     echo "            not to the bench reacting to the RTL file changing."
-else
-    echo "NEUTRALITY: *** $neu_v on a COMMENT-ONLY copy of the DUT."
-    echo "            The bench is sensitive to a change that cannot alter"
-    echo "            behaviour, so no kill below is attributable.  This is"
-    echo "            a fault in the BENCH.  See $WORK/neutral.log"
+    ;;
+NORESULT)
+    echo "NEUTRALITY: *** NO VERDICT from the comment-only copy of the DUT."
+    echo "            The copy DOES NOT COMPILE, or the run crashed before a"
+    echo "            check executed, so the arm measured nothing at all."
+    echo "            This is a fault in the CONTROL, not in the bench, and it"
+    echo "            is not evidence either way.  See $WORK/neutral.log"
     exit 1
-fi
+    ;;
+*)
+    echo "NEUTRALITY: *** $neu_v on a COMMENT-ONLY copy of the DUT."
+    echo "            The bench RAN and is sensitive to a change that cannot"
+    echo "            alter behaviour, so no kill below is attributable.  This"
+    echo "            is a fault in the BENCH.  See $WORK/neutral.log"
+    exit 1
+    ;;
+esac
 
 killed=0; survived=0; noresult=0; voided=0
 for i in "${!NAMES[@]}"; do

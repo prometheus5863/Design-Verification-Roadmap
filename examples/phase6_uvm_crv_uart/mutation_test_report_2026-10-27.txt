@@ -1,0 +1,40 @@
+----------------------------------------------------------------
+MUTANT control  (unmutated DUT -- the suite must PASS)
+  expected sites: 0   found: 0
+  suite outcome: PASS   required: PASS
+  VERDICT: OK
+----------------------------------------------------------------
+NEUTRALITY ARM  (comment-only copy of the DUT -- the suite must PASS)
+  suite outcome: PASS   required: PASS
+  VERDICT: OK -- every FAIL below is attributable to its defect
+           and not to the suite reacting to the RTL file changing.
+----------------------------------------------------------------
+MUTANT M1  (loopback mux removed: RX never sees TX)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: burst watchdog: 0 of 7 bytes returned (parity=1 stop2=0 baud=3 len=7 steer=- rej=2)
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M2  (TX even-parity bit inverted: RX must flag parity_err)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: drain status error bits set
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M3  (RX_DATA reads the wrong FIFO slot: bytes out of order)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: scoreboard: loopback mismatch got 0x61 exp 0x73
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+MUTANT M4  (tx_full asserts one entry early)
+  expected sites: 1   found: 1
+  suite outcome: FAIL   required: FAIL
+  first failure: scoreboard: tx_full reported 1, model says 0 at occupancy 7 of 8
+  mechanism: failing check
+  VERDICT: OK
+----------------------------------------------------------------
+mutation run exit: 0  (0 = every mutant behaved as required)
