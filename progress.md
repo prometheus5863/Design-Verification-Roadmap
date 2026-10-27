@@ -2857,3 +2857,82 @@ faults in today's first draft, both found by running it:**
 Final: **B 4/4, D 4/4, E 4/4, F 4/4, G 4/4 — 20/20**, every `N0` clean.
 
 - [x] **Cosmetic-edit neutrality control in every runnable transcript-comparing runner** — COMPLETE 2026-10-26 for the three Icarus runners (`phase6_rx_pin_driver`, `phase6_baud_error_coverage`, `phase6_bfm_equivalence`); `phase4_ral` and `phase6_uvm_crv_uart` checked, recorded in `S6`, and blocked on cocotb. 20/20 on `tools/test_neutrality_controls.py` across all five runners carrying an arm.
+
+---
+
+## 2026-10-27 — cocotb installs again, and the selftest found the defect in the arms it was written for
+
+**Subject:** the 2026-10-26 **ranked-first** item — *"make cocotb installable,
+or decide it is not"* — the one blocked decision the standing list was
+carrying as five separate bullets. Resolved in the **installs** direction, and
+then spent.
+
+### 1. The toolchain
+
+PyPI is reachable under the current egress allowlist. The 2026-09-06 recipe is
+still broadly right and **incomplete**: `uvm-python` 0.4.0 makes four
+transitive imports it does not declare, so with `--no-deps` (which pinning
+`cocotb<2.0` requires) they surface **one per import attempt** rather than as a
+resolver error — `cocotb_coverage`, `cocotb_bus`, `regex`, plus
+`python-constraint` needing `--use-pep517`. At no point does pip report
+anything missing, because by `--no-deps` nothing is. A session that stopped at
+the first would have recorded "uvm-python does not install" and been wrong.
+Full verified sequence in
+`notes/2026-10-27-cocotb-installs-again-and-the-port-it-unblocked.md`.
+
+It does not merely import. `examples/phase4_ral` runs green against the
+unmodified DUT — `TESTS=1 PASS=1 FAIL=0`, 0 `UVM_ERROR`, and the explicit
+predictor fires **109** times, so the mirror is updated from the bus
+**monitor** and not from the sequence's intent. First re-demonstration of that
+property since 2026-09-19.
+
+### 2. The two ports the 2026-10-26 check was waiting for
+
+| runner | arm | report |
+|---|---|---|
+| `phase4_ral` | G2b, asserting `verdict_of` == PASS | 5 killed / 0 survived / 0 no-verdict / 0 voided, first since 2026-10-07 |
+| `phase6_uvm_crv_uart` | G2b, asserting `RESULT: PASS` | control + neutral + M1–M4 all OK, first since 2026-10-11 |
+
+`phase4_ral`'s `MC_SELFTEST=1` positive control **still fires** — `MX` VOIDED
+as `HALF_INJECTED`, the anchor still occurring 4 times down from 6 — which
+matters more than the 5/5, because it had not been run since the toolchain
+went away.
+
+`phase6_uvm_crv_uart` was the only one of the six mutation runners with a
+`#!/bin/sh` shebang, and `tools/mutation_controls.sh` is bash
+(`mc__split_sed` uses a C-style `for (( ))`), so under dash sourcing it dies
+with *"Syntax error: Bad for loop variable"* before any control can be
+applied. **An unexamined precondition in the 2026-10-25 "share the EDIT, not
+the VERDICT" design:** sharing the edit requires the sharer to be able to
+source the file holding it, and five of six could only because they happened
+to be bash. Changed rather than worked around.
+
+### 3. Three findings from writing the selftest for the two new arms
+
+- **Both arms folded three outcomes into two.** Each printed one message for
+  everything that was not a pass, saying the bench is *sensitive to a change
+  that cannot alter behaviour* — false when the copy simply did not compile.
+  The 2026-10-25 runner-B fault repeated **by the session that cited it as a
+  lesson, hours later**, and found only because the needles require `N1` and
+  `N3` to be told apart by different messages. Both now split
+  PASS / no-verdict / ran-and-failed, and the information was always there:
+  `verdict_of` already returned `NORESULT`, and `run_one` already VOIDs a
+  crash per its own 2026-10-16 amendment.
+- **`N0`'s reach test was a hard-coded disjunction of four phrases** tried
+  against every runner. It is now a needle per runner, which is also strictly
+  stronger: under the disjunction, runner E could have been credited with
+  reaching its arm by printing runner G's message.
+- **`examples/phase6_bfm_equivalence/mutation_test_report_2026-10-26.txt` is
+  not a mutation report.** It is the `N3` probe's output — a deliberately
+  sabotaged copy of the runner — left in the runner's own directory and
+  committed beside six genuine reports under an indistinguishable name. No
+  mutant rows at all, only the abort and `neutral.v:175: syntax error`. The
+  10-26 log's numbers for that runner are right; the artefact committed for
+  that date is not what its name says. `run_probe` now snapshots the
+  directory, removes what the probe created and **reports each removal** — a
+  silent cleanup is how this survived — and `N4` asserts it.
+
+Final: **B, D, E, F, G, H, I — 5/5 each, 35/35**, every `N0` clean.
+
+- [x] **Cosmetic-edit neutrality control in every runnable transcript-comparing runner** — COMPLETE 2026-10-27 for all seven: the three Icarus runners (2026-10-26) plus `phase4_ral` and `phase6_uvm_crv_uart` today, the two that were blocked on cocotb. 35/35 on `tools/test_neutrality_controls.py`.
+- [x] **cocotb / uvm-python toolchain** — installable again; the complete dependency sequence is recorded, and the install lives in `/tmp` outside the repository, so the recipe and not the installed tree is the durable artefact.

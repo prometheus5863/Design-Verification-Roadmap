@@ -10978,3 +10978,243 @@ regenerated reports; the extended selftest with its 20/20 transcript; this
 entry with the refreshed list, the seven new `S6` rows, the adjudication entry
 and heading correction, and the progress.md session note). Each was pushed
 immediately after commit and verified against the GitHub API.
+
+## 2026-10-27 — the blocked decision, unblocked and spent; and the selftest that condemned the arms it was written for
+
+**Subject:** the 2026-10-26 **ranked-first** item, *"MAKE cocotb INSTALLABLE,
+OR DECIDE IT IS NOT"* — one blocked decision the standing list was carrying as
+five separate bullets. Three commits plus this entry.
+
+### 1. It installs, and the 2026-09-06 recipe was incomplete
+
+PyPI is reachable under the current egress allowlist. The recipe in
+`notes/2026-09-06-uvm-python-toolchain-resolution.md` is still broadly right
+and misses four packages: **`uvm-python` 0.4.0 makes four transitive imports
+it does not declare**, and with `--no-deps` — which pinning `cocotb<2.0`
+requires — they surface **one per import attempt**, not as a resolver error:
+
+```
+cocotb<2.0                      -> cocotb 1.9.2
+python-constraint --use-pep517  -> 1.4.0, built from sdist
+uvm-python==0.4.0 --no-deps
+cocotb-coverage   --no-deps     uvm/base/sv.py:35
+cocotb-bus        --no-deps     uvm/base/sv.py:38
+regex             --no-deps     uvm/base/uvm_cmdline_processor.py:205
+```
+
+At no point does pip report anything missing, because by `--no-deps` nothing
+is. **A session that stopped at the first `ModuleNotFoundError` would have
+recorded "uvm-python does not install" and been wrong** — which is the shape
+worth keeping from this, not the package list.
+
+It does not merely import. `examples/phase4_ral` runs green against the
+unmodified DUT: `TESTS=1 PASS=1 FAIL=0`, 0 `UVM_ERROR`, `[REG_PREDICTOR]` 109,
+`[UVMRegHWResetSeq]` 4, `[UVMRegBitBashSeq]` 3. The explicit predictor firing
+109 times is the property that bench was built to have — the mirror updated
+from the bus **monitor** rather than from the sequence's intent — and it had
+not been re-demonstrated since 2026-09-19.
+
+### 2. The two ports the 10-26 check was waiting for, and a precondition nobody had examined
+
+2026-10-26 CHECKED five transcript-comparing runners for a cosmetic-edit
+neutrality arm, found none had one, ported three, and recorded `phase4_ral`
+and `phase6_uvm_crv_uart` as blocked on cocotb. Both now carry it:
+
+| runner | asserts | result |
+|---|---|---|
+| `phase4_ral` | `verdict_of` == PASS, the function its baseline and all five rows use | BASELINE PASS, NEUTRALITY PASS, **5 killed / 0 survived / 0 no-verdict / 0 voided**, every injection verdict `OK` at one site |
+| `phase6_uvm_crv_uart` | `RESULT: PASS`, the grep `run_one` uses for every row | control OK, neutral OK, **M1–M4 all OK**, every one by a failing check |
+
+First current reports since 2026-10-07 and 2026-10-11 respectively. And
+`phase4_ral`'s `MC_SELFTEST=1` positive control **still fires** — `MX` VOIDED
+as `HALF_INJECTED`, the anchor still present 4 times down from 6 — which
+matters more than the 5/5, because a guard not run since the toolchain went
+away is a guard nobody has seen fire.
+
+`phase6_uvm_crv_uart` was the **only one of the six mutation runners with a
+`#!/bin/sh` shebang**, and `tools/mutation_controls.sh` is bash:
+`mc__split_sed` uses a C-style `for (( ))`, so under dash the source dies with
+*"Syntax error: Bad for loop variable"* at the helper's first line, before any
+control can be applied. That is an unexamined precondition in the 2026-10-25
+**"share the EDIT, not the VERDICT"** design — sharing the edit requires the
+sharer to be able to source the file holding it, and five of six runners could
+only because they happened to be bash. Changed to bash rather than worked
+around: inlining the edit here would also have detached this runner from
+`tools/test_neutrality_controls.py`, which greps for that exact comment.
+
+### 3. The selftest condemned both arms it was written for
+
+**Both arms ported today folded three outcomes into two.** Each printed one
+message for everything that was not a pass, and that message said *the bench
+is sensitive to a change that cannot alter behaviour* — which is **false when
+the comment-only copy simply did not compile**. That is the 2026-10-25
+runner-B fault, two faults folded into one message, **repeated by the session
+that cited it as a lesson, hours earlier in the same run.**
+
+It was found by trying to write the selftest needles, which require `N1` and
+`N3` to be told apart by **different** messages: the arms could not be probed
+because their failures could not be distinguished. Both now split
+PASS / no-verdict / ran-and-failed — and **the information was always there**:
+`phase4_ral`'s `verdict_of` already returned `NORESULT`, and
+`phase6_uvm_crv_uart`'s own `run_one` already VOIDs a crash per its 2026-10-16
+amendment, which exists because four mutants were once scored OK by a
+toolchain that could not run the DUT at all. Only the reporting threw it away.
+
+**`N0`'s reach test was a hard-coded disjunction of four phrases** tried
+against every runner. Adding H and I exposed it: both arms passed N1, N2 and
+N3 while N0 reported *"the COPY is broken, not the arm"* about a copy that was
+fine, because neither prints any of the four. It is now a needle per runner,
+which is also **strictly stronger** — under the disjunction runner E could
+have been credited with reaching its arm by printing runner G's message. The
+five existing runners keep the original tuple, so their verdicts are
+unchanged.
+
+Final: **B, D, E, F, G, H, I — 5/5 each, 35/35**, every `N0` clean. The full
+pass is ~7 minutes against a 180 s call cap, so the committed transcript is
+the concatenation of per-runner runs, each printing its own TOTAL.
+
+### 4. A committed report that was written by a sabotaged harness
+
+`examples/phase6_bfm_equivalence/mutation_test_report_2026-10-26.txt` **is not
+a mutation report.** It is the `N3` probe's output — a copy of the runner
+broken on purpose — left in the runner's own directory and committed beside
+six genuine reports under a name indistinguishable from theirs. It contains no
+mutant rows at all, only the abort and `neutral.v:175: syntax error`.
+
+Found by noticing the same filename appear untracked today, then scanning all
+**22** committed dated reports for probe signatures. The 2026-10-26 entry's
+numbers for that runner (7 detected / 0 escaped / 1 expected void) are
+**right** — today's real run reproduces them exactly — so what is wrong is the
+artefact, not the claim. That is its own lesson: a log entry and the file it
+cites can disagree, and nothing checks that they do not.
+
+This is the standing **"a module must not plant the pattern it censuses in the
+tree other audits read"** item in the worst available place: the planted
+artefact is a RESULT, and nothing distinguishes it from a real one by name or
+location. `run_probe` now snapshots the runner's directory, removes anything
+the probe created and **reports each removal** — a silent cleanup is how this
+survived — and `N4` asserts it. Four leftovers per runner-G pass, one per
+probe. A real runner-G report for today is committed alongside.
+
+### 5. Environment
+
+`/sessions` is 100 % full on this VM (other sessions', unreadable and
+undeletable), so the clone, the Icarus install and the Python stack all live
+on `/dev/sda1` under `/tmp`, which survives between sessions here. `--target
+/tmp/dvlibs` for that reason, `PATH=/tmp/dvlibs/bin` for `cocotb-config`,
+which the cocotb makefiles shell out to, and `source tools/setup_iverilog.sh`
+**without a pipe**, per the standing note. A single shell call is capped at
+180 s and **no background process survives it** — `nohup` and `setsid` are
+both killed when the call returns — which is why the selftest transcript is
+assembled per runner. Every commit pushed immediately and verified against the
+GitHub API.
+
+**The toolchain is in `/tmp`, outside the repository and outside any connected
+folder.** The next session gets it only if `/tmp` survives. The recipe in the
+notes file is the durable artefact; the installed tree is not.
+
+**Not yet covered (candidates for future runs):**
+
+- **THE FIVE SYMPTOMS ARE NOW FIVE PIECES OF WORK, NOT ONE BLOCKED DECISION**
+  — created today, **ranked first**, and it is a change in the list's SHAPE.
+  Two of the five are done (`phase4_ral` and `phase6_uvm_crv_uart` arms, and
+  two of the five missing reports). Remaining and now **unblocked**: the
+  equal-budget control re-run, the other `tx_empty` prediction, the three
+  suites still without a current report, and the capstone box's (b) SVA
+  protocol checkers bound into the UVM environment and (c)
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage`
+  collector. (b) and (c) are the largest remaining Phase 4/6 content and have
+  been untouched for nine sessions for one reason that no longer holds.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  created today, **ranked second**, and §4 is the argument. Today's scan of
+  22 reports was three greps by hand; the mechanical form is a tool, and the
+  cheapest version is narrow: a report must contain the runner's own summary
+  line (`mutants attempted`, `RESULT:`, a row table) and not only an abort.
+  **Related and stronger:** nothing checks that a log entry's numbers match
+  the file it cites, which is how 10-26's correct numbers sat beside a wrong
+  artefact for a day.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  2026-10-25, **ranked third**, and today is a third argument rather than
+  progress: the claim *"this runner has no neutrality arm"* for two runners
+  was checked by hand on 10-26, acted on today, and in between was prose.
+- **REGENERATE EVERY COMMITTED TRANSCRIPT EACH SESSION** — carried, and the
+  sibling graphene repository discharged it again today and found a
+  transcript that had asserted, for **nineteen days**, a defect repaired three
+  days after it was written. That is the *overstating* direction, which is
+  worse than the understating one 10-26 found, because a false claim of a
+  defect sends a session to work already done. Here the committed reports are
+  dated files, so staleness is invisible by design — and §4 shows the failure
+  is not only staleness but **provenance**.
+- **MUTATION-TEST THE TWO NEW ARMS' RUNNERS THEMSELVES, NOT ONLY THE ARMS** —
+  created today. `tools/test_neutrality_controls.py` now mutates the ARM in
+  all seven runners; it does not mutate the runners' scoring logic. H and I
+  are the two whose scoring logic was shown wrong today, and the probe that
+  found it was aimed at something else.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  2026-10-22; "coverage closure is a pass criterion, not a report line"
+  remains unevidenced rather than wrong.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; still the cheapest
+  remaining pure-content item and still the only queued item that adds
+  verification reach rather than auditing existing reach.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  2026-10-20; it needs no toolchain and the edges are already enumerated.
+  Today adds roughly sixty lines of new comment across two runners and one
+  tool, every line an assertion about why an arm exists, so the population it
+  audits grew again.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried from 2026-10-24, and today adds two more `sed` programs embedded in
+  shell-function overrides embedded in Python string literals (H's and I's
+  `N1`), the exact shape that item names.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row, and today supplies a **tenth** worked
+  reference: both arms repaired in §3 are three-valued precisely because two
+  values could not express the difference between a crash and a sensitivity.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from
+  2026-10-17, **tenth** session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  seventeen sessions old.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; still no stated
+  expectation with a spread, and now unblocked.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'s CROSSES, AND
+  AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — carried from 09-26/09-27, and §4 is a new instance of the
+  second half: a runner that writes a dated report **is** a file another
+  audit reads.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, **tenth**
+  consecutive session. Today it gains a concrete consequence rather than
+  another restatement: the shebang change in §2 means
+  `run_all_harnesses.sh` now invokes `phase6_uvm_crv_uart` under bash, which
+  nothing has verified because nothing runs it.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 2026-10-16, **eleventh** session, and newly cheap: the
+  toolchain is now something that can be removed, which it was not while it
+  was simply absent.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, fifteenth
+  session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **eighteenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; per-property coverage of the
+  Phase 4 UVM environment (09-23, unblocked); a less greedy steering policy
+  (09-24); widen the coverage model (09-24); two transmitters at once
+  (09-25); `abc pdr` as a second engine (09-23); mutants not yet attempted
+  (interrupt enable combinations, reset asserted mid-frame); a property
+  needing a strengthening invariant; the SVA sequence layer (09-20); code
+  coverage measurement (Icarus has none, 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 (the toolchain resolution with the RAL transcript, the
+`phase4_ral` arm and its two reports; the selftest extension with both arms'
+three-way repair, the per-runner `N0` needles, the probe-leftover cleanup with
+`N4`, the real runner-G report and the 35/35 transcript; this entry with the
+refreshed list and the `progress.md` session note). Each was pushed
+immediately after commit and verified against the GitHub API.
