@@ -1,0 +1,155 @@
+====================================================================
+tools/setup_cocotb.sh -- transcript, 2026-10-27
+====================================================================
+
+Four runs.  (2) is a POSITIVE CONTROL and comes before the green
+results, because a verify that has never been seen to FAIL is not
+evidence of anything.
+
+--------------------------------------------------------------------
+(1) FULL RUN into a fresh venv and a near-empty wheelhouse.
+    Seeded with the 4.2 MB cocotb wheel only; the other seven
+    distributions are fetched live.  exit status: 0
+--------------------------------------------------------------------
+[setup_cocotb] have   cocotb-1.9.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+[setup_cocotb] got    regex-2024.11.6-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (781702 bytes, 1 leg(s))
+[setup_cocotb] got    uvm_python-0.4.0-py3-none-any.whl (591919 bytes, 1 leg(s))
+[setup_cocotb] got    cocotb_bus-0.3.0-py3-none-any.whl (36206 bytes, 1 leg(s))
+[setup_cocotb] got    cocotb_coverage-1.2.0-py3-none-any.whl (21420 bytes, 1 leg(s))
+[setup_cocotb] got    PyYAML-6.0.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (751239 bytes, 1 leg(s))
+[setup_cocotb] got    find_libpython-0.5.1-py3-none-any.whl (9201 bytes, 1 leg(s))
+[setup_cocotb] got    python-constraint-1.4.0.tar.bz2 (18416 bytes, 1 leg(s))
+[setup_cocotb] creating venv at /tmp/venv_test
+====================================================================
+cocotb STACK VERIFY
+====================================================================
+  venv       : /tmp/venv_test
+  wheelhouse : /tmp/wh_test
+
+  python     : Python 3.10.12
+
+  PASS  import cocotb
+  PASS  import find_libpython
+  PASS  import constraint
+  PASS  import cocotb_coverage
+  PASS  import cocotb_bus
+  PASS  import regex
+  PASS  import yaml
+  PASS  import uvm
+
+  PASS  uvm-python RAL + component classes importable
+  PASS  iverilog is an executable file on PATH (/tmp/iverilog_install/bin/iverilog)
+  PASS  vvp is an executable file on PATH (/tmp/iverilog_install/bin/vvp)
+  PASS  cocotb-config is an executable file on PATH (/tmp/venv_test/bin/cocotb-config)
+
+  RESULT: PASS
+====================================================================
+
+--------------------------------------------------------------------
+(2) POSITIVE CONTROL: --verify against a bare venv with nothing
+    installed.  It MUST report FAIL and exit non-zero.  exit: 1
+
+    Note the two iverilog rows PASS here: Icarus is genuinely on
+    PATH, and this control is about the Python side only.
+--------------------------------------------------------------------
+====================================================================
+cocotb STACK VERIFY
+====================================================================
+  venv       : /tmp/bare_venv
+  wheelhouse : /tmp/cocotb_wheels
+
+  python     : Python 3.10.12
+
+  FAIL  import cocotb
+  FAIL  import find_libpython
+  FAIL  import constraint
+  FAIL  import cocotb_coverage
+  FAIL  import cocotb_bus
+  FAIL  import regex
+  FAIL  import yaml
+  FAIL  import uvm
+
+  FAIL  uvm-python RAL + component classes importable
+  PASS  iverilog is an executable file on PATH (/tmp/iverilog_install/bin/iverilog)
+  PASS  vvp is an executable file on PATH (/tmp/iverilog_install/bin/vvp)
+  FAIL  cocotb-config is not an executable file on PATH (a shell function does not count: make cannot see one)
+
+  RESULT: FAIL
+====================================================================
+
+--------------------------------------------------------------------
+(3) --verify against the real stack.  exit status: 0
+
+    The iverilog/vvp rows print an ABSOLUTE PATH, which is the
+    point: see the correction in the script header.  The first
+    draft of this check used `command -v`, which prints the bare
+    word "iverilog" when a shell FUNCTION of that name exists --
+    and sourcing tools/setup_iverilog.sh defines one.  It reported
+    PASS in a shell where nothing executable was on PATH at all.
+    `type -P` asks the question make asks.
+--------------------------------------------------------------------
+====================================================================
+cocotb STACK VERIFY
+====================================================================
+  venv       : /tmp/cocotb_venv
+  wheelhouse : /tmp/cocotb_wheels
+
+  python     : Python 3.10.12
+
+  PASS  import cocotb
+  PASS  import find_libpython
+  PASS  import constraint
+  PASS  import cocotb_coverage
+  PASS  import cocotb_bus
+  PASS  import regex
+  PASS  import yaml
+  PASS  import uvm
+
+  PASS  uvm-python RAL + component classes importable
+  PASS  iverilog is an executable file on PATH (/tmp/iverilog_install/bin/iverilog)
+  PASS  vvp is an executable file on PATH (/tmp/iverilog_install/bin/vvp)
+  PASS  cocotb-config is an executable file on PATH (/tmp/cocotb_venv/bin/cocotb-config)
+
+  RESULT: PASS
+====================================================================
+
+--------------------------------------------------------------------
+(4) --smoke: compile and RUN a cocotb test against the real
+    rtl/uart_controller.v, with /tmp/ivbin absent from PATH so the
+    wrappers tools/setup_iverilog.sh installs are what is used.
+    The only run of the four that means anything; (1)-(3) only ask
+    whether modules import.  exit status: 0
+--------------------------------------------------------------------
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /tmp/cocotb_venv/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1793099989
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+     0.00ns INFO     cocotb.regression                  Found test test_cocotb_smoke.smoke
+     0.00ns INFO     cocotb.regression                  running smoke (1/1)
+                                                          Reset the real UART and read one architectural invariant back.
+    50.00ns INFO     cocotb.uart_controller             SMOKE PASS: cocotb drove the real UART DUT
+    50.00ns INFO     cocotb.regression                  smoke passed
+    50.00ns INFO     cocotb.regression                  **************************************************************************************
+                                                        ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                        **************************************************************************************
+                                                        ** test_cocotb_smoke.smoke        PASS          50.00           0.00      57300.38  **
+                                                        **************************************************************************************
+                                                        ** TESTS=1 PASS=1 FAIL=0 SKIP=0                 50.00           0.00      11947.10  **
+                                                        **************************************************************************************
+                                                        
+make[1]: Leaving directory '/tmp/cocotb_smoke.13'
+  RESULT: PASS  (cocotb compiled and ran against rtl/uart_controller.v)
+
+--------------------------------------------------------------------
+(5) --smoke's FAIL criterion discriminates.  It greps results.xml
+    for <failure rather than reading make's exit status, because
+    make exits 0 on a cocotb FAIL.  Measured the same day:
+--------------------------------------------------------------------
+    deliberately failing cocotb test, same DUT:
+        MAKE EXIT STATUS = 0
+        ** TESTS=1 PASS=0 FAIL=1 SKIP=0
+        grep -c '<failure' results.xml  ->  1
+    the passing smoke run above:
+        grep -c '<failure' results.xml  ->  0
