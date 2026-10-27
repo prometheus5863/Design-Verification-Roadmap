@@ -2936,3 +2936,46 @@ Final: **B, D, E, F, G, H, I — 5/5 each, 35/35**, every `N0` clean.
 
 - [x] **Cosmetic-edit neutrality control in every runnable transcript-comparing runner** — COMPLETE 2026-10-27 for all seven: the three Icarus runners (2026-10-26) plus `phase4_ral` and `phase6_uvm_crv_uart` today, the two that were blocked on cocotb. 35/35 on `tools/test_neutrality_controls.py`.
 - [x] **cocotb / uvm-python toolchain** — installable again; the complete dependency sequence is recorded, and the install lives in `/tmp` outside the repository, so the recipe and not the installed tree is the durable artefact.
+
+### 2026-10-27, second session (addendum)
+
+Two sessions ran this date; this note covers only what the first did not do.
+See the **ADDENDUM** at the end of `AUTOMATION_LOG.md`.
+
+- [x] **`examples/phase6_uvm_crv_uart` repaired** — it had raised `NameError` on
+  *every* run since `ace870a` (2026-10-11): an extract-method refactor left
+  `print(line)` in `_tail` referring to a local of `report_phase`. The repaired
+  bench runs to completion — `RESULT: PASS`, 0 failures over 907 502 checks,
+  bins hit 30/30, `TESTS=1 PASS=1 FAIL=0`.
+- [x] **`mutation_test_report_2026-10-27.txt` annotated in place, no number
+  changed.** Its four `MUTANT` rows stay sound (each cites a checker message
+  produced before the crash); its two `PASS` rows — `control` and `NEUTRALITY
+  ARM` — are now marked **UNMEASURED**, because the runner greps `RESULT: PASS`
+  one statement *before* the `NameError`, so its own "crash or timeout (no
+  RESULT line)" mechanism cannot fire.
+- [x] **`make` exits 0 on a cocotb test FAILURE** — verified with a deliberate
+  `assert False` test against the same DUT (`MAKE EXIT STATUS = 0`, `TESTS=1
+  PASS=0 FAIL=1`). `results.xml` carries `<failure>`; the exit status does not.
+  A worked, non-hypothetical instance of **AUDIT WHAT ELSE A RUNNER'S VERDICT
+  NEVER REACHES**, where the thing never reached was the process's own exit.
+- [x] **`tools/free_name_audit.py`** — the `NameError` class caught *without
+  running anything*, from CPython's `symtable` rather than a grep. 36 files, the
+  one real defect found, 14 controls all firing (seven of them negative), and
+  registered in `tools/run_all_harnesses.sh`. Its first draft flagged itself,
+  because it grepped text for `from … import *` and its own controls contain
+  that string in a literal.
+- [x] **`tools/setup_cocotb.sh`** — the resumable, offline-reusable form of this
+  morning's recipe. `pip` cannot resume and the cocotb wheel needs ~155 s at this
+  link's ~27 kB/s against a 180 s call cap, so a plain `pip install` fails here
+  indistinguishably from a blocked allowlist. Adds `cocotb-coverage==1.2.0` (2.0
+  requires Python ≥3.11) and `pyyaml` to the pin list.
+- [ ] **The staleness audit is RED at 26/30 and regenerated that way.** Three
+  failures are the 10-26 inverted reminder rows firing *as designed* on the day
+  the arms landed; the fourth is an unnamed orphaned `OPEN` adjudication entry.
+  **Second consecutive session** in which this audit was left stale by the
+  session that moved what it measures. Repair is ranked first.
+- [ ] **This session also committed the 10-25 fault.** `setup_cocotb.sh`'s first
+  draft asserted that `tools/setup_iverilog.sh` only defines shell functions and
+  that this "was never written down" — both false; that file installs real PATH
+  wrappers and documented the whole problem on 2026-09-18, `export -f` poisoning
+  included. Corrected in the header rather than silently.

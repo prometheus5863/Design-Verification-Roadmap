@@ -11218,3 +11218,199 @@ three-way repair, the per-runner `N0` needles, the probe-leftover cleanup with
 `N4`, the real runner-G report and the 35/35 transcript; this entry with the
 refreshed list and the `progress.md` session note). Each was pushed
 immediately after commit and verified against the GitHub API.
+
+---
+
+### ADDENDUM to the 2026-10-27 entry — a second session the same day, and the bench both of them scored green was crashing
+
+**This addendum is deliberately not a second `## 2026-10-27` entry.** Two
+sessions ran on 2026-10-27: the first (commits `e82d79b`..`1f4d322`, 10:44–11:13
+UTC) wrote the entry above; this one started at 10:33, found the graphene
+repository already done for the day and this one apparently untouched — the
+GitHub commits API still reported `2026-10-26T11:06:52Z` as the tip of `main` at
+10:45, eleven minutes *after* `e82d79b` was pushed — and so did a full session in
+parallel. **The duplicate-work guard was defeated by API caching, not by
+reasoning**, which is worth recording as an operational fact: a freshness check
+against a cached endpoint is not a freshness check. The overlapping commit (an
+identical `examples/phase4_ral/uart_ral_tb_sim_output_2026-10-27.txt`) was
+dropped rather than pushed; what follows is only what the first session did not
+do.
+
+#### A6. `phase6_uvm_crv_uart` had raised `NameError` on every run since 2026-10-11
+
+`ace870a` (2026-10-11), whose message is *"Mutation test for the UVM CRV bench:
+5/5 as required"*, extracted the tail of `UartCrvTest.report_phase` into a new
+`_tail` method and left `print(line)` behind — `line` being a **local of
+`report_phase`**. The bench has ended in `NameError` on every invocation for
+sixteen days. The sim transcript sitting beside it,
+`uart_uvm_crv_sim_output_2026-10-11.txt`, was committed by the *earlier* commit
+`433aeb8` and describes the code **before** that refactor; it is left
+byte-unchanged, and `uart_uvm_crv_prerepair_nameerror_2026-10-27.txt` is what
+the tree was missing — any record that the bench was broken at all.
+
+**And it was scored green twice today before the repair.** The first session ran
+this suite and committed `mutation_test_report_2026-10-27.txt` reading `MUTANT
+control … VERDICT: OK` and `NEUTRALITY ARM … VERDICT: OK — every FAIL below is
+attributable to its defect`. Every run behind those words ended in an exception.
+That report is **annotated in place, no number changed**, and the annotation
+splits what the crash does and does not invalidate rather than condemning the
+file:
+
+- the four `MUTANT` rows stay sound — each cites a specific checker message
+  (burst watchdog, parity flag, loopback mismatch, `tx_full` misprediction)
+  produced *before* the report tail, by the mechanism the row claims. The crash
+  is downstream of the detection.
+- **the two `PASS` rows are the unsound ones.** `run_mutation_tests.sh` scores by
+  grepping for `RESULT: PASS`/`RESULT: FAIL`, and the crash fires **one statement
+  after** the `RESULT:` line is printed. So `PASS` there means *reached its
+  RESULT line*, not *completed*, and the runner's own *"crash or timeout (no
+  RESULT line)"* mechanism **cannot fire**, because the RESULT line is present.
+- the neutrality arm's attribution claim was therefore drawn from a process that
+  ended in an exception. It may well be true; it was not measured, and is
+  recorded as **UNMEASURED**, not confirmed.
+
+#### A7. `make` exits 0 on a cocotb test FAILURE
+
+Verified with a deliberate positive control rather than assumed: a cocotb test
+whose body is `assert False`, against this same DUT, gives **`MAKE EXIT STATUS =
+0`** with `TESTS=1 PASS=0 FAIL=1`. `results.xml` carries the `<failure>` element;
+the exit status does not. So cocotb's own verdict on this bench — printed `FAIL`
+in every transcript for sixteen days — **is read by nothing**. This is the
+standing **AUDIT WHAT ELSE A RUNNER'S VERDICT NEVER REACHES** item with a worked
+instance that is not hypothetical, and the thing never reached was the process's
+own exit status. Every `--smoke`-style check added today scores on
+`results.xml`, not on `make`.
+
+#### A8. `tools/free_name_audit.py` — the fault class, caught without running anything
+
+Every bench here is gated on a toolchain, so a `NameError` on a cold path is
+invisible to a suite that never reaches it — and nothing ran the cocotb benches
+*at all* between 10-11 and today. 2026-10-26 recorded this same class from the
+other side (`CP_LINE`, `COMMENT_TEXT`, `REAL_SED`, `REAL_LINE` deleted by a
+refactor; *"runner B aborted with a `NameError` instead of a verdict"*) — found
+by **running** it, which this repository cannot rely on.
+
+The audit asks a decidable question using CPython's own scope analysis
+(`symtable`), not a grep: every name referenced in a function or class body that
+resolves to the global scope and is bound nowhere at module level, not declared
+`global` and assigned, and not a builtin. 36 files; it found the one real defect
+and nothing else. It **refuses to clear** what it cannot see — `from X import *`
+makes a module's global set open (`UNSOUND`), an unparseable file is
+`UNPARSEABLE`, and all three non-clean states exit non-zero, so a caller cannot
+read *no findings* off a run that could not look. 14 controls, all firing: five
+positive (P1 is today's defect verbatim, P2 is 10-26's), **seven negative** —
+the ways it could cry wolf and be switched off for it — and two soundness
+controls. Registered in `tools/run_all_harnesses.sh` at a 30 s budget.
+
+**Its first draft flagged itself**, which is why `has_star_import` uses the
+parser: it grepped text for `from … import *` and reported itself `UNSOUND`,
+because its own positive controls contain that string inside a string literal.
+A grep cannot tell source from data — the confusion the audit exists to remove,
+found in the audit, before it was committed.
+
+#### A9. `tools/setup_cocotb.sh`, and this session asserting a file's contents and being wrong
+
+The recipe in §1 above is correct; the script adds the **resumable fetch**, which
+is the difference between it working and appearing blocked. Measured: both PyPI
+hosts answer 200; throughput is ~26–28 kB/s; the cocotb wheel is 4 209 565 bytes,
+so one fetch needs ~155 s; **a shell call here is capped at 180 s with no
+surviving background process**; and `pip download` **does not resume** — today's
+first attempt died at 150 s having written 3 141 632 bytes, and a retry restarts
+at zero. `curl -C -` resumes (HTTP 206). So a plain `pip install "cocotb<2.0"` on
+this link fails **indistinguishably from a blocked egress allowlist**, and fails
+identically on every retry. Whether that produced the 10-11→10-26 claim **cannot
+be proved** — the past allowlist is not observable from here — but it is
+sufficient on its own to produce that history with nothing having changed.
+
+Two additions to §1's pin list: **`cocotb-coverage` must be pinned to 1.2.0** (it
+is installed unpinned there, which resolves to 2.0, which declares
+`requires-python >=3.11` against this VM's 3.10.12 and is hard-refused), and
+`pyyaml`, a declared dependency of `cocotb-coverage` absent from the list of
+four — **not overstated: nothing run so far needs it**, both benches complete
+without it, coverage report included; it is pinned because a declared dependency
+not yet reached is a latent import error of exactly the shape §1 found four of.
+
+**And this session committed the 2026-10-25 fault, one level in.** The first
+draft of that script installed duplicate `iverilog`/`vvp` wrappers and asserted
+in a comment that `tools/setup_iverilog.sh` *"defines shell FUNCTIONS, which make
+cannot see"* and that this *"was never written down"*. **Both halves were
+false.** That script already installs real wrapper **scripts** on PATH, and
+already documents the problem more thoroughly — diagnosed **2026-09-18**,
+including the subtler finding that `export -f` *poisons* cocotb's simulator
+auto-detection, because `command -v iverilog` in a bash holding an exported
+function prints a bare word, so `Makefile.icarus` computes `ICARUS_BIN_DIR="."`
+and reports *"Unable to locate command >iverilog<"* in a shell where `iverilog
+-V` works. This is **AN OPEN ITEM THAT ASSERTED WHAT WAS INSIDE A FILE AND WAS
+WRONG** — 10-25's *"C has had one all along, and a stronger one"* — repeated by a
+session that had just read that entry, about a neighbouring file in `tools/`.
+
+**That same 2026-09-18 finding then caught the new `--verify`.** Its first draft
+checked `command -v iverilog` and printed `PASS  iverilog on PATH (iverilog)` in
+a shell where **nothing executable was on PATH** — it was seeing the shell
+function. It now uses `type -P`. A verify that accepts a shell function passes in
+precisely the configuration `make` cannot use.
+
+#### A10. THE STALENESS AUDIT WAS LEFT STALE BY THE SESSION THAT MOVED WHAT IT MEASURES — SECOND CONSECUTIVE DAY
+
+`tools/open_item_staleness_audit_output.txt` as committed read **30 passed, 0
+failed**, last regenerated by `cff22fd` on 2026-10-26. Run against the tree the
+first session left today, it gives **26 passed, 4 failed**. It is regenerated,
+red, in this addendum's commit, because a current red transcript is worth more
+than a stale green one.
+
+Three of the four failures are the **inverted reminder rows the 10-26 session
+built on purpose** — green while the gap is open, red *on the day the arm lands*,
+"which is the day the list must be updated". Today is that day: the two ports
+landed and the selftest went to five runners, so `phase4_ral still has NO
+cosmetic-edit control`, `phase6_uvm_crv_uart still has NO cosmetic-edit control`
+and `the selftest covers all FIVE runners, not the original two` all fired
+exactly as designed, and the list was not updated to match. **The instrument
+worked and nothing read it.**
+
+The fourth is a genuine **orphaned `OPEN` adjudication entry** (`S4`: *no OPEN
+adjudication entry has lost its item from the list entirely*), and the audit
+reports it **without naming which entry** — a second-order weakness worth fixing
+at the same time, since an unnamed orphan is a finding nobody can act on without
+re-deriving it.
+
+The 2026-10-25 entry records this audit *"red for at least four days behind an
+eight-day-stale transcript"*. That makes today the **second consecutive session**
+in which it was left stale by the session that created the condition it
+detects — which is the argument that regenerating it must be **mechanical**, not
+remembered. It is already in `tools/run_all_harnesses.sh`; the standing **MAKE
+`run_all_harnesses.sh` ITSELF REACHABLE** item is now the direct cause of two
+measured staleness incidents, not a tidiness complaint.
+
+**Not yet covered — added by this addendum, ranked:**
+
+- **RANKED FIRST: UPDATE THE THREE FIRED REMINDER ROWS AND NAME THE ORPHAN.**
+  Mechanical, needs no toolchain, and the audit is red until it is done. The
+  three rows have served their purpose and must now assert the *post-landing*
+  fact instead; the `S4` orphan check must print the entry it is objecting to.
+- **RANKED SECOND: REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`.**
+  Its two `PASS` rows are UNMEASURED, by the annotation in the file. A full
+  re-run exceeds the 180 s per-call cap, so this needs the run split across
+  calls — the same constraint the graphene repository recorded today for three
+  of its suites.
+- **RANKED THIRD: MAKE THE DUPLICATE-SESSION GUARD NOT DEPEND ON A CACHED
+  ENDPOINT.** The commits API lagged a real push by at least eleven minutes
+  today. Reading the git refs directly (`git ls-remote`) is not cached the same
+  way; nothing in either repository currently records that the API is not a
+  freshness oracle.
+- **SETTLE WHETHER THE CRV SPEEDUP MOVED.** 10-11 reports 13.68×; today's
+  repaired run reports 20.70× in sequence items and 21.08× in `TX_DATA` pushes.
+  **No conclusion is drawn**: `N_SEEDS=2`, the `steer=0` arm has stdev 250.3 on a
+  median of 207, worst-to-best spread 12.80×, and the bench's own introducing
+  commit called this *"a ratio with a stable denominator and an unstable
+  numerator"*. The standing **MORE SEEDS ON THE CLOSURE DISTRIBUTION** item is
+  what would settle it, and is no longer blocked.
+- **AUDIT THE OTHER DIRECTION OF `free_name_audit`.** It says nothing about a
+  name that is *bound to the wrong thing* — the `N1`-for-runner-E fault of
+  10-26 in a second form.
+
+**Commits this addendum's session:** 4 (the free-name audit, red, with its 14
+controls and its manifest registration; the `phase6_uvm_crv_uart` repair with the
+pre-repair evidence and the in-place annotation of today's report;
+`tools/setup_cocotb.sh` with its own header correction; this addendum with the
+regenerated staleness transcript and the `progress.md` note). One further commit
+was built and **discarded** as duplicate of `e82d79b`.
