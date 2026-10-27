@@ -141,6 +141,49 @@ else
     exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# CONTROL G2b (NEUTRALITY), ported 2026-10-27.
+# ---------------------------------------------------------------------------
+# Every control above asks whether the INJECTION arrived.  None asks the
+# opposite question, and without it the five kills below are unattributable: a
+# bench that FAILS on a change which cannot alter behaviour is measuring
+# itself.  2026-10-26 CHECKED this runner and recorded that it had no such arm;
+# the port was blocked because the arm has to RUN the bench and cocotb did not
+# install under the then-current egress allowlist.  It does now, so this is the
+# port that check was waiting for.
+#
+# Per the 2026-10-25 rule, the helper performs the EDIT and this runner asserts
+# the criterion ITS OWN ROWS ARE SCORED BY -- `verdict_of` returning PASS, the
+# same function the baseline above and every mutant below are judged with.  A
+# helper that judged would hand this runner a criterion it does not use.
+#
+# The two failure modes are kept apart, which is the 2026-10-25 lesson from
+# runner B: "the copy would control nothing" and "the bench is sensitive to a
+# comment" are different faults with different repairs.
+neu="$WORK/uart_controller_NEU.v"
+if ! mc_neutral_copy "$RTL" "$neu" "phase4_ral/run_mutation_tests.sh"; then
+    echo ""
+    echo "NEUTRALITY CONTROL: *** COULD NOT BE FORMED"
+    echo "    the comment-only copy is byte-identical to the DUT, so the arm"
+    echo "    would control nothing.  This is a fault in the control, not in"
+    echo "    the bench, and it is NOT a mutation result."
+    exit 1
+fi
+rm -rf "$HERE/sim_build"
+(cd "$HERE" && make RTL_SRC="$neu" > "$WORK/neutral.log" 2>&1)
+neu_v="$(verdict_of "$WORK/neutral.log")"
+if [ "$neu_v" = "PASS" ]; then
+    echo "NEUTRALITY: PASS on a comment-only copy of the DUT  (required)"
+    echo "            so every kill below is attributable to its defect and"
+    echo "            not to the bench reacting to the RTL file changing."
+else
+    echo "NEUTRALITY: *** $neu_v on a COMMENT-ONLY copy of the DUT."
+    echo "            The bench is sensitive to a change that cannot alter"
+    echo "            behaviour, so no kill below is attributable.  This is"
+    echo "            a fault in the BENCH.  See $WORK/neutral.log"
+    exit 1
+fi
+
 killed=0; survived=0; noresult=0; voided=0
 for i in "${!NAMES[@]}"; do
     n="${NAMES[$i]}"
