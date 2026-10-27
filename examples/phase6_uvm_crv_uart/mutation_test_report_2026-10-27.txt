@@ -38,3 +38,56 @@ MUTANT M4  (tx_full asserts one entry early)
   VERDICT: OK
 ----------------------------------------------------------------
 mutation run exit: 0  (0 = every mutant behaved as required)
+
+================================================================
+ANNOTATION ADDED LATER THE SAME DAY (2026-10-27).  NO NUMBER ABOVE
+IS CHANGED.
+================================================================
+EVERY RUN SCORED IN THIS REPORT ENDED IN AN UNCAUGHT NameError.
+
+examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py had, since commit
+ace870a (2026-10-11), a `print(line)` in UartCrvTest._tail referring to
+a local of report_phase, the method _tail had been extracted from.  The
+bench therefore raised
+
+    NameError: name 'line' is not defined
+
+in report_phase on EVERY invocation, including every one above.  See
+uart_uvm_crv_prerepair_nameerror_2026-10-27.txt.
+
+WHAT THAT DOES AND DOES NOT INVALIDATE, stated separately because
+lumping them would overstate it:
+
+  * The four MUTANT rows (M1-M4, "suite outcome: FAIL  required: FAIL")
+    are still believed sound.  Each carries a specific first-failure
+    message from a real checker -- a burst watchdog, a parity flag, a
+    loopback mismatch, a tx_full misprediction -- which is produced
+    BEFORE the report tail, by the mechanism the row claims.  The crash
+    is downstream of the detection.
+
+  * THE TWO "PASS" ROWS ARE THE ONES TO DISTRUST: `MUTANT control` and
+    `NEUTRALITY ARM`.  run_mutation_tests.sh scores by grepping the log
+    for "RESULT: PASS" / "RESULT: FAIL", and the NameError fires ONE
+    STATEMENT AFTER the RESULT: line is printed.  So "PASS" here means
+    "the bench reached its RESULT line", NOT "the bench completed".  The
+    runner's own "crash or timeout (no RESULT line)" mechanism cannot
+    fire, because the RESULT line is present.
+
+  * The neutrality arm's conclusion -- "every FAIL below is attributable
+    to its defect and not to the suite reacting to the RTL file
+    changing" -- was therefore drawn from a process that ended in an
+    exception.  The conclusion may well be true; it was not measured.
+
+  * make's exit status could not have caught it either.  Verified the
+    same day with a deliberately failing cocotb test against this DUT:
+    MAKE EXIT STATUS = 0 with TESTS=1 PASS=0 FAIL=1.  results.xml
+    carries the <failure> element; the exit status does not.
+
+The defect is repaired in the commit that adds this annotation, and the
+repaired bench runs to completion: RESULT: PASS, 0 failures over 907 502
+checks, bins hit 30/30, TESTS=1 PASS=1 FAIL=0 -- see
+uart_uvm_crv_sim_output_2026-10-27.txt.  THIS REPORT IS NOT REGENERATED
+HERE: a full re-run of the suite exceeds the 180 s per-call cap in this
+environment, so regenerating it is the next session's work and is
+ranked accordingly in AUTOMATION_LOG.md.  Until then the two PASS rows
+above are UNMEASURED, not confirmed.

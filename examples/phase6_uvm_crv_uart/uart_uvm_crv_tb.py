@@ -98,6 +98,19 @@ MAX_TX = 4000           # the same cap
 # was written in.
 STEER_AFTER_PUSHES = 24
 N_SEEDS = int(os.environ.get("N_SEEDS", "2"))
+
+# The report rule.  This was a LOCAL of report_phase until 2026-10-27.
+# When commit ace870a (2026-10-11) extracted the tail of report_phase
+# into _tail, the extracted code kept `print(line)` -- a reference to a
+# local of the method it had just been lifted out of -- and this bench
+# raised NameError on EVERY run for the next sixteen days.  Nothing saw
+# it: cocotb was believed un-installable, and the crash fires one
+# statement AFTER the `RESULT:` line run_mutation_tests.sh greps, so the
+# runner scored the crashing bench as a clean PASS.  Promoted to a
+# module constant so there is one definition that both methods can see;
+# tools/free_name_audit.py now fails the repository if this class of
+# defect reappears anywhere.
+RULE = "=" * 72
 SEED_BASE = int(os.environ.get("SEED_BASE", "0"))
 # Each seed pair costs ~70 s of wall clock on Icarus, and this environment's
 # shell calls are time-boxed, so the sweep is RESUMABLE: every run appends one
@@ -865,13 +878,13 @@ class UartCrvTest(UVMTest):
             print("  RESULT: %s  (%d failures over %d checks)"
                   % ("PASS" if ok and not errs else "FAIL", len(errs),
                      drv.checks + sb.checks))
-            print(line)
+            print(RULE)
             assert ok and not errs, "%d failures" % len(errs)
 
     def report_phase(self, phase):
         drv = self.env.agent.drv
         sb = self.env.sb
-        line = "=" * 72
+        line = RULE
         print(line)
         print("CRV / COVERAGE-DRIVEN UART STIMULUS FROM A UVM SEQUENCE")
         print("  seeds=%d  policies=2  bins=%d  max_tx=%d  steer_after=%d pushes"

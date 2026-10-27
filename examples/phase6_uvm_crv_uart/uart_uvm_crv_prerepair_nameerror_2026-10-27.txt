@@ -1,0 +1,38 @@
+====================================================================
+PRE-REPAIR EVIDENCE -- examples/phase6_uvm_crv_uart, 2026-10-27
+====================================================================
+
+The state of this bench as committed by ace870a (2026-10-11) and
+unchanged until today.  Kept because the 2026-10-11 transcript beside
+it shows a clean PASS and was taken BEFORE that commit's refactor, so
+without this file nothing in the tree records that the bench was
+broken for sixteen days.
+
+(1) The crash, every run, in report_phase's extracted tail:
+--------------------------------------------------------------------
+                                                           File "/tmp/dvr/examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py", line 868, in _tail
+                                                         NameError: name 'line' is not defined
+128:                                                           File "/tmp/dvr/examples/phase6_uvm_crv_uart/uart_uvm_crv_tb.py", line 868, in _tail
+129-                                                             print(line)
+
+(2) cocotb's own verdict on that run:
+--------------------------------------------------------------------
+** TEST                               STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+** uart_uvm_crv_tb.uart_uvm_crv_test   FAIL     1836488.00         123.75      14840.38  **
+** TESTS=1 PASS=0 FAIL=1 SKIP=0                 1836488.00         123.79      14836.06  **
+
+(3) AND make STILL EXITED 0.  Verified separately the same day with a
+    deliberately failing cocotb test against the same DUT:
+--------------------------------------------------------------------
+    MAKE EXIT STATUS = 0
+    ** test_must_fail.deliberately_failing   FAIL
+    ** TESTS=1 PASS=0 FAIL=1 SKIP=0
+    results.xml DOES carry the <failure> element; make's exit does not.
+
+(4) Why run_mutation_tests.sh did not notice.  It scores by grepping
+    the log for 'RESULT: PASS' / 'RESULT: FAIL', and has a
+    'crash or timeout (no RESULT line)' mechanism for the rest.  The
+    NameError fires ONE STATEMENT AFTER the RESULT: line is printed.
+    So the RESULT line is present, the grep matches, the crash
+    mechanism never fires, and a bench that crashed on every single
+    run scored a clean sheet.

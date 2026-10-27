@@ -1,0 +1,139 @@
+rm -f results.xml
+"make" -f Makefile results.xml
+make[1]: Entering directory '/tmp/dvr/examples/phase6_uvm_crv_uart'
+mkdir -p sim_build
+/tmp/ivbin/iverilog -o sim_build/sim.vvp -D COCOTB_SIM=1 -s uart_controller -g2012 -f sim_build/cmds.f  /tmp/dvr/examples/phase6_uvm_crv_uart/../../rtl/uart_controller.v
+rm -f results.xml
+MODULE=uart_uvm_crv_tb TESTCASE= TOPLEVEL=uart_controller TOPLEVEL_LANG=verilog \
+         /tmp/ivbin/vvp -M /tmp/cocotb_venv/lib/python3.10/site-packages/cocotb/libs -m libcocotbvpi_icarus   sim_build/sim.vvp  
+     -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:79   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+     -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+     0.00ns INFO     cocotb                             Running on Icarus Verilog version 10.3 (stable)
+     0.00ns INFO     cocotb                             Running tests with cocotb v1.9.2 from /tmp/cocotb_venv/lib/python3.10/site-packages/cocotb
+     0.00ns INFO     cocotb                             Seeding Python random module with 1793099508
+     0.00ns INFO     cocotb.regression                  pytest not found, install it to enable better AssertionError messages
+UVM_INFO @ 0.0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0.0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+     0.00ns INFO     cocotb.regression                  Found test uart_uvm_crv_tb.uart_uvm_crv_test
+     0.00ns INFO     cocotb.regression                  running uart_uvm_crv_test (1/1)
+UVM_INFO @ 0.0NS: reporter [RNTST] Running test UartCrvTest...
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_reset' (id=93) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.reset' (id=103) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_reset' (id=113) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_configure' (id=123) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.configure' (id=133) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_configure' (id=143) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_main' (id=153) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.main' (id=163) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_main' (id=173) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.pre_shutdown' (id=183) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 0.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.shutdown' (id=193) PHASE READY TO END
+  seed=1 steer=0  items= 384  pushes= 1745  bins=30/30  CLOSED
+  seed=2 steer=0  items=  30  pushes=  131  bins=30/30  CLOSED
+  seed=1 steer=1  items=  11  pushes=   48  bins=30/30  CLOSED
+  seed=2 steer=1  items=   9  pushes=   41  bins=30/30  CLOSED
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1836488.0NS: reporter [PH/TRC/EXE/ALLDROP] Phase 'common.run' (id=67) PHASE EXIT ALL_DROPPED
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1836488.0NS: reporter [PH_READY_TO_END] Phase 'common.run' (id=67) PHASE READY TO END
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_phase.py(63) @ 1836488.0NS: reporter [PH_READY_TO_END] Phase 'uvm.uvm_sched.post_shutdown' (id=203) PHASE READY TO END
+========================================================================
+CRV / COVERAGE-DRIVEN UART STIMULUS FROM A UVM SEQUENCE
+  seeds=2  policies=2  bins=30  max_tx=4000  steer_after=24 pushes
+========================================================================
+
+  last run's coverage report:
+  cp_parity  3 2 4
+  cp_stop    5 4
+  cp_baud    1 3 2 3
+  cp_data    6 1 1 4 15 17
+  cp_txq     1492 5603 1
+  cp_pd      9 7 5 4 12 7
+  cp_ps      2 1 1 1 2 2
+  bins hit: 30/30  (100%)
+
+  CLOSURE COUNTED IN SEQUENCE ITEMS (BURST CONFIGURATIONS)
+    steer=0  closed 2/2 runs
+             min=30 median=207.0 max=384 mean=207.0
+             stdev=250.3  spread max/min=12.80x
+    steer=1  closed 2/2 runs
+             min=9 median=10.0 max=11 mean=10.0
+             stdev=1.4  spread max/min=1.22x
+    steering speedup, median/median : 20.70x
+    same ratio, worst to best       : 2.73x .. 42.67x
+
+  CLOSURE COUNTED IN TX_DATA PUSHES (THE VERILOG BENCH'S UNIT)
+    steer=0  closed 2/2 runs
+             min=131 median=938.0 max=1745 mean=938.0
+             stdev=1141.3  spread max/min=13.32x
+    steer=1  closed 2/2 runs
+             min=41 median=44.5 max=48 mean=44.5
+             stdev=4.9  spread max/min=1.17x
+    steering speedup, median/median : 21.08x
+    same ratio, worst to best       : 2.73x .. 42.56x
+
+  THE UNIT IS NOT THE EXPLANATION
+    speedup in sequence items : 20.70x
+    speedup in TX_DATA pushes : 21.08x
+    they differ by            : 1.02x -- so the unit was
+    unlabelled, which is worth fixing, and is not the cause.
+
+  WHAT IS: see summarize_closure.py over the accumulated
+  seeds.  In one sentence -- the STEERED closure cost
+  reproduces across language, framework and RNG, and the
+  PURE-RANDOM one does not, so 13.68x is a ratio with a
+  stable denominator and an unstable numerator.
+
+  bus accesses observed    : 306071  (unresolved samples skipped: 1)
+  bytes pushed             : 1979
+  pushes skipped (tx_full) : 0
+  writes dropped by DUT    : 0
+  RX_DATA reads checked    : 1979
+  tx_full predicted & checked: 2847
+  constraint rejections    : 971 (steer=0) + 25 (steer=1)
+  burst watchdog failures  : 0
+  checks executed          : 599452 (driver) + 308050 (scoreboard)
+
+  RESULT: PASS  (0 failures over 907502 checks)
+========================================================================
+UVM_INFO /tmp/cocotb_venv/lib/python3.10/site-packages/uvm/base/uvm_report_server.py(568) @ 1836488.0NS: reporter [UVM/REPORT/SERVER] 
+--- UVM Report Summary ---
+
+** Report counts by severity
+UVM_INFO : 17
+UVM_WARNING : 0
+UVM_ERROR : 0
+UVM_FATAL : 0
+** Report counts by id
+[UVM/RELNOTES] 1
+[DEFVERB] 1
+[RNTST] 1
+[PH_READY_TO_END] 13
+[PH/TRC/EXE/ALLDROP] 1
+
+UVM_INFO @ 1836488.0NS: reporter [FINISH] $finish was reached in run_test()
+1836488.00ns INFO     cocotb.regression                  uart_uvm_crv_test passed
+1836488.00ns INFO     cocotb.regression                  *******************************************************************************************
+                                                         ** TEST                               STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+                                                         *******************************************************************************************
+                                                         ** uart_uvm_crv_tb.uart_uvm_crv_test   PASS     1836488.00         126.32      14538.12  **
+                                                         *******************************************************************************************
+                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0                 1836488.00         126.36      14534.09  **
+                                                         *******************************************************************************************
+                                                         
+make[1]: Leaving directory '/tmp/dvr/examples/phase6_uvm_crv_uart'
