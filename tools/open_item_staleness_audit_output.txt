@@ -2,15 +2,18 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 45 "Not yet covered" lists; the most recent has 25 items
-  progress.md: 35 completed checkboxes, 4 unchecked
+  AUTOMATION_LOG.md: 46 "Not yet covered" lists; the STANDING list has 30 items
+    FULL        25 items   Not yet covered (candidates for future runs):**
+    SUPPLEMENT   5 items   Not yet covered — added by this addendum, ranked:**
+  [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
+  progress.md: 40 completed checkboxes, 6 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 5   resolved: 5   unresolved: 0
+  paths named: 6   resolved: 6   unresolved: 0
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
   [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
@@ -34,10 +37,10 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
     0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.  <-- adjudicate
     0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, seventeen sessions ...  <-- adjudicate
     0.375  - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no stated expectation with a...  <-- adjudicate
+    0.364  - AUDIT THE OTHER DIRECTION OF free_name_audit. It says nothing about a name that is b...
     0.333  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — carried from 2026-...
     0.333  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 2026-10-17, tenth ses...
     0.333  - EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS — carried.
-    0.294  - MUTATION-TEST THE TWO NEW ARMS' RUNNERS THEMSELVES, NOT ONLY THE ARMS — created toda...
 
   top match for the highest-ranked item:
     - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
@@ -82,6 +85,15 @@ S5 -- controls on the ranker, and its mutation test
         output, by which time `UartCoverage` is one token and the boundary is gone;
         it fixed wire/wired, left all six 2026-10-17 entries RETIRED, and so changed
         nothing the check reported.]
+  [PASS] L1  REGRESSION CONTROL: a log with one FULL list and no supplement is read exactly as before   [3 items -- the 45 entries up to 2026-10-26 are all this shape, and the repair must not move them]
+  [PASS] L2  a FULL list followed by a SUPPLEMENT is read as the UNION, not as the supplement alone   [5 items from [('FULL', 3), ('SUPPLEMENT', 2)].  Reading the LAST heading gave 2 and is what broke
+        this audit on 2026-10-27; reading only the FULL list would now drop the
+        addendum's ranked-first item.]
+  [PASS] L3  a SUPPLEMENT with no FULL list before it still parses and is reported as a supplement   [the anchor check in main() is what calls this out; the parser must not crash on it]
+  [PASS] L4  and a second FULL list anchors on the LATER one   [a new session entry supersedes the previous full list, which is the behaviour every entry relies on]
+  [PASS] L5  POSITIVE CONTROL for the IndexError: a list SHORTER than REPORTING_CUT ranks without raising   [REPORTING_CUT is 6 and this list has 2 items.  The unguarded read was
+        ranked[REPORTING_CUT - 1], which raised IndexError and killed S3, S4, S5 and S6
+        at once -- so the crash removed the five checks that would have reported it.]
 
 ------------------------------------------------------------------------------
 S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
@@ -120,5 +132,5 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          tools/test_neutrality_controls.py  lacks "MARKER_RUNNERS = ('E', 'F', 'G')"  --  extended 2026-10-26.  Two runners inline their own cp and three are injected at a declared marker; if this goes, three arms are untested again while the file still claims five.
 
 ==============================================================================
-RESULT: 26 passed, 4 failed
+RESULT: 32 passed, 4 failed
 ==============================================================================

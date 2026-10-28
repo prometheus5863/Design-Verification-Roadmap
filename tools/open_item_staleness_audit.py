@@ -149,19 +149,58 @@ def stems(text):
 # Parsing
 # ---------------------------------------------------------------------------
 
-def open_item_blocks(log_text, which=-1):
+# A heading is a FULL standing list only if it carries this phrase.  Every
+# one of the 45 session entries up to 2026-10-27 does; the 2026-10-27
+# ADDENDUM's heading -- "Not yet covered - added by this addendum, ranked:"
+# -- deliberately does not, because it lists ADDITIONS and not the standing
+# list.  See open_item_headings() for what that cost.
+FULL_LIST_MARKER = '(candidates for future runs)'
+
+
+def open_item_headings(log_text):
+    """Every "Not yet covered" heading, classified FULL or SUPPLEMENT.
+
+    REPAIRED 2026-10-28, and the fault is worth stating because it was
+    introduced by a deliberate, correct editorial decision.
+
+    The 2026-10-27 addendum chose not to be a second `## 2026-10-27` entry
+    and headed its five new items "Not yet covered - added by this addendum,
+    ranked:".  open_item_blocks() took the LAST such heading, so from that
+    commit onward this audit stopped auditing the standing list of ~33 items
+    and audited a FIVE-item supplement instead -- S1 reported 1 named path
+    where the standing list names many, S2 found 0 creation dates, and then
+    S3 died with IndexError because REPORTING_CUT is 6 and ranked[5] does
+    not exist in a list of five.
+
+    The committed transcript shows a complete 26/4 run, so the tree carried
+    a crashing tool behind a green-looking artefact for a day -- the
+    repository's recurring failure, in the one tool whose job is to notice
+    that the list has drifted from the tree.
     """
-    The items of the `which`-th "Not yet covered" list (default: the most
-    recent).  An item is a top-level '- ' bullet plus its continuation lines.
-    """
-    heads = [m.start() for m in
-             re.finditer(r'\*\*Not yet covered[^\n]*\n', log_text)]
-    if not heads:
-        return [], None
-    start = heads[which]
-    start = log_text.index('\n', start) + 1
-    # the list ends at the next bold paragraph that is not a list item
-    m = re.search(r'\n\*\*(?!Not yet covered)', log_text[start:])
+    out = []
+    for m in re.finditer(r'\*\*Not yet covered([^\n]*)\n', log_text):
+        tail = m.group(1)
+        kind = 'FULL' if FULL_LIST_MARKER in tail else 'SUPPLEMENT'
+        out.append((m.start(), kind, ('Not yet covered' + tail).strip()))
+    return out
+
+
+def _items_from(log_text, head_start):
+    """The '- ' bullets of the list whose heading starts at `head_start`."""
+    start = log_text.index('\n', head_start) + 1
+    # The list ends at the next bold paragraph.
+    #
+    # CORRECTED 2026-10-28, and found by the control written for something
+    # else.  This read `r'\n\*\*(?!Not yet covered)'`, so a list's body ran
+    # straight THROUGH a following "Not yet covered" heading and absorbed
+    # the next list's bullets as its own.  In the committed log it never
+    # fired, because every entry puts a `**Commits this run:**` paragraph
+    # between its list and the next heading -- so the bug was latent behind
+    # a formatting convention, and L2 exposed it by planting the two
+    # headings adjacent.  Had it fired, standing_list() would have
+    # DOUBLE-COUNTED every supplement: once inside the full list's body and
+    # once as its own contribution.
+    m = re.search(r'\n\*\*', log_text[start:])
     end = start + (m.start() if m else len(log_text) - start)
     body = log_text[start:end]
     items, cur = [], None
@@ -177,7 +216,48 @@ def open_item_blocks(log_text, which=-1):
             cur = None
     if cur is not None:
         items.append('\n'.join(cur))
-    return [i for i in items if i.strip()], len(heads)
+    return [i for i in items if i.strip()]
+
+
+def standing_list(log_text):
+    """The standing list as of the END of the log, and how it was assembled.
+
+    The most recent FULL list, plus every SUPPLEMENT that appears AFTER it,
+    in order.  A supplement lists additions to the list above it, so the
+    union is the standing list; taking the supplement alone is what broke
+    this audit on 2026-10-27, and taking only the full list would now drop
+    five real items including that addendum's ranked-first one.
+
+    Returns (items, provenance), where provenance is a list of
+    (kind, heading, n_items) describing each contributing list.
+    """
+    heads = open_item_headings(log_text)
+    if not heads:
+        return [], []
+    full_at = [i for i, h in enumerate(heads) if h[1] == 'FULL']
+    first = full_at[-1] if full_at else 0
+    items, prov = [], []
+    for pos, kind, heading in heads[first:]:
+        got = _items_from(log_text, pos)
+        items.extend(got)
+        prov.append((kind, heading, len(got)))
+    return items, prov
+
+
+def open_item_blocks(log_text, which=None):
+    """Back-compatible wrapper.
+
+    `which=None` (the new default) returns the STANDING LIST per
+    standing_list().  An integer still selects one heading's list, which is
+    what the controls use to plant a single list.
+    """
+    heads = open_item_headings(log_text)
+    if not heads:
+        return [], None
+    if which is None:
+        items, _prov = standing_list(log_text)
+        return items, len(heads)
+    return _items_from(log_text, heads[which][0]), len(heads)
 
 
 def completed_blocks(progress_text):
@@ -439,6 +519,68 @@ def s5_controls():
                 "wire/wired, left all six 2026-10-17 entries RETIRED, and so "
                 "changed\n        nothing the check reported."
                 % sorted(stems('UartCoverage'))))
+
+    # ---------------------------------------------------------------------
+    # L1-L5 (2026-10-28): controls for the list-selection repair.
+    #
+    # The fault these are written against is not hypothetical: it was in the
+    # tree for a day, and the committed transcript showed a complete 26/4
+    # run while the tool died at S3 with IndexError.  Each planted log below
+    # is a string, built here -- nothing is written into the repository, per
+    # the standing "a module must not plant the pattern it censuses in the
+    # tree other audits read" item.
+    FULL_HEAD = '**Not yet covered (candidates for future runs):**\n'
+    SUPP_HEAD = '**Not yet covered - added by this addendum, ranked:**\n'
+    def _log(*parts):
+        return '## entry\n\n' + '\n'.join(parts) + '\n\n**Commits:** 1\n'
+    bullets_a = '- ALPHA item one\n- BETA item two\n- GAMMA item three\n'
+    bullets_b = '- DELTA added later\n- EPSILON added later\n'
+
+    only_full = _log(FULL_HEAD + bullets_a)
+    full_then_supp = _log(FULL_HEAD + bullets_a, SUPP_HEAD + bullets_b)
+    only_supp = _log(SUPP_HEAD + bullets_b)
+    two_fulls = _log(FULL_HEAD + bullets_a, FULL_HEAD + bullets_b)
+
+    it_full, _ = open_item_blocks(only_full)
+    it_union, prov_union = standing_list(full_then_supp)
+    it_supp, prov_supp = standing_list(only_supp)
+    it_two, prov_two = standing_list(two_fulls)
+
+    res.append(('L1', 'REGRESSION CONTROL: a log with one FULL list and no '
+                      'supplement is read exactly as before',
+                len(it_full) == 3 and 'ALPHA' in it_full[0],
+                '%d items -- the 45 entries up to 2026-10-26 are all this '
+                'shape, and the repair must not move them' % len(it_full)))
+    res.append(('L2', 'a FULL list followed by a SUPPLEMENT is read as the '
+                      'UNION, not as the supplement alone',
+                len(it_union) == 5
+                and [k for k, _h, _n in prov_union] == ['FULL', 'SUPPLEMENT'],
+                '%d items from %s.  Reading the LAST heading gave 2 and is '
+                'what broke\n        this audit on 2026-10-27; reading only '
+                'the FULL list would now drop the\n        addendum\'s '
+                'ranked-first item.'
+                % (len(it_union), [(k, n) for k, _h, n in prov_union])))
+    res.append(('L3', 'a SUPPLEMENT with no FULL list before it still parses '
+                      'and is reported as a supplement',
+                len(it_supp) == 2
+                and [k for k, _h, _n in prov_supp] == ['SUPPLEMENT'],
+                'the anchor check in main() is what calls this out; the '
+                'parser must not crash on it'))
+    res.append(('L4', 'and a second FULL list anchors on the LATER one',
+                len(it_two) == 2 and 'DELTA' in it_two[0],
+                'a new session entry supersedes the previous full list, '
+                'which is the behaviour every entry relies on'))
+    ranked_short = s3_rank(it_supp, completed_blocks(_SYNTH_PROGRESS))
+    res.append(('L5', 'POSITIVE CONTROL for the IndexError: a list SHORTER '
+                      'than REPORTING_CUT ranks without raising',
+                len(ranked_short) == 2
+                and min(REPORTING_CUT, len(ranked_short)) == 2,
+                'REPORTING_CUT is %d and this list has %d items.  The '
+                'unguarded read was\n        ranked[REPORTING_CUT - 1], '
+                'which raised IndexError and killed S3, S4, S5 and S6\n'
+                '        at once -- so the crash removed the five checks '
+                'that would have reported it.'
+                % (REPORTING_CUT, len(ranked_short))))
     return res
 
 
@@ -651,14 +793,26 @@ def main():
     log = open(LOG, encoding='utf-8').read()
     progress = open(PROGRESS, encoding='utf-8').read()
     items, n_lists = open_item_blocks(log)
+    prov = standing_list(log)[1]
     done = completed_blocks(progress)
 
     print('=' * 78)
     print('OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work')
     print('consistent with the file that records what is finished?  (2026-10-03)')
     print('=' * 78)
-    print('  AUTOMATION_LOG.md: %d "Not yet covered" lists; the most recent has '
-          '%d items' % (n_lists, len(items)))
+    print('  AUTOMATION_LOG.md: %d "Not yet covered" lists; the STANDING '
+          'list has %d items' % (n_lists, len(items)))
+    # Added 2026-10-28.  Which lists contributed, and in which role.  Before
+    # today this audit silently read whichever heading came last, and a
+    # five-item addendum supplement was enough to make it audit the wrong
+    # list and then crash.
+    for kind, heading, n in prov:
+        print('    %-10s %3d items   %s' % (kind, n, heading[:60]))
+    n_full = len([1 for k, _h, _n in prov if k == 'FULL'])
+    report(n_full == 1,
+           'the standing list is anchored on exactly one FULL list '
+           '(found %d at or after the most recent; the anchor must be '
+           'unambiguous)' % n_full)
     print('  progress.md: %d completed checkboxes, %d unchecked'
           % (len(done), len(re.findall(r'^- \[ \] ', progress, re.M))))
     report(len(items) > 0, 'the most recent open-items list parses into items')
@@ -694,18 +848,29 @@ def main():
     print('  score = fraction of the open item\'s distinctive tokens that a')
     print('  COMPLETED checkbox also contains.  A RANKING, not a verdict.\n')
     print('    %-6s %s' % ('score', 'open item'))
+    # CLAMPED 2026-10-28.  This read ranked[REPORTING_CUT - 1] unguarded and
+    # raised IndexError on any list shorter than REPORTING_CUT -- which is
+    # exactly what the five-item addendum supplement produced, killing the
+    # audit at S3 so that S4, S5 and S6 never ran at all.  A list shorter
+    # than the cut is a legitimate state (an early session, or a supplement
+    # read on purpose by a control); it is not the same as a crash, and it
+    # must be REPORTED rather than either raised or silently absorbed.
+    cut = min(REPORTING_CUT, len(ranked))
+    if cut < REPORTING_CUT:
+        print('    (only %d ranked item(s): the reporting cut of %d is '
+              'reduced to %d)' % (len(ranked), REPORTING_CUT, cut))
     for score, it, _w in ranked[:REPORTING_CUT + 4]:
-        mark = '  <-- adjudicate' if score >= ranked[REPORTING_CUT - 1][0] else ''
+        mark = '  <-- adjudicate' if cut and score >= ranked[cut - 1][0] else ''
         print('    %-6.3f %s%s' % (score, first_line(it, 86), mark))
     print('\n  top match for the highest-ranked item:')
     if ranked and ranked[0][2]:
         print('    %s' % first_line(ranked[0][2], 150))
 
     print('\n' + '-' * 78)
-    print('S4 -- the committed adjudication of the top %d' % REPORTING_CUT)
+    print('S4 -- the committed adjudication of the top %d' % cut)
     print('-' * 78)
     entries, covered, uncovered, extra, wording = s4_adjudication(
-        ranked, REPORTING_CUT, all_items=items)
+        ranked, cut, all_items=items)
     print('  adjudication entries on disk: %d' % len(entries))
     for txt, verdict in covered:
         print('    %-7s %s' % (verdict, txt))
