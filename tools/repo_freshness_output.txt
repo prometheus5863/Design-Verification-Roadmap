@@ -1,0 +1,25 @@
+==============================================================
+REPO FRESHNESS -- refs vs commits API
+  repo   : prometheus5863/single-layer-graphene-structure
+  branch : main
+  at     : 2026-10-28T01:30:21Z
+==============================================================
+  refs   : 88a0662235f862cfded33ffeb914e0b6206f06f0   <-- authoritative
+  API    : 88a0662235f862cfded33ffeb914e0b6206f06f0
+FRESHNESS: AGREE.  The API was not stale at this moment -- which is
+  a measurement, not a guarantee for the next one.
+
+--------------------------------------------------------------
+EXIT-CODE CONTROLS, run 2026-10-28 (the script's own claims)
+--------------------------------------------------------------
+  agree           exit 0   measured
+  no-such-branch  exit 1   measured (refs UNAVAILABLE -> INDETERMINATE)
+  bad slug        exit 1   measured
+  DISAGREE        exit 2   NOT REACHED today: both endpoints agreed on
+                           both repositories, including the graphene one
+                           pushed ~10 minutes before this run.  So the
+                           2026-10-27 eleven-minute lag did NOT reproduce
+                           here, and the exit-2 path is UNEXERCISED.  That
+                           is recorded rather than smoothed over: by this
+                           repository's own rule a control that has never
+                           fired is a control with no evidence that it can.
