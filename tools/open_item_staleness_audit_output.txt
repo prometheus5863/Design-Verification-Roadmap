@@ -59,7 +59,7 @@ S4 -- the committed adjudication of the top 6
     WORDING Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
             still on the list as: - THE FIVE SYMPTOMS ARE NOW FIVE PIECES OF WORK, NOT ONE BLOCK...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
-  [FAIL] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
+  [FAIL] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)  --  1 orphan(s): THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart
   [PASS] the RETIRED and WORDING categories are disjoint
   NOTE: 1 adjudicated item(s) are tracked under a different wording than the
         entry that judged them.  The entry is right and the item is live; what
@@ -124,13 +124,13 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          examples/phase6_bfm_equivalence/run_mutation_tests.sh  contains "G2b NEUTRALITY CONTROL"  --  checked 2026-10-26, same answer and same day.  The only one of the five whose mutation target is the BFM rather than the RTL, which is why mc_neutral_copy takes a path.
   [PASS] the neutral EDIT is shared and the VERDICT is not
          tools/mutation_controls.sh  contains "IT DELIBERATELY DOES NOT JUDGE THE RESUL"  --  mc_neutral_copy performs the comment-only edit and refuses a byte-identical copy; each runner asserts its own pass criterion.  If this comment goes, the next port is liable to give several runners one criterion none of them uses.
-  [FAIL] phase4_ral still has NO cosmetic-edit control -- CHECKED, not assumed
-         examples/phase4_ral/run_mutation_tests.sh  contains "G2b"  --  checked 2026-10-26: controls A/B/C via tools/mutation_controls.sh plus the MC_SELFTEST=1 positive control, and no neutral arm.  NOT ported because the bench needs cocotb, which does not install under the current egress allowlist.  This row is a REMINDER and not a permanently-red one: it is green while the gap is open and goes red on the day the arm lands, which is the day the list must be updated.
-  [FAIL] phase6_uvm_crv_uart still has NO cosmetic-edit control -- CHECKED
-         examples/phase6_uvm_crv_uart/run_mutation_tests.sh  contains "G2b"  --  checked 2026-10-26: it has an unmutated `control` ROW, which is a BASELINE and not a neutrality control -- a baseline asks whether the bench passes on good RTL, a neutrality arm asks whether it passes on RTL that is different but cannot behave differently.  Conflating the two is how a runner looks controlled and is not.  Blocked on cocotb, same as the row above.
-  [FAIL] the selftest covers all FIVE runners, not the original two
-         tools/test_neutrality_controls.py  lacks "MARKER_RUNNERS = ('E', 'F', 'G')"  --  extended 2026-10-26.  Two runners inline their own cp and three are injected at a declared marker; if this goes, three arms are untested again while the file still claims five.
+  [PASS] phase4_ral HAS a cosmetic-edit control (ported 2026-10-27)
+         examples/phase4_ral/run_mutation_tests.sh  contains "G2b"  --  this row read "phase4_ral still has NO cosmetic-edit control" from 2026-10-26, when the bench was blocked on cocotb; it was an inverted REMINDER, green while the gap was open.  cocotb installed on 2026-10-27 (see tools/setup_cocotb.sh) and the arm was ported the same day, so the reminder fired and is turned over here.  Red now if the port is reverted while the list claims it.
+  [PASS] phase6_uvm_crv_uart HAS a cosmetic-edit control (ported 2026-10-27)
+         examples/phase6_uvm_crv_uart/run_mutation_tests.sh  contains "G2b"  --  same turn-over as the row above.  Its pre-landing wording recorded the distinction that made the port necessary: the runner already had an unmutated `control` ROW, which is a BASELINE -- it asks whether the bench passes on good RTL -- and not a neutrality arm, which asks whether it passes on RTL that is different but cannot behave differently.  Conflating the two is how a runner looks controlled and is not.
+  [PASS] the selftest covers all SEVEN runners, not the original five
+         tools/test_neutrality_controls.py  contains "MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I"  --  read "all FIVE runners, not the original two" from 2026-10-26 with the needle MARKER_RUNNERS = ('E', 'F', 'G').  H and I were added 2026-10-27 with the two ports above, and the needle is the marker tuple itself, so the row tracks the number it claims rather than a comment about it.  35/35 across seven runners at the last full pass.
 
 ==============================================================================
-RESULT: 32 passed, 4 failed
+RESULT: 35 passed, 1 failed
 ==============================================================================

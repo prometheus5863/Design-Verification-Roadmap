@@ -730,33 +730,53 @@ CONTENT_CLAIMS = (
      'byte-identical copy; each runner asserts its own pass criterion.  If '
      'this comment goes, the next port is liable to give several runners one '
      'criterion none of them uses.'),
-    ('phase4_ral still has NO cosmetic-edit control -- CHECKED, not assumed',
+    # ----------------------------------------------------------------------
+    # THE THREE INVERTED REMINDER ROWS, TURNED OVER 2026-10-28.
+    #
+    # The 2026-10-26 session wrote these three deliberately BACKWARDS: each
+    # asserted the absence of an arm, so each was green while the gap was
+    # open and would go red "on the day the arm lands, which is the day the
+    # list must be updated".  The arms landed on 2026-10-27 and all three
+    # fired exactly as designed -- and the list was not updated, so the
+    # 10-27 addendum's own ranked-first item is this turn-over.  The
+    # instrument worked and nothing read it; that is the part worth keeping.
+    #
+    # They now assert the POST-LANDING fact, which is the direction a
+    # standing row should point: red if the arm is ever reverted while the
+    # list claims it.  The pre-landing wording is kept in each `why` rather
+    # than deleted, because a row that changed polarity is exactly the kind
+    # of history a later session needs in order to trust the row.
+    # ----------------------------------------------------------------------
+    ('phase4_ral HAS a cosmetic-edit control (ported 2026-10-27)',
      'examples/phase4_ral/run_mutation_tests.sh',
      'G2b',
-     False,
-     'checked 2026-10-26: controls A/B/C via tools/mutation_controls.sh plus '
-     'the MC_SELFTEST=1 positive control, and no neutral arm.  NOT ported '
-     'because the bench needs cocotb, which does not install under the '
-     'current egress allowlist.  This row is a REMINDER and not a '
-     'permanently-red one: it is green while the gap is open and goes red on '
-     'the day the arm lands, which is the day the list must be updated.'),
-    ('phase6_uvm_crv_uart still has NO cosmetic-edit control -- CHECKED',
+     True,
+     'this row read "phase4_ral still has NO cosmetic-edit control" from '
+     '2026-10-26, when the bench was blocked on cocotb; it was an inverted '
+     'REMINDER, green while the gap was open.  cocotb installed on '
+     '2026-10-27 (see tools/setup_cocotb.sh) and the arm was ported the '
+     'same day, so the reminder fired and is turned over here.  Red now if '
+     'the port is reverted while the list claims it.'),
+    ('phase6_uvm_crv_uart HAS a cosmetic-edit control (ported 2026-10-27)',
      'examples/phase6_uvm_crv_uart/run_mutation_tests.sh',
      'G2b',
-     False,
-     'checked 2026-10-26: it has an unmutated `control` ROW, which is a '
-     'BASELINE and not a neutrality control -- a baseline asks whether the '
-     'bench passes on good RTL, a neutrality arm asks whether it passes on '
-     'RTL that is different but cannot behave differently.  Conflating the '
-     'two is how a runner looks controlled and is not.  Blocked on cocotb, '
-     'same as the row above.'),
-    ('the selftest covers all FIVE runners, not the original two',
-     'tools/test_neutrality_controls.py',
-     "MARKER_RUNNERS = ('E', 'F', 'G')",
      True,
-     'extended 2026-10-26.  Two runners inline their own cp and three are '
-     'injected at a declared marker; if this goes, three arms are untested '
-     'again while the file still claims five.'),
+     'same turn-over as the row above.  Its pre-landing wording recorded '
+     'the distinction that made the port necessary: the runner already had '
+     'an unmutated `control` ROW, which is a BASELINE -- it asks whether '
+     'the bench passes on good RTL -- and not a neutrality arm, which asks '
+     'whether it passes on RTL that is different but cannot behave '
+     'differently.  Conflating the two is how a runner looks controlled and '
+     'is not.'),
+    ('the selftest covers all SEVEN runners, not the original five',
+     'tools/test_neutrality_controls.py',
+     "MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I')",
+     True,
+     'read "all FIVE runners, not the original two" from 2026-10-26 with '
+     "the needle MARKER_RUNNERS = ('E', 'F', 'G').  H and I were added "
+     '2026-10-27 with the two ports above, and the needle is the marker '
+     'tuple itself, so the row tracks the number it claims rather than a '
+     'comment about it.  35/35 across seven runners at the last full pass.'),
 )
 
 
@@ -883,9 +903,19 @@ def main():
         print('            still on the list as: %s' % first_line(hit, 62))
     report(not uncovered, 'every item at or above the reporting cut is '
                           'adjudicated on disk, with a reason')
+    # AMENDED 2026-10-28, per the 10-27 addendum's own complaint that this
+    # check "reports it without naming which entry".  The orphan WAS printed,
+    # as a RETIRED row some ten lines above -- so the complaint was not quite
+    # right -- but a reader scanning for FAIL lines does not see it, and a
+    # finding nobody can act on without re-deriving it is half a finding.
+    # The names are now in the failure text itself.
     report(not extra, 'no OPEN adjudication entry has lost its item from the '
                       'list entirely (a STALE entry losing its item is the '
-                      'audit trail working, not an orphan)')
+                      'audit trail working, not an orphan)%s'
+                      % ('' if not extra else
+                         '  --  %d orphan(s): %s'
+                         % (len(extra),
+                            '; '.join(first_line(e, 58) for e, _h in extra))))
     # The WORDING rows are NOT a failure: the item is on the list and the work
     # is tracked.  They are a defect in the LIST's stability, not in the
     # adjudication, and reporting them separately is the whole point of the
