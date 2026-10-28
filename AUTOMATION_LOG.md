@@ -11414,3 +11414,325 @@ pre-repair evidence and the in-place annotation of today's report;
 `tools/setup_cocotb.sh` with its own header correction; this addendum with the
 regenerated staleness transcript and the `progress.md` note). One further commit
 was built and **discarded** as duplicate of `e82d79b`.
+
+## 2026-10-28 — the audit that was crashing behind a green transcript, and three reminders that fired and were not read
+
+**Subject:** the 2026-10-27 addendum's three ranked items, worked in order —
+and the first of them turned out to be the smaller half of a fault: the audit
+that was supposed to be *red* until the reminder rows were updated had in fact
+been **raising `IndexError`** since the addendum was committed, with a
+committed transcript showing a complete `26 passed, 4 failed` run.
+
+No RTL, no UVM, no simulator this session: this is the list and the
+instruments that read it, which is exactly what the addendum ranked first,
+second and third.
+
+### 1. The audit was not red. It was dead.
+
+The 2026-10-27 addendum made a deliberate, correct editorial decision: *"this
+addendum is deliberately not a second `## 2026-10-27` entry"*. Its five new
+items were headed **"Not yet covered — added by this addendum, ranked:"**.
+
+`open_item_blocks()` took the **last** `Not yet covered` heading. So from that
+commit onward:
+
+| | read | should read |
+|---|---|---|
+| items audited | **5** (the supplement) | ~25 (the standing list) |
+| `S1` named paths | 1 | many |
+| `S2` creation dates | 0 | many |
+| `S3` | **`IndexError`** | a ranking |
+| `S4`, `S5`, `S6` | never ran | 30-odd checks |
+
+`REPORTING_CUT` is 6 and the read was `ranked[REPORTING_CUT - 1]`, so a
+five-item list killed the tool at S3. **The crash removed the five checks that
+would have reported the condition causing it** — and
+`tools/open_item_staleness_audit_output.txt` still showed the pre-addendum
+`26 passed, 4 failed`. A crashing tool behind a green-looking artefact, in the
+one tool whose job is to notice that the list has drifted from the tree.
+
+It was found by *running* it, which is the only way it could have been found,
+and it is the third consecutive session in which this audit has been left in a
+state the session itself created — which is the argument that regenerating it
+must be **mechanical**. The standing **MAKE `run_all_harnesses.sh` ITSELF
+REACHABLE** item is now the direct cause of three measured incidents.
+
+### 2. The repair is a union, with provenance
+
+Reading the full list instead would now **drop five real items**, including
+the addendum's own ranked-first one. A supplement lists *additions* to the
+list above it, so:
+
+> the standing list = the most recent FULL list + every SUPPLEMENT after it.
+
+`standing_list()` returns that, and prints **provenance** every run — which
+list contributed how many items, in which role — so reading the wrong list
+cannot be silent again:
+
+```
+AUTOMATION_LOG.md: 46 "Not yet covered" lists; the STANDING list has 30 items
+  FULL        25 items   Not yet covered (candidates for future runs):**
+  SUPPLEMENT   5 items   Not yet covered — added by this addendum, ranked:**
+```
+
+FULL is declared by the phrase `(candidates for future runs)`, which all 45
+session headings carry and the addendum's deliberately does not. A new check
+requires **exactly one** FULL anchor, because an ambiguous anchor is how this
+started.
+
+The `IndexError` is **clamped and reported**, not caught: a list shorter than
+the cut is a legitimate state — an early session, or a supplement read on
+purpose by a control — and it is not the same thing as a crash, so the run now
+prints `(only N ranked item(s): the reporting cut of 6 is reduced to N)`.
+
+### 3. A control written for something else found a latent bug
+
+`L2` plants a FULL list immediately followed by a SUPPLEMENT, and it **failed**.
+The body terminator was `\n\*\*(?!Not yet covered)`, so a list's body ran
+straight **through** a following `Not yet covered` heading and absorbed the
+next list's bullets as its own. It had never fired because every entry puts a
+`**Commits this run:**` paragraph between its list and the next heading — the
+bug was **latent behind a formatting convention**. Had it fired,
+`standing_list()` would have **double-counted every supplement**: once inside
+the full list's body and once as its own contribution. Corrected; the real
+log's parse is unchanged at 25 + 5 = 30.
+
+Five controls, `L1`–`L5`, none of which writes anything into the tree: the
+regression case, the union, a supplement with no FULL before it, a second FULL
+anchoring on the later one, and a **positive control for the `IndexError`** on
+a list shorter than the cut.
+
+### 4. The three reminder rows: the instrument worked and nothing read it
+
+The addendum's **ranked-first** item. The 10-26 session wrote three `S6` rows
+deliberately backwards — each asserting the *absence* of a neutrality arm, so
+each green while the gap was open and red *"on the day the arm lands, which is
+the day the list must be updated"*. The arms landed on 10-27. All three fired
+exactly as designed. The list was not updated.
+
+Turned over today, each verified from the source before being written: `G2b`
+appears twice in each of `phase4_ral`'s and `phase6_uvm_crv_uart`'s runners,
+and `MARKER_RUNNERS` is `('E','F','G','H','I')` — and the third row's needle is
+now the marker tuple itself rather than a comment about it, so the row tracks
+the number it claims. Each row's **pre-landing wording is kept in its `why`**
+rather than deleted: a row that has changed polarity is exactly the history a
+later session needs in order to trust it.
+
+The orphan is now named in the FAIL line. The addendum said the check reports
+it *"without naming which entry"* — not quite right, it was printed as a
+`RETIRED` row ten lines above — but a reader scanning for FAIL lines does not
+see it, and a finding nobody can act on without re-deriving it is half a
+finding.
+
+**26/4 (stale) → 32/4 → 35/1.** The four failures after the repair were
+exactly the four the addendum described, which is the evidence that the repair
+restored the audit rather than changing its verdict.
+
+### 5. The last failure was a list regression — and writing this entry created two more
+
+`OPEN: THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart` was an
+adjudication entry whose item had left the standing list. Its own verdict is
+that **the item's count is unverifiable**: a plain `grep -rln 'cmp -s'
+examples/` returns ten runner files, including the two this repository names
+as worked references for having been *fixed*, because nothing here
+distinguishes `cmp -s` used as a **verdict** from `cmp -s` used in a
+**control**. So it is live work, restored to the list with the classification
+its entry names as the cheapest route.
+
+**And appending this very entry orphaned two more.** The audit re-anchored on
+today's FULL list, which is correct, and then:
+
+- `GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE` lost its bullet,
+  because 10-27 tracked it *inside* a five-part "FIVE SYMPTOMS" bullet that
+  this entry re-worded;
+- `Wire PayloadAdmissibilityCoverage into the live UVM coverage collector`
+  lost its match for the same reason;
+- and the restored `cmp -s` item **still** did not match, because its bullet
+  now names the work (*classify every `cmp -s`*) while its entry heading
+  named the count (*the one remaining `cmp -s` runner*).
+
+Three orphans, all produced by **re-wording bullets, in the session that was
+fixing an orphan**. Fixed by aligning the strings in both directions — two
+bullets re-worded to their entries' phrasing, one entry heading renamed to its
+bullet's, with the previous heading kept — plus a new adjudication entry for
+`CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT`, which
+entered the top six because the list moved and not because the item changed.
+
+This is the standing **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING**
+item paid **three times in one session**, and it is now obvious why it keeps
+coming back: a bullet and its adjudication heading are **two copies of one
+string, and nothing keeps them equal**. That makes it a mechanisable item
+rather than a discipline one, which is a change in its character and the
+reason it is ranked where it is below.
+
+**Final: 35/1 → 36 passed, 0 failed** — the first fully green run of this
+audit since before 2026-10-25.
+
+### 6. The ranked-third item, and an honest negative result
+
+`tools/repo_freshness.sh`. Two sessions ran on 2026-10-27; the second read the
+GitHub commits API to decide whether the day's work was done, and that
+endpoint reported `2026-10-26T11:06:52Z` as the tip of `main` **eleven minutes
+after** the first session pushed `e82d79b`.
+
+The tool does not merely switch to the refs. It reads **both** and prints
+whether they agree, because "one endpoint lags another" deserves an instrument
+rather than a sentence in a log: a session that sees DISAGREE has measured the
+lag, and one that sees AGREE has measured that it was absent then. Exit 0
+AGREE, 1 INDETERMINATE, 2 DISAGREE — three of the four measured today.
+
+**And the lag did not reproduce.** Both endpoints agree on both repositories,
+including the graphene one pushed about ten minutes before the run, which is
+precisely the case where the lag appeared. The **exit-2 path is unexercised**,
+and the committed transcript says so in those words rather than implying the
+tool has demonstrated its finding. By this repository's own rule a control
+that has never fired is a control with no evidence that it can.
+
+### 7. Environment
+
+`/sessions` is **100 % full** on this VM (9.3 G of 9.8 G, other sessions',
+unreadable and undeletable), so the clone lives in `/tmp` on `/dev/sda1`.
+**`/tmp/dvlibs` did NOT survive from 2026-10-27** — `/tmp` is per-VM, not
+per-machine — so the 10-27 claim that it "survives between sessions here" is
+corrected: `tools/setup_cocotb.sh` is a cost every session pays, and the
+recipe remains the durable artefact. Nothing this session needed it: every
+commit is pure Python or shell and runs no simulator, which is why it was the
+right work for a session that spent its first half in the sibling repository.
+Each commit pushed and verified against the GitHub API.
+
+**Not yet covered (candidates for future runs):**
+
+- **CLASSIFY EVERY `cmp -s` AS VERDICT-BEARING OR CONTROL-BEARING** — restored
+  to the list today, **ranked first**, and the reason the staleness audit is
+  still red at 35/1. Its adjudication entry has been OPEN with an
+  unverifiable count: `grep -rln 'cmp -s' examples/` returns ten runner files
+  including `phase6_rx_pin_driver` and `phase6_bfm_equivalence`, the two named
+  as worked references for having been fixed — because `cmp -s` in a *control*
+  (did the injection land? did the cosmetic edit move the transcript?) is not
+  `cmp -s` as the *verdict*, and nothing distinguishes them. The 2026-10-16
+  rule — *a set with a silent default has no members you can name* — applied
+  to this count. Needs no toolchain.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — restored to the
+  list today. It was tracked inside the 2026-10-27 entry's five-part "FIVE
+  SYMPTOMS" bullet, and re-wording that bullet today dropped it, which
+  orphaned its adjudication entry — the second of the two orphans this
+  session's own list rewrite created. Both are the standing heading/wording
+  alignment item, and both are the argument that a bullet and its
+  adjudication heading are two copies of one string that nothing keeps equal.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — **ranked second**, and
+  promoted: it is now the direct cause of **three** measured staleness
+  incidents in this audit alone (10-25, 10-27, and today's crash, which the
+  committed transcript hid for a day). It has been carried as a tidiness
+  complaint for eleven consecutive sessions and is no longer one.
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried from the addendum, **ranked third**. Its two `PASS` rows are
+  UNMEASURED by the annotation in the file, because the harness scores on a
+  `RESULT:` line printed one statement before the `NameError` fired. A full
+  re-run exceeds the 180 s call cap, so it needs the run split across calls.
+  Now additionally blocked on nothing but time: the toolchain installs.
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT, AND WIRE
+  `PayloadAdmissibilityCoverage` INTO THE LIVE UVM COVERAGE COLLECTOR
+  (`UartCoverage`)** — the capstone box's (b) and (c), carried, and now the
+  **largest remaining block of actual verification content** rather than one
+  of several blocked items. Unblocked since 10-27. Ten sessions untouched,
+  and the reason given for nine of them no longer holds. *Worded to match
+  its adjudication entry's heading: the 2026-10-27 entry folded it into a
+  five-part bullet, and re-wording it today orphaned the entry until this
+  phrasing was restored — the standing ALIGN THE ADJUDICATION HEADINGS WITH
+  THE LIST WORDING item, paid a third time.*
+- **MUTATION-TEST THE RUNNERS' SCORING LOGIC, NOT ONLY THEIR ARMS** — carried
+  from the addendum, and today is a second argument from a different
+  direction: `open_item_staleness_audit.py`'s own scoring died at S3 and its
+  transcript did not say so, which is the same class — an instrument's
+  reporting path, untested — one level up from a runner.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27, and **strengthened by today**: the stronger half of
+  that item was *"nothing checks that a log entry's numbers match the file it
+  cites"*, and today produced the same shape in a third place — a transcript
+  asserting `26 passed, 4 failed` for a program that could not reach its own
+  total.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25, and today is progress rather than another argument: three `S6` rows
+  were turned over from source checks, and the third was re-pointed at the
+  **value** it claims (`MARKER_RUNNERS`'s tuple) instead of at a comment
+  about the value. That re-pointing is the shape the item wants everywhere.
+- **REGENERATE EVERY COMMITTED TRANSCRIPT EACH SESSION** — carried, and the
+  sibling graphene repository discharged it again today, registering 18 more
+  transcripts, finding a fifth stale one (stale by a month, and *overstating*
+  the tree), and a `SUITES` row that said `None` for a transcript that
+  exists. Here the committed reports are dated files, so staleness is
+  invisible by design; today adds that a transcript can also be **a claim
+  about a run that never completed**.
+- **AUDIT THE OTHER DIRECTION OF `free_name_audit`** — carried from the
+  addendum; it says nothing about a name bound to the *wrong* thing.
+- **SETTLE WHETHER THE CRV SPEEDUP MOVED** — carried from the addendum;
+  13.68× on 10-11 against 20.70× repaired, `N_SEEDS=2`, stdev 250.3 on a
+  median of 207. The standing **MORE SEEDS ON THE CLOSURE DISTRIBUTION** item
+  is what would settle it and is unblocked.
+- **MAKE THE DUPLICATE-SESSION GUARD NOT DEPEND ON A CACHED ENDPOINT** —
+  carried from the addendum and now **partly discharged**:
+  `tools/repo_freshness.sh` exists and measures both endpoints. What remains
+  is that its DISAGREE arm is unexercised, so the 10-27 observation is
+  recorded but not reproduced.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; still the cheapest
+  remaining pure-content item and still the only queued item that adds
+  verification *reach* rather than auditing existing reach.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20; needs no toolchain, edges already enumerated, and today adds ~90
+  more lines of comment that are assertions about why a check exists.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried from 10-24.
+- **RECORD THE ROLE OF EACH READ, NOT ONE ROLE PER SIGNAL PER FILE** —
+  carried from 10-13.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  still the worst remaining census row, and today supplies an **eleventh**
+  worked reference: the clamped reporting cut is three-valued (crash / short
+  list reported / normal) where it was two (crash / normal).
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17,
+  **eleventh** session.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  eighteen sessions old.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** — carried; unblocked, and now
+  with a named question to answer (the speedup item above).
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'s CROSSES, AND
+  AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — carried from 09-26/09-27.
+- **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING** — carried, and
+  **promoted to a mechanisable item** by §5: it was paid three times in this
+  one session, twice on orphans that writing *this entry* created. A bullet
+  and its adjudication heading are two copies of one string and nothing keeps
+  them equal, so the repair is a check that each OPEN entry's heading appears
+  verbatim as the head of some bullet — not a reminder to be careful.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, **twelfth** session, and newly cheap now that the
+  toolchain is something installable and therefore removable.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, sixteenth
+  session.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08, **nineteenth** session); **DERIVE C1's AND C3's DETAIL
+  STRINGS** (10-10); **A diversity TARGET**; per-property coverage of the
+  Phase 4 UVM environment (09-23, unblocked); a less greedy steering policy
+  (09-24); widen the coverage model (09-24); two transmitters at once
+  (09-25); `abc pdr` as a second engine (09-23); mutants not yet attempted
+  (interrupt enable combinations, reset asserted mid-frame); a property
+  needing a strengthening invariant; the SVA sequence layer (09-20); code
+  coverage measurement (Icarus has none, 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 (the staleness-audit repair with its five controls and
+the latent parser bug the controls found; the three reminder rows turned over
+with the orphan named; `tools/repo_freshness.sh` with its measured exit codes
+and its unexercised DISAGREE arm). This entry, the `progress.md` note, the
+three heading/bullet alignments and the new adjudication entry make **4**, and
+the audit ends the session at **36/0** — the first fully green run since
+before 2026-10-25. Each pushed and verified against the GitHub API.

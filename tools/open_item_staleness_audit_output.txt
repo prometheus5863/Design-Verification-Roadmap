@@ -2,11 +2,10 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 46 "Not yet covered" lists; the STANDING list has 30 items
-    FULL        25 items   Not yet covered (candidates for future runs):**
-    SUPPLEMENT   5 items   Not yet covered — added by this addendum, ranked:**
+  AUTOMATION_LOG.md: 47 "Not yet covered" lists; the STANDING list has 31 items
+    FULL        31 items   Not yet covered (candidates for future runs):**
   [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
-  progress.md: 40 completed checkboxes, 6 unchecked
+  progress.md: 49 completed checkboxes, 8 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
@@ -31,16 +30,16 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
   COMPLETED checkbox also contains.  A RANKING, not a verdict.
 
     score  open item
+    0.600  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — carried from 10-24...  <-- adjudicate
     0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
     0.600  - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carried.  <-- adjudicate
-    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 2026-10-22; "c...  <-- adjudicate
-    0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.  <-- adjudicate
-    0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, seventeen sessions ...  <-- adjudicate
-    0.375  - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no stated expectation with a...  <-- adjudicate
-    0.364  - AUDIT THE OTHER DIRECTION OF free_name_audit. It says nothing about a name that is b...
-    0.333  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — carried from 2026-...
-    0.333  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 2026-10-17, tenth ses...
-    0.333  - EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS — carried.
+    0.517  - ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING — carried, and promoted to a m...  <-- adjudicate
+    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...  <-- adjudicate
+    0.414  - GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE — restored to the list today. It w...  <-- adjudicate
+    0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.
+    0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, eighteen sessions o...
+    0.364  - AUDIT THE OTHER DIRECTION OF free_name_audit — carried from the addendum; it says no...
+    0.357  - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR — carried from...
 
   top match for the highest-ranked item:
     - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
@@ -48,25 +47,18 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
-  adjudication entries on disk: 22
+  adjudication entries on disk: 24
+    OPEN    - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...
     OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
     OPEN    - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carri...
+    OPEN    - ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING — ca...
     OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
-    OPEN    - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE V...
-    OPEN    - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — ca...
-    OPEN    - MORE SEEDS ON THE CLOSURE DISTRIBUTION — carried; still no...
-    RETIRED THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart
-    WORDING Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
-            still on the list as: - THE FIVE SYMPTOMS ARE NOW FIVE PIECES OF WORK, NOT ONE BLOCK...
+    OPEN    - GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE — restor...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
-  [FAIL] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)  --  1 orphan(s): THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart
+  [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
   [PASS] the RETIRED and WORDING categories are disjoint
-  NOTE: 1 adjudicated item(s) are tracked under a different wording than the
-        entry that judged them.  The entry is right and the item is live; what
-        moved is the list.  Each is named above with the item it matches, so a
-        reviewer can align the two without re-deciding the verdict.
   [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
-  verdicts: 5 STALE, 17 OPEN
+  verdicts: 5 STALE, 19 OPEN
 
 ------------------------------------------------------------------------------
 S5 -- controls on the ranker, and its mutation test
@@ -132,5 +124,5 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          tools/test_neutrality_controls.py  contains "MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I"  --  read "all FIVE runners, not the original two" from 2026-10-26 with the needle MARKER_RUNNERS = ('E', 'F', 'G').  H and I were added 2026-10-27 with the two ports above, and the needle is the marker tuple itself, so the row tracks the number it claims rather than a comment about it.  35/35 across seven runners at the last full pass.
 
 ==============================================================================
-RESULT: 35 passed, 1 failed
+RESULT: 36 passed, 0 failed
 ==============================================================================

@@ -2979,3 +2979,87 @@ See the **ADDENDUM** at the end of `AUTOMATION_LOG.md`.
   that this "was never written down" — both false; that file installs real PATH
   wrappers and documented the whole problem on 2026-09-18, `export -f` poisoning
   included. Corrected in the header rather than silently.
+
+## 2026-10-28 — the audit that was crashing behind a green transcript, and the three reminders turned over
+
+- [x] **`tools/open_item_staleness_audit.py` had been CRASHING since the 10-27
+  addendum, behind a committed transcript showing a complete 26/4 run.** The
+  addendum headed its five new items *"Not yet covered — added by this addendum,
+  ranked:"*; `open_item_blocks()` took the **last** such heading, so the audit
+  stopped reading the ~25-item standing list and read a five-item supplement —
+  `S1` found 1 named path, `S2` found 0 dates, and `S3` raised `IndexError`
+  because `REPORTING_CUT` is 6 and `ranked[5]` does not exist. `S4`, `S5` and
+  `S6` never ran. **The crash removed the five checks that would have reported
+  the condition causing it.** Found by running the tool, which is the only way
+  it could have been found.
+- [x] **The repair is a UNION, not a choice of list.** A supplement lists
+  additions to the list above it, so the standing list is the most recent FULL
+  list plus every SUPPLEMENT after it. `standing_list()` returns that with
+  **provenance** — which list contributed how many items, in which role —
+  printed every run, so reading the wrong list cannot be silent again. FULL is
+  declared by the phrase `(candidates for future runs)`, which all 45 session
+  headings carry and the addendum's deliberately does not; a new check requires
+  exactly one FULL anchor. The `IndexError` is **clamped and reported**, not
+  caught: a list shorter than the cut is a legitimate state, and it is not the
+  same thing as a crash.
+- [x] **A control written for something else found a latent parser bug.** `L2`
+  plants a FULL list immediately followed by a SUPPLEMENT and failed: the body
+  terminator was `\n\*\*(?!Not yet covered)`, so a list's body ran **through** a
+  following heading and absorbed the next list's bullets. It had never fired
+  because every entry puts a `**Commits this run:**` paragraph between its list
+  and the next heading — latent behind a formatting convention. Had it fired,
+  `standing_list()` would have **double-counted every supplement**. Corrected;
+  the real log's parse is unchanged at 25 + 5 = 30.
+- [x] **Five controls, `L1`–`L5`**, none writing anything into the tree: the
+  regression case (one FULL list, read as before), the union, a supplement with
+  no FULL before it, a second FULL anchoring on the later one, and a positive
+  control for the `IndexError` on a list shorter than the cut.
+- [x] **The three inverted reminder rows, turned over** — the addendum's
+  ranked-first item. The 10-26 session wrote them backwards on purpose: green
+  while each gap was open, red *on the day the arm lands, which is the day the
+  list must be updated*. The arms landed 10-27, all three fired as designed, and
+  the list was not updated. **The instrument worked and nothing read it.** They
+  now assert the post-landing fact, verified from the source (`G2b` twice in each
+  of the two runners; `MARKER_RUNNERS = ('E','F','G','H','I')`), with each row's
+  pre-landing wording kept in its `why` rather than deleted.
+- [x] **The orphan is named in the FAIL line.** The addendum said the check
+  reports it without naming which entry; not quite right — it was printed as a
+  `RETIRED` row ten lines above — but a reader scanning for FAIL lines does not
+  see it, and a finding nobody can act on without re-deriving it is half a
+  finding.
+- [x] **26/4 (stale) → 32/4 → 35/1 → 36/0**, the first fully green run of this
+  audit since before 2026-10-25. The 35/1 failure was a **list regression and
+  not finished work**: `OPEN: THE ONE REMAINING cmp -s RUNNER —
+  phase6_uvm_crv_uart` left the standing list while its own verdict is that the
+  item's COUNT is unverifiable. Restored with the classification its entry names
+  as the cheapest route.
+- [x] **And appending today's log entry orphaned two more entries**, by
+  re-wording bullets — in the session that was fixing an orphan. Three in total,
+  fixed by aligning the strings both ways: two bullets re-worded to their
+  entries' phrasing, one entry heading renamed to its bullet's with the old
+  heading kept, plus a new adjudication entry for the M7-`sed` item, which
+  entered the top six because the list moved and not because the item changed.
+  **ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING is therefore promoted
+  from a discipline item to a mechanisable one**: a bullet and its heading are
+  two copies of one string and nothing keeps them equal.
+- [x] **`tools/repo_freshness.sh`** — the addendum's ranked-third item, built so
+  the claim is measurable rather than anecdotal: it reads the git refs *and* the
+  commits API and prints whether they agree. Exit 0 AGREE, 1 INDETERMINATE, 2
+  DISAGREE, all three measured today except exit 2. **The 10-27 eleven-minute lag
+  did NOT reproduce** — both endpoints agreed on both repositories, including the
+  graphene one pushed ten minutes earlier, which is exactly the case where the
+  lag appeared. The DISAGREE arm is therefore **unexercised**, and the transcript
+  says so: a control that has never fired is a control with no evidence that it
+  can.
+- [ ] **No RTL or UVM content this session.** Everything above is the list and
+  the instruments that read it, which is what the addendum ranked first,
+  second and third. The Phase 4/6 content items — SVA protocol checkers bound
+  into the UVM environment, and `PayloadAdmissibilityCoverage` wired into the
+  live `UartCoverage` collector — are now the largest remaining block and are
+  unblocked, with the toolchain installable since 10-27 and
+  `tools/setup_cocotb.sh` to do it.
+- [ ] **The toolchain was NOT installed this session**, so nothing here ran a
+  simulator. Everything committed is pure-Python or shell and needs none, which
+  is why it was the right work for a session that spent its first half in the
+  sibling repository. `/tmp/dvlibs` did not survive from 10-27: `/tmp` is
+  per-VM, not per-machine, so `setup_cocotb.sh` is a cost every session pays.

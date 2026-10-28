@@ -373,7 +373,16 @@ not an accident, and today is the second recorded instance, which makes it a
 pattern rather than a one-off:** any session that changes the item list owes
 the audit a re-adjudication before the caller can be green.
 
-## OPEN: THE ONE REMAINING cmp -s RUNNER — phase6_uvm_crv_uart
+## OPEN: CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING
+
+**Heading corrected again 2026-10-28.** It read *"THE ONE REMAINING `cmp -s`
+RUNNER — phase6_uvm_crv_uart"*, which named a COUNT this entry's own verdict
+says is unverifiable; the list bullet was re-worded to name the work instead,
+and the two drifted apart, orphaning this entry. Renamed to match. That is the
+third payment on the standing *align the adjudication headings with the list
+wording* item, and the second on this entry alone — which is the argument that
+the alignment should be mechanical: the heading and the bullet are two copies
+of one string and nothing keeps them equal.
 
 **Heading corrected 2026-10-26.** It read `phase6_crv_uart`, which is a
 DIFFERENT directory and the one whose runners A, B and D are fully
@@ -600,3 +609,76 @@ with runner B's STATUS-decode edit, which the RX-pin bench cannot see, so the
 positive control could not fire and scored green. Second session running in
 which a positive control was planted somewhere it could not reach, and the
 first in which the file that exists to catch that shape contained it.
+
+## OPEN: CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT
+
+**Adjudicated 2026-10-28**, on its first appearance at or above the reporting
+cut. It entered the top six because the list moved, not because the item
+changed — which is the property the header of this file records: the
+adjudication is pinned to a ranking, and the ranking moves when the list does.
+
+**Verdict: OPEN, and the item is narrower than its title suggests, which is
+the useful part.** The M7 fault was a `sed` program whose replacement text
+contained a character `sed` reads as syntax, so the injection did not land the
+edit the row claimed while the runner still scored the row. The item asks for
+every other `sed` in every runner to be read for the same shape.
+
+Two reasons it has not been done, and only one of them is good:
+
+1. The population is not enumerated. Nobody has counted the `sed` programs in
+   the runners, so "every other" names no set — the 2026-10-16 rule that *a
+   set with a silent default has no members you can name*, in the same form as
+   the `cmp -s` count item now ranked first. **The enumeration is the work**,
+   and it is a grep plus a classification, needing no toolchain.
+2. It has been treated as a reading task rather than a measurable one. The
+   mechanical form is stronger and already has a precedent in this
+   repository: the declared-sites guard (`phase6_bfm_equivalence`, converted
+   2026-10-15) asks of each injection *did the edit land at the site I
+   declared*, which catches the M7 class **without reading any `sed` at all**.
+   Converting the remaining runners to that guard would discharge this item as
+   a by-product, and is testable by a mutation on the `sed` itself.
+
+The 2026-10-27 addendum's session added two more instances of the shape it
+names — `sed` programs embedded in shell-function overrides embedded in Python
+string literals, in H's and I's `N1` arms — so the population grows faster
+than the reading would.
+
+## OPEN: ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
+
+**Adjudicated 2026-10-28**, on the day it rose into the top six — and it rose
+because this session re-worded the bullet that describes it, which is the item
+demonstrating itself.
+
+**Verdict: OPEN, and its character has changed: it is a MECHANISABLE item, not
+a discipline one.** That is the adjudication, and the reason to write it down.
+
+It was paid **three times in this one session**, and twice on orphans that
+writing the day's own log entry created:
+
+| entry | why it orphaned |
+|---|---|
+| `THE ONE REMAINING cmp -s RUNNER` | the bullet was re-worded to name the WORK; the heading named the COUNT |
+| `GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE` | 10-27 tracked it inside a five-part bullet that today's entry rewrote |
+| `Wire PayloadAdmissibilityCoverage into the live UVM coverage collector` | the same five-part bullet |
+
+Each was repaired by making the two strings agree — two bullets re-worded to
+their entries' phrasing, one heading renamed to its bullet's. And that is the
+whole mechanism: **a bullet and its adjudication heading are two copies of one
+string, and nothing in this repository keeps them equal.** A session that
+improves a bullet's wording silently breaks a match, and the breakage surfaces
+as an *orphan*, which reads like a retired item rather than like a typo.
+
+So the repair is not "be careful when re-wording". It is a check: every `OPEN`
+entry's heading must appear, verbatim, as the head of some bullet on the
+standing list. That is strictly stronger than the present 0.75 stem-containment
+ranker, which is what has been absorbing the drift and, in absorbing it, hiding
+it — the `WORDING` category added 2026-10-17 exists precisely because the
+ranker was papering over this.
+
+**Why it is not done today.** A verbatim check would fail on the entries that
+have *legitimately* diverged — the `STALE` ones, whose items are gone on
+purpose and whose headings are the audit trail — so it needs the `OPEN`/`STALE`
+split the file already carries, and a declared exemption list for any `OPEN`
+entry whose heading is deliberately shorter than its bullet. That is the same
+registry-plus-reason shape the sibling graphene repository built three times on
+this same date, and it is a session's work rather than an afternoon's.
