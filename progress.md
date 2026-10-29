@@ -3063,3 +3063,96 @@ See the **ADDENDUM** at the end of `AUTOMATION_LOG.md`.
   is why it was the right work for a session that spent its first half in the
   sibling repository. `/tmp/dvlibs` did not survive from 10-27: `/tmp` is
   per-VM, not per-machine, so `setup_cocotb.sh` is a cost every session pays.
+
+## 2026-10-29 — the protocol checker, and three defects it had itself
+
+Subject: the Phase 6 content item the 2026-10-28 entry named as "the largest
+remaining block and unblocked" — SVA protocol checkers over the UART. First
+simulator run in this repository since 2026-10-27.
+
+- [x] **`checkers/uart_protocol_checker.v` — 15 rules over the DUT's PINS
+  ONLY.** A1–A5 APB-lite, R1–R2 reset, T1–T6 the serial frame, S1 the sticky
+  error bits, I1 the masked interrupt. It shadows CTRL/BAUD_DIV/INT_EN by
+  watching APB writes go past, so it would bind unchanged to a different
+  implementation of the same register map — which is what separates it from
+  the RTL's own `FORMAL` block, whose properties name `tx_state`, `baud_cnt`
+  and `rx_cnt` and are white-box by construction. Each rule has its own
+  counter, so a mutation test can say *which* rule caught a defect.
+- [x] **Two departures from the item's wording, both forced, both stated in
+  the source.** It is **not SVA**: Icarus 10.3 has no concurrent assertions,
+  so the rules are procedural monitors — a real industry form, equally
+  reusable, and it runs on the toolchain that exists here. And it is **not
+  yet bound into the UVM environment**, because a checker has to be shown to
+  have detection power before it is wired into anything. Both remain open
+  items with the blocker named rather than implied.
+- [x] **17/17 testbench checks, 0 violations on correct RTL, 0 unexercised
+  applicable rules.** The stimulus was written backwards from the rule list,
+  and the report prints an **evaluation count per rule** so the second claim
+  is readable instead of asserted. A rule that never evaluated has no
+  evidence either way — the same distinction the 10-28 entry drew about its
+  own unexercised `DISAGREE` arm, applied here before anyone could ask.
+- [x] **A2 and A5 are NOT APPLICABLE, and the reason is derived.** v1 scope
+  ties `pready` high; A1 measured 25 access phases with it never low; so the
+  access phase is one cycle and "stable *within* an access phase" is a
+  statement about a phase that cannot occur. They are kept, not deleted, and
+  the testbench ends with a **planted control** — an illegal extended access
+  phase in which `paddr` changes — which fires both (A2 0→1, A5 0→1) and so
+  distinguishes *vacuous* from *broken*. The control runs **after** the
+  verdict is taken so it cannot flatter it.
+- [x] **Three defects in the checker, found by running it, each recorded in
+  the source beside the failure that produced it.** (1) R1/R2 each fired once
+  against correct RTL at time 0, where the DUT's outputs are still X — fixed
+  with a `past_valid` qualifier, the same device the RTL's own `FORMAL` block
+  uses. (2) **The monitor had no abort path.** The new 9b stimulus disables
+  the DUT mid-frame; the monitor stayed armed on a frame that never
+  completed, never re-armed, and judged three *later* frames against the dead
+  frame's bit grid — **16 spurious T5 violations and one T6 on correct RTL**.
+  A frame killed by `CTRL.en` going low is not a protocol violation, it is a
+  frame that stops existing. Fixed, plus a watchdog, because any path that
+  leaves the monitor armed poisons every later frame silently. (3) T1 fired on
+  the cycle `CTRL.en` is written, since the DUT drives `tx` from a clocked
+  block — one cycle of pipeline allowance, derived from the DUT being
+  synchronous.
+- [x] **T6's window is derived and measured TIGHT.** The DUT leaves `TX_IDLE`
+  the cycle it sees a non-empty FIFO without waiting for a baud tick, so the
+  start bit can be short by up to one oversample period; the window
+  `[bitper − bitper/16, bitper]` comes from the oversampler, not from
+  loosening until green. The **first** run saw truncation 0 in every frame —
+  the APB driver was landing on the aligned phase every time — which left the
+  lower end with no evidence, and the raw min/max display hid it by mixing two
+  divisors. A phase sweep over all four phases of `(div+1)` at `div = 3` now
+  gives `{0, 2, 4, 2}` cycles, and the worst **equals** `bitper/16`: the bound
+  is attained, so one cycle looser would be slack and one cycle tighter would
+  fail on correct RTL.
+- [x] **Mutation test: 6 of 6 killed BY THE CHECKER**, each firing the rule
+  predicted for it (M1→A1, M2→T3, M3→T4, M4→A4, M5→T6, M6→T1). Scored on
+  `CHECKER_VIOLATIONS` alone and never on the testbench's own checks, because
+  a mutant the TB catches and the checker misses proves nothing about the
+  checker — and **M6 was exactly that on the first run**: CHECKER-MISS with
+  *zero* TB failures, since every disable in the stimulus happened with `tx`
+  already idle high, making the mutant equivalent to correct RTL. The gap was
+  in the **stimulus**, not in rule T1, and closing it is what turned up
+  defect (2) above.
+- [x] **vplan v14**, with the two findings a checker written against a *plan*
+  produces that one written against RTL does not. A scope reduction can empty
+  a **check** and not only remove stimulus, and Section 1.2 never said so —
+  new Section 1.3 tabulates, per reduction, which property it makes vacuous.
+  And the TX start-bit truncation is a DUT timing property **F7 has never
+  specified**: every F7 amendment from v3 to v13 is about the receiver's
+  window and its oracle, while a downstream receiver that locks on the start
+  edge sees a 1/16 phase error on the first bit from this DUT.
+- [x] **The vplan v2 revision carried as an open item was already closed, on
+  2026-09-19.** The STATUS sticky/live re-specification the standing
+  description still asks for is v2 Sections 1.1 and 2.4, a month old. Same
+  shape as the stale list claim the 10-25 entry found, and the same mechanism:
+  the item's authority is outside this repository, so correcting it here does
+  not stop it being re-imported. What this session can do about it is give the
+  v2 wording an **executable** form, which rule S1 is.
+- [ ] **Still open, with the blocker named.** Binding the checker into the
+  uvm-python environment (needs `tools/setup_cocotb.sh`, installable since
+  10-27, not run today). The SVA form of these rules (needs a simulator with
+  concurrent assertions; Icarus 10.3 is not one). `PayloadAdmissibilityCoverage`
+  wired into the live `UartCoverage` collector — untouched today and now the
+  largest remaining Phase 6 content item. The odd start-bit phases, unobserved
+  rather than shown absent. A divisor sweep for T6, which today's single
+  divisor is not.
