@@ -11736,3 +11736,190 @@ and its unexercised DISAGREE arm). This entry, the `progress.md` note, the
 three heading/bullet alignments and the new adjudication entry make **4**, and
 the audit ends the session at **36/0** — the first fully green run since
 before 2026-10-25. Each pushed and verified against the GitHub API.
+
+---
+
+## 2026-10-29 — a checker with detection power, and the three defects it had itself
+
+**Subject: the Phase 6 content item the 2026-10-28 entry ranked as "the
+largest remaining block and unblocked" — a protocol checker over the UART.
+The first simulator run in this repository since 2026-10-27, and the first
+session in four whose subject is the DUT rather than this repository's own
+standing-list instruments.**
+
+### 1. What was built
+
+`checkers/uart_protocol_checker.v`: fifteen rules over the DUT's **pins
+only**, shadowing `CTRL`/`BAUD_DIV`/`INT_EN` from observed APB writes so that
+it would bind unchanged to a different implementation of the same register
+map. That is the property that separates it from the RTL's own `FORMAL`
+block, whose properties name `tx_state`, `baud_cnt` and `rx_cnt` and are
+white-box by construction — and it is the reason this is a reusable
+verification component rather than a second copy of the design's assumptions.
+
+Two departures from the item's wording, both forced, both stated in the
+source rather than glossed:
+
+| the item said | what was built | why |
+|---|---|---|
+| SVA protocol checkers | **procedural** monitors | Icarus 10.3, this repository's pinned simulator, has no concurrent assertions. Every rule is kept; what is lost is the declarative form. The SVA version stays open against a simulator that has them. |
+| bound into the UVM environment | **standalone**, with its own Verilog bench | A checker has to be shown to have detection power *before* it is wired into anything. Binding stays open, with `tools/setup_cocotb.sh` named as the blocker. |
+
+### 2. The result on correct RTL, and why the second number matters
+
+17/17 testbench checks, **0 violations** and **0 unexercised applicable
+rules**. The second figure is the one worth having: the stimulus was written
+backwards from the rule list, and the report prints an **evaluation count per
+rule**, because a rule that never evaluated reports green and carries no
+evidence either way. That is exactly the distinction the 10-28 entry drew
+about its own unexercised `DISAGREE` arm, and it is cheaper to build in than
+to discover later.
+
+**A2 and A5 are marked NOT APPLICABLE, and the reason is derived rather than
+assumed.** v1 scope ties `pready` high; rule A1 measured 25 access phases
+with it never low; therefore the access phase is one cycle and "stable
+*within* an access phase" is a statement about a phase that cannot occur.
+They are kept rather than deleted — lifting the wait-state reduction makes
+them live — and the bench ends with a **planted control**, an illegal
+extended access phase in which `paddr` changes, which fires both (A2 0→1,
+A5 0→1). That distinguishes *vacuous* from *broken*, and it runs **after**
+the verdict is taken so it cannot flatter it.
+
+### 3. Three defects in the checker, found by running it
+
+Recorded here and in the source beside the failure that produced each, since
+a checker's own defects are the thing least likely to be looked for later.
+
+1. **R1 and R2 each fired once against correct RTL, at time 0**, where the
+   DUT's outputs are still X — its reset branch assigns `tx_line <= 1'b1` on
+   the first posedge, so `tx` is only meaningful from the second. Fixed with
+   a `past_valid` qualifier, which is the device the RTL's **own** `FORMAL`
+   block already uses; the fix was available by reading the file the checker
+   was written against.
+2. **The monitor had no abort path, and the symptom was three frames away
+   from the cause.** The new 9b stimulus disables the DUT mid-frame. Without
+   an abort the monitor stayed armed on a frame that never completed, never
+   re-armed, and judged three *later* frames against the dead frame's bit
+   grid: **16 spurious T5 violations and one T6 on correct RTL**. A frame
+   killed by `CTRL.en` going low is not a protocol violation, it is a frame
+   that stops existing, and the monitor had no way to say so. Fixed, plus a
+   **watchdog**, because any path that leaves the monitor armed poisons every
+   later frame silently — the defect class matters more than the instance.
+3. **T1 fired on the cycle `CTRL.en` is written**, since the DUT drives `tx`
+   from a clocked block and that cycle still carries the old value. One cycle
+   of pipeline allowance, **derived** from the DUT being synchronous rather
+   than tuned until the rule went green.
+
+### 4. T6: a window derived, then measured tight
+
+The DUT leaves `TX_IDLE` the cycle it sees a non-empty TX FIFO, forcing
+`tx_os` to 0 and `tx` low immediately **without waiting for a baud tick**, so
+the first of the start bit's sixteen oversample intervals is truncated by
+whatever remains of `baud_cnt`. The admissible window
+`[bitper − bitper/16, bitper]` is therefore derived from the oversampler, not
+from loosening a rule until it passed.
+
+The **first** run observed truncation 0 in every frame, which left the lower
+end of the window with no evidence at all — and the raw min/max display hid
+it, because it mixed start-bit *lengths* from two different divisors, which
+are not comparable. Changing the metric to the **truncation** and sweeping all
+four phases of `(div+1)` at `BAUD_DIV=3` gives `{0, 2, 4, 2}` cycles against
+a 64-cycle bit period. The worst case **equals** `bitper/16`: the derived
+bound is **attained**, so one cycle looser would be slack and one cycle
+tighter would fail on correct RTL. Two cautions kept rather than smoothed:
+only **even** truncations appeared, so the APB write shape advances the push
+cycle in steps of two relative to the baud grid and the odd phases are
+*unobserved rather than shown absent*; and four phases at one divisor is not
+a sweep over divisors.
+
+### 5. Detection power: 6 of 6, scored on the checker alone
+
+| mutant | predicted rule | result |
+|---|---|---|
+| M1 `pready` tied low | A1 | KILLED, checker 1911 |
+| M2 TX parity inverted | T3 | KILLED, checker 1 |
+| M3 first stop bit driven low | T4 | KILLED, checker 14 |
+| M4 unmapped read returns 0xFF | A4 | KILLED, checker 2 |
+| M5 baud reload off by one | T6 | KILLED, checker 26 |
+| M6 `tx` not forced high when disabled | T1 | KILLED, checker 59 |
+
+Every kill fires the rule predicted for it, which is a stronger statement
+than a kill count: a suite that kills six mutants through one over-broad rule
+has one rule's worth of evidence.
+
+Scored on `CHECKER_VIOLATIONS` **alone**, never on the testbench's own
+checks, because a mutant the TB catches and the checker misses says nothing
+about the checker. **M6 was exactly that on the first run** — CHECKER-MISS
+with *zero* TB failures, because every disable in the stimulus happened with
+`tx` already idle high, so the mutant was **equivalent to correct RTL** under
+that stimulus. The gap was in the **stimulus**, not in rule T1, and that
+distinction is only available because the two scores are kept apart. Closing
+it is what then exposed defect 2 of §3.
+
+### 6. vplan v14, and a stale item that was already closed
+
+v14 records the two findings a checker written against a **plan** produces
+that one written against RTL does not:
+
+- **A scope reduction can empty a CHECK, not merely remove stimulus**, and
+  Section 1.2 never said so. New Section 1.3 tabulates, for every reduction,
+  which property it makes vacuous. The general rule: a reduction that
+  silently empties a property leaves a green check standing where there is no
+  evidence. This is §2's finding arriving from the direction of the spec
+  instead of the instrument.
+- **The TX start-bit truncation is a DUT timing property F7 has never
+  specified.** Every F7 amendment from v3 to v13 concerns the **receiver's**
+  tolerance window and its oracle; a downstream receiver that locks on the
+  start edge and counts nominal periods sees a 1/16 phase error on the first
+  bit from this DUT. F7 needs a TX-side timing statement with §4's number in
+  it.
+
+**And the vplan v2 revision still carried as an open item was closed on
+2026-09-19** — the STATUS sticky/live re-specification is v2 Sections 1.1 and
+2.4, a month old. Same shape as the false list claim the 10-25 entry found,
+and the same mechanism: the item's authority is **outside** this repository,
+so correcting it here does not stop it being re-imported. The sibling
+repository hit the identical failure today, independently, on a different
+claim, and built a committed check for it — which is the general remedy and
+is logged below as an item for this repository too.
+
+### 7. Environment and automation health
+
+`/sessions` **100 % full** for the fifth consecutive session, so work goes to
+`/tmp` on `/dev/sda1`. `/tmp/iverilog_install` did **not** survive from
+10-27, confirming again that `/tmp` is per-VM: `tools/setup_iverilog.sh`
+re-ran cleanly (Icarus 10.3). Both documented gotchas held — the script must
+be sourced **unpiped**, and `timeout` must wrap the real binary at
+`/tmp/iverilog_install/usr/bin/vvp` rather than the shell function.
+`tools/setup_cocotb.sh` was **not** run, so nothing here touches
+uvm-python. Every commit pushed and verified against the GitHub API.
+
+**Open items, with blockers named:**
+
+- **BIND THE CHECKER INTO THE uvm-python ENVIRONMENT** — ranked first, the
+  direct continuation, blocked only on running `tools/setup_cocotb.sh`.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions. Icarus 10.3 is not one, and that is a fact about the
+  toolchain rather than a thing a session can fix.
+- **`PayloadAdmissibilityCoverage` INTO THE LIVE `UartCoverage` COLLECTOR** —
+  carried from 10-28, untouched today, now the largest remaining Phase 6
+  content item.
+- **A COMMITTED CHECK FOR EXTERNALLY-SOURCED LIST CLAIMS** — created today,
+  from §6. Two stale claims in two repositories in one day, both re-imported
+  from outside, both previously corrected in prose. The sibling repository
+  built `graphene_chapter_status_audit.py` for its case; the analogue here
+  would measure each vplan item's state from the plan and refuse a progress
+  entry that contradicts it. `tools/open_item_staleness_audit.py` already
+  exists and is the natural home.
+- **THE ODD START-BIT PHASES** — created today. `{0, 2, 4, 2}` covers even
+  truncations only; the odd phases are unobserved, and a divisor sweep for T6
+  is not done either.
+- **A TX-SIDE F7 TIMING STATEMENT** — created today, from vplan v14 (ii).
+- **REGISTER THE TWO NEW TRANSCRIPTS** in whatever reads transcripts here, so
+  that `uart_protocol_checker_tb_sim_output_2026-10-29.txt` and
+  `mutation_test_report_2026-10-29.txt` are compared rather than left to go
+  stale — the same registration gap the sibling repository is working.
+
+**Commits this run:** 3 (the checker with its bench, sim transcript and
+mutation report; vplan v14; progress.md). This `AUTOMATION_LOG.md` entry
+makes **4**. Each was pushed and verified against the GitHub API.
