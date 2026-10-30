@@ -16,13 +16,13 @@ VCD info: dumpfile uart_protocol_checker_tb.vcd opened for output.
   PASS  read of 0xF is zero: 1
 
 -- 4. TX frame, no parity, 1 stop (exercises T2, T4, T5, T6)
-  [checker] frame 1: start bit 32 cycles, bit period 32, truncation 0
+  [checker] frame 1: first boundary 32 cycles, k = 1, bit period 32, truncation 0
 
 -- 5. TX frame, even parity, 2 stop (exercises T3)
-  [checker] frame 2: start bit 32 cycles, bit period 32, truncation 0
+  [checker] frame 2: first boundary 32 cycles, k = 1, bit period 32, truncation 0
 
 -- 6. TX frame, odd parity, 1 stop (exercises T3 again)
-  [checker] frame 3: start bit 32 cycles, bit period 32, truncation 0
+  [checker] frame 3: first boundary 32 cycles, k = 1, bit period 32, truncation 0
 
 -- 7. RX a good frame, odd parity
   PASS  received byte is 0x5A: 1
@@ -40,10 +40,10 @@ VCD info: dumpfile uart_protocol_checker_tb.vcd opened for output.
   PASS  tx forced high by the disable: 1
 
 -- 10. TX at a second divisor, phase-swept (exercises T6 lower end)
-  [checker] frame 5: start bit 64 cycles, bit period 64, truncation 0
-  [checker] frame 6: start bit 62 cycles, bit period 64, truncation 2
-  [checker] frame 7: start bit 60 cycles, bit period 64, truncation 4
-  [checker] frame 8: start bit 62 cycles, bit period 64, truncation 2
+  [checker] frame 5: first boundary 64 cycles, k = 1, bit period 64, truncation 0
+  [checker] frame 6: first boundary 62 cycles, k = 1, bit period 64, truncation 2
+  [checker] frame 7: first boundary 60 cycles, k = 1, bit period 64, truncation 4
+  [checker] frame 8: first boundary 62 cycles, k = 1, bit period 64, truncation 2
 
   ---- protocol checker: 15 rules, 8 frames monitored ----
   rule                                      evaluated violations  in stable in reconfig
@@ -63,7 +63,12 @@ VCD info: dumpfile uart_protocol_checker_tb.vcd opened for output.
   S1 error bits are read-to-clear                   2          0          0          0
   I1 irq low when masked                         6118          0          0          0
   frames: 8 started, 1 aborted by a disable, 0 lost to the watchdog
-  start-bit truncation: 7 frames measured, worst 4 cycles
+  start-bit truncation: 7 frames measured (7 of them k=1, the
+   pre-2026-10-30 domain), worst 4 cycles
+  first-boundary distance in whole bit periods (k), i.e. 1 + the
+  count of trailing zeros in the data byte -- the measurement that
+  diagnosed the 2026-10-30 T6 correction:
+    k = 1   7 frame(s)
   (T6's window is [bitper - bitper/16, bitper], i.e. a truncation
    of at most bitper/16 = div+1 cycles.  A worst case EQUAL to
    bitper/16 means the derived bound is attained and therefore

@@ -133,6 +133,12 @@ module uart_protocol_checker (
     integer viol_i1 = 0;
     integer fired_i1 = 0;
 
+    integer t6_hk;
+    initial begin
+        for (t6_hk = 0; t6_hk <= 16; t6_hk = t6_hk + 1) t6_khist[t6_hk] = 0;
+        t6_pending = 1'b0;
+    end
+
     // =================================================================
     // THE RECONFIGURED EXCLUSION CLASS (2026-10-30)
     // =================================================================
@@ -359,11 +365,81 @@ module uart_protocol_checker (
     integer     aborted = 0;   // frames abandoned because CTRL.en went 0
     integer     lost = 0;      // frames abandoned by the watchdog
 
-    // The start bit's measurable length needs a rising edge right after it,
-    // i.e. a frame whose LSB is 1.  Frames with LSB 0 cannot exercise T6 and
-    // are not counted as evidence for it.
-    integer t6_frames = 0;   // frames with a measurable start bit
-    integer t6_max = 0;      // worst truncation seen, in clk cycles
+    // ===================================================================
+    // T6, CORRECTED 2026-10-30.  THE COMMENT BELOW WAS ALREADY RIGHT AND
+    // THE CODE DID NOT IMPLEMENT IT.
+    // ===================================================================
+    // The three lines that stood here read:
+    //
+    //     The start bit's measurable length needs a rising edge right after
+    //     it, i.e. a frame whose LSB is 1.  Frames with LSB 0 cannot
+    //     exercise T6 and are not counted as evidence for it.
+    //
+    // Every clause of that is true.  NONE of it was in the code.  T6 was
+    // evaluated unconditionally at the first tx transition after the start
+    // bit, against a window of ONE bit period -- and when the LSB is 0 that
+    // transition is not the end of the start bit at all, it is the end of
+    // the RUN OF ZEROS that begins with the start bit.  `t6_frames` was
+    // likewise incremented on every frame with a boundary, so the counter
+    // the comment describes as "frames with a measurable start bit" counted
+    // frames whose start bit was not measurable.
+    //
+    // Nothing had ever exercised it.  The directed Verilog bench sends 8
+    // frames, 7 measurable, and its bytes happen to have LSB 1.  Binding
+    // this checker into the constrained-random uvm-python environment on
+    // 2026-10-30 (examples/phase6_uvm_checker_bind) sent 1834 frames of
+    // random data and produced 885 T6 violations on CORRECT RTL.
+    //
+    // THE DIAGNOSIS IS MEASURED, NOT ARGUED, and it had to be, because the
+    // first hypothesis was WRONG (see the RECONFIGURED class above, built
+    // for it and kept as the refutation).  Over the 1834 frames, the
+    // measured first-boundary interval divided by the latched bit period
+    // rounds to:
+    //
+    //     k =  1  2  3   4   5  6  7  8  9  10
+    //       949 442 213 107  59 29 15  8 10   2
+    //
+    // which is the geometric-1/2 sequence a uniformly random byte's count
+    // of trailing zeros produces, and the residual (measured - k*bp) never
+    // leaves {-2, -1, 0, +1}, i.e. it stays inside the oversampler
+    // truncation bound.  A divisor that had moved under the frame would
+    // give arbitrary ratios and large residuals; it gives neither.  k = 9
+    // and k = 10 are the 0x00 bytes, where the first transition is the stop
+    // bit (9) or the stop bit after a zero parity bit (10).
+    //
+    // THE FIX, AND WHY IT IS NOT THE EXCLUSION THE COMMENT PROPOSED.
+    // Skipping LSB-0 frames would have been faithful to the comment and
+    // would have thrown away 48 % of the evidence.  It is not necessary:
+    // the checker already samples the data bits at their centres, on a
+    // schedule derived from t_fall and bp_lat ALONE, so the expected number
+    // of bit periods to the first transition is computable from data the
+    // rule does not depend on.  T6 is therefore MOVED -- from the first
+    // transition to the point where the eight data bits are known -- and
+    // evaluated against k*bp_lat with k derived from the SAMPLED data.
+    //
+    // That the expectation is independent of the measurement is the whole
+    // point: deriving k by rounding `measured/bp_lat` would make T6
+    // unfalsifiable except in its residual, which is the "control that
+    // cannot fail" shape this repository has now recorded five sessions
+    // running.  k comes from the data; the measurement is then checked
+    // against it.
+    //
+    // The 2026-10-29 truncation result is unaffected and its domain grows:
+    // the truncation is k*bp_lat - measured, which for k = 1 is exactly the
+    // quantity that session measured, and is now measured on every frame
+    // rather than on the LSB-1 half.  t6_frames_k1 keeps the old domain's
+    // count so the two are comparable across the change.
+    integer t6_frames = 0;    // frames with a measurable start bit (any k)
+    integer t6_frames_k1 = 0; // ... of which k == 1, the pre-10-30 domain
+    integer t6_max = 0;       // worst truncation seen, in clk cycles
+    integer t6_k_max = 0;     // largest k observed
+    integer t6_khist [0:16];  // frames by k, for the diagnosis above
+    integer m_start;          // t_boundary - t_fall, recorded, judged later
+    integer t6_i;
+    integer t6_k;
+    integer t6_trunc;
+    reg     t6_run;
+    reg     t6_pending;       // a boundary is recorded and not yet judged
 
     always @(posedge clk) begin
         if (!rst_n) begin
@@ -412,27 +488,17 @@ module uart_protocol_checker (
                                        + (sh_two_stop ? 2 : 1);
                 frames        =  frames + 1;
                 cfg_wr_atstart =  cfg_wr_cnt;
+                t6_pending     =  1'b0;
             end else if (mon_active) begin
                 // first boundary after the start bit, for T5's origin and T6
                 if (!have_boundary && tx !== tx_q) begin
+                    // RECORD ONLY (2026-10-30).  The verdict needs k, and k
+                    // needs the data bits, which are sampled later.  See the
+                    // T6 correction block above.
                     have_boundary <= 1'b1;
                     t_boundary    =  cyc;
-                    fired[T6] = fired[T6] + 1;
-                    if ((cyc - t_fall) > bp_lat ||
-                        (cyc - t_fall) < (bp_lat - (bp_lat / 16))) begin
-                        flag(T6, "start bit outside the oversampler window");
-                        $display("         measured %0d cycles, window [%0d, %0d]",
-                                 cyc - t_fall, bp_lat - (bp_lat / 16), bp_lat);
-                    end
-                    // Track the TRUNCATION, not the raw length: raw lengths
-                    // from two different divisors are not comparable, and the
-                    // quantity the T6 window is about is bitper - measured.
-                    if ((bp_lat - (cyc - t_fall)) > t6_max)
-                        t6_max = bp_lat - (cyc - t_fall);
-                    t6_frames = t6_frames + 1;        // frames with a measurement
-                    $display("  [checker] frame %0d: start bit %0d cycles, bit period %0d, truncation %0d",
-                             frames, cyc - t_fall, bp_lat,
-                             bp_lat - (cyc - t_fall));
+                    m_start       =  cyc - t_fall;
+                    t6_pending    =  1'b1;
                 end else if (have_boundary && tx !== tx_q) begin
                     // T5: every later transition is a whole number of bits
                     fired[T5] = fired[T5] + 1;
@@ -446,6 +512,53 @@ module uart_protocol_checker (
 
                 // centre samples
                 if (cyc == samp_next) begin
+                    // ---- T6's deferred verdict (2026-10-30) ----
+                    // samp_idx == 9 is the first sample at which all eight
+                    // data bits are settled (data_acc is written with a
+                    // non-blocking assignment at samp_idx 1..8).  `tx` at
+                    // this instant is the parity bit when parity is enabled
+                    // and the first stop bit when it is not, which is
+                    // exactly what decides k for an all-zero data byte.
+                    if (samp_idx == 9 && t6_pending) begin
+                        t6_pending = 1'b0;
+                        t6_k   = 1;
+                        t6_run = 1'b1;
+                        for (t6_i = 0; t6_i < 8; t6_i = t6_i + 1) begin
+                            if (t6_run && data_acc[t6_i] === 1'b0)
+                                t6_k = t6_k + 1;
+                            else
+                                t6_run = 1'b0;
+                        end
+                        // All eight data bits zero: the run continues into
+                        // the next bit, which is the parity bit if there is
+                        // one.  A stop bit is 1 by definition, so the run
+                        // cannot extend past it.
+                        if (t6_k == 9 && sh_parity != 2'b00 && tx === 1'b0)
+                            t6_k = t6_k + 1;
+
+                        fired[T6] = fired[T6] + 1;
+                        t6_frames = t6_frames + 1;
+                        if (t6_k == 1) t6_frames_k1 = t6_frames_k1 + 1;
+                        if (t6_k > t6_k_max) t6_k_max = t6_k;
+                        if (t6_k <= 16) t6_khist[t6_k] = t6_khist[t6_k] + 1;
+
+                        t6_trunc = (t6_k * bp_lat) - m_start;
+                        if (m_start > (t6_k * bp_lat) ||
+                            m_start < ((t6_k * bp_lat) - (bp_lat / 16))) begin
+                            flag(T6, "start bit outside the oversampler window");
+                            $display("         measured %0d cycles, k = %0d (from the sampled data 0x%02h), window [%0d, %0d]",
+                                     m_start, t6_k, data_acc,
+                                     (t6_k * bp_lat) - (bp_lat / 16),
+                                     t6_k * bp_lat);
+                        end
+                        // The TRUNCATION, not the raw length: raw lengths
+                        // from two different divisors are not comparable,
+                        // and the quantity the T6 window is about is
+                        // k*bitper - measured.
+                        if (t6_trunc > t6_max) t6_max = t6_trunc;
+                        $display("  [checker] frame %0d: first boundary %0d cycles, k = %0d, bit period %0d, truncation %0d",
+                                 frames, m_start, t6_k, bp_lat, t6_trunc);
+                    end
                     if (samp_idx == 0) begin
                         fired[T2] = fired[T2] + 1;
                         if (tx !== 1'b0)
@@ -597,8 +710,15 @@ module uart_protocol_checker (
         if (fired_i1 == 0) unexercised = unexercised + 1;
         $display("  frames: %0d started, %0d aborted by a disable, %0d lost to the watchdog",
                  frames, aborted, lost);
-        $display("  start-bit truncation: %0d frames measured, worst %0d cycles",
-                 t6_frames, t6_max);
+        $display("  start-bit truncation: %0d frames measured (%0d of them k=1, the",
+                 t6_frames, t6_frames_k1);
+        $display("   pre-2026-10-30 domain), worst %0d cycles", t6_max);
+        $display("  first-boundary distance in whole bit periods (k), i.e. 1 + the");
+        $display("  count of trailing zeros in the data byte -- the measurement that");
+        $display("  diagnosed the 2026-10-30 T6 correction:");
+        for (r = 1; r <= 16; r = r + 1)
+            if (t6_khist[r] != 0)
+                $display("    k = %-3d %0d frame(s)", r, t6_khist[r]);
         $display("  (T6's window is [bitper - bitper/16, bitper], i.e. a truncation");
         $display("   of at most bitper/16 = div+1 cycles.  A worst case EQUAL to");
         $display("   bitper/16 means the derived bound is attained and therefore");
