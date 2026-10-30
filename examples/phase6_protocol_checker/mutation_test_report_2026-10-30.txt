@@ -1,0 +1,21 @@
+MUTATION TEST -- protocol checker detection power
+date: 2026-10-30T11:45:45Z
+--------------------------------------------------------------------
+baseline (unmutated): RESULT=PASS  CHECKER_VIOLATIONS=0
+--------------------------------------------------------------------
+M1 pready tied low                     A1   KILLED   checker=1911 tb_fails=2   fired: rule 0 rule 1 rule 4 rule 7 
+M2 TX parity inverted                  T3   KILLED   checker=1    tb_fails=1   fired: rule 1 rule 4 rule 9 
+M3 first stop bit driven low           T4   KILLED   checker=14   tb_fails=1   fired: rule 1 rule 10 rule 11 rule 4 
+M4 unmapped read returns 0xFF          A4   KILLED   checker=2    tb_fails=3   fired: rule 1 rule 3 rule 4 
+M5 baud reload off by one              T6   KILLED   checker=24   tb_fails=3   fired: rule 1 rule 10 rule 11 rule 12 rule 4 rule 9 
+M6 tx not forced high when disabled    T1   KILLED   checker=59   tb_fails=2   fired: rule 1 rule 4 rule 7 
+--------------------------------------------------------------------
+mutants killed BY THE CHECKER: 6   checker-missed: 0   not applied: 0
+NOTE: rules 1 (A2) and 4 (A5) appear in EVERY row because the testbench
+ends with a planted control that fires them on purpose, to show they can
+fire at all -- they are unexercisable by legal stimulus against a DUT with
+pready tied high.  That control runs AFTER the counted total is taken, so
+it does not contribute to the checker= column; it only shows up in fired:.
+rule numbers in the fired column map to the table in
+checkers/uart_protocol_checker.v rule_name(): 0=A1 1=A2 2=A3 3=A4 4=A5
+5=R1 6=R2 7=T1 8=T2 9=T3 10=T4 11=T5 12=T6 13=S1, plus "rule I1".
