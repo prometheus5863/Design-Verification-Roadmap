@@ -11923,3 +11923,247 @@ uvm-python. Every commit pushed and verified against the GitHub API.
 **Commits this run:** 3 (the checker with its bench, sim transcript and
 mutation report; vplan v14; progress.md). This `AUTOMATION_LOG.md` entry
 makes **4**. Each was pushed and verified against the GitHub API.
+
+---
+
+## 2026-10-30 — the checker's own comment was right and its code was not, and the quantity it needed had been measured here a month earlier
+
+**Status:** The item ranked first on 2026-10-29 is closed, and closing it
+found a defect in the **instrument**, not the DUT. Six commits.
+
+### 1. The blocker was exactly the blocker
+
+`tools/setup_cocotb.sh` installed and verified the whole stack in **one shell
+call** — RESULT: PASS, 12/12, wheelhouse rebuilt from scratch because `/tmp`
+did not survive, every leg in 1 attempt. The 10-29 entry's "blocked only on
+running `tools/setup_cocotb.sh`" was accurate to the word. Worth noting
+against the 10-11..10-26 history of "cocotb does not install": the link was
+fast today (the graphene repo's `scipy` wheel came down at 11 MB/s), which is
+consistent with that script's own recorded hypothesis that a slow link plus a
+non-resuming `pip download` is indistinguishable from a blocked allowlist.
+
+### 2. The binding, and its three decisions
+
+`examples/phase6_uvm_checker_bind/` — wrapper top plus a Python bench that
+**subclasses** the CRV test.
+
+- **A wrapper, not `bind`.** Icarus 10.3 has no `bind`. For a *black-box*
+  checker a wrapper is the equivalent and not a workaround: the checker refers
+  to nothing but the DUT's pins, so there is nothing for `bind`'s hierarchical
+  scope access to provide. A white-box checker could not be bound this way,
+  and the `FORMAL` blocks inside `rtl/uart_controller.v` are the example.
+- **The stimulus is IMPORTED, not copied.** This is the decision that matters.
+  The claim worth making is "these fifteen rules hold under the
+  constrained-random stimulus this repository already runs". Against a *copy*
+  that claim is about a fork, and the fork drifts — silently, since both stay
+  green. Importing makes it checkable by construction: there is one
+  `UartCrvSequence`. (As a module, not `from ... import *`: a star import
+  would pull the CRV `@cocotb.test()` object into this namespace and cocotb
+  would collect and run it against a TOPLEVEL it was not pointed at.)
+- **Two scores kept apart, structurally.** 10-29's strongest finding was that
+  a mutant the TB catches and the checker misses says nothing about the
+  checker. There it was a convention in a scoring script; here `report_phase`
+  prints `UVM_CHECKER_VIOLATIONS` and `UVM_TB_RESULT` from independent
+  sources, checker **first and unconditionally**, with the imported report's
+  assertion caught — because the imported `report_phase` ends in an assert and
+  the checker's verdict is most interesting precisely when something failed.
+- **A liveness guard**, because a binding is an unusually easy place to build
+  a control that cannot fail: get the hierarchical path wrong and the bench is
+  green forever, since "no violations" and "read nothing" are both zero. The
+  wrapper exports `chk_alive`, a free-running clock-edge count, and the bench
+  fails if it is zero or unresolvable. The verdict is also aggregated **in
+  Verilog** rather than by reading the checker's `integer viol[0:13]` arrays
+  from cocotb, whose resolution through the Icarus VPI this repository has
+  never established.
+
+### 3. 2702 violations on unmodified RTL, and the distribution is the diagnosis
+
+Committed **red on purpose**: 2702 violations over 1834 frames, with
+`UVM_TB_RESULT=PASS` beside them — so the CRV environment had been passing all
+along over stimulus the checker rejects. All 2702 are in **T3/T4/T5/T6**, the
+four rules whose evaluation spans a whole frame. **Not one** is in any of the
+eleven that evaluate inside a cycle or an access phase.
+
+### 4. The first hypothesis was wrong, and its own instrument said so
+
+Hypothesis: `bp_lat`, `n_samples` and the parity/stop expectations are latched
+at frame start, so a mid-frame CTRL/BAUD write puts DUT and oracle on
+different configurations. A **RECONFIGURED** exclusion class was built for it —
+attributing every violation to a STABLE or a RECONFIGURED frame, counting and
+printing both, loosening nothing.
+
+**It refuted the hypothesis: 137 of 1834 frames are reconfigured and ZERO
+violations fall in them.** Kept anyway, as the refutation and as a standing
+guard, because the precondition is real even if it is not today's fault — the
+*directed* bench reports **1 of its 8** frames reconfigured, so it has been
+breaking it all along, harmlessly. What the DUT should do under a mid-frame
+reconfiguration is a **specification** question, logged in vplan v15.
+
+This is the session's methodological point. Had the attribution been written
+as a comment instead of a counter, the wrong story would have shipped.
+
+### 5. The real cause: a comment that was right, and code that was not
+
+Three lines above T6's counters:
+
+> The start bit's measurable length needs a rising edge right after it, i.e.
+> a frame whose LSB is 1. Frames with LSB 0 cannot exercise T6 and are not
+> counted as evidence for it.
+
+Every clause true; **none of it in the code.** T6 was evaluated
+unconditionally at the first `tx` transition after the start bit against a
+one-bit-period window — and when the LSB is 0 that transition is the end of
+the **run of zeros** beginning with the start bit. `t6_frames`, which the
+comment calls "frames with a measurable start bit", counted frames whose start
+bit was not measurable. Same shape as 10-25's finding and as
+`tools/setup_cocotb.sh`'s own header correction: **a file asserting what is
+inside it, and being wrong.**
+
+Nothing had ever exercised it, and that is measurable: the directed bench
+drives 8 frames, 7 measurable, and **all 7 are `g_first = 1`**.
+
+Measured diagnosis — `measured/bp_lat` rounds to:
+
+| k | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| frames | 949 | 442 | 213 | 107 | 59 | 29 | 15 | 8 | 10 | 2 |
+
+the geometric-½ sequence a uniform byte's trailing-zero count gives, with the
+residual `measured − k*bp` never leaving `{−2,−1,0,+1}` — inside the
+oversampler truncation bound. A divisor moving under the frame would give
+arbitrary ratios and large residuals; it gives neither. k=9 and k=10 are the
+`0x00` payloads, where the first transition is the stop bit, or the stop bit
+after a zero parity bit.
+
+### 6. And the quantity was already in the verification plan
+
+The expected first-transition distance is `1 + ctz(data)` — **exactly v7's
+`g_first`**, the adaptive observer's first gap, whose `1/(2*g_first)`
+tolerance law v7 measured **exhaustively over all 256 bytes at 1 bp
+resolution on 2026-09-29**, which v9 used to widen the F7 exclusion from two
+bytes to nine, and which v7 made a sign-off dependency as a `ctz(data)`
+coverpoint.
+
+**Two instruments in this repository needed the same function of the payload.
+One had it measured over the whole input space; the other did not have it at
+all, and nothing linked them.** The general form, which is the part worth
+keeping: *a quantity that sets one instrument's tolerance sets every
+instrument that measures the same edge* — so `g_first` belongs to the plan's
+shared vocabulary, not to F7's oracle section.
+
+**The fix is not the exclusion the comment proposed**, and the difference is
+48 % of the evidence. The data bits are sampled at centres derived from
+`t_fall` and `bp_lat` **alone**, so `g_first` is computable from data the rule
+does not depend on. T6 is **moved** to the sample where all eight data bits
+are settled and judged against `g_first * bp_lat`. Deriving `g_first` by
+rounding `measured/bp_lat` would have been easier and would have made T6
+**unfalsifiable except in its residual** — the control-that-cannot-fail shape
+recorded five sessions running.
+
+10-29's truncation result is unaffected and its **domain grows**: truncation
+is `g_first*bp_lat − measured`, equal at `g_first = 1` to exactly what that
+session measured, now measured on every frame instead of the LSB-1 half.
+Worst case still **4 cycles**; `t6_frames_k1` keeps the old domain's count so
+the two stay comparable across the change.
+
+### 7. Detection power, re-measured rather than assumed
+
+Widening T6's expectation from a constant to `g_first*bp_lat` makes the rule
+accept intervals it used to reject, and an accepting rule is a weaker rule
+unless the acceptance is exactly the set of correct behaviours. Asserting that
+would not settle it.
+
+**6 of 6 killed by the checker, 0 checker-missed, 0 not applied** — unchanged
+from 10-29 — and every kill still fires the rule predicted for it. **M5 (baud
+reload off by one), the mutant aimed at T6, still KILLS and still fires rule
+12.** Its count moved 26 → 24, recorded rather than smoothed over: T6 now
+contributes one evaluation per frame at the data-settled sample instead of one
+at the first transition.
+
+### 8. Results, and one side-effect left unexplained
+
+- Directed Verilog bench: `CHECKER_VIOLATIONS=0`, `RESULT=PASS`, score lines
+  **byte-identical** to 10-29's.
+- Bound CRV bench: `UVM_CHECKER_VIOLATIONS=0`, `UVM_BOUND_RESULT=PASS`, with
+  **T6 evaluated 1976 times over 1979 frames** and the same geometric k
+  distribution — so the green is a rule that *ran and passed*, not a rule that
+  stopped running. That distinction is the whole reason the evaluation count is
+  reported beside the verdict.
+
+**UNEXPLAINED, and recorded as such.** Across the T6 relocation the bound
+run's watchdog aborts fell **347 → 0**, its frame count rose **1834 → 1979**,
+and its RECONFIGURED frames fell **137 → 0**. The 137 are very likely an
+artefact of the watchdog churn — an abandoned frame holds `mon_active` for
+`(n_samples+2)*bp_lat`, a long window for a config write to land in — but
+**why the T6 relocation touches the watchdog at all is not established, and no
+mechanism is asserted here.** It does not weaken the green, which rests on
+T6's own evaluation count and on the unchanged directed bench. Ranked below.
+
+### 9. Environment and automation health
+
+`/sessions` **100 % full** (9.3 G of 9.8 G, other sessions', unreadable and
+undeletable) for the **sixth** consecutive session, so everything went to
+`/tmp` on `/dev/sda1`. `/tmp/iverilog_install` and `/tmp/cocotb_wheels` had
+**not** survived from 10-29, confirming again that `/tmp` is per-VM. Both
+documented Icarus gotchas held: source the script **unpiped**, and wrap the
+**real binary** at `/tmp/iverilog_install/usr/bin/vvp` in `timeout`, not the
+shell function.
+
+**A new environment fact worth logging: the device went offline mid-session**
+and the bridge dropped for several minutes with four commits unpushed in the
+sibling repository and this repository's work uncommitted. Everything survived
+because the scratch tree is in `/tmp` on the **same** VM and the VM came back;
+a session-scoped self-reminder was scheduled as the recovery path and proved
+unnecessary. The lesson for future runs is the one the three-firing schedule
+already encodes — nothing is safe until it is pushed — and it argues for
+pushing **per commit** rather than once at the end.
+
+One Verilog-2005 fact, recorded because the natural refactor does not compile:
+a **function must have at least one input port** and Icarus enforces it
+("Functions must have at least one input port"), so a zero-argument
+accumulator is not a function in this language. The two violation totals are
+accumulated in the `report` task's own loop instead.
+
+**Open items, with blockers named:**
+
+- **`PayloadAdmissibilityCoverage` INTO THE LIVE `UartCoverage` COLLECTOR** —
+  carried from 10-28, untouched for a **third** session, and now unambiguously
+  the largest remaining Phase 6 content item. **Ranked first.** Blocked on
+  nothing, and the uvm-python stack that the last two sessions' first-ranked
+  item needed is now installed and verified, so the usual reason for passing
+  over it is gone.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — created today, §8, and
+  ranked second because an unexplained behavioural change in a monitor is
+  exactly the thing that later gets mistaken for a DUT fault. The experiment
+  is cheap and named: re-run the bound bench with the 10-30 checker minus the
+  T6 relocation and compare the abort counts.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — created today, §6. The
+  general statement is the valuable part and it currently lives only in a
+  revision-history row.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions. Icarus 10.3 is not one; a fact about the toolchain,
+  not something a session can fix.
+- **A COMMITTED CHECK FOR EXTERNALLY-SOURCED LIST CLAIMS** — carried from
+  10-29. Today adds a **third** instance from a new direction: the vplan's
+  status header read **v2** while eleven revisions sat in the table below it,
+  so the stale-claim problem is not only about open-item lists but about any
+  claim a document makes about itself. `tools/open_item_staleness_audit.py` is
+  still the natural home, and the sibling repository's
+  `graphene_chapter_status_audit.py` is still the worked precedent.
+- **THE ODD START-BIT PHASES** — carried from 10-29. `{0, 2, 4, 2}` covers
+  even truncations only; the odd phases are unobserved rather than shown
+  absent. Today's `g_first` correction makes this **cheaper**, since the
+  truncation is now measured on every frame rather than on the LSB-1 half, so
+  the sample is roughly twice the size for the same stimulus.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29; four phases at one divisor
+  is not a sweep over divisors.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii).
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds three more
+  (`uart_uvm_checker_bind_sim_output_2026-10-30.txt`, its `_red` counterpart,
+  and `mutation_test_report_2026-10-30.txt`), so the registration gap widens
+  again. The sibling repository is working the same gap.
+
+**Commits this run:** 6 (the binding with its red transcript and the
+RECONFIGURED attribution; the T6 correction with both green transcripts; the
+mutation report; vplan v15; progress.md; this entry). Each pushed and verified
+against the GitHub API.
