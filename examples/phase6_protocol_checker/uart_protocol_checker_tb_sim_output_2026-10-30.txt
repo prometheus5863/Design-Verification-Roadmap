@@ -1,0 +1,99 @@
+VCD info: dumpfile uart_protocol_checker_tb.vcd opened for output.
+=============================================================
+ PROTOCOL CHECKER EXERCISE -- uart_controller v1
+=============================================================
+
+-- 1. reset held for 8 cycles (exercises R1, R2)
+  PASS  tx idles high in reset: 1
+  PASS  irq low in reset: 0
+
+-- 2. disabled window (exercises T1 tx-high-when-disabled, I1)
+  PASS  tx still high while CTRL.en = 0: 1
+  PASS  irq still low while INT_EN = 0: 0
+
+-- 3. unmapped register reads (exercises A4)
+  PASS  read of 0x6 is zero: 1
+  PASS  read of 0xF is zero: 1
+
+-- 4. TX frame, no parity, 1 stop (exercises T2, T4, T5, T6)
+  [checker] frame 1: start bit 32 cycles, bit period 32, truncation 0
+
+-- 5. TX frame, even parity, 2 stop (exercises T3)
+  [checker] frame 2: start bit 32 cycles, bit period 32, truncation 0
+
+-- 6. TX frame, odd parity, 1 stop (exercises T3 again)
+  [checker] frame 3: start bit 32 cycles, bit period 32, truncation 0
+
+-- 7. RX a good frame, odd parity
+  PASS  received byte is 0x5A: 1
+
+-- 8. RX with bad parity, then two STATUS reads (exercises S1)
+  PASS  STATUS.parity_err set after a bad-parity frame: 1
+  PASS  STATUS.parity_err cleared by the read: 0
+
+-- 9. RX with a low stop bit, then two STATUS reads
+  PASS  STATUS.frame_err set after a bad stop bit: 1
+  PASS  STATUS.frame_err cleared by the read: 0
+
+-- 9b. disable mid-frame while tx is low (exercises T1 properly)
+  PASS  tx is low mid-frame before the disable: 0
+  PASS  tx forced high by the disable: 1
+
+-- 10. TX at a second divisor, phase-swept (exercises T6 lower end)
+  [checker] frame 5: start bit 64 cycles, bit period 64, truncation 0
+  [checker] frame 6: start bit 62 cycles, bit period 64, truncation 2
+  [checker] frame 7: start bit 60 cycles, bit period 64, truncation 4
+  [checker] frame 8: start bit 62 cycles, bit period 64, truncation 2
+
+  ---- protocol checker: 15 rules, 8 frames monitored ----
+  rule                                      evaluated violations  in stable in reconfig
+  A1 pready high in access phase                   25          0          0          0
+  A2 address/data stable in access                  0          0          0          0   (N/A in v1 scope)
+  A3 penable implies psel                          50          0          0          0
+  A4 unmapped read is 0x00                          2          0          0          0
+  A5 prdata stable in read access                   0          0          0          0   (N/A in v1 scope)
+  R1 tx high in reset                               7          0          0          0
+  R2 irq low in reset                               7          0          0          0
+  T1 tx high when disabled                        118          0          0          0
+  T2 start bit low at centre                        8          0          0          0
+  T3 parity matches data                            2          0          0          0
+  T4 stop bits high at centre                       8          0          0          0
+  T5 transitions on the bit grid                   20          0          0          0
+  T6 start bit in oversampler window                7          0          0          0
+  S1 error bits are read-to-clear                   2          0          0          0
+  I1 irq low when masked                         6118          0          0          0
+  frames: 8 started, 1 aborted by a disable, 0 lost to the watchdog
+  start-bit truncation: 7 frames measured, worst 4 cycles
+  (T6's window is [bitper - bitper/16, bitper], i.e. a truncation
+   of at most bitper/16 = div+1 cycles.  A worst case EQUAL to
+   bitper/16 means the derived bound is attained and therefore
+   tight: one cycle looser would be slack, one cycle tighter
+   would fail on correct RTL.  A worst case of 0 would mean the
+   lower end of the window has no evidence at all.)
+  frames charged to the RECONFIGURED exclusion class: 1 of 8
+  (a frame during which CTRL or BAUD was written.  T3/T4/T5/T6
+   latch bp_lat, n_samples and the parity/stop expectations at
+   frame start, so in such a frame the DUT and the oracle are
+   computed from different configurations and a violation says
+   nothing about the DUT.  Counted and named, never dropped:
+   what the DUT SHOULD do under a mid-frame reconfiguration is
+   a specification question the vplan has not answered.)
+  ---- total violations 0 (stable 0, reconfigured 0), unexercised rules 0 ----
+
+-- verdict on correct RTL
+  PASS  checker violations on correct RTL: 0
+  PASS  applicable checker rules never evaluated: 0
+
+-- 11. planted control: an illegal extended access phase
+  CHECKER VIOLATION @61295000 rule 1: paddr/pwrite changed inside an access phase
+  CHECKER VIOLATION @61295000 rule 4: prdata changed inside a read access phase
+  PASS  planted control makes A2 fire: 1
+  PASS  planted control makes A5 fire: 1
+     A2 0 -> 1, A5 0 -> 1
+
+=============================================================
+ TB checks: 17 passed, 0 failed
+ CHECKER_VIOLATIONS=0
+ CHECKER_UNEXERCISED=0
+ RESULT=PASS
+=============================================================

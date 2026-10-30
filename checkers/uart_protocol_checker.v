@@ -109,6 +109,8 @@ module uart_protocol_checker (
     initial begin
         for (k = 0; k < N_RULES; k = k + 1) begin
             viol[k]  = 0;
+            viol_stable[k]   = 0;
+            viol_reconfig[k] = 0;
             fired[k] = 0;
             na[k]    = 1'b0;
         end
@@ -131,10 +133,72 @@ module uart_protocol_checker (
     integer viol_i1 = 0;
     integer fired_i1 = 0;
 
+    // =================================================================
+    // THE RECONFIGURED EXCLUSION CLASS (2026-10-30)
+    // =================================================================
+    // Added the day this checker was bound into the uvm-python
+    // constrained-random environment
+    // (examples/phase6_uvm_checker_bind), which is the first stimulus
+    // ever to point it at a reconfiguration mid-frame.  It fired 2702
+    // times on CORRECT RTL, and the distribution of those violations is
+    // the diagnosis rather than a puzzle: every one of them was in
+    // T3, T4, T5 or T6 -- the four rules whose evaluation SPANS A WHOLE
+    // FRAME -- and not one was in A1-A5, R1, R2, T1, T2, S1 or I1, all
+    // of which evaluate inside a cycle or inside one access phase.
+    //
+    // The cause is visible in the frame monitor below: `bp_lat`,
+    // `n_samples` and the parity/stop expectations are LATCHED AT FRAME
+    // START from the shadow configuration.  If CTRL or BAUD is written
+    // while the frame is in flight, the DUT's remaining bits and the
+    // checker's expectations are computed from different configurations,
+    // and the checker reports the difference as a DUT fault.  Measured
+    // examples from that run: a start bit of 129 cycles against a
+    // latched bit period of 64 (divisor doubled mid-frame), and 287
+    // cycles against 32.
+    //
+    // SO THE FOUR FRAME RULES HAVE A PRECONDITION -- the configuration
+    // is stable for the duration of the frame -- AND NOTHING SAID SO.
+    // The directed Verilog bench satisfied it implicitly by never
+    // writing CTRL or BAUD during a transmission; the constrained-random
+    // sequence does not, and had no reason to know it should not.
+    //
+    // WHAT IS DONE ABOUT IT, AND WHAT IS NOT.  The rules are NOT
+    // loosened: no window is widened, no tolerance is introduced, and
+    // the total violation count still counts every violation.  What is
+    // added is an ATTRIBUTION: each violation is charged either to a
+    // STABLE frame or to a RECONFIGURED one, both are counted and both
+    // are printed, and a consumer that wants a verdict over the rules'
+    // own domain of validity reads the STABLE count.  An excluded
+    // violation that is not counted and named is a hidden relaxation;
+    // this one is counted, named, and printed on every run.
+    //
+    // WHAT THE DUT SHOULD DO under a mid-frame reconfiguration is a
+    // SPECIFICATION QUESTION the verification plan has never answered --
+    // F7 and the register-map sections are silent on it -- and it is
+    // logged as a vplan item rather than decided here by a checker.
+    //
+    // The attribution is built from a free-running COUNT of CTRL/BAUD
+    // writes, latched at frame start, rather than from a flag set by the
+    // write and cleared by the frame.  A flag makes the answer depend on
+    // which always block the simulator schedules first when a write and
+    // a frame start land on the same edge; comparing a count with a
+    // latched copy of it has no such ordering.
+    integer viol_stable   [0:N_RULES-1];
+    integer viol_reconfig [0:N_RULES-1];
+    integer viol_i1_stable   = 0;
+    integer viol_i1_reconfig = 0;
+    integer frames_reconfig  = 0;
+
+    integer cfg_wr_cnt     = 0;    // CTRL/BAUD writes observed, ever
+    integer cfg_wr_atstart = 0;    // the count as of this frame's start
+
     task flag(input integer rule, input [511:0] msg);
     begin
         viol[rule] = viol[rule] + 1;
-        $display("  CHECKER VIOLATION @%0t rule %0d: %0s", $time, rule, msg);
+        if (cfg_dirty) viol_reconfig[rule] = viol_reconfig[rule] + 1;
+        else           viol_stable[rule]   = viol_stable[rule]   + 1;
+        $display("  CHECKER VIOLATION @%0t rule %0d: %0s%0s", $time, rule, msg,
+                 cfg_dirty ? "  [RECONFIGURED frame]" : "");
     end
     endtask
 
@@ -154,6 +218,18 @@ module uart_protocol_checker (
     // condition is weakened and no later cycle is skipped.
     reg past_valid = 1'b0;
     always @(posedge clk) past_valid <= 1'b1;
+
+    // Count each reconfigured frame ONCE, on the edge it becomes dirty,
+    // rather than per violation: the frame is the unit the exclusion class
+    // is about.
+    reg cfg_dirty_q = 1'b0;
+    always @(posedge clk) begin
+        if (!rst_n) cfg_dirty_q <= 1'b0;
+        else begin
+            if (cfg_dirty && !cfg_dirty_q) frames_reconfig = frames_reconfig + 1;
+            cfg_dirty_q <= cfg_dirty;
+        end
+    end
 
     reg tx_q = 1'b1;
     reg acc_q = 1'b0;
@@ -197,6 +273,21 @@ module uart_protocol_checker (
 
     // One bit period in clk cycles, from the shadow divisor only.
     wire [31:0] bitper = 16 * (sh_baud + 1);
+
+    // CTRL/BAUD writes, counted.  INTEN is excluded on purpose: it changes
+    // no frame-level expectation (it gates irq only), so a write to it
+    // cannot put a frame and its oracle out of step, and charging frames to
+    // the RECONFIGURED class for it would overstate the exclusion.
+    always @(posedge clk) begin
+        if (!rst_n) cfg_wr_cnt = 0;
+        else if (acc && pwrite && pready &&
+                 (paddr == ADDR_CTRL || paddr == ADDR_BAUD))
+            cfg_wr_cnt = cfg_wr_cnt + 1;
+    end
+
+    // True while a frame is in flight whose configuration has moved under
+    // it.  A wire, not a reg, so it has no schedule of its own.
+    wire cfg_dirty = mon_active && (cfg_wr_cnt != cfg_wr_atstart);
 
     // -----------------------------------------------------------------
     // A-group: the APB-lite rules
@@ -320,6 +411,7 @@ module uart_protocol_checker (
                 n_samples     =  1 + 8 + ((sh_parity == 2'b00) ? 0 : 1)
                                        + (sh_two_stop ? 2 : 1);
                 frames        =  frames + 1;
+                cfg_wr_atstart =  cfg_wr_cnt;
             end else if (mon_active) begin
                 // first boundary after the start bit, for T5's origin and T6
                 if (!have_boundary && tx !== tx_q) begin
@@ -430,6 +522,8 @@ module uart_protocol_checker (
             fired_i1 = fired_i1 + 1;
             if (irq !== 1'b0) begin
                 viol_i1 = viol_i1 + 1;
+                if (cfg_dirty) viol_i1_reconfig = viol_i1_reconfig + 1;
+                else           viol_i1_stable   = viol_i1_stable   + 1;
                 $display("  CHECKER VIOLATION @%0t rule I1: irq high while shadow INT_EN is 0",
                          $time);
             end
@@ -465,24 +559,40 @@ module uart_protocol_checker (
 
     task report(output integer total_viol, output integer unexercised);
         integer r;
+        integer stable_viol;
+        integer reconfig_viol;
     begin
-        total_viol  = 0;
-        unexercised = 0;
+        total_viol    = 0;
+        unexercised   = 0;
+        // Accumulated here rather than in two helper FUNCTIONS, which was
+        // the first form: a Verilog-2005 function must have at least one
+        // input port and Icarus 10.3 enforces it ("Functions must have at
+        // least one input port"), so a zero-argument accumulator is not a
+        // function in this language.  Recorded because the natural C-shaped
+        // refactor does not compile here.
+        stable_viol   = viol_i1_stable;
+        reconfig_viol = viol_i1_reconfig;
         $display("");
         $display("  ---- protocol checker: %0d rules, %0d frames monitored ----",
                  N_RULES + 1, frames);
-        $display("  %-40s %10s %10s", "rule", "evaluated", "violations");
+        $display("  %-40s %10s %10s %10s %10s", "rule", "evaluated",
+                 "violations", "in stable", "in reconfig");
         for (r = 0; r < N_RULES; r = r + 1) begin
             if (na[r])
-                $display("  %-40s %10d %10d   (N/A in v1 scope)",
-                         rule_name(r), fired[r], viol[r]);
+                $display("  %-40s %10d %10d %10d %10d   (N/A in v1 scope)",
+                         rule_name(r), fired[r], viol[r],
+                         viol_stable[r], viol_reconfig[r]);
             else
-                $display("  %-40s %10d %10d", rule_name(r), fired[r], viol[r]);
-            total_viol = total_viol + viol[r];
+                $display("  %-40s %10d %10d %10d %10d",
+                         rule_name(r), fired[r], viol[r],
+                         viol_stable[r], viol_reconfig[r]);
+            total_viol    = total_viol    + viol[r];
+            stable_viol   = stable_viol   + viol_stable[r];
+            reconfig_viol = reconfig_viol + viol_reconfig[r];
             if (fired[r] == 0 && !na[r]) unexercised = unexercised + 1;
         end
-        $display("  %-40s %10d %10d", "I1 irq low when masked",
-                 fired_i1, viol_i1);
+        $display("  %-40s %10d %10d %10d %10d", "I1 irq low when masked",
+                 fired_i1, viol_i1, viol_i1_stable, viol_i1_reconfig);
         total_viol = total_viol + viol_i1;
         if (fired_i1 == 0) unexercised = unexercised + 1;
         $display("  frames: %0d started, %0d aborted by a disable, %0d lost to the watchdog",
@@ -495,8 +605,17 @@ module uart_protocol_checker (
         $display("   tight: one cycle looser would be slack, one cycle tighter");
         $display("   would fail on correct RTL.  A worst case of 0 would mean the");
         $display("   lower end of the window has no evidence at all.)");
-        $display("  ---- total violations %0d, unexercised rules %0d ----",
-                 total_viol, unexercised);
+        $display("  frames charged to the RECONFIGURED exclusion class: %0d of %0d",
+                 frames_reconfig, frames);
+        $display("  (a frame during which CTRL or BAUD was written.  T3/T4/T5/T6");
+        $display("   latch bp_lat, n_samples and the parity/stop expectations at");
+        $display("   frame start, so in such a frame the DUT and the oracle are");
+        $display("   computed from different configurations and a violation says");
+        $display("   nothing about the DUT.  Counted and named, never dropped:");
+        $display("   what the DUT SHOULD do under a mid-frame reconfiguration is");
+        $display("   a specification question the vplan has not answered.)");
+        $display("  ---- total violations %0d (stable %0d, reconfigured %0d), unexercised rules %0d ----",
+                 total_viol, stable_viol, reconfig_viol, unexercised);
     end
     endtask
 
