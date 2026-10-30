@@ -3148,11 +3148,98 @@ simulator run in this repository since 2026-10-27.
   the item's authority is outside this repository, so correcting it here does
   not stop it being re-imported. What this session can do about it is give the
   v2 wording an **executable** form, which rule S1 is.
-- [ ] **Still open, with the blocker named.** Binding the checker into the
-  uvm-python environment (needs `tools/setup_cocotb.sh`, installable since
-  10-27, not run today). The SVA form of these rules (needs a simulator with
-  concurrent assertions; Icarus 10.3 is not one). `PayloadAdmissibilityCoverage`
-  wired into the live `UartCoverage` collector — untouched today and now the
-  largest remaining Phase 6 content item. The odd start-bit phases, unobserved
-  rather than shown absent. A divisor sweep for T6, which today's single
-  divisor is not.
+- [x] **Binding the checker into the uvm-python environment — DONE
+  2026-10-30.** `tools/setup_cocotb.sh` installed and verified the stack in one
+  shell call (RESULT: PASS, 12/12), so the blocker named here was exactly the
+  blocker. `examples/phase6_uvm_checker_bind/` puts the DUT and the checker on
+  one pin set behind a wrapper (Icarus 10.3 has no `bind`, and for a *black-box*
+  checker a wrapper is the equivalent — there is nothing for `bind`'s scope
+  access to provide). The stimulus is **imported, not copied**:
+  `uart_uvm_crv_tb.py`'s sequence, driver, monitor, scoreboard and coverage
+  collector are subclassed, because a checker bound to a *fork* of the stimulus
+  cannot be compared with the original and the fork would drift while both
+  stayed green. Two scores are kept apart **structurally** rather than by
+  convention in a scoring script — `UVM_CHECKER_VIOLATIONS` and
+  `UVM_TB_RESULT` from independent sources, checker first and unconditionally,
+  with the imported report's assertion caught so neither can mask the other.
+  And a **liveness guard**, because a binding is an unusually easy place to
+  build a control that cannot fail: get the hierarchical path wrong and "no
+  violations" and "read nothing" are both zero, so the wrapper exports a
+  free-running clock-edge count and the bench fails if it is zero.
+
+- [x] **And it fired 2702 times on correct RTL, in T3/T4/T5/T6 only — the
+  defect was in the CHECKER, and its own comment already said so.** All 2702
+  are in the four rules whose evaluation spans a whole frame; not one is in any
+  of the eleven that evaluate inside a cycle or an access phase. Three lines
+  above T6's counters read *"the start bit's measurable length needs a rising
+  edge right after it, i.e. a frame whose LSB is 1. Frames with LSB 0 cannot
+  exercise T6"*. Every clause is true and **none of it was in the code**: when
+  the LSB is 0, the first `tx` transition is the end of the **run of zeros**
+  beginning with the start bit, not the end of the start bit — and `t6_frames`,
+  which that comment calls "frames with a measurable start bit", counted frames
+  whose start bit was not measurable. Same shape as the 10-25 finding and as
+  `tools/setup_cocotb.sh`'s own header correction: a file asserting what is
+  inside it, and being wrong.
+
+- [x] **The missing quantity was `g_first = 1 + ctz(data)` — which v7 measured
+  exhaustively over all 256 bytes on 2026-09-29.** Two instruments here needed
+  the same function of the payload; one had it to 1 basis point and the other
+  did not have it at all, and nothing linked them. T6 is now **moved** to the
+  sample at which all eight data bits are settled and judged against
+  `g_first * bp_lat`, with `g_first` taken from the **sampled data** — never
+  from `round(measured/bp_lat)`, which would have been easier and would have
+  made the rule unfalsifiable except in its residual. The fix keeps all the
+  evidence rather than excluding the 48 % of frames the comment proposed
+  dropping, and **10-29's truncation result gains domain**: the truncation is
+  `g_first*bp_lat − measured`, equal at `g_first = 1` to exactly what that
+  session measured, now measured on every frame; worst case still 4 cycles,
+  with `t6_frames_k1` retaining the old domain's count so the two stay
+  comparable.
+
+- [x] **Diagnosed by measurement, because the first hypothesis was wrong.**
+  `measured/bp_lat` rounds to k = 1..10 with frame counts
+  949/442/213/107/59/29/15/8/10/2 — the geometric-½ sequence a uniform byte's
+  trailing-zero count gives — and the residual never leaves `{−2,−1,0,+1}`,
+  i.e. inside the oversampler truncation bound. A divisor moving under the
+  frame would give arbitrary ratios and large residuals; it gives neither.
+  k = 9 and k = 10 are the `0x00` payloads, where the first transition is the
+  stop bit, or the stop bit after a zero parity bit.
+
+- [x] **The RECONFIGURED exclusion class, kept as a refutation.** It was built
+  for the first hypothesis — `bp_lat`, `n_samples` and the parity/stop
+  expectations are all latched at frame start, so a mid-frame CTRL/BAUD write
+  puts DUT and oracle on different configurations. **The attribution refuted
+  it: 137 of 1834 frames are reconfigured and ZERO violations fall in them.**
+  Kept anyway, because the precondition is real even though it is not this
+  session's fault: the *directed* bench reports 1 of its 8 frames reconfigured,
+  so it was already breaking it, harmlessly. What the DUT should do under a
+  mid-frame reconfiguration is a **specification** question, logged in vplan
+  v15 rather than decided by a checker.
+
+- [x] **Detection power re-measured after the fix: 6 of 6 still killed**, each
+  by its predicted rule, with M5 — the T6-targeted mutant — still firing rule
+  12. An accepting rule is a weaker rule unless the acceptance is exactly the
+  set of correct behaviours, and asserting that would not settle it. M5's count
+  moved 26 → 24, recorded rather than smoothed: T6 now contributes one
+  evaluation per frame at the data-settled sample instead of one at the first
+  transition.
+
+- [x] **vplan v15**, and its status header was stale — it still read **v2**
+  while eleven revisions sat in the table below it.
+
+- [ ] **Still open, with the blocker named.** The SVA form of these rules
+  (needs a simulator with concurrent assertions; Icarus 10.3 is not one).
+  `PayloadAdmissibilityCoverage` wired into the live `UartCoverage` collector —
+  untouched again today and still the largest remaining Phase 6 content item.
+  The odd start-bit phases, unobserved rather than shown absent. A divisor
+  sweep for T6. **New today, and unexplained rather than explained away:**
+  across the T6 relocation the bound run's watchdog aborts fell 347 → 0, its
+  frame count rose 1834 → 1979, and its reconfigured frames fell 137 → 0. The
+  137 were very likely an artefact of the watchdog churn — an abandoned frame
+  holds `mon_active` for `(n_samples+2)*bp_lat`, a long window for a config
+  write to land in — but **why the T6 relocation touches the watchdog at all is
+  not established, and no mechanism is asserted.** It does not weaken the green,
+  which rests on T6 having **evaluated 1976 times over 1979 frames** and on the
+  directed bench being unchanged. **Also new:** `g_first` should move into the
+  plan's shared vocabulary, since a quantity that sets one instrument's
+  tolerance sets every instrument measuring the same edge.
