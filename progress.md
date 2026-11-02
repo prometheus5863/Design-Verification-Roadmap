@@ -3243,3 +3243,91 @@ simulator run in this repository since 2026-10-27.
   directed bench being unchanged. **Also new:** `g_first` should move into the
   plan's shared vocabulary, since a quantity that sets one instrument's
   tolerance sets every instrument measuring the same edge.
+
+---
+
+### 2026-11-02 — the admissibility model meets the live coverpoint, and finds two bins that cannot be closed
+
+**Checklist movement.** Capstone remainder **(c)** — `PayloadAdmissibility
+Coverage` wired into the live `UartCoverage` collector — moves from untouched
+to **half closed**, and the half that is done is the half nobody expected to
+be interesting. The STRUCTURAL question turned out to be answerable with no
+simulator at all, and answering it found a conflict rather than plumbing.
+
+- [x] **`examples/phase6_payload_admissibility_bind/payload_admissibility_audit.py`**
+  — 9 checks, 9 passing, pure python, runs in under a second and therefore
+  ahead of the simulator tests (the 09-29 precedent). It IMPORTS
+  `payload_coverage_model`, IMPORTS `reachable_cross_under_per_byte_rule`, and
+  lifts `data_class`/`byte_for_class` out of the live CRV testbench by AST
+  rather than re-typing them. If the lift fails the audit FAILS — it does not
+  fall back to a local copy, because a fallback copy is the fork the 10-30
+  imported-stimulus decision exists to prevent.
+
+- [x] **Two cp_data bins have no admissible witness, and they are singletons.**
+  `cp_data` bin 0 is `{0x00}` and bin 1 is `{0xFF}`. A singleton bin is
+  closable only by its one member, so when that member is excluded from F7
+  evidence the bin cannot be closed by any stimulus at all — the `illegal_bins`
+  situation v7/v8 settled for `g_first` bins 8 and 9, arriving in a different
+  coverpoint, in a different example, with nothing linking the two.
+
+- [x] **And the wiring forces a choice of exclusion rule that nobody had to
+  make before.** The repository carries two. Under the **vplan 2-byte rule**
+  `{0x00, 0x80}` — what `classify()` implements, and therefore what the live
+  collector inherits if it is wired to that module as it stands — **one** bin
+  is unclosable. Under **v9's nine-byte closed form** — which is where the open
+  item's "16-cell cross" turns out to come from — **two** are, because `0xFF`
+  is excluded there and bin 1 is nothing else. **The rule the open item tells
+  this wiring to adopt is the rule that makes the live model less closable.**
+  The cross goal's size is rule-dependent the same way: 23 cells against 16.
+
+- [x] **The steering map drives the excluded byte deliberately.**
+  `byte_for_class(0)` is `0x00` and `byte_for_class(1)` is `0xFF`, so whenever
+  one of those bins is unhit the coverage-driven policy aims at it for the
+  whole burst. S4 distinguishes this from a map defect: a map driving an
+  illegal byte for a bin that HAS a legal witness is repairable by changing one
+  entry, and these bins are singletons, so there is no other entry to change.
+  **`CovModel.closed()` requires all 30 bins, so every CLOSED run recorded in
+  `closure_results.csv` drove an excluded payload at least once.**
+
+- [x] **Credited rather than rediscovered.** `witness_soundness.py` (10-03) and
+  `evidence_soundness_coverage.py` (10-04) built this exact axis —
+  `population_unsound_bins()`, "no admissible byte reaches this bin at all",
+  computable before a frame is driven — and the committed 10-04 transcript
+  already reports cross cell `(7,3)`. What is new is that the axis had never
+  been pointed at the **live** coverpoint, only at F7's own model. S6-c
+  reproduces that transcript's one-cell answer under the rule that file used,
+  so the two are shown to be one computation under two rules rather than a
+  disagreement. **The one-way channel again: an instrument four weeks old,
+  in this repository, that nothing connected to the collector its question is
+  about.**
+
+- [x] **S6 was written as a prediction and the prediction was wrong.** It
+  asserted that excluding borderline payloads does not shrink the cross. It
+  does, 23 → 21. Cells `(7,1)` and `(7,3)` are singletons holding `0xC0` and
+  `0x40`, and `g_first = 7` means `ctz = 6`, which only those two bytes have —
+  so **the cross's whole `g_first = 7` row IS the borderline set, exactly.**
+  Replaced by the measurement with the refutation recorded in place. The first
+  form of this check would have shipped a false claim that passed.
+
+- [x] **Mutation.** Collapsing the three-valued axis to two does **not** change
+  the cp_data answer — bins 0 and 1 have no borderline member either — and that
+  is stated plainly rather than left to imply the third state did the work.
+  Where it is load-bearing is the cross, where the two borderline bytes are the
+  sole occupants of two cells a two-valued audit would have called closable.
+
+- [ ] **Still open — the LIVE half of (c), and it is now the clear next step.**
+  The collector component that samples TX payloads through `mon.ap` inside the
+  running CRV environment, measuring the observed inadmissible/borderline rate
+  per policy against the predicted 0.78 % / 1.56 % for uniform payloads. The
+  prediction worth testing is that **steer=1 is materially dirtier than
+  steer=0**, because the steering map drives `0x00` and `0xFF` on purpose while
+  the random policy draws them at 1/256 each. The toolchain is installed and
+  verified (12/12) and the design decision is settled: the raise must be gated
+  on an evidence-vs-survey mode, since the CRV bench is not an F7 run and
+  driving an excluded byte there is legitimate stimulus, not a defect.
+
+- [ ] **New today, and it is a specification question, not a coding one.**
+  Which exclusion rule the live collector is judged under. The two give
+  different answers about how much of the live model is closable, and the
+  repository has been carrying both without having to choose. Logged, not
+  decided.
