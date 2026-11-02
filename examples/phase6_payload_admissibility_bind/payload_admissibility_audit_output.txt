@@ -1,0 +1,90 @@
+============================================================================
+PAYLOAD ADMISSIBILITY vs THE LIVE cp_data COVERPOINT
+2026-11-02.  The structural half of the item ranked first on
+2026-10-28, 10-29 and 10-30.
+============================================================================
+
+  admissibility model : payload_coverage_model (IMPORTED)
+  closed-form rule    : reachable_cross_under_per_byte_rule (IMPORTED)
+  coverpoint + map    : uart_uvm_crv_tb, lifted from source
+  bytes classified    : 256
+  vplan 2-byte        : 0x00, 0x80
+  v9 nine-byte        : 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF
+  BORDERLINE (classify): 0x40, 0xC0
+
+============================================================================
+SECTION 1 -- the census, exhaustive over all 256 bytes, under BOTH rules
+============================================================================
+
+  --- vplan 2-byte rule ---
+  bin  meaning          total  adm   bord   excl/inadm verdict
+  0    0x00             1      0     0      1         NO ADMISSIBLE WITNESS
+  1    0xFF             1      1     0      0         closable
+  2    one-hot          8      6     1      1         closable
+  3    0xAA/0x55        2      2     0      0         closable
+  4    even popcount    124    123   1      0         closable
+  5    odd popcount     120    120   0      0         closable
+
+  --- v9 nine-byte rule ---
+  bin  meaning          total  adm   bord   excl/inadm verdict
+  0    0x00             1      0     0      1         NO ADMISSIBLE WITNESS
+  1    0xFF             1      0     0      1         NO ADMISSIBLE WITNESS
+  2    one-hot          8      6     1      1         closable
+  3    0xAA/0x55        2      2     0      0         closable
+  4    even popcount    124    121   0      3         closable
+  5    odd popcount     120    117   0      3         closable
+  [PASS] S1 the census covers all 256 bytes exactly once, under both rules
+         256 under each rule
+
+============================================================================
+SECTION 2 -- the conflict, as an exact statement, and it is rule-dependent
+============================================================================
+  [PASS] S2 bins 0 and 1 are singletons; ONE of them has no admissible witness under the vplan rule and BOTH do under v9's
+         unclosable bins: [0] under the 2-byte rule, [0, 1] under the nine-byte rule.  bin 0 = {0x00}, bin 1 = {0xFF}.  The rule the 10-02 open item tells this wiring to adopt is the one that makes the live model LESS closable.  CovModel.closed() requires all 30 bins, so every closed run in closure_results.csv drove an excluded payload.
+
+============================================================================
+SECTION 3 -- positive control on the census
+============================================================================
+  [PASS] S3 most bins DO have an admissible witness under both rules
+         closable bins: 5 of 6 under the 2-byte rule, 4 of 6 under the nine-byte rule.  A census reporting 'no admissible witness' everywhere would satisfy S2's shape and mean nothing; this is the control that it does not.
+
+============================================================================
+SECTION 4 -- the steering map, audited rather than assumed
+============================================================================
+  bin   witness  classify()     g_first   excluded by   
+  0     0x00     INADMISSIBLE   9         vplan 2-byte, v9 nine-byte
+  1     0xFF     ADMISSIBLE     1         v9 nine-byte  
+  2     0x08     ADMISSIBLE     4         -             
+  3     0xAA     ADMISSIBLE     2         -             
+  4     0x33     ADMISSIBLE     1         -             
+  5     0x07     ADMISSIBLE     1         -             
+  [PASS] S4 every steering witness that is excluded belongs to a bin S2 identifies -- so the conflict is in the BIN, not the map
+         excluded witnesses at bins [0] (2-byte) and [0, 1] (nine-byte).  This matters: a map driving an illegal byte for a bin that HAS a legal witness would be a MAP defect, repairable by changing one entry.  These bins are singletons, so there is no other entry to change and only the vplan can resolve it.
+
+============================================================================
+SECTION 5 -- negative control: containing an illegal byte is not the same as being unclosable
+============================================================================
+  [PASS] S5 bin 2 contains 0x80 (inadmissible) and 0x40 (borderline) and is still closable admissibly
+         bin 2: 6 admissible, 1 borderline, 1 excluded; the map picks 0x08, which is ADMISSIBLE.  So the audit does not conflate 'contains an inadmissible byte' with 'cannot be closed admissibly' -- bin 2 is the first and not the second, and bins 0 and 1 are the second because they are SINGLETONS.
+
+============================================================================
+SECTION 6 -- the reachable cross under both rules, and a refuted prediction
+============================================================================
+  vplan 2-byte   rule: 23 legal cross cells, 2 population-unsound [(7, 1), (7, 3)]
+  v9 nine-byte   rule: 16 legal cross cells, 1 population-unsound [(7, 3)]
+  [PASS] S6 the cross goal's SIZE is rule-dependent, and the nine-byte rule is the source of the open item's '16-cell cross'
+         23 cells under the 2-byte rule, 16 under the nine-byte rule.  The 10-02 item's '16-cell cross' is therefore the NINE-BYTE rule's cross, which this audit identifies rather than inherits -- the item does not say which rule it means, and the two differ by 7 cells.
+  [PASS] S6-b THE PREDICTION THIS CHECK WAS FIRST WRITTEN WITH WAS WRONG: excluding borderline payloads DOES shrink the 2-byte cross
+         it was asserted that the borderline bytes share their cells with admissible ones, so that the cross is achievable on admissible evidence alone.  It is not: 23 -> 21.  Cells (7,1) and (7,3) are SINGLETONS holding 0xC0 and 0x40, and g_first = 7 means ctz = 6, which only those two bytes have -- so the cross's whole `g_first = 7` row IS the BORDERLINE set, exactly.  Recorded as a refutation rather than corrected quietly: the first form of this check would have shipped a false claim that passed.
+  [PASS] S6-c the 10-04 transcript's single population-unsound cell is reproduced under the rule it used
+         nine-byte rule gives [(7, 3)], which is what evidence_soundness_2026-10-04.txt reports.  The two-cell answer above is not a contradiction of that file -- it is the same computation under the OTHER rule, and (7,1) disappears there because v9 excludes 0xC0 outright.  Credited, not rediscovered.
+
+============================================================================
+SECTION 7 -- mutation: collapse the three-valued axis to two
+============================================================================
+  [PASS] S7 counting BORDERLINE as admissible changes the census for at least one bin, so the third state is doing work here
+         bins whose admissible count moves under the mutant: [2, 4].  The mutant does NOT change S2's answer -- bins 0 and 1 have no borderline member either -- which is worth stating plainly: today's cp_data conflict would have been found by a two-valued audit as well.  Where the third state is load-bearing is S6-b, where the two borderline bytes are the SOLE occupants of two cross cells and a two-valued audit would have called those cells closable.
+
+============================================================================
+RESULT: PASS   (9 passed, 0 failed)
+============================================================================
