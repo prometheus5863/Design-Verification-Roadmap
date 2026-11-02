@@ -12167,3 +12167,214 @@ accumulated in the `report` task's own loop instead.
 RECONFIGURED attribution; the T6 correction with both green transcripts; the
 mutation report; vplan v15; progress.md; this entry). Each pushed and verified
 against the GitHub API.
+
+## 2026-11-02 — the coverage model has two bins nothing may close, and the wiring made us pick a rule
+
+**Status:** The item ranked **first** on 10-28, 10-29 and 10-30 is **half
+closed**, and the structural half — which nobody expected to be the
+interesting one — found a conflict rather than plumbing. Three commits.
+
+### 1. The wiring did not need the simulator to say something
+
+The item is "wire `PayloadAdmissibilityCoverage` into the live `UartCoverage`
+collector". Starting it turned up a question that is a property of **the two
+coverage models alone**: it needs no DUT, no elaboration and not one driven
+frame, and an audit that needs a four-minute cocotb run to state a fact about
+256 bytes is an audit nobody runs. So the structural claims went into
+`examples/phase6_payload_admissibility_bind/payload_admissibility_audit.py`
+— **9 checks, 9 passing, under a second on a bare python3**, which is the
+09-29 precedent for running ahead of the simulator tests.
+
+It **imports** `payload_coverage_model`, **imports**
+`reachable_cross_under_per_byte_rule`, and lifts `data_class` /
+`byte_for_class` out of the live CRV testbench **by AST**, exec'ing only those
+two function definitions so no cocotb import is triggered. **If the lift fails
+the audit FAILS** rather than falling back to a local copy — a fallback copy
+is exactly the fork the 10-30 imported-stimulus decision exists to prevent,
+and it is the one that drifts silently because both halves stay green.
+
+### 2. Two singleton bins, and nothing may close either
+
+`cp_data` bin 0 is **`{0x00}`** and bin 1 is **`{0xFF}`**. A singleton bin is
+closable only by its one member, so when that member is excluded from F7
+evidence the bin has **no admissible witness under any stimulus at all**.
+
+This is the `illegal_bins` situation **v7/v8 already settled** for `g_first`
+bins 8 and 9 — declared illegal rather than uncovered, because a goal stated
+over an unachievable set leaves sign-off permanently short with no honest way
+to close it. It has arrived in a **different coverpoint**, in a **different
+example**, and **nothing linked the two**.
+
+### 3. And the wiring forces a choice of rule nobody had to make
+
+This repository carries **two** exclusion rules and the wiring is the first
+thing that has to pick one:
+
+| rule | set | unclosable `cp_data` bins | cross cells | population-unsound cells |
+|---|---|---|---|---|
+| vplan 2-byte | `{0x00, 0x80}` | **1** (bin 0) | **23** | 2 — `(7,1)`, `(7,3)` |
+| v9 nine-byte closed form | `{0x00,0x80,0xC0,0xE0,0xF0,0xF8,0xFC,0xFE,0xFF}` | **2** (bins 0, 1) | **16** | 1 — `(7,3)` |
+
+The 2-byte rule is what `classify()` implements and therefore what the live
+collector **inherits by default** if it is wired to that module as it stands.
+The nine-byte rule is where the open item's **"16-cell cross"** actually comes
+from — identified here rather than inherited, since the item never says which
+rule it means and the two differ by seven cells.
+
+**The rule the open item tells this wiring to adopt is the rule that makes the
+live model LESS closable**, because `0xFF` is excluded under it and bin 1 is
+nothing else. That is not a reason to prefer the other rule; it is a reason
+the choice has to be made deliberately instead of inherited.
+
+### 4. The steering map drives the excluded byte on purpose
+
+`byte_for_class(0)` **is** `0x00` and `byte_for_class(1)` **is** `0xFF`, so
+whenever one of those bins is unhit the coverage-driven policy aims the whole
+burst at it. **S4 distinguishes this from a map defect**, and the distinction
+is the actionable part: a map driving an illegal byte for a bin that *has* a
+legal witness is repairable by changing one entry. These bins are singletons,
+so **there is no other entry to change** — the conflict is in the BIN, and
+only the vplan can resolve it.
+
+`CovModel.closed()` requires all 30 bins, so **every CLOSED run recorded in
+`closure_results.csv` drove an excluded payload at least once.** The 30-bin
+closure criterion and the F7 admissibility rule cannot both be satisfied by
+one payload stream, under either rule.
+
+**What is NOT claimed.** The CRV bench is not an F7 run — it checks APB
+protocol rules and loopback integrity, neither of which depends on the
+adaptive observer's baud window — so driving `0x00` or `0xFF` there is
+legitimate stimulus and not a defect in that bench. The conflict is one of
+**scope**: the closure number and the evidence rule are each sound alone.
+Nothing here says the UART is wrong, and **nothing here resolves it**.
+
+### 5. Credited, not rediscovered — and it is the one-way channel again
+
+`witness_soundness.py` (10-03) and `evidence_soundness_coverage.py` (10-04)
+built **this exact axis**: `population_unsound_bins()`, "no admissible byte
+reaches this bin at all", explicitly described there as structural and
+computable before a frame is driven. The committed
+`evidence_soundness_2026-10-04.txt` **already reports cross cell `(7,3)` as
+population-unsound.**
+
+What is new is only that **the axis had never been pointed at the LIVE
+coverpoint** — only at F7's own `g_first`/transition model. **S6-c reproduces
+the 10-04 transcript's one-cell answer under the rule that file used**, so the
+two are shown to be one computation under two rules rather than a
+disagreement, which is the check that keeps this entry honest about novelty.
+
+An instrument that could have answered the question existed **four weeks ago,
+in this repository**, and nothing connected it to the collector the question
+is about. That is the one-way-channel item in its sharpest form yet: not a
+stale claim in a document, but a working tool nobody pointed at the next
+thing.
+
+### 6. A prediction, written into a check, and refuted by it
+
+**S6 was first written as an assertion and it FAILED.** It claimed that
+excluding borderline payloads does not shrink the cross, on the reasoning that
+`0x40` and `0xC0` share their cells with admissible bytes. **They do not:
+23 → 21.** Cells `(7,1)` and `(7,3)` are **singletons** holding `0xC0` and
+`0x40`, and `g_first = 7` means `ctz = 6`, which **only those two bytes have**
+— so the cross's entire **`g_first = 7` row IS the BORDERLINE set, exactly**.
+
+Replaced by the measurement, with the refutation recorded in place rather than
+corrected quietly. **The first form of this check would have shipped a false
+claim that passed**, which is the same shape as 10-29's and 10-30's findings
+and the third consecutive session in which a check written today caught
+something written today.
+
+### 7. Mutation, including what it did NOT show
+
+Collapsing the three-valued axis to two (counting BORDERLINE as admissible)
+**does not change the cp_data answer** — bins 0 and 1 have no borderline
+member either — and that is **stated plainly** rather than left to imply the
+third state did today's work. A two-valued audit would have found §2 as well.
+Where the third state is load-bearing is **§6**: the two borderline bytes are
+the sole occupants of two cross cells that a two-valued audit would have
+called closable. The controls: **S3** (five of six bins DO have an admissible
+witness, so the census is not vacuous) and **S5** (bin 2 contains `0x80` AND
+`0x40` and is *still* closable admissibly, so "contains an illegal byte" and
+"cannot be closed admissibly" are not conflated).
+
+### 8. Environment and automation health
+
+**The device went offline TWICE**, once mid-`setup_cocotb.sh` and once while
+reading the CRV bench, with gaps of roughly 35 and 45 minutes. Both times the
+scratch tree in `/tmp` on the same VM survived intact and the session resumed
+from a self-scheduled reminder — the 10-30 recovery path, used twice in anger
+today rather than proving unnecessary. **Nothing was lost because every commit
+is pushed as it lands**, which is the 10-30 recommendation and is now a
+practice rather than a suggestion.
+
+`tools/setup_cocotb.sh` **completed 12/12 PASS** after the first drop,
+rebuilding from the partial `/tmp/cocotb_wheels` the interrupted run had left.
+`/tmp/iverilog_install`, `/tmp/cocotb_venv` and `/tmp/cocotb_wheels` are all
+in place and verified; **the live half of the item is not blocked on the
+toolchain.**
+
+`/sessions` **100 % full** for the **seventh** consecutive session. New and
+worth recording: this time it was not merely tight — `git clone` **failed
+outright** with `fatal: write error: No space left on device` at **1.8 M**
+free, and `pip` failed identically until `TMPDIR` was pointed at `/tmp` as
+well, since pip stages wheels in `$TMPDIR` regardless of `--target`. Clone to
+`/tmp` on `/dev/sda1`, and **set `TMPDIR=/tmp/piptmp`**.
+
+**One shell-quoting fact, recorded because it silently lost a commit.** A
+`git commit -m` heredoc containing a double-quoted phrase terminated the
+message early; `git` then read the remainder as a pathspec and reported
+`did not match any file(s) known to git`, **exit status nonzero, HEAD
+unmoved** — a failure that looks like a missing file rather than a quoting
+error. Commit messages with embedded quotes go in a file and through
+`git commit -F`. Caught only because the push line printed the **unchanged**
+short SHA, which is an argument for printing `git rev-parse` after every
+commit rather than trusting the command's own silence.
+
+**Open items, with blockers named:**
+
+- **THE LIVE HALF OF (c)** — created today, **ranked first**, and the direct
+  continuation of this entry. The collector component sampling TX payloads
+  through `mon.ap` inside the running CRV environment, measuring the observed
+  inadmissible/borderline rate per policy against the predicted **0.78 % /
+  1.56 %** for uniform payloads. The prediction worth testing: **steer=1 is
+  materially dirtier than steer=0**, because the steering map drives `0x00`
+  and `0xFF` deliberately while the random policy draws them at 1/256 each —
+  a number that can come out wrong. **Blocked on nothing**: the toolchain is
+  verified 12/12 and the design decision is settled — the raise is gated on
+  an evidence-vs-survey mode, with a positive control that it DOES raise in
+  evidence mode and does NOT raise on `0x01`.
+- **WHICH EXCLUSION RULE THE LIVE COLLECTOR IS JUDGED UNDER** — created today,
+  §3, **ranked second**, and a **specification** question rather than a coding
+  one. The repository has carried both rules without having to choose; the
+  wiring is the first thing that must. It joins the adjudication's existing
+  top item (score 0.400) as a **second instance of two sign-off criteria in
+  conflict** rather than a criterion conflicting with a number.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, §8
+  there, still unexplained. The experiment is cheap and named: re-run the
+  bound bench with the 10-30 checker minus the T6 relocation and compare the
+  abort counts.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30, and
+  **today is a second argument for it**: `g_first = 7` turns out to *be* the
+  borderline set, so the same quantity that sets F7's tolerance also indexes
+  the cross cells no sound stimulus can close. It still lives only in a
+  revision-history row.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions. Icarus 10.3 is not one; a fact about the toolchain.
+- **A COMMITTED CHECK FOR EXTERNALLY-SOURCED LIST CLAIMS** — carried from
+  10-29, and today adds a **fourth** instance from a new direction: the open
+  item's own text says "16-cell cross" without naming the rule that makes it
+  16, and the other rule gives 23. A list claim that is true only under an
+  unstated assumption. `tools/open_item_staleness_audit.py` is still the
+  natural home.
+- **THE ODD START-BIT PHASES** — carried from 10-29, unobserved rather than
+  shown absent.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii).
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds one more
+  (`payload_admissibility_audit_output.txt`), so the registration gap widens
+  again. The sibling repository is working the identical gap and added one of
+  its own today.
+
+**Commits this run:** 2 before this entry (the structural audit with its
+transcript; `progress.md`), and this `AUTOMATION_LOG.md` entry makes **3**.
+Each pushed and verified against the GitHub API.
