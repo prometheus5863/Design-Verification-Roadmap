@@ -1,0 +1,59 @@
+UVM_INFO @ 0NS: reporter [UVM/RELNOTES] 
+----------------------------------------------------------------
+uvm-python 0.4.0 (Ported from UVM 1.2)
+(C) 2007-2014 Mentor Graphics Corporation
+(C) 2007-2014 Cadence Design Systems, Inc.
+(C) 2006-2014 Synopsys, Inc.
+(C) 2011-2013 Cypress Semiconductor Corp.
+(C) 2013-2014 NVIDIA Corporation
+(C) 2019-2021 Tuomas Poikela (tpoikela)
+----------------------------------------------------------------
+
+  ***********       IMPORTANT RELEASE NOTES         ************
+
+  You are using a Python version of the UVM library which 
+  requires cocotb and an HDL simulator.
+
+      (Specify +UVM_NO_RELNOTES to turn off this notice)
+
+UVM_INFO @ 0NS: reporter [DEFVERB] No verbosity specified on the command line.  Using the default: UVM_MEDIUM
+============================================================================
+LIVE CENSUS vs STRUCTURAL AUDIT -- exhaustive over all 256 bytes
+============================================================================
+
+  the reference is payload_admissibility_audit.census(), the same
+  function the 11-02 structural half reports from; the subject is
+  uart_uvm_payload_bind_tb.AdmissibilityCensus driven one byte at
+  a time, which is how the live subscriber is driven.
+
+SECTION 1 -- the shipped census
+  [PASS] live / vplan rule: the 3-class totals are EQUAL to the structural audit's
+         live {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2} vs audit {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2}
+  [PASS] live / per-bin totals are EQUAL, bin for bin
+         live [1, 1, 8, 2, 124, 120] vs audit [1, 1, 8, 2, 124, 120]
+  [PASS] live / per-bin INADMISSIBLE counts are EQUAL
+         live [1, 0, 1, 0, 0, 0] vs audit [1, 0, 1, 0, 0, 0]
+  [PASS] live / v9 rule: the 3-class totals are EQUAL to the structural audit's
+         live {'ADMISSIBLE': 246, 'BORDERLINE': 1, 'INADMISSIBLE': 9} vs audit {'ADMISSIBLE': 246, 'BORDERLINE': 1, 'INADMISSIBLE': 9}
+
+SECTION 2 -- the mutant, which the suite must REJECT
+  [PASS] M1 rule-blind / vplan rule: the 3-class totals are EQUAL to the structural audit's
+         live {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2} vs audit {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2}
+  [PASS] M1 rule-blind / per-bin totals are EQUAL, bin for bin
+         live [1, 1, 8, 2, 124, 120] vs audit [1, 1, 8, 2, 124, 120]
+  [PASS] M1 rule-blind / per-bin INADMISSIBLE counts are EQUAL
+         live [1, 0, 1, 0, 0, 0] vs audit [1, 0, 1, 0, 0, 0]
+  [FAIL] M1 rule-blind / v9 rule: the 3-class totals are EQUAL to the structural audit's
+         live {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2} vs audit {'ADMISSIBLE': 246, 'BORDERLINE': 1, 'INADMISSIBLE': 9}
+  [PASS] M1 IS DETECTED -- a rule-blind census does not reproduce the audit
+         the v9 column moves from {'ADMISSIBLE': 246, 'BORDERLINE': 1, 'INADMISSIBLE': 9} to {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2}: 0xFF and the seven other single-transition bytes stop being excluded.  The vplan column is UNCHANGED by the mutation, so a suite that checked only the vplan rule would score this mutant as clean.
+  [PASS] M1's vplan column really is unchanged, which is why both rules are checked
+         both {'ADMISSIBLE': 252, 'BORDERLINE': 2, 'INADMISSIBLE': 2} -- the vplan exclusion set and the model's own INADMISSIBLE set are the SAME two bytes, so ignoring the rule costs nothing there.  That coincidence is the reason this mutation is worth having.
+
+SECTION 3 -- sanity: every byte counted exactly once
+  [PASS] the sweep saw all 256 bytes, once each
+         seen 256, per_bin sum 256, distinct bytes 256
+
+============================================================================
+10 checks, 10 passing, 0 failing
+============================================================================
