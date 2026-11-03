@@ -12378,3 +12378,196 @@ commit rather than trusting the command's own silence.
 **Commits this run:** 2 before this entry (the structural audit with its
 transcript; `progress.md`), and this `AUTOMATION_LOG.md` entry makes **3**.
 Each pushed and verified against the GitHub API.
+
+---
+
+## 2026-11-03 — the live half closes at 22.7x, the calibration is v8's own figure, and the steering map has no legal way to close bin 0
+
+### 1. What ran, and what it answers
+
+The item ranked first on **10-28, 10-29, 10-30 and 11-02** — the live half of
+capstone remainder (c) — is **done**. The structural half (11-02) settled
+which `cp_data` bins have no admissible witness over the **input space**. The
+live half asks what the **stimulus** drove, and those differ by exactly as
+much as the stimulus is non-uniform — which a coverage-steered policy is, by
+construction and on purpose.
+
+`PayloadAdmissibilityCoverage` is a **third subscriber on
+`agent.mon.ap`**, beside the scoreboard and `UartCoverage`. It classifies
+what the **monitor observed**, not what the driver intended; the bench
+reports a nonzero `pushes skipped (tx_full)`, so the distinction is not
+hypothetical. Nothing is re-typed — `classify` and the class constants from
+`payload_coverage_model`, the nine-byte rule from
+`reachable_cross_under_per_byte_rule`, `data_class` AST-lifted from the live
+bench by the structural audit's own helper, and the env is the live
+`UartEnv` subclassed to add one subscriber.
+
+### 2. The number, and the calibration that has to come first
+
+| policy | payloads | vplan inadmissible | v9 excluded |
+|---|---|---|---|
+| steer=0 | 1884 | 14 (**0.743 %**) | 60 (3.185 %) |
+| steer=1 | 95 | 16 (**16.842 %**) | 21 (22.105 %) |
+| *uniform* | — | *2/256 = 0.781 %* | *9/256 = 3.516 %* |
+
+**The 11-02 prediction is CONFIRMED** — written down that day as "a number
+that can come out wrong" — at a factor of **22.7**, two-proportion
+**z = +12.5**. And it holds in ABSOLUTE terms: steer=1 drove **more**
+inadmissible frames (16) than steer=0 (14) while running **20x fewer
+payloads**. The rate alone would not have ruled out a small-denominator
+artefact; the absolute count does, which is why S2 checks both.
+
+**S1 is the calibration and it is deliberately first.** Pure random lands on
+the uniform binomial: z = **−0.19** (vplan) and **−0.78** (v9). The "not
+clean F7 evidence" rate comes out at **1 in 61** against vplan v8's stated
+"about 1 in 64" — **v8's figure reproduced from live stimulus for the first
+time**, having been an exhaustive-enumeration claim since 09-30. All three
+targets are DERIVED from the imported model, so a drift in the model moves
+the target rather than silently passing against a stale constant.
+
+### 3. The mechanism, which is the finding
+
+**14.7 % of all steered payloads are the single byte `0x00`**, against 0.32 %
+under random. That is **forced, not incidental**: `cp_data` bin 0 is the
+singleton `{0x00}`, so `byte_for_class[0]` **is** `0x00`, and a
+coverage-driven policy has **no other way to close the bin**. The steering
+map is **structurally obliged to drive the one byte that cannot carry F7
+evidence**. A steered item also carries `burst_len = 1..8` pushes of the
+*same* byte, so a single steering decision costs up to eight inadmissible
+frames — which is why the count is 14 and not 1 or 2.
+
+So **"steering closes coverage faster" and "steering produces interpretable
+frames" are not the same virtue**, and on this bench they are in direct
+opposition. 10-21 recorded that coverage-driven steering *detected less* than
+random; this is the same trade arriving from the evidence side rather than
+the detection side, and it is the second independent cost found for a policy
+whose only measured benefit is closure speed.
+
+### 4. An asymmetry neither half predicted
+
+**The steered policy saw ZERO borderline bytes.** `0x40` and `0xC0` are no
+bin's only witness, so the steering map never names one; random stumbles on
+them at the base rate, 17 of 1884. The two policies are therefore dirty in
+**different ways, not in different amounts** — steered contamination is
+deliberate and concentrated on the inadmissible singleton, random
+contamination is incidental and spread over the borderline pair. The 11-02
+specification item ("which exclusion rule?") accordingly gains a second axis:
+**which policy**, because the answer to the first differs between them.
+
+Stated with its limit: zero of 95 is consistent with the base rate over so
+few payloads, so this is **unobserved rather than shown absent** — the same
+shape as the standing odd-start-bit-phases item, and logged the same way.
+
+### 5. Exhaustive beats sampled, and it costs a second
+
+`test_census_vs_audit.py` drives the live census over **all 256 bytes** and
+requires **equality** — not agreement within a tolerance — against the
+structural audit's census: 3-class totals under both rules, per-bin totals,
+per-bin INADMISSIBLE counts. **10/10, under a second, no simulator.**
+
+This buys coverage the simulated runs cannot. In 1884 random payloads bin 0
+appeared **6** times and the borderline pair **17**, so most of the 6 x 3 x 2
+table is never exercised by a run of any affordable length. The two routes
+share `payload_coverage_model` and the lifted `data_class` but **not** the
+accumulation logic, which is where a live sampler actually goes wrong.
+
+### 6. The mutant was chosen to be one a weaker suite passes
+
+**M1** makes `classify_under` ignore the exclusion rule — what a
+"simplification" would do. It is detected. What the transcript shows
+*alongside* the detection is the reason both rules are checked: **M1's vplan
+column is bit-for-bit UNCHANGED**, because the vplan exclusion set and the
+model's own INADMISSIBLE set happen to be the same two bytes. **A suite
+checking only the vplan rule would have scored this mutant clean** — the
+identical shape to 11-02's 55/55 against broken RTL. The mutant's three
+*passing* vplan lines are left in the committed transcript for that reason.
+
+### 7. Two defects, both caught by today's own checks
+
+**(i) P1 and P2 FAILED on first run, and the failure was the right one.**
+`UartCrvTest.run_phase` calls `cov.reset()` once per (seed, policy) run, so
+the live collector holds only the **last** run while the subscriber
+accumulated across all of them. The comparison was not merely failing — it
+was **ill-posed**, and a looser tolerance would have hidden that rather than
+fixed it. Repaired by segmenting the census on reset, via an
+`ObservedCovModel` **subclass** that publishes the boundary. A subclass and
+not a patch to the live bench: the hook exists only for runs that ask for it,
+and `uart_uvm_crv_tb.py` is untouched.
+
+**(ii) The P5 probe was an illegal UVM component.** It was first built as a
+second `PayloadAdmissibilityCoverage` with `parent=None`, and uvm-python
+killed the run with `ILLCRT` inside `report_phase`. The fix is the design
+that should have been there from the start: the measurement is now a plain
+`AdmissibilityCensus` class with no UVM in it, and the component is only the
+wiring. That is what makes P5 a real control — the evidence gate can be
+exercised by any python caller — and it is what made §5's exhaustive sweep
+possible at all.
+
+**Fourth consecutive session in which a check written today caught something
+written today.** The sibling repository recorded the same count today, from
+its own direction, and its pattern is worth borrowing: the checks that fail
+on first run are the ones predicting **exactness**.
+
+### 8. Environment and automation health
+
+`/sessions` **100 % full** (9.3 G of 9.8 G) for the **eighth** consecutive
+session, and this time `git clone` failed outright at **1.7 M** free, as on
+11-02. Clone to `/tmp` on `/dev/sda1` (3.5 G free). **New and useful: `/tmp`
+survives between sessions here, and so did the entire toolchain** —
+`/tmp/cocotb_venv` (cocotb 1.9.2, uvm-python 0.4.0), `/tmp/iverilog_install`
+and `/tmp/cocotb_wheels` were all intact from 11-02, so `setup_cocotb.sh` did
+not need to run at all and the session started simulating within two minutes.
+That is the strongest argument yet for the wheelhouse design.
+
+**One `/tmp` gotcha, new today.** `/tmp` is sticky and shared across
+sessions: `mkdir -p /tmp/gwork` *succeeded* against a directory left by
+11-02's session and owned by another uid, and the next write failed with
+`Permission denied` — which looks like a disk problem and is not. Use a
+uid-qualified scratch path (`/tmp/gw-$(id -u)`).
+
+Timings: elaboration ~7 s; steer=1 x2 seeds ~7 s of sim; steer=0 x2 seeds
+~128 s. The 175 s shell cap is the binding constraint on steer=0, which is
+the reason the bench is one-policy-per-invocation with a resumable CSV.
+
+**Open items, with blockers named:**
+
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02 and **ranked
+  first**, now with the second axis from §4. A specification decision, not a
+  coding task, and it is the last thing standing between (c) and a sign-off
+  statement.
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — created today.
+  `PAC_MODE=evidence` is exercised only by P5's synthetic probe. Running the
+  steered policy in evidence mode should abort within the first few dozen
+  pushes, and that it aborts **at the push the census predicts** is a check
+  nobody has run. **Blocked on nothing**: one invocation.
+- **THE BORDERLINE PAIR UNDER STEERING** — created today, §4. Unobserved, not
+  shown absent. The strong form of the claim is about the *map* and needs no
+  simulator at all: enumerate what `byte_for_class` can emit.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02. Today adds a **third** argument: the live measurement is reported
+  per `cp_data` bin, and the quantity that decides admissibility is
+  `g_first`, so the two coverage models are now joined by a measurement and
+  still not by a shared name.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions. Icarus 10.3 is not one.
+- **A COMMITTED CHECK FOR EXTERNALLY-SOURCED LIST CLAIMS** — carried from
+  10-29. `tools/open_item_staleness_audit.py` is still the natural home and
+  today's entry adds no new instance.
+- **THE ODD START-BIT PHASES** — carried from 10-29, and §4 is now a second
+  item of the same shape (unobserved vs shown absent), which is an argument
+  for a shared form of words rather than two separate items.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii).
+- **A vplan v2 REVISION FOR THE STICKY STATUS BITS** — carried, untouched.
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds **four**
+  (`uart_payload_bind_sim_steer0/1_2026-11-03.txt`,
+  `summarize_admissibility_output.txt`, `test_census_vs_audit_output.txt`),
+  so the registration gap widens the most it has in one session. The sibling
+  repository is working the identical gap.
+
+**Commits this run:** 4 before this entry (the live bench with both
+transcripts and the results CSV; the summarizer; the exhaustive cross-check
+with its mutant; `progress.md`), and this `AUTOMATION_LOG.md` entry makes
+**5**. Each pushed and verified against the GitHub API.
