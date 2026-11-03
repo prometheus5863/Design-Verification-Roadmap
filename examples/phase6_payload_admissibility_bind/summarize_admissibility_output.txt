@@ -1,0 +1,66 @@
+============================================================================
+PAYLOAD ADMISSIBILITY, LIVE -- cross-policy summary
+============================================================================
+
+  uniform predictions, derived from the imported model:
+    vplan inadmissible : 2/256 = 0.7812 %
+    v9 excluded        : 9/256 = 3.5156 %
+    not clean evidence : 4/256 = 1.5625 %
+
+  policy   runs    payloads  vplan inadm   vplan notclean v9 excluded  
+  steer=0  2       1884      14 (0.743 %)  31 (1.645 %)  60 (3.185 %) 
+  steer=1  2       95        16 (16.842 %) 16 (16.842 %) 21 (22.105 %)
+
+S1  CALIBRATION -- does pure random match the uniform prediction?
+  [PASS] S1-vplan the pure-random inadmissible count is within 3 sigma of the uniform binomial
+         observed 14 of 1884 (0.7431 %) against an expected 14.72 (0.7812 %),
+         sigma 3.82, z = -0.19. The stimulus is a UART burst generator and
+         nothing in it is supposed to bias the payload, so this is the check that
+         the census is counting the right thing at all.
+  [PASS] S1-v9 the pure-random inadmissible count is within 3 sigma of the uniform binomial
+         observed 60 of 1884 (3.1847 %) against an expected 66.23 (3.5156 %),
+         sigma 7.99, z = -0.78. The stimulus is a UART burst generator and
+         nothing in it is supposed to bias the payload, so this is the check that
+         the census is counting the right thing at all.
+  [PASS] S1-notclean the 'not clean F7 evidence' rate reproduces the vplan v8 figure under random stimulus
+         observed 31 of 1884 (1.645 %) against 29.44 (1.562 %), z = +0.29. v8
+         states this as 'about 1 in 64'; the measured rate is 1 in 61.
+
+S2  THE 2026-11-02 PREDICTION -- is steer=1 materially dirtier?
+  [PASS] S2 the steered policy IS materially dirtier -- the 11-02 prediction is CONFIRMED
+         steer=1 drives an inadmissible payload in 16.842 % of frames against
+         steer=0's 0.743 % -- a factor of 22.7, two-proportion z = +12.5. Written
+         down on 11-02 as 'a number that can come out wrong'; it did not.
+  [PASS] S2-b and the steered policy drives MORE inadmissible frames IN ABSOLUTE TERMS despite running far fewer
+         steer=1: 16 inadmissible in 95 payloads; steer=0: 14 in 1884. The
+         steered policy closes coverage in roughly 20x fewer pushes and still
+         drives the excluded bytes MORE often, so this is not a small-denominator
+         artefact.
+
+S3  THE MECHANISM -- which bins and which bytes
+  bin    meaning            steer=1      steer=0     
+  0      0x00               14 (14.7 %)  0.3 %       
+  1      0xFF               2 (2.1 %)    0.1 %       
+  2      one-hot            3 (3.2 %)    3.8 %       
+  3      0xAA/0x55          10 (10.5 %)  0.5 %       
+  4      even popcount      32 (33.7 %)  48.5 %      
+  5      odd popcount       34 (35.8 %)  46.8 %      
+  [PASS] S3 the excess is BIN 0, whose only member is 0x00 -- the steering map has no other way to close it
+         14.7 % of all steered payloads are bin 0, i.e. the single byte 0x00,
+         against 0.32 % under random. byte_for_class[0] IS 0x00 because bin 0 is
+         the singleton {0x00}, so a coverage-driven policy is STRUCTURALLY
+         OBLIGED to drive the byte that cannot carry F7 evidence. And a steered
+         item carries burst_len = 1..8 pushes of the SAME byte, so one steering
+         decision costs up to eight inadmissible frames -- which is why the count
+         is 14 and not 1 or 2.
+  [PASS] S3-b the steered policy saw NO borderline bytes at all, which the structural audit predicts
+         0x40 and 0xC0 are the borderline pair and neither is any cp_data bin's
+         only witness, so the steering map never names one: byte_for_class is
+         ['0x0', '0xff', '0x8', '0xaa', '0x33', '0x7']. Random drew them 17
+         times. The two policies are therefore dirty in DIFFERENT ways -- steered
+         drives the inadmissible singleton deliberately, random stumbles on the
+         borderline pair at its base rate.
+
+============================================================================
+7 checks, 7 passing, 0 failing
+============================================================================
