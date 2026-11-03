@@ -3331,3 +3331,119 @@ simulator at all, and answering it found a conflict rather than plumbing.
   different answers about how much of the live model is closable, and the
   repository has been carrying both without having to choose. Logged, not
   decided.
+
+---
+
+### 2026-11-03 — the live half closes, the prediction holds at 22.7x, and the steering map turns out to be obliged to drive the one byte it may not
+
+**Checklist movement.** Capstone remainder **(c)** — `PayloadAdmissibility
+Coverage` wired into the live `UartCoverage` collector — is **COMPLETE**. The
+structural half landed 11-02; the live half is today. Both halves are
+committed with transcripts.
+
+- [x] **The LIVE half of (c)** — `examples/phase6_payload_admissibility_bind/
+  uart_uvm_payload_bind_tb.py`, a third subscriber on `agent.mon.ap` alongside
+  the scoreboard and `UartCoverage`. It classifies every TX_DATA payload the
+  **monitor observed** — not what the driver intended, which differs whenever
+  a push is dropped on `tx_full` — under **both** exclusion rules at once.
+  Nothing re-typed: `classify` and the class constants from
+  `payload_coverage_model`, the nine-byte rule from
+  `reachable_cross_under_per_byte_rule`, `data_class` AST-lifted from the live
+  bench by the structural audit's own helper, and the environment is the live
+  `UartEnv` subclassed to add one subscriber.
+
+- [x] **The 11-02 prediction is CONFIRMED, at 22.7x.** Two seeds per policy:
+
+  | policy | payloads | vplan inadmissible | v9 excluded |
+  |---|---|---|---|
+  | steer=0 | 1884 | 14 (**0.743 %**) | 60 (3.185 %) |
+  | steer=1 | 95 | 16 (**16.842 %**) | 21 (22.105 %) |
+  | *uniform prediction* | — | *2/256 = 0.781 %* | *9/256 = 3.516 %* |
+
+  Two-proportion z = **+12.5**. It also holds in **absolute** terms — the
+  steered policy drove **more** inadmissible frames (16) than the random one
+  (14) while running **20x fewer payloads** — which is what rules out a
+  small-denominator artefact, and the rate alone would not.
+
+- [x] **The calibration passes, and it had to pass first.** Pure random lands
+  on the uniform binomial almost exactly: 14 against an expected 14.72
+  (z = −0.19) for the vplan rule, 60 against 66.23 (z = −0.78) for v9's, and
+  the "not clean F7 evidence" rate comes out at **1 in 61** against vplan v8's
+  stated "about 1 in 64". **That is v8's figure reproduced from live stimulus
+  for the first time** — it has been an exhaustive-enumeration claim since
+  09-30. All three targets are DERIVED from the imported model, not typed.
+
+- [x] **The mechanism, which is the finding rather than the number.** 14.7 %
+  of all steered payloads are the single byte `0x00`, against 0.32 % under
+  random. That is **forced**: `cp_data` bin 0 is the singleton `{0x00}`, so
+  `byte_for_class[0]` **is** `0x00` and a coverage-driven policy has no other
+  way to close the bin. **The steering map is structurally obliged to drive
+  the one byte that cannot carry F7 evidence.** A steered item also carries
+  `burst_len = 1..8` pushes of the same byte, so one steering decision costs
+  up to eight inadmissible frames — which is why the count is 14 and not 1.
+  **"Steering closes coverage faster" and "steering produces interpretable
+  frames" are not the same virtue, and on this bench they oppose each other
+  directly.**
+
+- [x] **An asymmetry neither half predicted: the two policies are dirty in
+  DIFFERENT ways, not in different amounts.** The steered policy saw **zero**
+  borderline bytes. `0x40` and `0xC0` are no bin's only witness, so the
+  steering map never names one; random stumbles on them at the base rate (17
+  of 1884). So steered contamination is deliberate and concentrated on the
+  inadmissible singleton, random contamination is incidental and spread over
+  the borderline pair. Which one may carry F7 evidence is a different question
+  for each, and the 11-02 open item about *which rule* now has a second
+  dimension: which *policy*.
+
+- [x] **`summarize_admissibility.py`** — 7/7, the cross-policy aggregation
+  over `pac_results.csv`, with duplicate rows reported and not averaged, as
+  `closure_results.csv` does. One policy per invocation under the bench's
+  existing `POLICIES` knob, because shell calls here are time-boxed.
+
+- [x] **`test_census_vs_audit.py`** — 10/10, under a second, no simulator.
+  Drives the live census over all 256 bytes and requires **equality**, not
+  agreement within a tolerance, against the structural audit's census: 3-class
+  totals under both rules, per-bin totals, per-bin INADMISSIBLE counts. This
+  is coverage the simulated runs cannot buy — in 1884 random payloads bin 0
+  appeared 6 times, so most of the 6 x 3 x 2 table is never exercised by a run
+  of any affordable length.
+
+- [x] **Mutation, and the mutant was chosen to be one a weaker suite passes.**
+  M1 makes `classify_under` ignore the exclusion rule — what a
+  "simplification" would do. It is detected. What the transcript shows
+  alongside is **why both rules are checked**: M1's vplan column is
+  bit-for-bit **unchanged**, because the vplan exclusion set and the model's
+  own INADMISSIBLE set happen to be the same two bytes. **A suite checking
+  only the vplan rule would have scored this mutant clean**, which is exactly
+  the 11-02 shape (55/55 against broken RTL). The mutant's three passing vplan
+  lines are left in the committed transcript for that reason.
+
+- [x] **Two defects caught by today's own checks, both recorded in place.**
+  (i) **P1 and P2 FAILED on first run** — `UartCrvTest.run_phase` resets the
+  coverage model once per run, so the live collector holds only the LAST run
+  while the subscriber accumulated across all of them. The comparison was not
+  merely failing, it was **ill-posed**. Fixed by segmenting the census on
+  reset via an `ObservedCovModel` subclass that publishes the boundary — a
+  subclass, not a patch to the live bench. (ii) The P5 probe was first built
+  as a second UVM component with `parent=None`, and uvm-python killed the run
+  with `ILLCRT`. The fix is the design that should have been there: the
+  measurement is now a plain `AdmissibilityCensus` with no UVM in it, so the
+  evidence gate can be exercised by any python caller — which is what makes P5
+  a control rather than a second simulated run. **Fourth consecutive session
+  in which a check written today caught something written today.**
+
+- [ ] **Still open, and now ranked first: WHICH RULE AND WHICH POLICY.** The
+  11-02 specification question is unchanged and today adds the second axis
+  above. It is still a decision, not a coding task.
+
+- [ ] **Still open — the raise has never fired in anger.** `PAC_MODE=evidence`
+  is exercised only by P5's synthetic probe. Running the steered policy in
+  evidence mode should abort within the first few dozen pushes, and that it
+  does so **at the push the census predicts** is a check nobody has run.
+  Blocked on nothing; it is one invocation.
+
+- [ ] **Still open — the borderline pair is unobserved under steering, not
+  shown absent.** Zero of 95 is consistent with the base rate over so few
+  payloads. More steered seeds would separate "the map never names them" from
+  "we did not look long enough", and the first is a claim about the map that
+  can be checked without the simulator at all.
