@@ -2,25 +2,27 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 47 "Not yet covered" lists; the STANDING list has 31 items
-    FULL        31 items   Not yet covered (candidates for future runs):**
+  AUTOMATION_LOG.md: 51 "Not yet covered" lists; the STANDING list has 12 items
+    FULL        12 items   Open items, with blockers named:**
+  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 747942 > 739569), not to an older one
   [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
-  progress.md: 49 completed checkboxes, 8 unchecked
+  progress.md: 81 completed checkboxes, 14 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 6   resolved: 6   unresolved: 0
+  paths named: 4   resolved: 3   unresolved: 1
+    UNRESOLVED  uart_payload_bind_sim_steer0/1_2026-11-03.txt  in: - REGISTER THE NEW TRANSCRIPTS — carried, and today adds...
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
-  [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
+  [PASS] S1 ran and reported 1 unresolved path(s) for adjudication
 
 ------------------------------------------------------------------------------
 S2 -- every "created <date>" parses and is not in the future
 ------------------------------------------------------------------------------
-  dates found: 2   ok: 2   bad: 0
+  dates found: 0   ok: 0   bad: 0
   [PASS] no open item carries an unparseable or future creation date
 
 ------------------------------------------------------------------------------
@@ -30,32 +32,51 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
   COMPLETED checkbox also contains.  A RANKING, not a verdict.
 
     score  open item
-    0.600  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — carried from 10-24...  <-- adjudicate
-    0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
-    0.600  - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carried.  <-- adjudicate
-    0.517  - ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING — carried, and promoted to a m...  <-- adjudicate
-    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...  <-- adjudicate
-    0.414  - GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE — restored to the list today. It w...  <-- adjudicate
-    0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.
-    0.400  - A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS — carried, eighteen sessions o...
-    0.364  - AUDIT THE OTHER DIRECTION OF free_name_audit — carried from the addendum; it says no...
-    0.357  - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR — carried from...
+    0.667  - A vplan v2 REVISION FOR THE STICKY STATUS BITS — carried, untouched.  <-- adjudicate
+    0.571  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
+    0.400  - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan v14 (ii).  <-- adjudicate
+    0.333  - A DIVISOR SWEEP FOR T6 — carried from 10-29.  <-- adjudicate
+    0.308  - THE BORDERLINE PAIR UNDER STEERING — created today, §4. Unobserved, not shown absent...  <-- adjudicate
+    0.308  - REGISTER THE NEW TRANSCRIPTS — carried, and today adds four (uart_payload_bind_sim_s...  <-- adjudicate
+    0.273  - THE ODD START-BIT PHASES — carried from 10-29, and §4 is now a second item of the sa...
+    0.250  - A COMMITTED CHECK FOR EXTERNALLY-SOURCED LIST CLAIMS — carried from 10-29. tools/ope...
+    0.222  - g_first INTO THE PLAN'S SHARED VOCABULARY — carried from 10-30 and 11-02. Today adds...
+    0.214  - WHICH RULE AND WHICH POLICY — carried from 11-02 and ranked first, now with the seco...
 
   top match for the highest-ranked item:
-    - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
+    - x The vplan v2 revision carried as an open item was already closed, on 2026-09-19. The STATUS sticky/live re-specification the standing description ...
 
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
   adjudication entries on disk: 24
-    OPEN    - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...
-    OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
-    OPEN    - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carri...
-    OPEN    - ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING — ca...
-    OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
-    OPEN    - GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE — restor...
-  [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
-  [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
+    MISSING - A vplan v2 REVISION FOR THE STICKY STATUS BITS — carried, ...
+    MISSING - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
+    MISSING - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan ...
+    MISSING - A DIVISOR SWEEP FOR T6 — carried from 10-29.
+    MISSING - THE BORDERLINE PAIR UNDER STEERING — created today, §4. Un...
+    MISSING - REGISTER THE NEW TRANSCRIPTS — carried, and today adds fou...
+    RETIRED Control B for the FOUR OLDER mutation harnesses
+    RETIRED A mutant on budget_law_exhaustive.py's own stimulus generator
+    RETIRED The F7 cross cannot be closed without drawing 0x40, and 0x40 is BORDER...
+    RETIRED Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
+    RETIRED Audit every "what this does not change" paragraph in the vplan
+    RETIRED Apply the three-valued outcome axis to phase6_crv_uart's crosses, and ...
+    RETIRED A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS
+    RETIRED MORE SEEDS ON THE CLOSURE DISTRIBUTION
+    RETIRED A REPOSITORY-WIDE DETAIL-STRING CENSUS
+    RETIRED MAKE run_all_harnesses.sh ITSELF REACHABLE
+    RETIRED CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING
+    RETIRED A MUTANT FOR THE rx_avail SYNC_ONLY ROW
+    RETIRED EXTEND THE CENSUS TO THE REMAINING CHECKERS
+    RETIRED GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE
+    RETIRED THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ
+    RETIRED NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE
+    RETIRED RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED
+    RETIRED CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT
+    RETIRED ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
+  [FAIL] every item at or above the reporting cut is adjudicated on disk, with a reason
+  [FAIL] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)  --  19 orphan(s): Control B for the FOUR OLDER mutation harnesses; A mutant on budget_law_exhaustive.py's own stimulus genera...; The F7 cross cannot be closed without drawing 0x40, and 0x...; Wire PayloadAdmissibilityCoverage into the live UVM covera...; Audit every "what this does not change" paragraph in the v...; Apply the three-valued outcome axis to phase6_crv_uart's c...; A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS; MORE SEEDS ON THE CLOSURE DISTRIBUTION; A REPOSITORY-WIDE DETAIL-STRING CENSUS; MAKE run_all_harnesses.sh ITSELF REACHABLE; CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARIN...; A MUTANT FOR THE rx_avail SYNC_ONLY ROW; EXTEND THE CENSUS TO THE REMAINING CHECKERS; GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE; THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ; NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE; RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY R...; CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...; ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
   [PASS] the RETIRED and WORDING categories are disjoint
   [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
   verdicts: 5 STALE, 19 OPEN
@@ -69,6 +90,8 @@ S5 -- controls on the ranker, and its mutation test
   [PASS] M1  MUTATION TEST: with the completed checkbox removed, the same item no longer ranks high   [0.818 -> 0.000]
   [PASS] E1  EXACT: an open item that is verbatim a completed block scores exactly 1.0   [1.0]
   [PASS] W1  the EXACT matcher misses an item that differs only in wording   [wire/wired and uvm-coverage-collector/UartCoverage-collector]
+  [PASS] R1  PLANTED: every retired wording, put back into the list verbatim, turns its row RED   [2 phrases planted, 2 rows red]
+  [PASS] R2  PLANTED, CASE SWAPPED: the same phrases in the opposite case still turn their rows RED -- the 2026-11-03 evasion   [this control FAILS against the case-sensitive matcher this section carried until 2026-11-04, which is why that matcher reported green on the session it was built to catch]
   [PASS] W2  and the wording-tolerant form finds it   [so the row is reported WORDING, with the item it matches, rather than as a
         retirement -- the sentence the old form printed about it was false]
   [PASS] W3  NEGATIVE CONTROL: the loose form does NOT rescue an entry whose item is really gone   [the split must never be able to turn a FAIL into a PASS; it may only move a
@@ -100,6 +123,10 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          phrase is absent from the current list
   [PASS] and the fact that justified retiring it still holds
          examples/phase1_mutation/run_mutation_tests.py still contains "G0b positive control for the false DET"  --  runner C has carried G0b since before the item was written, and G0b is STRONGER than runner A's G2: it requires the cosmetic edit to pass the bench, to change the RAW transcript and NOT to change the normalised one.  A session acting on the item as written would have built a weaker duplicate.
+  [FAIL] the retired wording "a vplan v2 revision" (retired 2026-10-29; re-imported 2026-11-03) stays gone from the list
+         phrase HAS RETURNED TO the current list
+  [PASS] and the fact that justified retiring it still holds
+         verification_plans/uart_controller_verification_plan.md still contains "sticky (read-to-clear):"  --  the plan has specified STATUS[6:4] as sticky/read-to-clear since v2 on 2026-09-19 -- Section 1.1 and the register map -- and v14 (iii) gave that wording an executable form as protocol-checker rule S1 on 2026-10-29.  An item asking for the revision is asking for work that is six weeks old, and a session acting on it would have re-specified a register that is already specified.
   [PASS] runner B now HAS a cosmetic-edit positive control
          examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh  contains "G2b neutrality control"  --  ported 2026-10-25; this row goes red if the port is ever reverted while the list still claims it was done.
   [PASS] runner D now HAS a cosmetic-edit positive control
@@ -124,5 +151,5 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          tools/test_neutrality_controls.py  contains "MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I"  --  read "all FIVE runners, not the original two" from 2026-10-26 with the needle MARKER_RUNNERS = ('E', 'F', 'G').  H and I were added 2026-10-27 with the two ports above, and the needle is the marker tuple itself, so the row tracks the number it claims rather than a comment about it.  35/35 across seven runners at the last full pass.
 
 ==============================================================================
-RESULT: 36 passed, 0 failed
+RESULT: 38 passed, 3 failed
 ==============================================================================

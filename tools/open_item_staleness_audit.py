@@ -156,9 +156,38 @@ def stems(text):
 # list.  See open_item_headings() for what that cost.
 FULL_LIST_MARKER = '(candidates for future runs)'
 
+# REPAIRED 2026-11-04, AND THIS IS THE SAME FAULT AS THE 2026-10-28 ONE,
+# ARRIVING FROM THE OTHER SIDE.  10-28 fixed an audit that had locked onto a
+# five-item SUPPLEMENT because it took the LAST matching heading.  The
+# remedy recognised one heading shape -- "**Not yet covered ... (candidates
+# for future runs):**" -- and from 2026-10-29 the log stopped using it.  The
+# 10-29, 10-30, 11-02 and 11-03 entries head their standing lists
+#
+#     **Open items, with blockers named:**
+#
+# so `open_item_headings` matched nothing in any of them, `standing_list`
+# fell back to the newest heading it DID recognise, and this audit has been
+# auditing the 2026-10-28 list for FOUR CONSECUTIVE SESSIONS while reporting
+# a clean 36/0 against it.
+#
+# That is the staleness this tool exists to detect, in the tool itself, and
+# it is the mechanical reason the vplan v2 item (RETIRED_WORDINGS, below)
+# could be re-imported on 11-03 with nothing able to see it.  Matching on a
+# single literal heading made the audit's scope depend on an editorial habit
+# nobody had agreed to keep.
+#
+# The repair is a TUPLE of accepted FULL-list headings rather than one, and
+# S0 (added the same day) asserts that the list actually audited comes from
+# the LAST session entry in the log -- so the next heading rename fails this
+# audit loudly instead of silently narrowing it.
+FULL_LIST_HEADINGS = (
+    r'\*\*Not yet covered([^\n]*)\n',
+    r'\*\*(Open items, with blockers named[^\n]*)\n',
+)
+
 
 def open_item_headings(log_text):
-    """Every "Not yet covered" heading, classified FULL or SUPPLEMENT.
+    """Every standing-list heading, classified FULL or SUPPLEMENT.
 
     REPAIRED 2026-10-28, and the fault is worth stating because it was
     introduced by a deliberate, correct editorial decision.
@@ -178,11 +207,26 @@ def open_item_headings(log_text):
     that the list has drifted from the tree.
     """
     out = []
-    for m in re.finditer(r'\*\*Not yet covered([^\n]*)\n', log_text):
+    for m in re.finditer(FULL_LIST_HEADINGS[0], log_text):
         tail = m.group(1)
         kind = 'FULL' if FULL_LIST_MARKER in tail else 'SUPPLEMENT'
         out.append((m.start(), kind, ('Not yet covered' + tail).strip()))
+    for pat in FULL_LIST_HEADINGS[1:]:
+        for m in re.finditer(pat, log_text):
+            out.append((m.start(), 'FULL', m.group(1).strip()))
+    out.sort()
     return out
+
+
+def last_session_offset(log_text):
+    """Byte offset of the last `## ` session heading in the log.
+
+    S0 uses it to assert that the list being audited belongs to the NEWEST
+    entry.  Added 2026-11-04 with the heading repair above, because the
+    repair fixes today's two spellings and nothing stops a third.
+    """
+    ms = list(re.finditer(r'(?m)^## .*', log_text))
+    return ms[-1].start() if ms else 0
 
 
 def _items_from(log_text, head_start):
@@ -498,6 +542,33 @@ def s5_controls():
     res.append(('W1', 'the EXACT matcher misses an item that differs only in '
                       'wording', not _is_exact(e_w, items_w),
                 'wire/wired and uvm-coverage-collector/UartCoverage-collector'))
+
+    # -- controls on the 2026-11-04 case-insensitive retired-wording match.
+    # R1 plants each retired phrase into a synthetic list and requires the
+    # row to go RED; without it, "the phrase stays gone" passes for a
+    # matcher that can never match anything.  R2 plants it in a DIFFERENT
+    # CASE than the tuple stores, which is the specific evasion that let the
+    # vplan item back in on 2026-11-03.
+    planted = ['- ' + ph for _l, ph, _p, _n, _w in RETIRED_WORDINGS]
+    red_all = all(not ok for ok, lbl, _d in s6_retired_wordings(planted)
+                  if 'stays gone' in lbl)
+    res.append(('R1', 'PLANTED: every retired wording, put back into the '
+                      'list verbatim, turns its row RED', red_all,
+                '%d phrases planted, %d rows red'
+                % (len(planted),
+                   sum(1 for ok, lbl, _d in s6_retired_wordings(planted)
+                       if 'stays gone' in lbl and not ok))))
+    swapped = ['- ' + (ph.upper() if ph.islower() else ph.lower())
+               for _l, ph, _p, _n, _w in RETIRED_WORDINGS]
+    red_ci = all(not ok for ok, lbl, _d in s6_retired_wordings(swapped)
+                 if 'stays gone' in lbl)
+    res.append(('R2', 'PLANTED, CASE SWAPPED: the same phrases in the '
+                      'opposite case still turn their rows RED -- the '
+                      '2026-11-03 evasion', red_ci,
+                'this control FAILS against the case-sensitive matcher this '
+                'section carried until 2026-11-04, which is why that '
+                'matcher reported green on the session it was built to '
+                'catch'))
     res.append(('W2', 'and the wording-tolerant form finds it',
                 _is_wording(e_w, items_w),
                 'so the row is reported WORDING, with the item it matches, '
@@ -642,6 +713,37 @@ RETIRED_WORDINGS = (
      'the bench, to change the RAW transcript and NOT to change the '
      'normalised one.  A session acting on the item as written would have '
      'built a weaker duplicate.'),
+
+    # ----------------------------------------------------------------------
+    # ADDED 2026-11-04, AND IT IS THE ROW THE 2026-10-29 ENTRY ASKED FOR BY
+    # NAME.  That entry found "A vplan v2 revision" still carried as an open
+    # item although the work was committed on 2026-09-19 -- the plan's
+    # Sections 1.1 and 2.4 re-specify STATUS[6:4] as sticky/read-to-clear --
+    # and it diagnosed the mechanism exactly:
+    #
+    #     "the item's authority is OUTSIDE this repository, so correcting it
+    #      here does not stop it being re-imported"
+    #
+    # and it proposed the remedy: a committed check for externally-sourced
+    # list claims.  The remedy was logged as an item and NOT BUILT.
+    #
+    # THE PREDICTION THEN CAME TRUE.  The 2026-11-03 standing list carries
+    # "A vplan v2 REVISION FOR THE STICKY STATUS BITS -- carried,
+    # untouched", four sessions after 10-29 retired it, and nothing in the
+    # tree could see it because this tuple had one entry.  So this row is
+    # not a hypothetical guard: it is a row that WOULD HAVE FIRED on
+    # 2026-11-03, and the commit that adds it deliberately reports it RED
+    # against that list before the list is corrected.
+    ('"a vplan v2 revision" (retired 2026-10-29; re-imported 2026-11-03)',
+     'vplan v2 revision',
+     'verification_plans/uart_controller_verification_plan.md',
+     'sticky (read-to-clear):',
+     'the plan has specified STATUS[6:4] as sticky/read-to-clear since v2 on '
+     '2026-09-19 -- Section 1.1 and the register map -- and v14 (iii) gave '
+     'that wording an executable form as protocol-checker rule S1 on '
+     '2026-10-29.  An item asking for the revision is asking for work that '
+     'is six weeks old, and a session acting on it would have re-specified '
+     'a register that is already specified.'),
 )
 
 
@@ -649,9 +751,19 @@ def s6_retired_wordings(items):
     """[(ok, label, detail)] for each retired wording: gone from the list,
     and the fact that justified retiring it still true."""
     listed = '\n'.join(items)
+    # MATCHED CASE-INSENSITIVELY, added 2026-11-04, and the reason is the
+    # defect this section exists for.  The vplan item was retired on
+    # 2026-10-29 while the list spelled it "A vplan v2 revision" and
+    # re-imported on 2026-11-03 spelled "A vplan v2 REVISION FOR THE STICKY
+    # STATUS BITS".  A case-sensitive needle would have been evaded by
+    # exactly the drift that carried the item back, so the matcher would have
+    # reported green on the session it was built to catch.  Lowering both
+    # sides is strictly stronger and does not weaken the 10-24 row, whose
+    # needle is already lower case.
+    low = listed.lower()
     out = []
     for label, phrase, path, needle, why in RETIRED_WORDINGS:
-        gone = phrase not in listed
+        gone = phrase.lower() not in low
         full = os.path.join(ROOT, path)
         holds = (os.path.exists(full)
                  and needle in open(full, encoding='utf-8').read())
@@ -828,6 +940,22 @@ def main():
     # list and then crash.
     for kind, heading, n in prov:
         print('    %-10s %3d items   %s' % (kind, n, heading[:60]))
+    # S0, added 2026-11-04 with the heading repair.  The repair teaches this
+    # audit TWO heading spellings and nothing stops a third, so the thing
+    # actually worth asserting is not which spelling matched but WHERE the
+    # matched heading sits: inside the newest `## ` session entry.  Between
+    # 2026-10-29 and 2026-11-03 this audit read a list four entries old and
+    # reported 36/0 against it, and no check in the file could have said so.
+    # S0 is that check.  It is deliberately about POSITION, not wording, so a
+    # future rename fails it loudly instead of narrowing the audit silently.
+    last_sec = last_session_offset(log)
+    full_offsets = [o for o, k, _h in open_item_headings(log) if k == 'FULL']
+    newest = max(full_offsets) if full_offsets else -1
+    report(newest > last_sec,
+           'S0 the standing list being audited belongs to the LAST session '
+           'entry in the log (offset %d > %d), not to an older one'
+           % (newest, last_sec))
+
     n_full = len([1 for k, _h, _n in prov if k == 'FULL'])
     report(n_full == 1,
            'the standing list is anchored on exactly one FULL list '
