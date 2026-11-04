@@ -12571,3 +12571,344 @@ the reason the bench is one-policy-per-invocation with a resumable CSV.
 transcripts and the results CSV; the summarizer; the exhaustive cross-check
 with its mutant; `progress.md`), and this `AUTOMATION_LOG.md` entry makes
 **5**. Each pushed and verified against the GitHub API.
+
+## 2026-11-04 — the borderline pair is reachable and the item's own method could not see it, and the staleness audit had been reading a list four sessions old
+
+### 1. The item is closed, and closed against the method it proposed
+
+11-03 created **THE BORDERLINE PAIR UNDER STEERING** and said how to close
+it:
+
+> The strong form of the claim is about the **map** and needs no simulator at
+> all: enumerate what `byte_for_class` can emit.
+
+The enumeration was done, in pure python, over the live bench's own source by
+AST — `examples/phase6_steering_byte_reachability/`, **19 checks, 19
+passing**, no simulator, no toolchain, no DUT. And it **confirms** the
+map-level claim exactly. The image of everything `_steered_item` can assign
+to `steer_byte` is
+
+&nbsp;&nbsp;&nbsp;&nbsp;`{0x00, 0x07, 0x08, 0x33, 0xAA, 0xFF}`
+
+— `byte_for_class`'s six values plus the two pd-cross literals — and it is
+**disjoint** from the derived `BORDERLINE` set `{0x40, 0xC0}`.
+
+**That is not the answer to the question.** `_steered_item` has **seven**
+return paths and only **two** of them assign `steer_byte` at all. The other
+five return with it `None`, and the driver then does
+
+&nbsp;&nbsp;&nbsp;&nbsp;`byte = (it.steer_byte if it.steer_byte is not None else self.rng.getrandbits(8))`
+
+— a uniform draw over all 256 values. So:
+
+| question | verdict |
+|---|---|
+| can the **map** name a borderline byte? | **UNREACHABLE** — the item's question |
+| can the **policy as wired** drive one? | **REACHABLE** — the real one |
+
+Both are true, about different objects, and the item asked for the one that
+does not matter. Section 3 of the audit prints them side by side rather than
+picking one.
+
+### 2. The structural point is sharper than the statistics
+
+The five random-byte branches include the **last** one: the `cp_txq` full-bin
+fallback, reached only when every other coverpoint is already closed, and the
+branch that forces `burst_len = 8`. `cp_txq`'s `full` bin is the one the
+bench documents as needing a long burst with the UART disabled — the hardest
+bin, therefore typically the last one standing.
+
+**The hardest bin's branch is the one that does not steer the byte.** So the
+tail of a steered run is eight uniformly random payloads per item, by
+construction, not by accident. 11-03 §3 found the steering map *structurally
+obliged* to drive `0x00`; this is the same mechanism's other end, where the
+map stops choosing at all.
+
+### 3. `zero of 95` never carried information, and the audit prices it
+
+| | computed |
+|---|---|
+| P(one uniform byte not borderline) | `127/128` |
+| P(none of 95), exact | `127^95 / 2^665` |
+| … as a float | **0.474686** |
+| observed, steered | 0 of 95 |
+| observed, random | 17 of 1884 (0.902 %) |
+
+Even under **maximal** exposure — every one of the 95 steered payloads drawn
+uniformly — seeing zero borderline bytes is **close to a coin flip**. The
+observation is therefore consistent with total exposure and with none alike,
+so it was never evidence about the map in either direction.
+
+11-03's **"unobserved rather than shown absent" was the right call.** What is
+new is that the map cannot settle it either, so the item could not have been
+closed the way it was posed. And the measurement that *would* settle it is
+now named with a number: **382** fully-exposed steered payloads bring P(zero)
+below 0.05, a **4.0x** longer steered run. That is the price of closing this
+by simulation, written down instead of implied.
+
+### 4. Exactly-known targets, and two defects of mine found before commit
+
+Four checks are against values known in advance rather than ranges:
+
+- **V1** `data_class(byte_for_class(c)) == c` for all six classes — the
+  identity. A steering map that fails it cannot close the bin it names.
+- **V2** the pd-cross literals match the axis they steer: `0x07` odd
+  popcount, `0x33` even, because the branch selects on `k`'s low bit and that
+  bit **is** the popcount-parity axis.
+- **V4** the probability must be `127^95 / 2^665` and nothing else, since
+  `254/256` reduces. Checked as integers.
+- **V3** the `Fraction` against the floating-point power: `≤ 4 ulp`
+  predicted, **0 ulp** measured.
+
+**Two defects in my own file, both found before commit.** (i) The branch
+analysis was first a **line-number heuristic** carrying a "last assignment
+wins" state, with a docstring claiming it *asserted* the shape it relied on.
+It did not. Replaced by a structural walk of the method's blocks, plus
+**S2a**, which actually asserts the shape — one return per top-level `for`,
+plus a tail, no return elsewhere — and fails if a future rewrite breaks it.
+(ii) The AST lift carried `isinstance(getattr(node, 'parent_is_module',
+True), bool)`, which is always `True`: a guard that guards nothing while
+reading as one. Deleted.
+
+The tail-path check also gained planted control **C1** (inject
+`steer_byte = 0x5A` into the `cp_txq` branch, require the verdict to flip),
+because without it "the last branch is random" passes for a method with no
+branches at all.
+
+**Fifth consecutive session in which a check written today caught something
+written today** — and this time both catches were in the audit itself rather
+than in the thing audited.
+
+### 5. The mutant that matters is the one aimed at the method
+
+**M1** puts `0x40` into `byte_for_class`: the map-level verdict flips, so §1's
+check is not vacuous.
+
+**M2** runs **the item's own proposed method** — enumerate `byte_for_class`,
+nothing else — against two benches: the real one, and a control with the
+driver's randomising fallback **deleted**. Under the control the strong claim
+really is true. The method returns **UNREACHABLE for both**. The two benches
+differ on precisely the question being asked, and the method cannot tell them
+apart. That is the proof that it measures the map and not the policy, and it
+is why this item is closed with a **correction to its method** rather than
+with its answer. Identical shape to 11-02's 55/55 against broken RTL and
+11-03's M1 with its unchanged vplan column: a suite that scores a mutant
+clean because it was asking a narrower question than it thought.
+
+### 6. The staleness audit had drifted from the list
+
+Building the long-carried **COMMITTED CHECK FOR EXTERNALLY-SOURCED LIST
+CLAIMS** exposed why it was needed. `open_item_headings` matched one heading
+shape:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`**Not yet covered … (candidates for future runs):**`
+
+Every entry up to 10-28 uses it. **From 10-29 the log heads its standing list
+`**Open items, with blockers named:**`**, so the 10-29, 10-30, 11-02 and
+11-03 lists matched **nothing**, `standing_list` fell back to the newest
+heading it still recognised — the **2026-10-28** one, four entries and 57 kB
+upstream — and this audit has reported a clean **36 / 0** against a list that
+stopped being the standing list five sessions ago.
+
+**The tool whose job is to notice that the list has drifted from the tree had
+drifted from the list.** It is the 10-28 fault arriving from the other side:
+that session found the audit locked onto a five-item *addendum supplement*
+because it took the last matching heading, and the remedy — require one
+literal phrase — made the audit's scope depend on an editorial habit nobody
+had agreed to keep. Same disease as the sibling graphene repository's finding
+today, an instrument reading the wrong copy of what it audits and staying
+green throughout; **both repositories hit it on the same day from different
+directions**, which is the second time that has happened in three sessions.
+
+### 7. What the repair exposes, committed red on purpose
+
+**38 passed, 3 failed, exit 1**, per the 10-17/10-18 precedent for
+registering a row while it is red so the repair has a BEFORE state.
+
+**(i) The retired vplan item is back, exactly as 10-29 predicted.** That
+entry found "A vplan v2 revision" carried as open although the work landed
+**2026-09-19** — plan Sections 1.1 and 2.4 specify `STATUS[6:4]` as
+sticky/read-to-clear, and v14 (iii) gave that wording an executable form as
+protocol-checker rule S1. It named the mechanism — *"the item's authority is
+**outside** this repository, so correcting it here does not stop it being
+re-imported"* — and proposed a committed check. **The remedy was logged as an
+item and not built.** The 11-03 list carries *"A vplan v2 REVISION FOR THE
+STICKY STATUS BITS — carried, untouched"*. The prediction came true in four
+sessions and nothing in the tree could see it. **It is absent from this
+entry's list, which is what turns the new row green.**
+
+**(ii) Orphaned OPEN adjudication entries — 19 against the 11-03 list, and
+4 against this one.** Not caused by the repair: four sessions of list churn
+that were invisible while the audit read the 10-28 list. S4's reporting-cut
+check fails too.
+
+**The drop from 19 to 4 was not a repair and must not be read as one.**
+Writing this entry's list restored the carried wording of fifteen items, so
+fifteen adjudication entries found their items again *as a side effect of
+re-wording a list* — which is precisely the standing **ALIGN THE
+ADJUDICATION HEADINGS WITH THE LIST WORDING** item, observed from the
+opposite side: if a bullet's phrasing can orphan an entry, it can also
+un-orphan one, and neither event means anything about the work. The number
+that matters is therefore **4 real orphans**, and the lesson is that this
+count is unstable under editing until the heading/bullet equality is
+mechanised.
+
+**Three things added, and the least interesting is the repair.**
+`FULL_LIST_HEADINGS` is a tuple of accepted spellings instead of one literal
+— it fixes today's two and nothing stops a third. **S0** is the check that
+should have existed instead: it asserts the matched FULL heading sits inside
+the **last** `## ` session entry (offset 747942 > 739569), so it is about
+**position, not wording**, and the next rename fails this audit loudly rather
+than silently narrowing it. No check in the file could previously have said
+*"the list I am auditing is four entries old"*. And `RETIRED_WORDINGS` gains
+the vplan row matched **case-insensitively**, which is not tidiness: the item
+was retired spelled lower case and re-imported spelled upper, so a
+case-sensitive needle would have been evaded by exactly the drift that
+carried it back. Control **R2** plants each phrase in the opposite case and
+requires red — it **fails** against the matcher this file carried until today.
+**R1** is the verbatim-planting control, without which "the phrase stays
+gone" passes for a matcher that can never match anything.
+
+### 8. Environment and automation health
+
+`/sessions` **100 % full** (9.3 G of 9.8 G) for the **ninth** consecutive
+session, and this time `git clone` failed at **0 bytes** free. `du` over
+`/sessions` accounts for only 29 M of the 9.3 G, the rest being sibling
+session directories this uid cannot read: **not cleanable from inside a
+session**, so future runs should stop spending minutes on it. Clone to `/tmp`
+on `/dev/sda1` (3.6 G free).
+
+**`/tmp` did NOT survive this time.** 11-03 recorded the whole toolchain
+intact from 11-02 — `/tmp/cocotb_venv`, `/tmp/iverilog_install`,
+`/tmp/cocotb_wheels` — and called it the strongest argument yet for the
+wheelhouse design. All three were **absent** today. So `/tmp` persistence is
+**per-VM and not dependable**, and 11-03's conclusion is softened rather than
+withdrawn: the wheelhouse is still right, but a session must not plan on
+finding it. This is the direct reason the evidence-mode item was not
+attempted — it needs cocotb, and today's work needed none.
+
+11-03's uid-qualified-scratch gotcha was applied preemptively and held
+(`/tmp/pylibs_$(id -u)`, `MPLCONFIGDIR=/tmp/mplcache_$(id -u)`,
+`TMPDIR=/tmp/piptmp_$(id -u)`). Both repositories' work today ran on plain
+`python3` with no simulator, which is why a dead toolchain cost nothing.
+
+**Open items, with blockers named:**
+
+- **THE 4 ORPHANED OPEN ADJUDICATION ENTRIES, AND S4's RED REPORTING CUT** —
+  created today, **ranked first**, blocked on nothing but time.
+  `tools/open_item_adjudication.md` has **4** OPEN entries whose items are no
+  longer on the standing list, and the reporting-cut check fails because this
+  entry's top items (the orphan item itself, and the TX-side F7 statement)
+  have no adjudication entries at all. Both are four sessions of churn that
+  were invisible while §6's bug stood.
+  **The count moved 19 → 4 while this entry was being written**, purely from
+  restoring carried wording — see §7 (ii). So the count is **not a progress
+  metric** until the heading/bullet equality is mechanised, and mechanising it
+  is the real item: **a check that each OPEN entry's heading appears verbatim
+  as the head of some bullet.** That is the standing **ALIGN THE ADJUDICATION
+  HEADINGS WITH THE LIST WORDING** item, which today makes mechanisable and
+  which this orphan count is now the strongest argument for. Do that check
+  first and adjudicate second, or the next session will measure its own
+  editing again.
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02 and 11-03, where it
+  was ranked first; still a **specification decision, not a coding task**, and
+  still the last thing between capstone remainder (c) and a sign-off
+  statement. Today sharpens it a third time: §§1–2 show "the steered policy"
+  is not one stimulus distribution but a **mixture**, mostly uniform in the
+  payload and deliberately degenerate on `0x00`. A rule indexed by policy must
+  therefore say **which part** of the policy it means, which the 11-03 wording
+  does not.
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — carried from 11-03.
+  `PAC_MODE=evidence` is exercised only by P5's synthetic probe. Still one
+  invocation, and now blocked on a **toolchain install** rather than nothing,
+  because `/tmp` did not survive (§8). The check worth running is not that it
+  aborts but that it aborts **at the push the census predicts**.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii). The
+  start-bit truncation bound is measured and the plan still says nothing about
+  it.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02, three arguments and no action. The two coverage models are joined by
+  a measurement and still not by a shared name.
+- **THE ODD START-BIT PHASES** — carried from 10-29, and 11-03 §4 gave it a
+  sibling of the same shape (unobserved vs shown absent). Today **supplies the
+  form of words** those two were waiting for: §3's "priced rather than
+  disputed" is the general remedy — compute what the null predicts for the
+  sample size actually run, and say whether the observation discriminates.
+  Both items should be rewritten that way rather than re-argued.
+- **THE BORDERLINE PAIR UNDER STEERING** is **closed** (§§1–5) and removed.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions. Icarus 10.3 is not one.
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT** — capstone
+  remainder (b), carried, unblocked since 10-27 when a toolchain existed, and
+  now blocked again on the install (§8). Still the largest remaining block of
+  actual verification content.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds **one**
+  (`steering_byte_reachability_audit_output.txt`), deliberately captured by
+  **redirection** rather than written by the module so the sibling
+  repository's pristine-transcript route can compare it without a
+  `SELF_WRITING` exclusion. That choice is a direct borrowing of the sibling's
+  11-04 finding, and it is the first transcript in this repository added with
+  that constraint in mind.
+- **MUTATION-TEST THE RUNNERS' SCORING LOGIC, NOT ONLY THEIR ARMS** — carried,
+  and §6 is a **third** argument from a third direction: this audit's
+  *scope-selection* logic, not its scoring, was the untested path, and it was
+  untested in a way no arm could have exposed.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25, and today adds a row and a case-insensitivity repair to it.
+- **CLASSIFY EVERY `cmp -s` AS VERDICT-BEARING OR CONTROL-BEARING** — carried,
+  needs no toolchain.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, eleven-plus
+  sessions, named cause of three measured staleness incidents.
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried; a full re-run exceeds the 180 s call cap and needs splitting, and
+  now also needs the toolchain reinstalled.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; still the cheapest
+  item that adds verification *reach* rather than auditing existing reach.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried, and §1
+  bears on it directly: `0x40` is borderline and **not** in the steering map's
+  image, so a coverage-driven policy cannot close that cross on purpose — only
+  by the random fallback. Worth re-reading with §§1–2 in hand.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  nineteen sessions old.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and **today was an accidental instance of it**: the
+  toolchain was gone and both pieces of work ran anyway, which is evidence for
+  the pure-python split rather than for the item.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08); **DERIVE C1's AND C3's DETAIL STRINGS** (10-10); **A
+  diversity TARGET**; per-property coverage of the Phase 4 UVM environment
+  (09-23); a less greedy steering policy (09-24) — which §§1–2 now give a
+  concrete design question; widen the coverage model (09-24); two transmitters
+  at once (09-25); `abc pdr` as a second engine (09-23); mutants not yet
+  attempted (interrupt enable combinations, reset asserted mid-frame); a
+  property needing a strengthening invariant; the SVA sequence layer (09-20);
+  code coverage measurement (Icarus has none, 09-18); Phase 6 lint, regression
+  infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 before this entry (the reachability audit with its
+transcript and Makefile; the staleness-audit repair with its red transcript;
+`progress.md`), and this `AUTOMATION_LOG.md` entry makes **4**. This session
+also wrote the sibling graphene repository's missing 11-04 entry, which an
+earlier firing had left unwritten after three code commits.

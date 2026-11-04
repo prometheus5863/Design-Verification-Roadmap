@@ -3510,12 +3510,17 @@ the work turned out to be auditing the wrong list.
   each phrase in the opposite case and requires red; it fails against the
   matcher this file carried until today.
 
-- [ ] **NOW RANKED FIRST: 19 orphaned OPEN adjudication entries, and S4's
+- [ ] **NOW RANKED FIRST: 4 orphaned OPEN adjudication entries, and S4's
   reporting-cut check is red.** Not caused by today's repair — four sessions
   of list churn that were invisible while the audit read the 10-28 list.
-  `tools/open_item_adjudication.md` needs the catch-up, it is a session's
-  work, and it is left whole rather than started and abandoned. The count is
-  recorded so the next run can tell progress from drift.
+  **The count was 19 against the 11-03 list and fell to 4 purely from writing
+  today's list in the carried wording** — fifteen entries found their items
+  again as a side effect of phrasing, which is the standing ALIGN THE
+  ADJUDICATION HEADINGS WITH THE LIST WORDING item seen from the other side.
+  So this count is **not a progress metric** until that equality is
+  mechanised, and mechanising it — a check that each OPEN entry's heading
+  appears verbatim as the head of some bullet — is the item to do first.
+  Adjudicating 4 entries before that would be measuring one's own editing.
 
 - [ ] **Still open, unchanged: WHICH RULE AND WHICH POLICY.** The 11-02
   specification question, with 11-03's second axis. Today sharpens it a third
