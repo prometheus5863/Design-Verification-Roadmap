@@ -1,0 +1,117 @@
+============================================================================
+STEERING BYTE REACHABILITY AUDIT -- 2026-11-04
+Can the coverage-steered policy emit a BORDERLINE payload?
+============================================================================
+
+============================================================================
+SECTION 1 -- the steering map's image, lifted not re-typed
+============================================================================
+  assignments to `steer_byte` found      : 4
+  literal bytes assigned directly        : ['0x07', '0x33']
+  `byte_for_class(...)` used             : True
+  range of `byte_for_class`              : ['0x00', '0x07', '0x08', '0x33', '0xAA', '0xFF']
+  IMAGE (every byte steering can NAME)   : ['0x00', '0x07', '0x08', '0x33', '0xAA', '0xFF']
+  BORDERLINE set, derived from the model : ['0x40', '0xC0']
+  [PASS] no opaque `steer_byte` assignment: every one is a literal, a byte_for_class call, or None
+         4 assignments, all classified
+  [PASS] V1 the steering map lands in the bin it names: data_class(byte_for_class(c)) == c for all 6 classes
+         EXACTLY KNOWN IN ADVANCE -- the identity, not a range.  got [0, 1, 2, 3, 4, 5]
+  [PASS] V2 the pd-cross literals match the axis they steer: 0x07 odd popcount, 0x33 even
+         EXACTLY KNOWN -- popcount(0x07)=3, popcount(0x33)=4
+  [PASS] the item's own question: `byte_for_class` (and every other literal in the map) cannot emit a borderline byte
+         image n BORDERLINE = [] -- CONFIRMED, and over the whole image rather than just byte_for_class's range
+
+============================================================================
+SECTION 2 -- the half the item's method omits: five of seven branches never assign the byte at all
+============================================================================
+    for@310       steers the byte
+    for@317       byte left RANDOM
+    for@322       steers the byte
+    for@329       byte left RANDOM
+    for@335       byte left RANDOM
+    for@341       byte left RANDOM
+    tail@353      byte left RANDOM
+  return paths in `_steered_item`                  : 7
+  ... that assign `steer_byte`                     : 2
+  ... that return with `steer_byte` still None     : 5
+  [PASS] S2a the method has the block shape this analysis requires: one return per top-level `for`, plus a tail, and no return anywhere else
+         ASSERTED, not assumed -- the first draft of this check was a line-number heuristic whose docstring claimed otherwise.  7 paths, all accounted for
+  [PASS] the method has more than one return path, so a single-path analysis of it would be unsound
+         7 paths
+  [PASS] at least one return path leaves `steer_byte` None
+         5 of 7 paths.  Each is a path on which the steering map does NOT choose the payload.
+  [PASS] the DRIVER draws the payload uniformly when `steer_byte` is None
+         found in the live source: the conditional selects `rng.getrandbits(8)`
+
+============================================================================
+SECTION 3 -- two verdicts, and they disagree -- which is the finding
+============================================================================
+  borderline, under the MAP alone (the item's question)   : UNREACHABLE
+  borderline, under the POLICY as wired (the real one)    : REACHABLE
+
+  Both are true statements about different objects.  The item
+  asked for the first and would have been closed by it; the
+  second is the one a reader of 11-03 Section 4 wants, and it is
+  the opposite answer.
+  [PASS] the strong form of the 11-03 item is REFUTED: the map cannot name a borderline byte, but the policy can drive one
+         map UNREACHABLE / policy REACHABLE
+  [PASS] the LAST return path -- the cp_txq full-bin fallback, reached only when every other coverpoint is closed -- is a random-byte path
+         tail@353 leaves the byte random, so the tail of a steered run drives uniformly random payloads at burst_len = 8 by construction.  Not an incidental exposure: the hardest bin's branch is the one that does not steer the byte.
+  [PASS] C1 the tail-path check has detection power: a planted `steer_byte` in the fallback branch flips it
+         planted 0x5A in the cp_txq branch and the analysis reports the tail as steering
+
+============================================================================
+SECTION 4 -- pricing `zero of 95`, against a value known to be rational
+============================================================================
+  P(one uniform byte is not borderline)   = 127/128
+  P(none of 95 is borderline), EXACT      = 72669720665528804470077270835267575725300236489243371219347491140835100086046958936602455998269751398700157684665938194606311256707169338604209323013581789398255925475010586430773275586087208431644543/153090103458041951154620325043801237641319743206933311288544235956760011447392195175450369025277569052617268428910122535686807015741471080782585043071649294869136754165183653769539196448293593632735232
+  ... as a float                          = 0.474686
+  ... computed in floating point directly = 0.474686
+  observed under steering                 = 0 of 95
+  observed under random                   = 17 of 1884 (0.902 %)
+  [PASS] V4 the exact denominator is 2^665, known in advance from (127/128)^95
+         EXACTLY KNOWN -- 254/256 reduces to 127/128, so the rational must be 127^95 / 2^665 and nothing else.  denominator is a power of two: True; numerator == 127^95: True
+  [PASS] V3 the exact rational and the floating-point power agree to within 4 ulp
+         EXACTLY KNOWN TARGET -- (254/256)^95 is rational, so the Fraction is the answer and the float is the thing under test.  diff = 0.000e+00, 1 ulp = 1.054e-16
+  [PASS] `zero of 95` does not discriminate: even under MAXIMAL exposure the probability of seeing zero exceeds 1/4
+         0.4747.  So the 11-03 observation is consistent with every exposure level from none to total, and was never evidence about the map.  11-03's `unobserved rather than shown absent` was right; what is new is that the map cannot settle it either.
+  [PASS] the measurement that WOULD settle it is named with a number
+         382 fully-exposed steered payloads bring P(zero) below 0.05, against the 95 run on 11-03 -- a 4.0x longer steered run, which is the actual cost of closing this item by simulation.
+
+============================================================================
+SECTION 5 -- mutation: one mutant for the verdict, one for the METHOD
+============================================================================
+  [PASS] M1 the mutant source differs from the original
+         0x08 -> 0x40 in byte_for_class
+  [PASS] M1 a steering map that CAN name a borderline byte flips the map-level verdict
+         mutant image n BORDERLINE = ['0x40'].  The S1 check has detection power; it is not vacuously true.
+  [PASS] M2 the control is a real control: the fallback line was actually removed
+         the driver's conditional is gone in the control source
+    item's method, real bench                 : UNREACHABLE
+    item's method, randomising fallback REMOVED: UNREACHABLE
+  [PASS] M2 the item's proposed method cannot distinguish a bench that DOES drive random bytes from one that cannot
+         both UNREACHABLE.  The two benches differ on the question being asked and the method returns one answer for both, so it does not measure reachability under the policy -- only under the map.  This is why the item is being closed with a CORRECTION to its method rather than with its answer.
+
+============================================================================
+  PASS  no opaque `steer_byte` assignment: every one is a literal, a byte_for_class call, or None
+  PASS  V1 the steering map lands in the bin it names: data_class(byte_for_class(c)) == c for all 6 classes
+  PASS  V2 the pd-cross literals match the axis they steer: 0x07 odd popcount, 0x33 even
+  PASS  the item's own question: `byte_for_class` (and every other literal in the map) cannot emit a borderline byte
+  PASS  S2a the method has the block shape this analysis requires: one return per top-level `for`, plus a tail, and no return anywhere else
+  PASS  the method has more than one return path, so a single-path analysis of it would be unsound
+  PASS  at least one return path leaves `steer_byte` None
+  PASS  the DRIVER draws the payload uniformly when `steer_byte` is None
+  PASS  the strong form of the 11-03 item is REFUTED: the map cannot name a borderline byte, but the policy can drive one
+  PASS  the LAST return path -- the cp_txq full-bin fallback, reached only when every other coverpoint is closed -- is a random-byte path
+  PASS  C1 the tail-path check has detection power: a planted `steer_byte` in the fallback branch flips it
+  PASS  V4 the exact denominator is 2^665, known in advance from (127/128)^95
+  PASS  V3 the exact rational and the floating-point power agree to within 4 ulp
+  PASS  `zero of 95` does not discriminate: even under MAXIMAL exposure the probability of seeing zero exceeds 1/4
+  PASS  the measurement that WOULD settle it is named with a number
+  PASS  M1 the mutant source differs from the original
+  PASS  M1 a steering map that CAN name a borderline byte flips the map-level verdict
+  PASS  M2 the control is a real control: the fallback line was actually removed
+  PASS  M2 the item's proposed method cannot distinguish a bench that DOES drive random bytes from one that cannot
+
+TOTAL: 19 passed, 0 failed
+============================================================================
