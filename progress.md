@@ -3447,3 +3447,84 @@ committed with transcripts.
   payloads. More steered seeds would separate "the map never names them" from
   "we did not look long enough", and the first is a claim about the map that
   can be checked without the simulator at all.
+
+---
+
+### 2026-11-04 — the borderline pair is REACHABLE, and the staleness audit had been reading a list four sessions old
+
+**Checklist movement.** No Phase 4 or Phase 6 content box closes. Capstone
+remainder **(b)** (SVA protocol checkers bound into the UVM environment) is
+untouched. Today's two pieces of work both land on the *instrument* side:
+one open item is closed by refuting its own method, and the tool that chooses
+the work turned out to be auditing the wrong list.
+
+- [x] **CLOSED, the other way round: the borderline pair under steering.**
+  `examples/phase6_steering_byte_reachability/`, 19 checks, 19 passing, no
+  simulator and no toolchain. The item asked for an enumeration of
+  `byte_for_class`, and that enumeration CONFIRMS what it predicted: the
+  image of everything `_steered_item` can assign to `steer_byte` is
+  `{0x00, 0x07, 0x08, 0x33, 0xAA, 0xFF}`, disjoint from the derived
+  BORDERLINE set `{0x40, 0xC0}`. **That is not the answer to the question.**
+  `_steered_item` has **seven** return paths and only **two** assign
+  `steer_byte` at all; the other five return `None` and the driver then draws
+  the payload uniformly over 256 values. So the borderline pair is
+  **REACHABLE** under the steered policy. The map-level verdict and the
+  policy-level verdict are opposite, and the item asked for the one that does
+  not matter.
+
+  The structural point is sharper than the statistics: the five random-byte
+  branches include the **last** one — the `cp_txq` full-bin fallback, reached
+  only once every other coverpoint is closed, and the branch that forces
+  `burst_len = 8`. The hardest bin's branch is the one that does not steer
+  the byte, so the tail of a steered run is eight uniformly random bytes per
+  item **by construction**.
+
+- [x] **And `zero of 95` never carried information.** Priced rather than
+  argued: under *maximal* exposure, P(no borderline byte) = (254/256)^95 =
+  **0.4747**. A coin flip. The observation is consistent with total exposure
+  and with none, so 11-03's "unobserved rather than shown absent" was right
+  and the map cannot settle it either. **382** fully-exposed steered payloads
+  would bring P(zero) below 0.05 — a 4.0x longer steered run, which is the
+  actual price of closing this by simulation and is now written down instead
+  of being implied.
+
+- [x] **The committed check for externally-sourced list claims EXISTS**, which
+  closes the item carried since 10-29 — and building it exposed why it was
+  needed. `tools/open_item_staleness_audit.py` matched one heading spelling,
+  `**Not yet covered ... (candidates for future runs):**`. From 10-29 the log
+  heads its standing list `**Open items, with blockers named:**`, so the
+  10-29, 10-30, 11-02 and 11-03 lists matched nothing and the audit fell back
+  to the **2026-10-28** list — four entries upstream — while reporting a
+  clean 36/0 against it. **The tool whose job is to notice the list has
+  drifted from the tree had drifted from the list.** Repaired, and the repair
+  is committed RED (38 passed, 3 failed) so it has a BEFORE state.
+
+- [x] **The 10-29 prediction came true and is now caught by a row.** 10-29
+  retired "A vplan v2 revision" as already done (plan Sections 1.1 and 2.4,
+  committed 2026-09-19; executable as checker rule S1 since v14 (iii)) and
+  said the item would be re-imported because "the item's authority is OUTSIDE
+  this repository". The 11-03 list carries it again. `RETIRED_WORDINGS` now
+  holds that row, matched **case-insensitively** — the item was retired in
+  lower case and re-imported in upper, so a case-sensitive needle would have
+  been evaded by exactly the drift that carried it back. Control **R2** plants
+  each phrase in the opposite case and requires red; it fails against the
+  matcher this file carried until today.
+
+- [ ] **NOW RANKED FIRST: 19 orphaned OPEN adjudication entries, and S4's
+  reporting-cut check is red.** Not caused by today's repair — four sessions
+  of list churn that were invisible while the audit read the 10-28 list.
+  `tools/open_item_adjudication.md` needs the catch-up, it is a session's
+  work, and it is left whole rather than started and abandoned. The count is
+  recorded so the next run can tell progress from drift.
+
+- [ ] **Still open, unchanged: WHICH RULE AND WHICH POLICY.** The 11-02
+  specification question, with 11-03's second axis. Today sharpens it a third
+  time: "the steered policy" is not one stimulus distribution but a mixture,
+  mostly uniform in the payload, so a rule indexed by policy has to say which
+  part of the policy it means.
+
+- [ ] **Still open — the evidence-mode raise has never fired in anger.**
+  `PAC_MODE=evidence` is exercised only by P5's synthetic probe. One
+  invocation, blocked on nothing but a toolchain install; `/tmp` did **not**
+  survive into this session, so the cocotb venv was absent and this was not
+  attempted today.
