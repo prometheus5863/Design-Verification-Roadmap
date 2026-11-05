@@ -3533,3 +3533,77 @@ the work turned out to be auditing the wrong list.
   invocation, blocked on nothing but a toolchain install; `/tmp` did **not**
   survive into this session, so the cocotb venv was absent and this was not
   attempted today.
+
+### 2026-11-05 — the heading check, and S4's coverage test was satisfied by the wrong item
+
+- [x] **`S4b` — heading/bullet equality, mechanised.** The item 11-04 ranked
+  first and specified exactly: "a check that each OPEN entry's heading appears
+  verbatim as the head of some bullet", to be done **before** adjudicating, "or
+  the next session will measure its own editing again". `bullet_head()` takes a
+  bullet's bolded lead; `norm_head()` folds whitespace, case, backticks,
+  asterisks, dash forms and one trailing punctuation mark **and nothing else**;
+  each OPEN entry is `ALIGNED` / `MISALIGNED` / `ORPHAN`. Six planted controls,
+  none reading the live list — which is the property the orphan count lacked.
+  `C4b.6` requires that dropping a term from a heading **changes** the key, or
+  the comparison is just a slower token match; `C4b.4` requires a `STALE` entry
+  to be classified but **never** counted a fault, so the audit trail is not
+  pressure to delete evidence.
+
+- [x] **The real finding: `S4`'s coverage check was satisfied by the WRONG
+  item.** `ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING` has no bullet
+  of its own — 11-04 folded it into another bullet's prose — and `S4`'s 0.75
+  token matcher bound it to `THE 4 ORPHANED OPEN ADJUDICATION ENTRIES, AND S4's
+  RED REPORTING CUT`, a different item. That spurious match is the only reason
+  it was not already an orphan. A count satisfiable by the wrong member is the
+  `R4`/`R5` shape of 10-17, found inside the tool that measures it. The other
+  two misalignments were ordinary drift: a dropped trailing clause, and a
+  dropped `DUT-SIGNAL` that was the only word saying which census.
+
+- [x] **The four orphans were two different phenomena, and only the tree could
+  tell them apart.** `PayloadAdmissibilityCoverage` lost its bullet because the
+  work was **finished** (`uart_uvm_payload_bind_tb.py`, a third subscriber on
+  `agent.mon.ap`; `[x] The LIVE half of (c)` here) while its entry went on
+  asserting the work was outstanding — now `STALE`, `REPLACED-BY:` that file.
+  The other three lost their bullets **by accident** and are restored to the
+  list; the five-suites item for the **second** time.
+
+- [x] **A bullet that announced its own closure outranked everything real.**
+  11-04 wrote that `THE BORDERLINE PAIR UNDER STEERING` "is **closed** (§§1–5)
+  and removed" and did not remove it. A closed-looking bullet is nearly
+  invisible to a human scanning for work and **maximally visible to a ranker**
+  that scores on heading and age, so it sat at the top of the cut, unadjudicated,
+  for four sessions. `STALE`, `NO-SUCCESSOR:`, removed.
+
+- [x] **All of `S4`'s reporting cut adjudicated, with blockers stated.** The
+  SVA form of the fifteen rules (blocked — Icarus 10.3 has no concurrent
+  assertions, and for a tool-blocked item "no progress for N sessions" carries
+  no information while an age-scoring ranker keeps promoting it); a TX-side F7
+  timing statement (unblocked, a paragraph of plan text, listed under "blockers
+  named" on 11-04 with none named); a check that a dated report was written by
+  the runner it is named for (unblocked, stuck on what counts as evidence of
+  authorship); and `EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT`, which
+  rose into the cut **during the session** when the list changed — the pinning
+  this file documents, observed live.
+
+- [x] **The successor row's failure text now names the entries.** It went red
+  today on four entries that each carried a successor and spelled it
+  `REPLACED-BY` without the colon the check requires, and said only that some
+  `STALE` verdict somewhere was unsuccessored. Same repair as the orphan row got
+  on 10-28, same reason.
+
+- **`tools/open_item_staleness_audit.py`: 48 passed, 0 failed, exit 0**, from
+  39/2 at the start of the session; 21 `ALIGNED`, **0 `MISALIGNED`, 0
+  `ORPHAN`**. No toolchain was installed — everything today is pure python over
+  two markdown files — so every item blocked on Icarus or cocotb stays blocked,
+  deliberately and not by a failed install.
+
+- [ ] **NOW RANKED FIRST: why do bullets leave the list unobserved?** The
+  successor, and a different question from the item it replaces. `S4b` makes
+  misalignment measurable and does nothing about the prior fault: four bullets
+  left the list since 10-28 with no artefact recording that they had, one of
+  them twice, while one that announced its own closure stayed. The check is
+  cheap and the shape is known — diff the newest list's bullet-head set against
+  the previous entry's and require every departure to be matched either by a
+  `STALE` adjudication entry or by an explicit removal note in the entry that
+  dropped it. That makes completion-versus-loss **decidable from the
+  documents**, which today could only do by reading the tree.
