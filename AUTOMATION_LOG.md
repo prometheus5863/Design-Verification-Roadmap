@@ -12912,3 +12912,279 @@ transcript and Makefile; the staleness-audit repair with its red transcript;
 `progress.md`), and this `AUTOMATION_LOG.md` entry makes **4**. This session
 also wrote the sibling graphene repository's missing 11-04 entry, which an
 earlier firing had left unwritten after three code commits.
+
+---
+
+## 2026-11-05 — the heading check the last entry ranked first, and it found the coverage test being satisfied by the wrong item
+
+One piece of work, done in the order the 2026-11-04 entry specified, and the
+order turned out to matter: the check found three things the count it replaces
+could not have, and one of them is a fault in `S4` itself rather than in the
+documents `S4` reads.
+
+### 1. Why the orphan count was not a number
+
+11-04 ranked first, and said why in its own text: the orphan count **"moved
+19 → 4 while this entry was being written, purely from restoring carried
+wording"**, so it **"is not a progress metric until the heading/bullet equality
+is mechanised, and mechanising it is the real item: a check that each OPEN
+entry's heading appears verbatim as the head of some bullet."** Then the
+instruction: *"Do that check first and adjudicate second, or the next session
+will measure its own editing again."*
+
+The diagnosis was right and the mechanism is worth naming precisely. `S4`
+matches an adjudication entry to a list item by **0.75 token containment**.
+That is the correct matcher for `S4`'s own question — *is this item adjudicated
+at all* — because it has to survive a bullet being rewritten around its
+subject. It is the wrong instrument for asking whether the two artefacts
+**agree**, because it cannot distinguish
+
+- an entry whose heading **is** a bullet's head, from
+- an entry that merely shares three quarters of its nouns with a bullet's
+  **gloss** — and the gloss is where the session counts and the arguments live,
+  i.e. the part that gets rewritten every day.
+
+Those two are identical to `S4` and behave oppositely under editing. The first
+is stable; the second moves in and out of the orphan set on a rewording. That
+is the whole of 19 → 4.
+
+### 2. `S4b`, and an exact comparison
+
+`bullet_head()` takes the bolded lead of a bullet — the list's convention is
+`- **HEAD** — gloss`, and only the head names the item. `norm_head()` folds
+whitespace, case, backticks, asterisks, the three dash forms and one trailing
+punctuation mark, **and nothing else**: folding anything with meaning in it
+would reproduce the weakness being measured. Each OPEN entry is then `ALIGNED`,
+`MISALIGNED` (token-reachable, equal to no bullet head) or `ORPHAN`. The failing
+condition is `MISALIGNED`. `ORPHAN` is deliberately **not** re-reported — `S4`
+owns that verdict, and two checks failing on one fact is one finding counted
+twice.
+
+Six planted controls, every answer known before the run and **none of them
+reading the live list** — which is exactly the property the orphan count
+lacked:
+
+| id | planted claim | verdict |
+|----|----|----|
+| `C4b.1` | a heading quoting a bullet head verbatim → `ALIGNED` | PASS |
+| `C4b.2` | token-reachable but equal to no head → `MISALIGNED`, not `ALIGNED` and not `ORPHAN` | PASS |
+| `C4b.3` | no bullet at all → `ORPHAN` | PASS |
+| `C4b.4` | a `STALE` entry is classified but **never** counted a fault | PASS |
+| `C4b.5` | `norm_head` folds typography and whitespace only | PASS |
+| `C4b.6` | and **not** meaning — dropping a term must change the key | PASS |
+
+`C4b.6` is the one that keeps `S4b` honest: a comparison loose enough to accept
+*"A CHECK THAT CATCHES M1 AND M4"* for *"…M1, M4 AND M5"* would be the token
+matcher again with extra steps. `C4b.4` is the one that keeps the audit trail
+safe: requiring a `STALE` entry's heading to match a live bullet would require
+the list to carry items it has retired, which would make the check pressure to
+**delete** evidence.
+
+### 3. Three `MISALIGNED`, and the third is a fault in `S4`
+
+Live result: **12 ALIGNED, 3 MISALIGNED, 4 ORPHAN.**
+
+Two were ordinary wording drift — the entry heading carried `, and 0x40 is
+BORDERLINE` where the bullet head stops at `` `0x40` ``; another had dropped
+`DUT-SIGNAL`, which was the only word saying **which** census.
+
+The third is the finding. **`ALIGN THE ADJUDICATION HEADINGS WITH THE LIST
+WORDING` has no bullet of its own** — 11-04 folded that item into the *text* of
+another bullet, which the 10-26 entry had already identified as a failure mode
+("live, but compressed into a prose tail sentence, which hides an item from the
+ranker entirely"). The 0.75 matcher bound it to **`THE 4 ORPHANED OPEN
+ADJUDICATION ENTRIES, AND S4's RED REPORTING CUT`** — a *different item*. So:
+
+> **`S4`'s coverage check was being satisfied by the wrong member, and that
+> spurious match is the only reason the entry was not already in the orphan
+> set.**
+
+A count satisfiable by the wrong member is the `R4`/`R5` shape this repository
+recorded on 2026-10-17, now found **inside the tool that measures it**. It is
+also a second instance of the sibling repository's 11-05 finding of the same
+day — a detector matched on a phrasing rather than on an assertion — reached
+from the opposite direction: there the matcher was too **tight** and missed a
+revival; here it is too **loose** and manufactured a match.
+
+### 4. The four orphans are two different phenomena
+
+Adjudicated second, as instructed, and the four do not belong together:
+
+- **`PayloadAdmissibilityCoverage` → `STALE`, `REPLACED-BY`
+  `examples/phase6_payload_admissibility_bind/uart_uvm_payload_bind_tb.py`.**
+  That file calls itself "the LIVE half" and makes the model a third subscriber
+  on `agent.mon.ap` beside the scoreboard and `UartCoverage`; `progress.md`
+  carries **`[x] The LIVE half of (c)`**. Its bullet left the list because the
+  work was **finished** and the removal was correct — while the entry went on
+  asserting the work was outstanding.
+- **The three-valued axis, the five suites without a report, and the M7 sed
+  census** lost their bullets **by accident**, and are restored below. The five
+  suites had been lost and restored once before (10-26).
+
+So `orphan` was conflating **completion** with **loss**, and no reading of
+either document can separate them — the distinction is in the tree. Of four
+orphans, exactly one was of the first kind.
+
+### 5. The four unadjudicated top-ranked items, and one that said it was closed
+
+`S4`'s reporting cut was red on four `MISSING` rows; all four are now
+adjudicated. The first is the interesting one:
+
+**`THE BORDERLINE PAIR UNDER STEERING`** — the 11-04 entry closed it in its own
+text ("is **closed** (§§1–5) and removed") and **did not remove the bullet**.
+So it ranked at the top of the cut with no entry. A bullet saying it is closed
+is nearly invisible to a human scanning for work and **maximally visible to the
+ranker**, which reads the heading and the age: the most conspicuous item on the
+list was the one nobody needed to do, and four sessions read the word "closed"
+without deleting the line. `STALE`, `NO-SUCCESSOR`, bullet removed.
+
+The other three are genuinely `OPEN` and are adjudicated with their blockers
+stated: **the SVA form of the fifteen rules** (blocked on a simulator with
+concurrent assertions — Icarus 10.3 is not one, and for a tool-blocked item "no
+progress for N sessions" carries no information while a ranker scoring by age
+keeps promoting it); **a TX-side F7 timing statement** (unblocked, a paragraph
+of plan text, carried seven days, and listed under "blockers named" on 11-04
+with no blocker named); **a check that a dated report was written by the runner
+it is named for** (unblocked, mechanical, and stuck on what counts as evidence
+of authorship when the only artefact is the report).
+
+**45 passed, 3 failed** against 39/2, then **0 `MISALIGNED`** after the
+repairs. The three remaining orphans are restored to the list below, so they
+are queued items rather than lingering entries.
+
+### 6. Environment
+
+No toolchain work and none needed: everything today was pure python over two
+markdown files and one audit, which is the split the 11-04 entry argued for
+after `/tmp` did not survive. Icarus was **not** installed this session, so
+every item blocked on it stays blocked; that is a deliberate scope choice, not
+a failed install.
+
+Two notes from the shared device VM, both costing a call. `/sessions` is **100 %
+full** and `mkdir $HOME/work` failed at 0 bytes free — work was done on
+`/dev/sda1`. And the previous run's `/tmp/gwork` is owned by a uid this session
+is **not**: the VM hands out a fresh uid per run, so a fixed scratch path is not
+reusable across runs and `rm -rf` fails on it file by file. Use
+`/tmp/gwork$(id -u)`.
+
+**Open items, with blockers named:**
+
+- **WHY DO BULLETS LEAVE THE LIST UNOBSERVED** — created today, **ranked
+  first**, and it is the successor §4 and §5 jointly argue for rather than a
+  restatement of the item they closed. `S4b` makes misalignment measurable and
+  does nothing about the prior question: four bullets left the list since
+  10-28 without any artefact recording that they had, one of them (the five
+  suites) for the second time, and one bullet that announced its own closure
+  stayed. **The check is cheap and the shape is known:** diff the bullet-head
+  set of the newest list against the previous entry's and require every
+  departure to be accounted for — matched either by a `STALE` adjudication
+  entry (completed or retired) or by an explicit removal note in the entry
+  that dropped it. That makes the two phenomena §4 separated **decidable from
+  the documents**, which is precisely what today could only do by reading the
+  tree. Blocked on nothing.
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02, 11-03 and 11-04,
+  still a **specification decision, not a coding task**, and still the last
+  thing between capstone remainder (c) and a sign-off statement. 11-04's
+  sharpening stands: "the steered policy" is a **mixture**, mostly uniform in
+  the payload and deliberately degenerate on `0x00`, so a rule indexed by
+  policy must say **which part** of the policy it means.
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — carried from 11-03,
+  blocked on a toolchain install. `PAC_MODE=evidence` is still exercised only
+  by P5's synthetic probe. The check worth running is not that it aborts but
+  that it aborts **at the push the census predicts**.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii), and
+  **now adjudicated** (§5): unblocked, a paragraph of plan text, eight days
+  carried.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions; Icarus 10.3 is not one. **Now adjudicated** (§5) with
+  the blocker on the record, so the next session need not re-derive it.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27, **now adjudicated** (§5). Unblocked and mechanical; what
+  it needs is a decision about what counts as evidence of authorship.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO phase6_crv_uart'S CROSSES** —
+  **restored to the list** (§4), lost since 10-28. Its entry heading was two
+  items in one clause, which is how the pair came to be carried as one and
+  then lost together; the second half is now its own bullet below.
+- **AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — split out from the bullet above, where it had been a tail clause
+  since 10-26. The fault itself is 09-27's and has recurred twice.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — **restored to the
+  list** (§4), and this is the **second** time it has been lost and restored
+  (first on 10-26). That repetition is the sharpest argument for the
+  ranked-first item.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  **restored to the list** (§4), lost since 10-28.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02, now a fourth argument and no action. Two coverage models joined by a
+  measurement and still not by a shared name.
+- **THE ODD START-BIT PHASES** — carried from 10-29. 11-04 supplied the form
+  of words both this and its 11-03 sibling were waiting for: compute what the
+  null predicts for the sample size actually run and say whether the
+  observation discriminates. Both should be **rewritten that way** rather than
+  re-argued.
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT** — capstone
+  remainder (b), blocked on the toolchain install. Still the largest remaining
+  block of actual verification content.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+- **REGISTER THE NEW TRANSCRIPTS** — carried. No transcript was added today;
+  `tools/open_item_staleness_audit_output.txt` was **regenerated**, and it is
+  already captured by redirection rather than written by the module, per
+  11-04's borrowing from the sibling repository.
+- **MUTATION-TEST THE RUNNERS' SCORING LOGIC, NOT ONLY THEIR ARMS** — carried,
+  and §3 is a **fourth** argument from a fourth direction: `S4`'s *matcher*,
+  not its scoring and not its scope selection, was the untested path, and no
+  arm could have exposed a match to the wrong item.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25.
+- **CLASSIFY EVERY `cmp -s` AS VERDICT-BEARING OR CONTROL-BEARING** — carried,
+  needs no toolchain.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, twelve-plus
+  sessions, named cause of three measured staleness incidents.
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried; a full re-run exceeds the 180 s call cap, needs splitting, and
+  needs the toolchain.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong.
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; still the cheapest
+  item that adds verification **reach** rather than auditing existing reach.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried, and its
+  adjudication heading was re-quoted today to equal this head (§3). `0x40` is
+  borderline and **not** in the steering map's image, so a coverage-driven
+  policy cannot close that cross on purpose — only by the random fallback.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried, twenty
+  sessions old.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried, and
+  its adjudication heading was re-quoted today to equal this head (§3).
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today is a **second** accidental instance: no
+  toolchain was installed and the session's whole output is pure python, which
+  is evidence for the split rather than for the item.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11.
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08); **DERIVE C1's AND C3's DETAIL STRINGS** (10-10); **A
+  diversity TARGET**; per-property coverage of the Phase 4 UVM environment
+  (09-23); a less greedy steering policy (09-24); widen the coverage model
+  (09-24); two transmitters at once (09-25); `abc pdr` as a second engine
+  (09-23); mutants not yet attempted (interrupt enable combinations, reset
+  asserted mid-frame); a property needing a strengthening invariant; the SVA
+  sequence layer (09-20); code coverage measurement (Icarus has none, 09-18);
+  Phase 6 lint, regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** `S4b` with its six controls, its deliberately-red
+transcript, the nine adjudication edits, `progress.md`, the regenerated
+transcript, and this `AUTOMATION_LOG.md` entry.
