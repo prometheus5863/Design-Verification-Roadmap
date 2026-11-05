@@ -467,6 +467,101 @@ def s4_adjudication(ranked, cut, all_items=None):
 
 
 # ---------------------------------------------------------------------------
+# S4b -- HEADING/BULLET EQUALITY, MECHANISED 2026-11-05
+#
+# The 2026-11-04 entry ranked this first and said why: the orphan count "moved
+# 19 -> 4 while this entry was being written, purely from restoring carried
+# wording", so the count "is not a progress metric until the heading/bullet
+# equality is mechanised, and mechanising it is the real item: a check that
+# each OPEN entry's heading appears verbatim as the head of some bullet."
+#
+# S4 matches an entry to an item by 0.75 token containment.  That is the right
+# matcher for "is this item adjudicated at all" -- it has to survive a bullet
+# being rewritten around its subject.  It is the wrong instrument for asking
+# whether the two artefacts AGREE, because it cannot distinguish an entry whose
+# heading IS a bullet's head from one that merely shares three quarters of its
+# nouns with the bullet's body.  Those two look identical to S4 and behave
+# completely differently when the list is edited: the first is stable, the
+# second flips in and out of the orphan set on a rewording.  So the orphan
+# count was measuring the session's own editing, exactly as 11-04 said.
+#
+# S4b asks the narrower question with an EXACT comparison.  Each OPEN entry is
+# ALIGNED (its heading equals some bullet's head), MISALIGNED (it token-matches
+# a bullet but equals no bullet's head) or ORPHAN (no bullet at all).  The
+# failing condition is MISALIGNED: an entry that is only reachable through the
+# loose matcher.  ORPHAN is not re-reported here -- S4 owns that verdict and
+# two checks failing on one fact is one finding counted twice.
+
+
+def bullet_head(bullet):
+    """The head of a standing-list bullet: the bolded lead if there is one,
+    else the text up to the first dash separator.
+
+    The list's convention is `- **HEAD** -- gloss`, with the gloss carrying
+    the session counts and the arguments.  Only the head names the item, and
+    only the head is what an adjudication heading is supposed to quote.
+    """
+    b = bullet.strip()
+    b = re.sub(r'^-\s*', '', b)
+    b = ' '.join(b.split())
+    m = re.match(r'\*\*(.+?)\*\*', b)
+    if m:
+        return m.group(1)
+    return re.split(r'\s+(?:\u2014|\u2013|--)\s+', b)[0]
+
+
+def norm_head(text):
+    """Whitespace, case and markdown emphasis folded; NOTHING else.
+
+    Deliberately not tokens() and not stems(): this comparison exists because
+    the loose matchers cannot see a wording difference, so folding anything
+    with meaning in it would defeat the point.  Backticks and asterisks go
+    because they are typography, and a trailing colon or period goes because
+    the heading format adds one; every word must still be there, in order.
+    """
+    t = ' '.join(text.split()).lower()
+    t = t.replace('`', '').replace('*', '')
+    t = t.replace('\u2014', '--').replace('\u2013', '--')
+    return t.strip().rstrip('.:,;')
+
+
+def s4b_heading_alignment(entries, items):
+    """-> rows [(verdict, phrase, cls, detail)], one per adjudication entry.
+
+    cls in {ALIGNED, MISALIGNED, ORPHAN} for OPEN entries.  STALE entries are
+    classified too, and reported, but never counted as a fault: a STALE entry
+    whose item has left the list is the audit trail doing its job, and
+    requiring its heading to match a bullet would require the list to carry
+    items it has retired.
+    """
+    heads = {}
+    for it in items:
+        heads.setdefault(norm_head(bullet_head(it)), it)
+    rows = []
+    for verdict, phrase in entries:
+        np_ = norm_head(phrase)
+        if np_ in heads:
+            rows.append((verdict, phrase, 'ALIGNED',
+                         'heading equals the head of a live bullet'))
+            continue
+        tp = tokens(phrase)
+        hit = None
+        for it in items:
+            ti = tokens(it)
+            if tp and len(tp & ti) / float(len(tp)) >= 0.75:
+                hit = it
+                break
+        if hit is None:
+            rows.append((verdict, phrase, 'ORPHAN',
+                         'no bullet matches, loosely or exactly'))
+        else:
+            rows.append((verdict, phrase, 'MISALIGNED',
+                         'reachable only through the 0.75 token matcher; the '
+                         'bullet head is "%s"' % bullet_head(hit)))
+    return rows
+
+
+# ---------------------------------------------------------------------------
 # S5 -- controls
 # ---------------------------------------------------------------------------
 
@@ -1054,6 +1149,70 @@ def main():
     # quietly move a retirement into the benign column.
     report(not ({e for e, _ in extra} & {e for e, _ in wording}),
            'the RETIRED and WORDING categories are disjoint')
+
+    # -- S4b ------------------------------------------------------------
+    print('\n' + '-' * 78)
+    print('S4b -- does each OPEN entry\'s heading EQUAL the head of a bullet?')
+    print('-' * 78)
+    print('  Mechanises the item the 2026-11-04 entry ranked first.  S4 asks')
+    print('  whether an item is adjudicated AT ALL, with a 0.75 token match.')
+    print('  This asks whether the two artefacts AGREE, with an exact one.')
+    rows4b = s4b_heading_alignment(entries, items)
+    for verdict, phrase, cls, detail in rows4b:
+        print('    %-10s %-5s %s' % (cls, verdict, first_line(phrase, 56)))
+        if cls != 'ALIGNED':
+            print('               %s' % detail)
+    mis = [r for r in rows4b if r[2] == 'MISALIGNED' and r[0] == 'OPEN']
+    aligned = [r for r in rows4b if r[2] == 'ALIGNED' and r[0] == 'OPEN']
+    orph = [r for r in rows4b if r[2] == 'ORPHAN' and r[0] == 'OPEN']
+    print()
+    print('  OPEN entries: %d ALIGNED, %d MISALIGNED, %d ORPHAN'
+          % (len(aligned), len(mis), len(orph)))
+    report(not mis,
+           "every OPEN entry's heading equals the head of some live bullet, "
+           "so the orphan set is decidable without the loose matcher%s"
+           % ('' if not mis else
+              '  --  %d misaligned: %s'
+              % (len(mis), '; '.join(first_line(r[1], 44) for r in mis))))
+    # The planted controls for the three classes.  Answers known before the
+    # run, and independent of what the list and the adjudication currently
+    # say -- which is the property the orphan COUNT lacks and the reason it
+    # was not a progress metric.
+    plant_items = [
+        '- **AN ITEM WHOSE HEAD IS QUOTED EXACTLY** -- gloss, carried, with a '
+        'session count that moves.',
+        '- **AN ITEM WHOSE HEAD WAS REWORDED SLIGHTLY** -- gloss mentioning '
+        'budget and stimulus and generator and mutant so the tokens still '
+        'match.',
+    ]
+    plant_entries = [
+        ('OPEN', 'AN ITEM WHOSE HEAD IS QUOTED EXACTLY'),
+        ('OPEN', 'AN ITEM WHOSE HEAD WAS REWORDED'),
+        ('OPEN', 'AN ITEM THAT IS NOT ON THE LIST AT ALL'),
+        ('STALE', 'AN ITEM THAT IS NOT ON THE LIST AT ALL'),
+    ]
+    got = [r[2] for r in s4b_heading_alignment(plant_entries, plant_items)]
+    report(got[0] == 'ALIGNED',
+           'C4b.1 a heading quoting a bullet head verbatim -> ALIGNED  (got %s)'
+           % got[0])
+    report(got[1] == 'MISALIGNED',
+           'C4b.2 a heading the token matcher still reaches, but which equals '
+           'no bullet head -> MISALIGNED, not ALIGNED and not ORPHAN  (got %s)'
+           % got[1])
+    report(got[2] == 'ORPHAN',
+           'C4b.3 a heading no bullet matches at all -> ORPHAN  (got %s)'
+           % got[2])
+    report(got[3] == 'ORPHAN' and
+           not [r for r in s4b_heading_alignment(plant_entries, plant_items)
+                if r[2] == 'MISALIGNED' and r[0] == 'STALE'],
+           'C4b.4 a STALE entry is classified but never counted a fault, so '
+           'the audit trail is not pressure to delete it')
+    report(norm_head('**`FOO`  --  bar**') == norm_head('FOO  --  bar'),
+           'C4b.5 norm_head folds typography and whitespace only')
+    report(norm_head('A CHECK THAT CATCHES M1, M4 AND M5') !=
+           norm_head('A CHECK THAT CATCHES M1 AND M4'),
+           'C4b.6 and NOT meaning: dropping a term must change the key, or '
+           'this comparison is just a slower token match')
     if wording:
         print('  NOTE: %d adjudicated item(s) are tracked under a different '
               'wording than the\n        entry that judged them.  The entry '
