@@ -1239,9 +1239,20 @@ def main():
             unsuccessored.append(phrase)
     for phrase in unsuccessored:
         print('    NO SUCCESSOR NAMED  %s' % first_line(phrase, 66))
+    # NAMES IN THE FAILURE TEXT, 2026-11-05, for the same reason the orphan
+    # check got them on 2026-10-28: this row went red today on four entries
+    # that all carried a successor and spelled it `REPLACED-BY` without the
+    # colon, and the failure said only that some STALE verdict somewhere was
+    # unsuccessored.  A finding nobody can act on without re-deriving it is
+    # half a finding.
     report(not unsuccessored, 'every STALE verdict names what inherits the '
                               'work (REPLACED-BY) or states there is none '
-                              '(NO-SUCCESSOR)')
+                              '(NO-SUCCESSOR)%s'
+                              % ('' if not unsuccessored else
+                                 '  --  %d without one: %s'
+                                 % (len(unsuccessored),
+                                    '; '.join(first_line(u, 52)
+                                              for u in unsuccessored))))
     n_stale = sum(1 for v, _p in entries if v == 'STALE')
     print('  verdicts: %d STALE, %d OPEN'
           % (n_stale, sum(1 for v, _p in entries if v == 'OPEN')))

@@ -101,14 +101,39 @@ which is exactly why the verdict is not derived from the score.
 mutates the law under test, not the generator that produces its stimulus.
 Nothing in the tree targets the generator. Created 09-29, still not done.
 
-## OPEN: The F7 cross cannot be closed without drawing `0x40`, and `0x40` is BORDERLINE
+## OPEN: THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`
+
+**Heading re-quoted 2026-11-05 to equal the bullet head exactly.** It read
+"The F7 cross cannot be closed without drawing `0x40`, and `0x40` is
+BORDERLINE"; the list's bullet head stops at `0x40`. S4b classified it
+MISALIGNED — reachable only through S4's 0.75 token matcher — which means its
+membership of the orphan set depended on how the bullet's *gloss* happened to
+be worded. The dropped clause is not lost: it is the second paragraph below,
+which is where a qualification belongs.
 
 **Score 0.400, rank 4. Verdict: OPEN, and it is the repository's top item.**
 Created 10-02 and recorded in the vplan at v10. It is the first conflict
 between two sign-off criteria rather than between a criterion and a number,
 and all three ways out change what a coverage number means. Untouched.
 
-## OPEN: Wire `PayloadAdmissibilityCoverage` into the live UVM coverage collector
+## STALE: Wire `PayloadAdmissibilityCoverage` into the live UVM coverage collector
+
+**Verdict changed OPEN -> STALE on 2026-11-05. REPLACED-BY:
+`examples/phase6_payload_admissibility_bind/uart_uvm_payload_bind_tb.py`.**
+That file's own docstring calls itself "the LIVE half of wiring the payload
+admissibility model into the running UVM environment", and
+`PayloadAdmissibilityCoverage` is a third subscriber on `agent.mon.ap`
+alongside the scoreboard and `UartCoverage`. `progress.md` carries it as a
+ticked box: **"[x] The LIVE half of (c)"**.
+
+**This is the useful half of the orphan finding, and it reverses the natural
+reading of it.** An orphaned OPEN entry sounds like bookkeeping that lost its
+item. This one lost its item because the work was *finished* and the bullet was
+correctly removed, while the entry went on asserting the work was outstanding.
+So "orphan" conflates two opposite situations — an item completed, and an item
+dropped by accident — and S4 cannot tell them apart, because the distinction is
+in the tree and not in either document. Of today's four orphans this is the
+only one of the first kind; the other three are of the second.
 
 **Score 0.308, rank 5. Verdict: OPEN.** `UartCoverage` in
 `uart_uvm_tb.py` is the live collector and does not reference
@@ -155,7 +180,15 @@ actionable thing on the list.
 > collector. Nothing from this entry is retired except sub-item (a), which is
 > done, and the methodology summary, which 2026-10-14 judged written.**]**
 
-## OPEN: Apply the three-valued outcome axis to phase6_crv_uart's crosses, and audit every remaining runner for the "greps a file it did not just write" pattern
+## OPEN: APPLY THE THREE-VALUED OUTCOME AXIS TO phase6_crv_uart'S CROSSES
+
+**Heading shortened 2026-11-05, and today's standing list carries a bullet whose
+head equals it.** It ran to two clauses and the second — "audit every remaining
+runner for the 'greps a file it did not just write' pattern" — is a *second*
+item, which is how the pair came to be carried as one and then lost together.
+The second clause is split out as its own bullet on today's list. The 2026-10-26
+entry had already diagnosed this family: the item was "live, but compressed into
+a prose tail sentence, which hides an item from the ranker entirely".
 
 **Rank 6 on the 10-03 list, score 0.222. Verdict: OPEN.** A compound bullet
 carrying several items from 09-23 through 09-27. It enters the adjudicated head
@@ -423,7 +456,12 @@ never *checked*, which is exactly the claim a mutant tests: break the signal
 and the bench should hang or mis-sequence rather than report a mismatch. No
 mutant targets it. Untouched since creation.
 
-## OPEN: EXTEND THE CENSUS TO THE REMAINING CHECKERS
+## OPEN: EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS
+
+**Heading re-quoted 2026-11-05 to equal the bullet head exactly.** It read
+"EXTEND THE CENSUS TO THE REMAINING CHECKERS", dropping `DUT-SIGNAL`. S4b
+classified it MISALIGNED. The repository has more than one census, so the
+dropped word was the only thing in the heading saying which one.
 
 **Verdict: OPEN, with the boundary quoted from the census itself.** The census
 is complete *within* its five files and says so in its own words: "13 reads
@@ -643,7 +681,23 @@ names — `sed` programs embedded in shell-function overrides embedded in Python
 string literals, in H's and I's `N1` arms — so the population grows faster
 than the reading would.
 
-## OPEN: ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
+## STALE: ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
+
+**Verdict changed OPEN -> STALE on 2026-11-05. REPLACED-BY: `S4b` in
+`tools/open_item_staleness_audit.py`.** The item asked for the alignment to be
+mechanised; it now is, by `bullet_head()` / `norm_head()` /
+`s4b_heading_alignment()` with six planted controls, and the three entries it
+was about are repaired above and below. An item asking for a check that exists
+is stale in this file's sense.
+
+**And this entry was the strongest case for its own item.** It had no bullet of
+its own — the 2026-11-04 entry folded the item into the *text* of another
+bullet — and S4's 0.75 token matcher bound it to "THE 4 ORPHANED OPEN
+ADJUDICATION ENTRIES, AND S4's RED REPORTING CUT", a different item. So S4's
+coverage check was satisfied by the wrong member, and that spurious match is
+the only reason this entry was not already counted an orphan. A count
+satisfiable by the wrong member is the R4/R5 shape recorded on 2026-10-17,
+here inside the tool that measures it.
 
 **Adjudicated 2026-10-28**, on the day it rose into the top six — and it rose
 because this session re-worded the bullet that describes it, which is the item
@@ -682,3 +736,134 @@ split the file already carries, and a declared exemption list for any `OPEN`
 entry whose heading is deliberately shorter than its bullet. That is the same
 registry-plus-reason shape the sibling graphene repository built three times on
 this same date, and it is a session's work rather than an afternoon's.
+
+---
+
+## STALE: THE BORDERLINE PAIR UNDER STEERING
+
+**Score at rank 1 on the 2026-11-04 list, unadjudicated. Verdict: STALE.
+NO-SUCCESSOR: the work is finished, not inherited.**
+
+The 2026-11-04 entry closed this item in its own text: "**THE BORDERLINE PAIR
+UNDER STEERING** is **closed** (§§1–5) and removed." It was not removed. The
+bullet is still in the list, so the ranker still ranks it, and it ranked at the
+top of the cut with no entry here — one of the four `MISSING` rows that made
+S4's reporting-cut check red.
+
+**Worth recording because of how it failed rather than that it did.** A bullet
+that says it is closed is invisible to a human reader scanning for work and
+maximally visible to the ranker, which reads the heading and the age. So the
+most conspicuous item on the list was the one item on it that nobody needed to
+do, and the four sessions since could all see the word "closed" and none of
+them removed the line. Removed from today's list.
+
+---
+
+## OPEN: THE SVA FORM OF THESE FIFTEEN RULES
+
+**Verdict: OPEN, and blocked — not stale.**
+
+Fifteen protocol-checker rules exist in procedural Verilog
+(`checkers/uart_protocol_checker.v`); the item asks for their SVA concurrent-
+assertion form. Icarus Verilog 10.3 does not implement concurrent assertions,
+so this is blocked on a simulator and not on a session's attention.
+
+It has no entry here because the reporting cut only reaches it now, and it is
+adjudicated rather than skipped for a reason this file should state plainly: an
+item blocked on a tool is the case where "no progress for N sessions" carries no
+information at all, and a ranker that scores by age will keep promoting it. The
+verdict that matters is the blocker, and recording it here is what stops the
+next session re-deriving it.
+
+---
+
+## OPEN: A TX-SIDE F7 TIMING STATEMENT
+
+**Verdict: OPEN. Carried since 2026-10-29, vplan v14 (ii).**
+
+The start-bit truncation bound is measured; the verification plan still says
+nothing about it. A measured bound that no plan asserts is not a verification
+result — nothing fails if the bound is violated later — so this is a real gap
+and the work is a paragraph in
+`verification_plans/uart_controller_verification_plan.md`, not code.
+
+Adjudicated now because it reached the cut, and because the 2026-11-04 entry
+listed it under "Open items, with blockers named" with no blocker named. There
+is none. It is unblocked, small, and has been carried for seven days.
+
+---
+
+## OPEN: A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR
+
+**Verdict: OPEN. Carried since 2026-10-27.**
+
+`tools/report_provenance_audit.py` relates reports to runners; what is missing
+is the narrower assertion that a report file named for a date and a runner was
+*produced* by that runner on that date. The repository has already been bitten
+by the general form twice — a transcript that outlived the code it transcribed
+(2026-11-04, sibling repository) and a runner that greps a file it did not just
+write (2026-09-27) — so this is the same disease in the reporting layer.
+
+Adjudicated now because it reached the cut. It is unblocked and purely
+mechanical; what it needs is a decision about what counts as evidence of
+authorship when the only artefact is the report itself, which is why it has
+survived nine days of being cheap.
+
+---
+
+## STALE: THE 4 ORPHANED OPEN ADJUDICATION ENTRIES, AND S4's RED REPORTING CUT
+
+**Ranked first on 2026-11-04. Verdict: STALE as of 2026-11-05. REPLACED-BY:
+`S4b` in `tools/open_item_staleness_audit.py`, plus the nine adjudication
+edits made today.**
+
+The item set its own order of work — "a check that each OPEN entry's heading
+appears verbatim as the head of some bullet… Do that check first and adjudicate
+second, or the next session will measure its own editing again" — and that order
+was followed. `S4b` first, with six planted controls; then the adjudication.
+
+What the check found, which the orphan count could not have:
+
+- **3 MISALIGNED** entries, reachable only through S4's 0.75 token matcher. Two
+  were wording drift (`0x40`, `DUT-SIGNAL`). The third, `ALIGN THE ADJUDICATION
+  HEADINGS WITH THE LIST WORDING`, was bound by the loose matcher **to this very
+  item** — a different one — so S4's coverage was satisfied by the wrong member,
+  and that is the only reason it was not already an orphan.
+- **The four orphans are not one phenomenon.** One
+  (`PayloadAdmissibilityCoverage`) lost its bullet because the work was
+  *finished*; three (the three-valued axis, the five suites, the M7 sed census)
+  lost theirs by accident and are restored to today's list. "Orphan" was
+  conflating completion with loss, and no reading of either document can
+  separate them — only the tree can.
+
+**Why STALE and not closed-as-done:** the item's first clause is discharged, but
+its own warning now applies to its successor. `S4b` makes the alignment
+measurable; it does not make the orphan set *small*, and nothing yet stops an
+item from falling off the list in the first place. That is the successor item on
+today's list, and it is stated as a different question — not "adjudicate the
+orphans" but "why do bullets leave the list unobserved".
+
+---
+
+## OPEN: EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT
+
+**Verdict: OPEN. Carried since 2026-10-25.**
+
+Adjudicated today because it rose into the reporting cut when the list changed,
+which is this file's documented behaviour — "the adjudication is pinned to a
+ranking, and the ranking moves when the list does, so a new list and a refreshed
+adjudication belong in the same commit." It was below the cut this morning and
+above it this afternoon purely because `THE BORDERLINE PAIR UNDER STEERING` was
+removed and three lost bullets were restored.
+
+`S6` checks that a retired wording stays gone *and* that the fact which
+justified retiring it still holds — the second half is what makes a retirement
+auditable rather than asserted. It currently covers a hand-written set of rows.
+The item asks for coverage of **every** open item that makes a claim about a
+file's content, which is the class `S1` cannot reach: `S1` asks whether a path an
+item names exists and cannot ask whether what the item says about that file is
+true.
+
+Unblocked and purely mechanical. What it needs is a decision about how to
+recognise a content claim in free prose, which is why a cheap item has survived
+eleven days.
