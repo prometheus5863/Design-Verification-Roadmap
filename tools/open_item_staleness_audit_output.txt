@@ -2,9 +2,9 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 54 "Not yet covered" lists; the STANDING list has 33 items
-    FULL        33 items   Open items, with blockers named:**
-  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 762330 > 750562), not to an older one
+  AUTOMATION_LOG.md: 55 "Not yet covered" lists; the STANDING list has 36 items
+    FULL        36 items   Open items, with blockers named:**
+  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 778535 > 770202), not to an older one
   [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
   progress.md: 85 completed checkboxes, 17 unchecked
   [PASS] the most recent open-items list parses into items
@@ -13,7 +13,7 @@ consistent with the file that records what is finished?  (2026-10-03)
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 6   resolved: 6   unresolved: 0
+  paths named: 5   resolved: 5   unresolved: 0
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
   [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
@@ -31,36 +31,32 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
   COMPLETED checkbox also contains.  A RANKING, not a verdict.
 
     score  open item
-    0.800  - THE BORDERLINE PAIR UNDER STEERING is closed (§§1–5) and removed.  <-- adjudicate
     0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
-    0.571  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
     0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...  <-- adjudicate
-    0.462  - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan v14 (ii). The start-bit tr...  <-- adjudicate
-    0.429  - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR — carried from...  <-- adjudicate
+    0.455  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
+    0.429  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — restored to the li...  <-- adjudicate
     0.429  - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such tool exists.  <-- adjudicate
-    0.400  - CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING — carried, needs no tool...
-    0.400  - THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ — carried from 10-20.
-    0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.
+    0.400  - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carried from 10-25.  <-- adjudicate
+    0.400  - CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING — carried, needs no tool...  <-- adjudicate
+    0.400  - THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ — carried from 10-20.  <-- adjudicate
+    0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.  <-- adjudicate
+    0.400  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 10-17.  <-- adjudicate
 
   top match for the highest-ranked item:
-    - x CLOSED, the other way round: the borderline pair under steering. examples/phase6_steering_byte_reachability/, 19 checks, 19 passing, no simulator ...
+    - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
 
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
-  adjudication entries on disk: 24
+  adjudication entries on disk: 30
     OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
     OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
-    MISSING - THE BORDERLINE PAIR UNDER STEERING is closed (§§1–5) and r...
-    MISSING - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
-    MISSING - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan ...
-    MISSING - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT I...
-    RETIRED Wire PayloadAdmissibilityCoverage into the live UVM coverage collector
-    RETIRED Apply the three-valued outcome axis to phase6_crv_uart's crosses, and ...
-    RETIRED GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE
-    RETIRED CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT
-  [FAIL] every item at or above the reporting cut is adjudicated on disk, with a reason
-  [FAIL] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)  --  4 orphan(s): Wire PayloadAdmissibilityCoverage into the live UVM covera...; Apply the three-valued outcome axis to phase6_crv_uart's c...; GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE; CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...
+    OPEN    - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
+    OPEN    - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...
+    OPEN    - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such ...
+    OPEN    - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carrie...
+  [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
+  [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
   [PASS] the RETIRED and WORDING categories are disjoint
 
 ------------------------------------------------------------------------------
@@ -73,15 +69,13 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
                no bullet matches, loosely or exactly
     ALIGNED    OPEN  Control B for the FOUR OLDER mutation harnesses
     ALIGNED    OPEN  A mutant on budget_law_exhaustive.py's own stimulus gene...
-    MISALIGNED OPEN  The F7 cross cannot be closed without drawing 0x40, and ...
-               reachable only through the 0.75 token matcher; the bullet head is "THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`"
-    ORPHAN     OPEN  Wire PayloadAdmissibilityCoverage into the live UVM cove...
+    ALIGNED    OPEN  THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40
+    ORPHAN     STALE Wire PayloadAdmissibilityCoverage into the live UVM cove...
                no bullet matches, loosely or exactly
     ALIGNED    OPEN  Audit every "what this does not change" paragraph in the...
     ORPHAN     STALE The four unchecked capstone boxes as newly disambiguated...
                no bullet matches, loosely or exactly
-    ORPHAN     OPEN  Apply the three-valued outcome axis to phase6_crv_uart's...
-               no bullet matches, loosely or exactly
+    ALIGNED    OPEN  APPLY THE THREE-VALUED OUTCOME AXIS TO phase6_crv_uart'S...
     ORPHAN     STALE A MUTANT FOR THE NEW tx_empty PREDICTION
                no bullet matches, loosely or exactly
     ALIGNED    OPEN  A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS
@@ -92,22 +86,27 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
                no bullet matches, loosely or exactly
     ALIGNED    OPEN  CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEAR...
     ALIGNED    OPEN  A MUTANT FOR THE rx_avail SYNC_ONLY ROW
-    MISALIGNED OPEN  EXTEND THE CENSUS TO THE REMAINING CHECKERS
-               reachable only through the 0.75 token matcher; the bullet head is "EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS"
+    ALIGNED    OPEN  EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS
     ORPHAN     STALE A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT CO...
                no bullet matches, loosely or exactly
-    ORPHAN     OPEN  GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE
-               no bullet matches, loosely or exactly
+    ALIGNED    OPEN  GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE
     ALIGNED    OPEN  THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ
     ALIGNED    OPEN  NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE
     ALIGNED    OPEN  RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY...
-    ORPHAN     OPEN  CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPIN...
+    ALIGNED    OPEN  CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPIN...
+    ORPHAN     STALE ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
                no bullet matches, loosely or exactly
-    MISALIGNED OPEN  ALIGN THE ADJUDICATION HEADINGS WITH THE LIST WORDING
-               reachable only through the 0.75 token matcher; the bullet head is "THE 4 ORPHANED OPEN ADJUDICATION ENTRIES, AND S4's RED REPORTING CUT"
+    ORPHAN     STALE THE BORDERLINE PAIR UNDER STEERING
+               no bullet matches, loosely or exactly
+    ALIGNED    OPEN  THE SVA FORM OF THESE FIFTEEN RULES
+    ALIGNED    OPEN  A TX-SIDE F7 TIMING STATEMENT
+    ALIGNED    OPEN  A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT...
+    ORPHAN     STALE THE 4 ORPHANED OPEN ADJUDICATION ENTRIES, AND S4's RED R...
+               no bullet matches, loosely or exactly
+    ALIGNED    OPEN  EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT
 
-  OPEN entries: 12 ALIGNED, 3 MISALIGNED, 4 ORPHAN
-  [FAIL] every OPEN entry's heading equals the head of some live bullet, so the orphan set is decidable without the loose matcher  --  3 misaligned: The F7 cross cannot be closed without drawin...; EXTEND THE CENSUS TO THE REMAINING CHECKERS; ALIGN THE ADJUDICATION HEADINGS WITH THE LIS...
+  OPEN entries: 21 ALIGNED, 0 MISALIGNED, 0 ORPHAN
+  [PASS] every OPEN entry's heading equals the head of some live bullet, so the orphan set is decidable without the loose matcher
   [PASS] C4b.1 a heading quoting a bullet head verbatim -> ALIGNED  (got ALIGNED)
   [PASS] C4b.2 a heading the token matcher still reaches, but which equals no bullet head -> MISALIGNED, not ALIGNED and not ORPHAN  (got MISALIGNED)
   [PASS] C4b.3 a heading no bullet matches at all -> ORPHAN  (got ORPHAN)
@@ -115,7 +114,7 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
   [PASS] C4b.5 norm_head folds typography and whitespace only
   [PASS] C4b.6 and NOT meaning: dropping a term must change the key, or this comparison is just a slower token match
   [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
-  verdicts: 5 STALE, 19 OPEN
+  verdicts: 9 STALE, 21 OPEN
 
 ------------------------------------------------------------------------------
 S5 -- controls on the ranker, and its mutation test
@@ -187,5 +186,5 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
          tools/test_neutrality_controls.py  contains "MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I"  --  read "all FIVE runners, not the original two" from 2026-10-26 with the needle MARKER_RUNNERS = ('E', 'F', 'G').  H and I were added 2026-10-27 with the two ports above, and the needle is the marker tuple itself, so the row tracks the number it claims rather than a comment about it.  35/35 across seven runners at the last full pass.
 
 ==============================================================================
-RESULT: 45 passed, 3 failed
+RESULT: 48 passed, 0 failed
 ==============================================================================
