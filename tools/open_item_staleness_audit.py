@@ -1005,6 +1005,222 @@ def s6_content_claims():
     return out
 
 
+# ---------------------------------------------------------------------------
+# S7 -- A DEPARTURE FROM THE LIST MUST BE ACCOUNTED FOR.  CREATED 2026-11-06.
+#
+# The 2026-11-05 entry ranked this first and specified it: "diff the
+# bullet-head set of the newest list against the previous entry's and require
+# every departure to be accounted for -- matched either by a STALE
+# adjudication entry (completed or retired) or by an explicit removal note in
+# the entry that dropped it.  Blocked on nothing."
+#
+# The reason it is wanted: four bullets left the list between 10-28 and 11-05
+# with no artefact recording that they had, one of them for the SECOND time,
+# while a bullet that announced its own closure stayed.  S4b made
+# misalignment measurable and says nothing about departure.
+#
+# THE SPECIFICATION DOES NOT SURVIVE THE WHOLE LOG, AND THAT IS MEASURED
+# RATHER THAN ASSERTED.  Applied to every consecutive pair of entries the
+# diff reports 220 departures over 50 transitions, worst 31 in one step, and
+# the number is dominated by CHANGES OF FORMAT, not losses.  Those figures
+# are PRINTED by s7_history_scan rather than quoted here as a verdict; the
+# three causes are:
+#
+#   * Entries 10-29, 10-30, 11-02 and 11-03 carry short lists -- 7, 9, 10 and
+#     12 bullets -- where 10-28 carries 31 and 11-04 carries 33.  Those
+#     entries do not enumerate the standing list at all.
+#   * Entries 10-25..10-28, 11-04 and 11-05 fold the tail into one bullet
+#     headed "The rest of the standing list is unchanged: ...", and its head
+#     CARRIES THE FOLDED NAMES, so its wording changes every entry and it
+#     never compares equal to the previous entry's.
+#   * So 10-28 -> 10-29 alone reports 31 departures, every one of them a
+#     presentation change.  Treating the compression bullet as INHERITANCE --
+#     i.e. reading "the rest is unchanged" as carrying the previous entry's
+#     tail forward -- was tried first and makes it worse, not better: because
+#     that bullet's own head carries the folded names and so changes wording
+#     every entry, the effective set accumulates to 68 items by 10-28 and
+#     then collapses in a single step, turning a 31-departure artefact into a
+#     68-departure one.  That experiment is recorded here because it is the
+#     reason the simpler reading was kept.
+#
+# A diff over heads is therefore not a history-wide instrument on this log,
+# and nothing here claims it is.  What IS decidable is exactly what the item
+# asks for operationally -- the NEWEST transition, between two entries whose
+# lists are both current -- so S7 is scoped to that and the history scan is
+# printed as a REPORT with its numbers, which is the evidence for the scope.
+#
+# ROUTES, in precedence order.  A departure is accounted for if:
+#   ADJUDICATED  tools/open_item_adjudication.md carries a STALE entry whose
+#                heading equals the departed head.  This is the route the
+#                committed history actually uses.
+#   NOTED        the entry that dropped it carries an explicit removal note.
+#                The convention is defined BY THIS CHECK and no committed
+#                entry uses it yet, so this route is exercised only by its
+#                control (C3) -- stated rather than implied, because an
+#                untested path in an auditor is this repository's own
+#                recurring fault.
+#   REWORDED     some head that ARRIVED in the same transition contains 75 %
+#                of the departed head's tokens.  A reworded bullet is not a
+#                departure, and S4b is the precedent for using the exact
+#                comparison and the loose one to answer different questions.
+#   LOST         none of the above.  The fault.
+
+
+S7_REMOVAL_NOTE = re.compile(
+    r'(?mi)^\s*[-*]\s*\*\*(?:RETIRED|REMOVED|DROPPED) FROM THE LIST:\*\*'
+    r'\s*(.+?)\s*$')
+
+S7_COMPRESSION = re.compile(r'the rest of the standing list is unchanged',
+                            re.I)
+
+
+def session_entries(log_text):
+    """[(date, text)] for every `## YYYY-MM-DD` session entry, oldest first."""
+    marks = [mm.start() for mm in re.finditer(r'(?m)^## .*', log_text)]
+    out = []
+    for i, st in enumerate(marks):
+        en = marks[i + 1] if i + 1 < len(marks) else len(log_text)
+        d = re.match(r'## (\d{4}-\d\d-\d\d)', log_text[st:en])
+        if d:
+            out.append((d.group(1), log_text[st:en]))
+    return out
+
+
+def entry_heads(entry_text):
+    """Normalised bullet heads of one entry's standing list."""
+    its, _prov = standing_list(entry_text)
+    return [norm_head(bullet_head(i)) for i in its]
+
+
+def stale_adjudication_heads(adj_text):
+    """Normalised headings of the STALE adjudication entries."""
+    return {norm_head(p)
+            for v, p in re.findall(r'^##\s+(STALE|OPEN):\s*(.+?)\s*$',
+                                   adj_text, re.M) if v == 'STALE'}
+
+
+def removal_notes(entry_text):
+    """Normalised heads named by explicit removal notes in one entry."""
+    return {norm_head(mm.group(1))
+            for mm in S7_REMOVAL_NOTE.finditer(entry_text)}
+
+
+def classify_departure(head, arrivals, stale_heads, notes):
+    """-> (cls, detail).  Precedence: ADJUDICATED, NOTED, REWORDED, LOST."""
+    if head in stale_heads:
+        return 'ADJUDICATED', 'a STALE adjudication entry quotes this head'
+    if head in notes:
+        return 'NOTED', 'the entry that dropped it carries a removal note'
+    th = tokens(head)
+    for a in arrivals:
+        if th and len(th & tokens(a)) / float(len(th)) >= 0.75:
+            return 'REWORDED', 'arrived reworded as "%s"' % a[:58]
+    return 'LOST', 'no adjudication, no removal note, no reworded arrival'
+
+
+def s7_newest_transition(log_text, adj_text):
+    """-> (prev_date, cur_date, rows).  rows = [(cls, head, detail)]."""
+    ents = session_entries(log_text)
+    if len(ents) < 2:
+        return None, None, []
+    (pd, _ptxt), (cd, ctxt) = ents[-2], ents[-1]
+    ph, ch = entry_heads(ents[-2][1]), entry_heads(ctxt)
+    cs = set(ch)
+    arrivals = [h for h in ch if h not in set(ph)]
+    stale_heads = stale_adjudication_heads(adj_text)
+    notes = removal_notes(ctxt)
+    rows = []
+    for h in ph:
+        if h in cs:
+            continue
+        cls, detail = classify_departure(h, arrivals, stale_heads, notes)
+        rows.append((cls, h, detail))
+    return pd, cd, rows
+
+
+def s7_history_scan(log_text):
+    """The evidence for S7's scope: (n_transitions, n_departures, worst,
+    short_entries, compression_entries).  A REPORT, never a verdict."""
+    ents = session_entries(log_text)
+    heads = [(d, entry_heads(t)) for d, t in ents]
+    n_tr = n_dep = 0
+    worst = (None, 0)
+    for i in range(1, len(heads)):
+        pd, ph = heads[i - 1]
+        cd, ch = heads[i]
+        if not ph or not ch:
+            continue
+        dep = [h for h in ph if h not in set(ch)]
+        if dep:
+            n_tr += 1
+            n_dep += len(dep)
+            if len(dep) > worst[1]:
+                worst = ('%s -> %s' % (pd, cd), len(dep))
+    sizes = [(d, len(h)) for d, h in heads if h]
+    short = [d for d, n in sizes[-10:] if n < 15]
+    comp = [d for d, t in ents[-10:]
+            if any(S7_COMPRESSION.search(h) for h in entry_heads(t))]
+    return n_tr, n_dep, worst, short, comp
+
+
+def s7_controls():
+    """Planted logs with answers known by inspection.  -> [(tag, ok, detail)]."""
+    def mk(date, bullets, extra=''):
+        return ('## %s - a plant\n\n%s\n\n**Not yet covered '
+                '(candidates for future runs):**\n\n%s\n\n'
+                '**Commits this run:** 0\n'
+                % (date, extra, '\n'.join('- **%s** -- gloss.' % b
+                                          for b in bullets)))
+    out = []
+    # C1 a bullet simply vanishes: LOST.
+    log1 = mk('2026-01-01', ['ITEM ALPHA', 'ITEM BETA']) + mk('2026-01-02',
+                                                              ['ITEM BETA'])
+    _p, _c, r1 = s7_newest_transition(log1, '# none\n')
+    out.append(('C1 a bullet that vanishes with no trace is LOST',
+                [x[0] for x in r1] == ['LOST'],
+                'rows %r' % [(x[0], x[1]) for x in r1]))
+    # C2 the same log, with a STALE adjudication quoting the head.
+    _p, _c, r2 = s7_newest_transition(
+        log1, '## STALE: ITEM ALPHA\n\nreason.\n')
+    out.append(('C2 and ACCOUNTED once a STALE adjudication entry quotes it',
+                [x[0] for x in r2] == ['ADJUDICATED'],
+                'rows %r' % [(x[0], x[1]) for x in r2]))
+    # C3 the same log, with an explicit removal note in the dropping entry.
+    log3 = mk('2026-01-01', ['ITEM ALPHA', 'ITEM BETA']) + mk(
+        '2026-01-02', ['ITEM BETA'],
+        extra='- **RETIRED FROM THE LIST:** ITEM ALPHA')
+    _p, _c, r3 = s7_newest_transition(log3, '# none\n')
+    out.append(('C3 or a removal note in the entry that dropped it',
+                [x[0] for x in r3] == ['NOTED'],
+                'rows %r -- the ONLY exercise of this route; no committed '
+                'entry uses the convention yet'
+                % [(x[0], x[1]) for x in r3]))
+    # C4 THE ZERO CASE: nothing departs, so there is nothing to account for.
+    log4 = mk('2026-01-01', ['ITEM ALPHA']) + mk('2026-01-02',
+                                                 ['ITEM ALPHA', 'ITEM GAMMA'])
+    _p, _c, r4 = s7_newest_transition(log4, '# none\n')
+    out.append(('C4 a list that only GAINS a bullet reports no departure',
+                r4 == [], 'rows %r' % (r4,)))
+    # C5 a reworded head is not a departure.
+    log5 = mk('2026-01-01', ['THE ALPHA ITEM OF INTEREST']) + mk(
+        '2026-01-02', ['THE ALPHA ITEM OF INTEREST, NOW REWORDED'])
+    _p, _c, r5 = s7_newest_transition(log5, '# none\n')
+    out.append(('C5 a reworded head is REWORDED and not LOST',
+                [x[0] for x in r5] == ['REWORDED'],
+                'rows %r' % [(x[0], x[1]) for x in r5]))
+    # C6 PRECEDENCE, and the answer is known: a departure that BOTH has a
+    # STALE entry and a reworded arrival must read ADJUDICATED.  Without an
+    # order the two routes would race and the verdict would depend on dict
+    # iteration, which is the "verdict indexed by nothing" fault.
+    _p, _c, r6 = s7_newest_transition(
+        log5, '## STALE: THE ALPHA ITEM OF INTEREST\n\nreason.\n')
+    out.append(('C6 ADJUDICATED takes precedence over REWORDED, so the '
+                'verdict does not depend on route order',
+                [x[0] for x in r6] == ['ADJUDICATED'],
+                'rows %r' % [(x[0], x[1]) for x in r6]))
+    return out
+
+
 def main():
     n_pass = n_fail = 0
 
@@ -1278,6 +1494,48 @@ def main():
     for ok, claim, detail in s6_content_claims():
         report(ok, '%s' % claim)
         print('         %s' % detail)
+
+    print('\n' + '-' * 78)
+    print('S7 -- every bullet that LEAVES the list is accounted for (2026-11-06)')
+    print('-' * 78)
+    adj_text = (open(ADJUDICATION, encoding='utf-8').read()
+                if os.path.exists(ADJUDICATION) else '')
+    n_tr, n_dep, worst, short, comp = s7_history_scan(log)
+    print('  history scan, a REPORT and not a verdict -- it is the evidence')
+    print('  for why S7 is scoped to the newest transition:')
+    print('    transitions with departures : %d' % n_tr)
+    print('    departures in total         : %d' % n_dep)
+    print('    worst single transition     : %s, %d departures'
+          % (worst[0], worst[1]))
+    print('    recent entries with a SHORT list (<15 bullets): %s'
+          % (', '.join(short) or 'none'))
+    print('    recent entries folding the tail into one bullet: %s'
+          % (', '.join(comp) or 'none'))
+    print('  A head diff cannot tell a format change from a loss, so the')
+    print('  %d above measures presentation and not work lost.  S7 itself'
+          % n_dep)
+    print('  is scoped to the newest transition, where both lists are')
+    print('  current and the question is decidable.')
+    print()
+    pd_, cd_, rows = s7_newest_transition(log, adj_text)
+    print('  newest transition: %s -> %s   %d departures'
+          % (pd_, cd_, len(rows)))
+    for cls, head, detail in rows:
+        print('    %-12s %s' % (cls, head[:58]))
+        print('                 %s' % detail)
+    lost = [h for c, h, _d in rows if c == 'LOST']
+    report(not lost,
+           'S7 no bullet left the newest list unaccounted for '
+           '(%d departures: %s)'
+           % (len(rows),
+              ', '.join('%s=%d' % (c, len([1 for x, _h, _d in rows if x == c]))
+                        for c in ('ADJUDICATED', 'NOTED', 'REWORDED', 'LOST'))))
+    if lost:
+        for h in lost:
+            print('         LOST: %s' % h)
+    print()
+    for tag, ok, detail in s7_controls():
+        report(ok, '%s   [%s]' % (tag, detail))
 
     print('\n' + '=' * 78)
     print('RESULT: %d passed, %d failed' % (n_pass, n_fail))

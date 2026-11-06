@@ -6,7 +6,7 @@ consistent with the file that records what is finished?  (2026-10-03)
     FULL        36 items   Open items, with blockers named:**
   [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 778535 > 770202), not to an older one
   [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
-  progress.md: 85 completed checkboxes, 17 unchecked
+  progress.md: 91 completed checkboxes, 18 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
@@ -31,30 +31,30 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
   COMPLETED checkbox also contains.  A RANKING, not a verdict.
 
     score  open item
+    0.800  - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carried from 10-25.  <-- adjudicate
+    0.733  - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR — carried from...  <-- adjudicate
+    0.727  - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan v14 (ii), and now adjudica...  <-- adjudicate
+    0.636  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
     0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
     0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...  <-- adjudicate
-    0.455  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
-    0.429  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — restored to the li...  <-- adjudicate
-    0.429  - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such tool exists.  <-- adjudicate
-    0.400  - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carried from 10-25.  <-- adjudicate
-    0.400  - CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING — carried, needs no tool...  <-- adjudicate
-    0.400  - THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ — carried from 10-20.  <-- adjudicate
-    0.400  - AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN — carried.  <-- adjudicate
-    0.400  - CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES — carried from 10-17.  <-- adjudicate
+    0.429  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — restored to the li...
+    0.429  - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such tool exists.
+    0.400  - CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING — carried, needs no tool...
+    0.400  - THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ — carried from 10-20.
 
   top match for the highest-ranked item:
-    - x Milestone: full UVM testbench w/ 2-3 sequences/tests + coverage target -- COMPLETE 2026-09-18. examples/phase4_uvm_milestone/uart_uvm_tb.py (~1030...
+    - x All of S4's reporting cut adjudicated, with blockers stated. The SVA form of the fifteen rules (blocked — Icarus 10.3 has no concurrent assertions...
 
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
   adjudication entries on disk: 30
+    OPEN    - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carrie...
+    OPEN    - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT I...
+    OPEN    - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan ...
+    OPEN    - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
     OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
     OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
-    OPEN    - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
-    OPEN    - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...
-    OPEN    - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such ...
-    OPEN    - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carrie...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
   [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
   [PASS] the RETIRED and WORDING categories are disjoint
@@ -185,6 +185,37 @@ S6 -- an open item's claim about a FILE'S CONTENT (2026-10-25)
   [PASS] the selftest covers all SEVEN runners, not the original five
          tools/test_neutrality_controls.py  contains "MARKER_RUNNERS = ('E', 'F', 'G', 'H', 'I"  --  read "all FIVE runners, not the original two" from 2026-10-26 with the needle MARKER_RUNNERS = ('E', 'F', 'G').  H and I were added 2026-10-27 with the two ports above, and the needle is the marker tuple itself, so the row tracks the number it claims rather than a comment about it.  35/35 across seven runners at the last full pass.
 
+------------------------------------------------------------------------------
+S7 -- every bullet that LEAVES the list is accounted for (2026-11-06)
+------------------------------------------------------------------------------
+  history scan, a REPORT and not a verdict -- it is the evidence
+  for why S7 is scoped to the newest transition:
+    transitions with departures : 50
+    departures in total         : 220
+    worst single transition     : 2026-10-28 -> 2026-10-29, 31 departures
+    recent entries with a SHORT list (<15 bullets): 2026-10-29, 2026-10-30, 2026-11-02, 2026-11-03
+    recent entries folding the tail into one bullet: 2026-10-25, 2026-10-26, 2026-10-27, 2026-10-28, 2026-11-04, 2026-11-05
+  A head diff cannot tell a format change from a loss, so the
+  220 above measures presentation and not work lost.  S7 itself
+  is scoped to the newest transition, where both lists are
+  current and the question is decidable.
+
+  newest transition: 2026-11-04 -> 2026-11-05   3 departures
+    ADJUDICATED  the 4 orphaned open adjudication entries, and s4's red rep
+                 a STALE adjudication entry quotes this head
+    ADJUDICATED  the borderline pair under steering
+                 a STALE adjudication entry quotes this head
+    REWORDED     the rest of the standing list is unchanged: a positive con
+                 arrived reworded as "the rest of the standing list is unchanged: a positive con"
+  [PASS] S7 no bullet left the newest list unaccounted for (3 departures: ADJUDICATED=2, NOTED=0, REWORDED=1, LOST=0)
+
+  [PASS] C1 a bullet that vanishes with no trace is LOST   [rows [('LOST', 'item alpha')]]
+  [PASS] C2 and ACCOUNTED once a STALE adjudication entry quotes it   [rows [('ADJUDICATED', 'item alpha')]]
+  [PASS] C3 or a removal note in the entry that dropped it   [rows [('NOTED', 'item alpha')] -- the ONLY exercise of this route; no committed entry uses the convention yet]
+  [PASS] C4 a list that only GAINS a bullet reports no departure   [rows []]
+  [PASS] C5 a reworded head is REWORDED and not LOST   [rows [('REWORDED', 'the alpha item of interest')]]
+  [PASS] C6 ADJUDICATED takes precedence over REWORDED, so the verdict does not depend on route order   [rows [('ADJUDICATED', 'the alpha item of interest')]]
+
 ==============================================================================
-RESULT: 48 passed, 0 failed
+RESULT: 55 passed, 0 failed
 ==============================================================================
