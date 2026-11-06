@@ -1218,6 +1218,27 @@ def s7_controls():
                 'verdict does not depend on route order',
                 [x[0] for x in r6] == ['ADJUDICATED'],
                 'rows %r' % [(x[0], x[1]) for x in r6]))
+    # C7 THE THRESHOLD ITSELF, AND IT WAS ADDED BECAUSE A MUTANT SURVIVED.
+    # The 2026-11-06 mutation test loosened the rewording threshold from 0.75
+    # to 0.0 -- which makes ANY arrival absorb ANY departure -- and every
+    # control stayed green.  The reason is that C1's plant has NO arrivals at
+    # all, so the rewording loop never executes and the threshold is never
+    # read.  An unguarded constant in a classifier is exactly the "lever with
+    # no guard" fault, and the harness found it where inspection had not.
+    #
+    # C7 is the plant that reads it: a bullet vanishes AND an unrelated bullet
+    # arrives in the same transition.  At 0.75 the arrival shares none of the
+    # departed head's tokens, so the verdict must be LOST; at any threshold
+    # low enough to absorb it the verdict becomes REWORDED and this control
+    # goes red.
+    log7 = mk('2026-01-01', ['ITEM ALPHA', 'ITEM BETA']) + mk(
+        '2026-01-02', ['ITEM BETA', 'SOMETHING ENTIRELY DIFFERENT'])
+    _p, _c, r7 = s7_newest_transition(log7, '# none\n')
+    out.append(('C7 an unrelated ARRIVAL does not absorb a lost bullet -- the '
+                '0.75 threshold is read, not merely declared',
+                [x[0] for x in r7] == ['LOST'],
+                'rows %r; added after a surviving mutant showed C1 never '
+                'reaches the threshold' % [(x[0], x[1]) for x in r7]))
     return out
 
 

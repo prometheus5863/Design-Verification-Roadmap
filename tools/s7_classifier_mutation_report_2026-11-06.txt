@@ -1,0 +1,36 @@
+==========================================================================
+S7 CLASSIFIER MUTATION TEST -- 2026-11-06
+Does any control actually fail when the classifier is broken?
+==========================================================================
+
+BASELINE (unmutated, real repo): RESULT: 56 passed, 0 failed
+baseline: C1-C6 all green, so a red control below is caused by the mutant
+
+M1  DETECTED  LOST made unreachable: an unaccounted departure reads REWORDED
+        expected red : C1
+        actually red  : C1,C7
+        RESULT: 54 passed, 2 failed
+M2  DETECTED  the STALE-adjudication route deleted
+        expected red : C2,C6
+        actually red  : C2,C6
+        RESULT: 53 passed, 3 failed
+M3  DETECTED  the removal-note route deleted
+        expected red : C3
+        actually red  : C3
+        RESULT: 55 passed, 1 failed
+M4  DETECTED  precedence inverted: the REWORDED scan runs before ADJUDICATED, every route still present
+        expected red : C6
+        actually red  : C6
+        RESULT: 55 passed, 1 failed
+M5  DETECTED  the token threshold loosened to 0.0, so any arrival looks like a rewording
+        expected red : C7
+        actually red  : C7
+        RESULT: 55 passed, 1 failed
+M6  DETECTED  the departure membership test inverted, so departures are never found
+        expected red : C2,C3,C4,C5,C6
+        actually red  : C2,C3,C4,C5,C6
+        RESULT: 50 passed, 6 failed
+
+==========================================================================
+TOTAL: 6 detected, 0 survived, 0 not applied (of 6)
+==========================================================================
