@@ -3597,7 +3597,44 @@ the work turned out to be auditing the wrong list.
   two markdown files — so every item blocked on Icarus or cocotb stays blocked,
   deliberately and not by a failed install.
 
-- [ ] **NOW RANKED FIRST: why do bullets leave the list unobserved?** The
+- [x] **RANKED FIRST ON 11-05, DONE 11-06: why do bullets leave the list
+  unobserved?** `S7`, with the specification's scope corrected by measurement.
+  Four accounting routes in fixed precedence — `ADJUDICATED` (a `STALE`
+  adjudication entry whose heading equals the departed head), `NOTED` (an
+  explicit removal note, a convention this check defines and no committed
+  entry yet uses, so the route is exercised only by its control), `REWORDED`
+  (an arrival in the same transition containing 75 % of the departed head's
+  tokens) and `LOST`, the fault. On the real log the newest transition is
+  clean: 11-04 → 11-05, three departures, two `ADJUDICATED`, one `REWORDED`,
+  **zero `LOST`** — so the check lands green and forward-looking with no
+  baseline of historical exceptions to maintain.
+
+  **The 11-05 specification does not survive the whole log, and that is
+  measured.** Across every consecutive pair the diff reports **220 departures
+  over 50 transitions, worst 31 in one step**, and the figure measures
+  presentation: entries 10-29, 10-30, 11-02 and 11-03 carry 7, 9, 10 and 12
+  bullets where 10-28 carries 31, and 10-25..10-28, 11-04 and 11-05 fold the
+  tail into one bullet whose head *carries the folded names* and so changes
+  wording every entry. Reading that bullet as inheritance makes it worse — the
+  effective set accumulates to 68 by 10-28 and collapses in one step. The
+  history figures are printed as a report and gate nothing.
+
+- [x] **`S7`'s classifier mutation-tested, and one mutant survived.** The
+  10-26 item "mutation-test the runners' scoring logic, not only their arms",
+  discharged against the classifier written the same day. Six defects, five
+  caught, and **M5 survived**: loosening the rewording threshold from 0.75 to
+  0.0 left every control green, because `C1`'s plant drops a bullet and adds
+  nothing, so the rewording loop never runs and the threshold is never read.
+  `C7` is the plant that reads it. Two of the six mutant *specifications* were
+  also wrong and the harness's expected-versus-actual printout is what showed
+  it. **6 detected, 0 survived.**
+
+- **`tools/open_item_staleness_audit.py`: 56 passed, 0 failed, exit 0**, from
+  55/0 after `S7` landed and 48/0 at the start of the day. No toolchain was
+  installed again — everything is pure python over two markdown files — so
+  every Icarus- or cocotb-blocked item stays blocked deliberately.
+
+- [ ] **SUPERSEDED, kept for the record — the 11-05 wording of the above:** The
   successor, and a different question from the item it replaces. `S4b` makes
   misalignment measurable and does nothing about the prior fault: four bullets
   left the list since 10-28 with no artefact recording that they had, one of

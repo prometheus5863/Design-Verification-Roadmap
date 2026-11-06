@@ -13188,3 +13188,297 @@ reusable across runs and `rm -rf` fails on it file by file. Use
 **Commits this run:** `S4b` with its six controls, its deliberately-red
 transcript, the nine adjudication edits, `progress.md`, the regenerated
 transcript, and this `AUTOMATION_LOG.md` entry.
+
+## 2026-11-06 — the ranked-first item built, its specification corrected by measurement, and a surviving mutant in the classifier it was built on
+
+Three commits, all pure python over two markdown files. No toolchain was
+installed, so every Icarus- or cocotb-blocked item stays blocked deliberately
+and not by a failed install — the second consecutive session of which, and
+still evidence for the "run every mutation suite with its toolchain
+deliberately removed" item rather than action on it.
+
+### 1. `S7`, and why the specification it was given does not survive the log
+
+The 11-05 entry ranked this first and specified it: *diff the bullet-head set
+of the newest list against the previous entry's and require every departure to
+be accounted for — matched either by a `STALE` adjudication entry or by an
+explicit removal note in the entry that dropped it.* It called the item
+blocked on nothing, and it was right about the blocker and wrong about the
+scope.
+
+**Applied to the whole log the diff reports 220 departures over 50
+transitions, worst 31 in a single step, and the figure measures presentation
+rather than work lost.** Three causes, all printed by `s7_history_scan` rather
+than quoted here as a verdict:
+
+- Entries 10-29, 10-30, 11-02 and 11-03 carry **7, 9, 10 and 12** bullets
+  where 10-28 carries 31 and 11-04 carries 33. Those entries do not enumerate
+  the standing list at all.
+- Entries 10-25..10-28, 11-04 and 11-05 fold the tail into one bullet headed
+  "The rest of the standing list is unchanged: …", whose **head carries the
+  folded names** — so its wording changes every entry and it never compares
+  equal to the previous entry's.
+- Hence 10-28 → 10-29 alone reports 31 departures, every one a format change.
+
+Reading the compression bullet as **inheritance** — "the rest is unchanged"
+carrying the previous tail forward — was tried first and makes it *worse*:
+because that bullet's own head changes wording every entry, the effective set
+accumulates to **68** items by 10-28 and then collapses in one step, turning a
+31-departure artefact into a 68-departure one. That experiment is recorded in
+the module because it is the reason the simpler reading was kept.
+
+So `S7` is scoped to the **newest transition**, which is what the item wants
+operationally and is decidable because both lists are current. Four routes in
+fixed precedence: `ADJUDICATED` (a `STALE` entry whose heading equals the
+departed head — the route the committed history actually uses), `NOTED` (an
+explicit removal note), `REWORDED` (an arrival in the same transition
+containing 75 per cent of the departed head's tokens — `S4b` is the precedent
+for using the exact and loose matchers for *different* questions), and `LOST`.
+
+The `NOTED` convention is **defined by this check** and, as of the commit that
+added it, no committed entry used it — so that route was exercised only by its
+control, which is stated in the module and in `C3`'s detail string rather than
+implied, because an untested path inside an auditor is this repository's own
+recurring fault. **This entry is the first to use it**, and the list below
+ranks the re-run that will confirm it.
+
+On the real log the newest transition was clean — 11-04 → 11-05, three
+departures, two `ADJUDICATED` and one `REWORDED`, **zero `LOST`** — so `S7`
+landed green and forward-looking, with no baseline of historical exceptions to
+maintain. A check that ships red for history is one nobody reads.
+
+### 2. The classifier's mutation test, and the mutant that survived it
+
+The 10-26 item *"mutation-test the runners' scoring logic, not only their
+arms"* has been carried with four arguments and no action. `S7`'s classifier
+**is** scoring logic — it assigns one of four verdicts and nothing else
+checked that the assignment was load-bearing — so it got a harness on the day
+it was written.
+
+**It earned its keep on the first run.** Six defects injected into
+`classify_departure`, five detected, and **`M5` survived**: loosening the
+rewording threshold from 0.75 to **0.0** — which makes *any* arrival absorb
+*any* departure, so a genuinely lost bullet reads `REWORDED` whenever the
+entry adds anything at all — left every control green and the suite at 55
+passed, 0 failed.
+
+The reason is specific and was not visible by inspection. `C1`'s plant drops a
+bullet and adds nothing, so `arrivals` is empty, the rewording loop never
+executes, and **the threshold is never read**. The one constant in the
+classifier that decides whether a loss gets reported was an unguarded lever,
+and the control meant to cover `LOST` could not reach it. `C7` is the plant
+that reads it: a bullet vanishes *and* an unrelated bullet arrives in the same
+transition, so at 0.75 the verdict must be `LOST` and at any threshold low
+enough to absorb it the verdict becomes `REWORDED`. `M5` is now detected.
+**6 detected, 0 survived.**
+
+**Two of the six mutant specifications were also wrong**, and the harness
+printing expected-red beside actually-red is what showed it:
+
+- `M4` was labelled "precedence inverted" but its edit **deleted** the
+  `ADJUDICATED` branch, making it a duplicate of `M2` — which is why it
+  reddened `C2` as well as `C6`. It now moves the rewording scan ahead of the
+  adjudication check with every route still present, and reddens `C6` alone.
+- `M6` was expected to redden `C1`. It cannot: inverting the membership test
+  makes the "departures" the heads still **present**, and in `C1`'s plant that
+  head classifies `LOST` too, so `C1` passes *for the wrong reason*. The
+  expectation was corrected to the five controls that do fire rather than left
+  to read as a pass.
+
+A mutation harness whose expectations are not themselves checked against the
+output reports its author's beliefs, so both corrections are on the record.
+
+### 3. Environment and automation health
+
+`/sessions` **100 per cent full** — 212 K free of 9.8 G — and the first
+mutation harness died with `ENOSPC` partway through `shutil.copytree` into the
+default temp directory, which resolves onto that filesystem. The harness now
+builds each mutant tree out of **symlinks** to the real repo with exactly one
+real file, the mutated module. That is faster, needs no space, and is also
+*stronger*: each mutant sees byte-for-byte the repository the baseline saw,
+which a copy does not guarantee.
+
+The device bridge **dropped mid-session** during the sibling repository's work
+and did not return on the immediate retry; the session was parked with a
+ten-minute self-check rather than abandoned, and `/tmp` survived intact. While
+the bridge was degraded the per-call timeout cap fell from 180 s to **45 s**,
+which matters for the sibling repository's ~90 s census and not here — this
+audit runs in 0.12 s.
+
+**Retired from the list this session**, using the convention `S7` defines so
+the departure is accounted for by an artefact rather than by this prose:
+
+- **RETIRED FROM THE LIST:** WHY DO BULLETS LEAVE THE LIST UNOBSERVED
+- **RETIRED FROM THE LIST:** MUTATION-TEST THE RUNNERS' SCORING LOGIC, NOT ONLY THEIR ARMS
+
+**Open items, with blockers named:**
+
+- **RE-RUN THE AUDIT AFTER THIS ENTRY LANDS** — **ranked first**, cheap,
+  mechanical, blocked on nothing, and it carries a prediction to falsify.
+  This entry retires two bullets using the `RETIRED FROM THE LIST:`
+  convention `S7` defines, and the transcript committed beside it already
+  shows the answer: the newest transition 11-05 → 11-06 reports **two
+  departures, both `NOTED`, zero `LOST`** — the **first exercise of the
+  `NOTED` route by a committed entry rather than by its control**. What the
+  re-run must confirm is that it *stays* that way once the next entry is
+  written on top, since a convention that works only for the session that
+  invented it is worth nothing. **A first draft of this bullet also predicted
+  a `REWORDED` row for the compression bullet and was wrong:** that bullet was
+  carried forward **verbatim**, so it does not depart at all. Carrying it
+  unchanged is in fact the cheapest way to avoid the artefact entirely, and is
+  a hint at the repair the next item names.
+
+- **THE COMPRESSION BULLET'S HEAD CARRIES ITS PAYLOAD** — created today, and
+  it is the single reason `S7` is scoped to one transition. The bullet reading
+  "The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08); …" folds the tail of the list into its own **head**, so
+  the head's text changes every entry and never compares equal to the previous
+  entry's. The repair is mechanical and local: give it a stable head — "**THE
+  REST OF THE STANDING LIST**" — and move the folded names into the gloss
+  after the dash, where `bullet_head()` does not read them. Blocked on
+  nothing, and it is a precondition for the item below.
+
+- **WIDEN `S7` BEYOND THE NEWEST TRANSITION** — created today, and
+  **blocked on the item above**, deliberately rather than by accident.
+  `s7_history_scan` measures 220 departures over 50 transitions and every
+  large figure in it is a format change, so widening the verdict now would
+  ship a check that is red for history and therefore unread. Once the
+  compression bullet has a stable head and a few entries have been written
+  with it, the same diff becomes meaningful across those entries, and the
+  scope can move one transition at a time with the scan as the evidence.
+
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02, 11-03 and 11-04,
+  still a **specification decision, not a coding task**, and still the last
+  thing between capstone remainder (c) and a sign-off statement. 11-04's
+  sharpening stands: "the steered policy" is a **mixture**, mostly uniform in
+  the payload and deliberately degenerate on `0x00`, so a rule indexed by
+  policy must say **which part** of the policy it means.
+
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — carried from 11-03,
+  blocked on a toolchain install. `PAC_MODE=evidence` is still exercised only
+  by P5's synthetic probe. The check worth running is not that it aborts but
+  that it aborts **at the push the census predicts**.
+
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii), and
+  **now adjudicated** (§5): unblocked, a paragraph of plan text, eight days
+  carried.
+
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions; Icarus 10.3 is not one. **Now adjudicated** (§5) with
+  the blocker on the record, so the next session need not re-derive it.
+
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27, **now adjudicated** (§5). Unblocked and mechanical; what
+  it needs is a decision about what counts as evidence of authorship.
+
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO phase6_crv_uart'S CROSSES** —
+  **restored to the list** (§4), lost since 10-28. Its entry heading was two
+  items in one clause, which is how the pair came to be carried as one and
+  then lost together; the second half is now its own bullet below.
+
+- **AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — split out from the bullet above, where it had been a tail clause
+  since 10-26. The fault itself is 09-27's and has recurred twice.
+
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — **restored to the
+  list** (§4), and this is the **second** time it has been lost and restored
+  (first on 10-26). That repetition is the sharpest argument for the
+  ranked-first item.
+
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  **restored to the list** (§4), lost since 10-28.
+
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02, now a fourth argument and no action. Two coverage models joined by a
+  measurement and still not by a shared name.
+
+- **THE ODD START-BIT PHASES** — carried from 10-29. 11-04 supplied the form
+  of words both this and its 11-03 sibling were waiting for: compute what the
+  null predicts for the sample size actually run and say whether the
+  observation discriminates. Both should be **rewritten that way** rather than
+  re-argued.
+
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT** — capstone
+  remainder (b), blocked on the toolchain install. Still the largest remaining
+  block of actual verification content.
+
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+
+- **REGISTER THE NEW TRANSCRIPTS** — carried. No transcript was added today;
+  `tools/open_item_staleness_audit_output.txt` was **regenerated**, and it is
+  already captured by redirection rather than written by the module, per
+  11-04's borrowing from the sibling repository.
+
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25.
+
+- **CLASSIFY EVERY `cmp -s` AS VERDICT-BEARING OR CONTROL-BEARING** — carried,
+  needs no toolchain.
+
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, twelve-plus
+  sessions, named cause of three measured staleness incidents.
+
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried; a full re-run exceeds the 180 s call cap, needs splitting, and
+  needs the toolchain.
+
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong.
+
+- **A MUTANT FOR THE `rx_avail` SYNC_ONLY ROW** — carried; still the cheapest
+  item that adds verification **reach** rather than auditing existing reach.
+
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried, and its
+  adjudication heading was re-quoted today to equal this head (§3). `0x40` is
+  borderline and **not** in the steering map's image, so a coverage-driven
+  policy cannot close that cross on purpose — only by the random fallback.
+
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried, twenty
+  sessions old.
+
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried, and
+  its adjudication heading was re-quoted today to equal this head (§3).
+
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today is a **second** accidental instance: no
+  toolchain was installed and the session's whole output is pure python, which
+  is evidence for the split rather than for the item.
+
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11.
+
+- The rest of the standing list is unchanged: **A POSITIVE CONTROL THAT MAKES
+  S-f FIRE** (10-08); **DERIVE C1's AND C3's DETAIL STRINGS** (10-10); **A
+  diversity TARGET**; per-property coverage of the Phase 4 UVM environment
+  (09-23); a less greedy steering policy (09-24); widen the coverage model
+  (09-24); two transmitters at once (09-25); `abc pdr` as a second engine
+  (09-23); mutants not yet attempted (interrupt enable combinations, reset
+  asserted mid-frame); a property needing a strengthening invariant; the SVA
+  sequence layer (09-20); code coverage measurement (Icarus has none, 09-18);
+  Phase 6 lint, regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** `S7` with its seven controls and its transcript, the
+classifier mutation harness with its report and the `C7` control the surviving
+mutant forced, `progress.md`, and this `AUTOMATION_LOG.md` entry.

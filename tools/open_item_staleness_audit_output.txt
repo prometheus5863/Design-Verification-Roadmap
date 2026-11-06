@@ -2,11 +2,11 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 55 "Not yet covered" lists; the STANDING list has 36 items
-    FULL        36 items   Open items, with blockers named:**
-  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 778535 > 770202), not to an older one
+  AUTOMATION_LOG.md: 56 "Not yet covered" lists; the STANDING list has 37 items
+    FULL        37 items   Open items, with blockers named:**
+  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 793495 > 786471), not to an older one
   [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
-  progress.md: 91 completed checkboxes, 18 unchecked
+  progress.md: 93 completed checkboxes, 18 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
@@ -36,8 +36,8 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
     0.727  - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan v14 (ii), and now adjudica...  <-- adjudicate
     0.636  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
     0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
-    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...  <-- adjudicate
-    0.429  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — restored to the li...
+    0.571  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — restored to the li...  <-- adjudicate
+    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...
     0.429  - A REPOSITORY-WIDE DETAIL-STRING CENSUS — carried; no such tool exists.
     0.400  - CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING — carried, needs no tool...
     0.400  - THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ — carried from 10-20.
@@ -54,7 +54,7 @@ S4 -- the committed adjudication of the top 6
     OPEN    - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan ...
     OPEN    - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
     OPEN    - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERA...
-    OPEN    - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — c...
+    OPEN    - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING ...
   [PASS] every item at or above the reporting cut is adjudicated on disk, with a reason
   [PASS] no OPEN adjudication entry has lost its item from the list entirely (a STALE entry losing its item is the audit trail working, not an orphan)
   [PASS] the RETIRED and WORDING categories are disjoint
@@ -190,24 +190,22 @@ S7 -- every bullet that LEAVES the list is accounted for (2026-11-06)
 ------------------------------------------------------------------------------
   history scan, a REPORT and not a verdict -- it is the evidence
   for why S7 is scoped to the newest transition:
-    transitions with departures : 50
-    departures in total         : 220
+    transitions with departures : 51
+    departures in total         : 222
     worst single transition     : 2026-10-28 -> 2026-10-29, 31 departures
     recent entries with a SHORT list (<15 bullets): 2026-10-29, 2026-10-30, 2026-11-02, 2026-11-03
-    recent entries folding the tail into one bullet: 2026-10-25, 2026-10-26, 2026-10-27, 2026-10-28, 2026-11-04, 2026-11-05
+    recent entries folding the tail into one bullet: 2026-10-26, 2026-10-27, 2026-10-28, 2026-11-04, 2026-11-05, 2026-11-06
   A head diff cannot tell a format change from a loss, so the
-  220 above measures presentation and not work lost.  S7 itself
+  222 above measures presentation and not work lost.  S7 itself
   is scoped to the newest transition, where both lists are
   current and the question is decidable.
 
-  newest transition: 2026-11-04 -> 2026-11-05   3 departures
-    ADJUDICATED  the 4 orphaned open adjudication entries, and s4's red rep
-                 a STALE adjudication entry quotes this head
-    ADJUDICATED  the borderline pair under steering
-                 a STALE adjudication entry quotes this head
-    REWORDED     the rest of the standing list is unchanged: a positive con
-                 arrived reworded as "the rest of the standing list is unchanged: a positive con"
-  [PASS] S7 no bullet left the newest list unaccounted for (3 departures: ADJUDICATED=2, NOTED=0, REWORDED=1, LOST=0)
+  newest transition: 2026-11-05 -> 2026-11-06   2 departures
+    NOTED        why do bullets leave the list unobserved
+                 the entry that dropped it carries a removal note
+    NOTED        mutation-test the runners' scoring logic, not only their a
+                 the entry that dropped it carries a removal note
+  [PASS] S7 no bullet left the newest list unaccounted for (2 departures: ADJUDICATED=0, NOTED=2, REWORDED=0, LOST=0)
 
   [PASS] C1 a bullet that vanishes with no trace is LOST   [rows [('LOST', 'item alpha')]]
   [PASS] C2 and ACCOUNTED once a STALE adjudication entry quotes it   [rows [('ADJUDICATED', 'item alpha')]]
