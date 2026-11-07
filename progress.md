@@ -3644,3 +3644,49 @@ the work turned out to be auditing the wrong list.
   `STALE` adjudication entry or by an explicit removal note in the entry that
   dropped it. That makes completion-versus-loss **decidable from the
   documents**, which today could only do by reading the tree.
+
+### 2026-11-07
+
+- [x] **The toolchain was never blocked — it was misdiagnosed, three times.**
+  `tools/setup_iverilog.sh` reported a full-disk fault as a network one
+  ("failed to download"), and the fix had to be found twice more by testing
+  the fix: the compile then failed the same way one layer down
+  (`iverilog: Error opening temporary file`), and the writability probe that
+  was supposed to catch that reported a 100 %-full filesystem as writable,
+  because **a zero-length create succeeds when there are no free data
+  blocks**. Verified in the condition that broke it: with `TMPDIR` at 0 bytes
+  free the install, the shell function and the PATH wrapper scripts all work,
+  and a good `TMPDIR` is still honoured. Three sessions had recorded "no
+  toolchain installed" as deliberate; one that had tried would have been sent
+  to the network.
+
+- [x] **`STATUS.rx_avail` SYNC_ONLY: argued since 10-12, now measured.**
+  `examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh`, the census's
+  weakest row and the cheapest item that adds verification *reach*. Four
+  seeds × two stimulus modes, **4/4 detected on every mutant, none by a check
+  naming the signal** — R1 by the per-burst watchdog, R2 by the loopback
+  reference-model comparison, R3 by the watchdog at occupancy 1. The
+  adjudication is **inverted** relative to the `tx_empty` runner: with no
+  prediction naming the signal, consistent-with-SYNC_ONLY means detected by a
+  check that does *not* name it. `G2` confirms that premise mechanically
+  (0 of 11 `check_eq` calls mention `rx_avail` or `st[3]`). Two first-draft
+  defects caught by reading its own output: R4 was voting on the verdict it
+  exists to sit outside, and R3/R4 are indistinguishable in this matrix —
+  both now stated rather than hidden.
+
+- [x] **The compression bullet has a stable head**, the 11-06 precondition for
+  widening `S7`. The folded tail now reads `- **THE REST OF THE STANDING
+  LIST** — unchanged: …`, so `bullet_head()` sees five words instead of
+  sixty tokens. The repair is itself a departure and is accounted for by a
+  `RETIRED FROM THE LIST:` note quoting the old head in full — unwieldy
+  exactly once, which is the point.
+
+- [x] **The ranked item re-run: 11-06 → 11-07, three departures,
+  `ADJUDICATED=1 NOTED=2 LOST=0`.** The `NOTED` convention survives a second
+  author. The audit also caught **two incomplete discharges in this very
+  session** — a removal note that orphaned an `OPEN` adjudication entry, and
+  a new `STALE` verdict with no `REPLACED-BY` — the first time it has caught
+  the session running it rather than a predecessor.
+
+- **`tools/open_item_staleness_audit.py`: 56 passed, 0 failed, exit 0.**
+  Phase 4 UVM remains in progress; `S7` is now unblocked for widening.

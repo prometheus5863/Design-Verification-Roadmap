@@ -13482,3 +13482,319 @@ the departure is accounted for by an artefact rather than by this prose:
 **Commits this run:** `S7` with its seven controls and its transcript, the
 classifier mutation harness with its report and the `C7` control the surviving
 mutant forced, `progress.md`, and this `AUTOMATION_LOG.md` entry.
+
+---
+
+## 2026-11-07 — the toolchain was never blocked, it was misdiagnosed three times in a row; the census's weakest row is now measured; and the compression bullet has a stable head
+
+Four commits before this entry, and for the first time in four sessions the
+work is not all in the instrument layer: two of the four are a toolchain fix
+and a new mutation suite.
+
+### 1. The toolchain reported a DISK fault as a NETWORK one, three times over
+
+11-04, 11-05 and 11-06 each recorded "no toolchain was installed", described
+as deliberate. It was deliberate — but a session that had tried would have
+been told something false. `tools/setup_iverilog.sh` failed with
+
+    ERROR: failed to download iverilog .deb from http://archive.ubuntu.com/...
+
+while the same URL fetched by hand returned **200 and 1858972 bytes**. That
+discrepancy is the only thing that separated the two diagnoses, and it took
+three rounds to get to the bottom, each round found by **testing the previous
+fix rather than by reading it**:
+
+1. **The download.** `TMP_DEB` was `mktemp --suffix=.deb`, which honours
+   `$TMPDIR`, and in this sandbox `$TMPDIR` resolves onto `/sessions`, 100 %
+   full for twelve consecutive sessions. `curl` could not write 1.8 MB.
+   `TMP_DEB` now lives inside the install directory, and the error path
+   reports curl's exit code, the bytes written and the free space — naming a
+   disk fault explicitly at curl exit 23 or under 4 MB free.
+2. **The compile.** With the download fixed the install succeeded and every
+   compile died with `iverilog: Error opening temporary file
+   /.../ivrlg5194391` — the same disk fault one layer down, misattributed
+   again, because `iverilog` writes preprocessor scratch into `$TMPDIR` on
+   every invocation. Both the shell functions and, more importantly, the PATH
+   wrapper scripts that child processes actually resolve now fall back to an
+   install-local `TMPDIR`.
+3. **The probe.** The fallback's writability test was `: > file`, and **a
+   zero-length create succeeds on a full filesystem** — it needs an inode and
+   no data block. So the probe called the full filesystem writable, the
+   fallback never fired, and the compile failed one layer further down with
+   `ivlpp: No input files given`, a **third** misattributed message for the
+   same fault. Found by re-running the verification against the *real* full
+   directory after a first run had "passed" against a path that merely did
+   not exist. The probe now writes 4096 bytes and checks they arrived.
+   `test -w` would have had exactly the same defect.
+
+Verified in the condition that broke it rather than a proxy for it: with
+`TMPDIR` on the 0-bytes-free filesystem the install succeeds, the shell
+function compiles and runs the CRV bench to `RESULT: PASS (99965/99965)`, and
+the PATH wrapper compiles too; with `TMPDIR=/tmp` the inherited value is still
+honoured, so there is no regression.
+
+**The pattern is worth naming because it cost three rounds.** Every layer of
+this toolchain reports *the thing I was about to do failed* and none of them
+reports *the disk is full*. A diagnosis that names the operation rather than
+the cause survives any number of fixes to the operation — and the standing
+item "run every mutation suite with its toolchain deliberately removed" now
+has a sharper sibling: **run it with the toolchain deliberately broken in a
+way that is not the network**, because that is the case every message here
+got wrong.
+
+### 2. `STATUS.rx_avail` is genuinely `SYNC_ONLY`, and it is now measured rather than argued
+
+`examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh`, discharging the
+item carried since 10-12 and named on the list as *the cheapest item that adds
+verification reach rather than auditing existing reach*. The census recorded
+this row's exposure as an argument — *"the exposure exists, but it is indirect
+and no mutant has ever been run for it"* — and it is 1 of only 2 `SYNC_ONLY`
+rows of 18.
+
+**The adjudication is inverted** relative to `run_tx_empty_mutation_tests.sh`,
+which is why it is a separate runner and not four more rows. For `tx_empty`
+there *are* predictions naming the signal, so a detection is attributable when
+the failing check names it. Here the census's claim is that **no** check names
+it, so the attributable case is the opposite: consistent with `SYNC_ONLY`
+exactly when the first failing check does **not** name `rx_avail`. Three
+outcomes, three different findings — an escape refutes the exposure; a
+detection by an `rx_avail` check means the row is misclassified as `SYNC_ONLY`
+when it is `PREDICTED` or `TRUSTED`; a detection by a data-path check confirms
+it.
+
+`G2` **checks the premise rather than quoting it**: 0 of the bench's 11
+`check_eq` calls mention `rx_avail` or `st[3]`, and the sequencing read the
+census names is present. Asserting that a bench does *not* contain a check is
+the 10-20 "naming is not invoking" fault reversed, and the whole adjudication
+rests on it.
+
+Four seeds × two stimulus modes, **all 4/4 detected, none by a check naming
+the signal**:
+
+| id | mutant | first failing check |
+|---|---|---|
+| R1 | decode stuck CLEAR | burst watchdog, 0 of 4 bytes returned |
+| R2 | decode stuck SET | loopback byte matches reference model |
+| R3 | decode one entry LATE | burst watchdog, 3 of 4 bytes returned |
+| R4 | **WIRE** one entry late | *(control, not verdict-bearing)* |
+
+**Two defects in the first draft, both caught by reading its own output rather
+than by a control.**
+
+- **`R4` was voting on the verdict it exists to sit outside.** It mutates the
+  wire, which `rx_pop` gates on, so it changes what the DUT *does* and can
+  neither confirm nor refute a claim about what the *bench reads* — and yet
+  `sync_only_holds` was fed by all four rows. Verdict-bearing is now an
+  explicit argument at the call site and the matrix prints which rows carry
+  the verdict, so a control cannot quietly become evidence. This is the
+  10-08 "a control with no control" shape one level out: not a control
+  lacking a control, but a control **inside the population it controls**.
+- **`R3` and `R4` are indistinguishable in this matrix**, and the report says
+  so rather than letting the control look informative. Both report the same
+  first failing check with the same byte count, because both make the last
+  byte unreadable — `R3` by stopping the bench asking for it, `R4` by stopping
+  the RTL popping it. The mechanisms differ and this instrument cannot tell
+  them apart, which bounds what the control establishes: a wire mutation is
+  detected, not detected *differently*.
+
+### 3. The compression bullet now has a stable head, and this entry pays the one-time cost
+
+The 11-06 entry created this item and called it a precondition for widening
+`S7`. The repair is in the standing list below: the folded tail now reads
+`- **THE REST OF THE STANDING LIST** — unchanged: …`, so `bullet_head()` sees
+a five-word head that will compare equal to the next entry's instead of a
+sixty-token head that never can.
+
+**The repair is itself a departure, and it is accounted for by an artefact
+rather than by this paragraph.** The old head leaves the list and nothing
+arrives that shares 75 % of its tokens, so without a removal note it would
+classify `LOST` — correctly. The `RETIRED FROM THE LIST:` note below quotes it
+in full, which is unwieldy exactly once, and that unwieldiness is the clearest
+possible statement of what was wrong with putting the payload in the head.
+
+### 4. The ranked item: the `NOTED` route, one entry on
+
+11-06 ranked the re-run first and asked a specific question: the 11-05 → 11-06
+transition reported two departures, both `NOTED`, zero `LOST` — *the first
+exercise of the `NOTED` route by a committed entry rather than by its
+control* — and **what the re-run must confirm is that it stays that way once
+the next entry is written on top**, since a convention that works only for the
+session that invented it is worth nothing.
+
+**Measured, with this entry in place: 11-06 → 11-07, three departures,
+`ADJUDICATED=1 NOTED=2 REWORDED=0 LOST=0`.** The convention survives a second
+author, and the compression repair of §3 is the departure it had to survive.
+Both routes are exercised deliberately rather than only the one 11-06
+invented: the `rx_avail` item is `ADJUDICATED`, its `OPEN` entry in
+`tools/open_item_adjudication.md` moved to `STALE` with the measurement in it,
+which is the route the committed history actually uses and which `S7` gives
+precedence; the other two are `NOTED`.
+
+**And the audit caught two incomplete discharges in this session, which is
+the first time it has caught the session that was running it.** Writing the
+removal notes alone left the suite at **55/1** twice over:
+
+1. Retiring the `rx_avail` bullet with only a `NOTED` note **orphaned its
+   `OPEN` adjudication entry** — `S4`'s orphan check fired. A removal note
+   says the bullet left; it does not say the item was *finished*, and for an
+   item with an adjudication entry on disk the two artefacts then disagree.
+   That is what moved it to `ADJUDICATED` above, and it is the better
+   discharge: `NOTED` is for items that never had an entry.
+2. The new `STALE` verdict then failed the check that **every `STALE` must
+   name what inherits the work** (`REPLACED-BY`) or say there is none
+   (`NO-SUCCESSOR`). It has a successor — the `rx_cnt` item §2 created — and
+   writing it down is what separates *this question is closed* from *this
+   question was abandoned*.
+
+Neither was deducible from the list; both came from running the thing. Ninth
+instance of the one-way channel, and the sharpest yet, because the instrument
+caught its own author mid-discharge rather than catching a predecessor.
+
+### 5. Environment and automation health
+
+`/sessions` **100 % full** (9.68 G of 9.8 G, 0 bytes free) for the **twelfth**
+consecutive session, and §1 is three faults that are all that one fact.
+Everything was done on `/dev/sda1` (3.2 G free) under `/tmp/work`, cloned
+fresh, and the Icarus install lives at `/tmp/iverilog_install`.
+
+The device bridge did **not** drop and the per-call cap stayed at 180 s. One
+measurement worth carrying: a single CRV sim is **2.5 s**, so the 4-seed ×
+2-mode × 5-arm matrix in §2 fits inside one call with room to spare — which is
+what made a new mutation suite affordable today at all.
+
+**Retired from the list this session**, each departure accounted for by an
+artefact rather than by prose, and deliberately by **two different routes** so
+today's transition exercises both. The `rx_avail` item is `ADJUDICATED`: its
+`OPEN` entry in `tools/open_item_adjudication.md` is now `STALE` with the
+measurement in it, which is the route the committed history actually uses and
+which `S7` gives precedence. The two below are `NOTED`. The second is quoted
+in full deliberately: it is the old compression head, and its length here is
+the clearest statement of why a head must not carry its payload.
+
+- **RETIRED FROM THE LIST:** THE COMPRESSION BULLET'S HEAD CARRIES ITS PAYLOAD
+- **RETIRED FROM THE LIST:** The rest of the standing list is unchanged: A POSITIVE CONTROL THAT MAKES S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); A diversity TARGET; per-property coverage of the Phase 4 UVM environment (09-23); a less greedy steering policy (09-24); widen the coverage model (09-24); two transmitters at once (09-25); abc pdr as a second engine (09-23); mutants not yet attempted (interrupt enable combinations, reset asserted mid-frame); a property needing a strengthening invariant; the SVA sequence layer (09-20); code coverage measurement (Icarus has none, 09-18); Phase 6 lint, regression infra, coverage merge, CDC basics, interview prep
+
+**Open items, with blockers named:**
+
+- **RE-RUN THE AUDIT AFTER THIS ENTRY LANDS** — **ranked first**, cheap,
+  mechanical, blocked on nothing, and it carries a sharper prediction than
+  last time. 11-06 → 11-07 is the **first transition to test the compression
+  repair**, and the next one is the first where both sides have a stable head:
+  the 11-07 → 11-08 transition should show the folded bullet **not departing
+  at all**, because its head no longer changes when its payload does. If it
+  departs again, the head is still carrying something it should not.
+- **WIDEN `S7` BEYOND THE NEWEST TRANSITION** — created 11-06 and **now
+  unblocked**, the item above having landed the precondition. The scan still
+  measures 220+ departures over 50 transitions and every large figure is a
+  format change, so the scope should move **one transition at a time** with
+  `s7_history_scan` as the evidence, starting from the first transition where
+  both lists carry a stable head.
+- **RUN A MUTATION SUITE WITH THE TOOLCHAIN BROKEN IN A WAY THAT IS NOT THE
+  NETWORK** — created today, the sibling of the long-carried "toolchain
+  deliberately removed" item and sharper than it. §1 is three real instances
+  and none of them was a removal; each was a *present* toolchain failing to
+  say why.
+- **A CHECK THAT OBSERVES `rx_cnt` DIRECTLY** — created today by §2's second
+  defect. It is what would separate `R3` from `R4`, and more generally it is
+  the only way this bench could distinguish *the sequencing gate lied* from
+  *the DUT changed*.
+- **CLASSIFY EVERY CONTROL AS VERDICT-BEARING OR NOT** — created today,
+  generalising §2's first defect. `R4` voted on a verdict it exists to sit
+  outside, and the fix was to make verdict-bearing explicit at the call site.
+  Every other runner here has controls mixed into the same loop as its
+  mutants; none of them says which carry the verdict. This is the close
+  sibling of the carried `cmp -s` item and should probably absorb it.
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02 through 11-06, still
+  a **specification decision, not a coding task**, and still the last thing
+  between capstone remainder (c) and a sign-off statement. "The steered
+  policy" is a **mixture**, mostly uniform in the payload and deliberately
+  degenerate on `0x00`, so a rule indexed by policy must say **which part**.
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — carried from 11-03,
+  **and its blocker is gone**: it was blocked on a toolchain install, and §1
+  installed one. `PAC_MODE=evidence` is still exercised only by P5's synthetic
+  probe, and the check worth running is not that it aborts but that it aborts
+  **at the push the census predicts**.
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT** — capstone
+  remainder (b), **blocker also gone** for the install half; what remains is
+  that Icarus 10.3 has no concurrent assertions, which is a different and
+  larger blocker. Still the largest remaining block of actual verification
+  content.
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried; a full re-run exceeds the 180 s cap and needs splitting. §5's
+  2.5 s-per-sim measurement is the number that would let someone size the
+  split instead of guessing at it.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii),
+  adjudicated unblocked on 11-06, a paragraph of plan text, nine days carried.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions; Icarus 10.3 is not one, and §1 does not change that.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27, unblocked and mechanical; what it needs is a decision
+  about what counts as evidence of authorship. Today added
+  `rx_avail_mutation_report_2026-11-07.txt`, a fifth dated report with the
+  same unverified provenance.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'S CROSSES** —
+  carried.
+- **AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — carried; the fault is 09-27's and has recurred twice.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, lost and
+  restored twice.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried, and today's runner adds four more `sed` expressions to the
+  population; all four are guarded by `G3`'s no-op and compile checks, which
+  is the mitigation this item wants generalised.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02, a fifth argument and no action.
+- **THE ODD START-BIT PHASES** — carried from 10-29; 11-04 supplied the form
+  of words it and its sibling were waiting for, and both should be
+  **rewritten** that way rather than re-argued.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds one:
+  `rx_avail_mutation_report_2026-11-07.txt`.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25.
+- **CLASSIFY EVERY `cmp -s` AS VERDICT-BEARING OR CONTROL-BEARING** — carried,
+  needs no toolchain, and the new item above should probably absorb it since
+  both are the same question asked of different objects.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, thirteen-plus
+  sessions, named cause of three measured staleness incidents.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried; `0x40`
+  is borderline and not in the steering map's image, so a coverage-driven
+  policy cannot close that cross on purpose.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17,
+  and today's runner ships with `G2b` from the start, which is the fifth
+  harness to have it and the argument that retrofitting the other four is
+  cheap.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-one sessions old.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried, and
+  §2 makes it more pointed: the census's weakest row turned out to hold, so
+  the open question is no longer the rows it has but the files it does not.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today is the **first session in four** that is not
+  an accidental instance of it, the toolchain having been installed.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT MAKES
+  S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); A diversity
+  TARGET; per-property coverage of the Phase 4 UVM environment (09-23); a less
+  greedy steering policy (09-24); widen the coverage model (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants
+  not yet attempted (interrupt enable combinations, reset asserted mid-frame);
+  a property needing a strengthening invariant; the SVA sequence layer
+  (09-20); code coverage measurement (Icarus has none, 09-18); Phase 6 lint,
+  regression infra, coverage merge, CDC basics, interview prep.

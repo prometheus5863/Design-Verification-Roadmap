@@ -444,9 +444,39 @@ verdict-bearing or control-bearing, and require each to be one or the other —
 the 2026-10-16 rule that *a set with a silent default has no members you can
 name*, applied to this count instead of to the runner list.
 
-## OPEN: A MUTANT FOR THE rx_avail SYNC_ONLY ROW
+## STALE: A MUTANT FOR THE rx_avail SYNC_ONLY ROW
 
-**Verdict: OPEN, and confirmed as the census's weakest row.**
+**Verdict: STALE as of 2026-11-07 — the mutant was run and the census row
+survives it.** `examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh`
+mutates the STATUS decode three ways (stuck clear, stuck set, one entry late)
+plus the wire as a non-verdict-bearing control, across four seeds and both
+stimulus modes. **All 4/4 detected in every mode, and not one of them by a
+check naming `rx_avail`**: R1 by the per-burst watchdog, R2 by the loopback
+reference-model comparison, R3 by the watchdog again at occupancy 1. `G2`
+confirms the row's precondition mechanically rather than quoting it — 0 of the
+bench's 11 `check_eq` calls mention `rx_avail` or `st[3]`, while the
+sequencing read `if (st[3])` is present.
+
+So the exposure the row argued for is real and is now **measured**: the signal
+is read to sequence and never checked, and breaking it mis-sequences the bench
+into a data-path failure rather than escaping. `SYNC_ONLY` is the right class.
+
+What the run did *not* settle, and is carried as its own item rather than
+folded in here: R3 and R4 are indistinguishable in this matrix — both report
+the same first failing check with the same byte count, because both make the
+last byte unreadable, one by stopping the bench asking and one by stopping the
+RTL popping. Separating them needs a check that observes `rx_cnt` directly.
+Report: `examples/phase6_crv_uart/rx_avail_mutation_report_2026-11-07.txt`.
+
+> **REPLACED-BY:** A CHECK THAT OBSERVES `rx_cnt` DIRECTLY — created
+> 2026-11-07 on the standing list. It inherits the only part of this item
+> that the run left open: distinguishing *the sequencing gate lied* from
+> *the DUT changed*, which this matrix cannot do because R3 and R4 produce
+> identical rows. The classification question this item asked is closed; the
+> instrument's resolution limit is what carries forward.
+
+**Original reasoning, kept:**
+**It was OPEN, and confirmed as the census's weakest row.**
 `tools/scoreboard_dut_signal_census_output.txt` carries `SYNC_ONLY
 STATUS.rx_avail (st[3])` with its exposure argument in prose — "decide when to
 read RX_DATA and no row named it" — and it is one of only **2 SYNC_ONLY rows
