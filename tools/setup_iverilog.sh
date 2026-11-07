@@ -55,9 +55,37 @@ IVERILOG_DEB_URL="http://archive.ubuntu.com/ubuntu/pool/universe/i/iverilog/iver
 if [ ! -x "${IVERILOG_INSTALL_DIR}/usr/bin/iverilog" ]; then
     echo "Setting up Icarus Verilog (no root required)..."
     mkdir -p "${IVERILOG_INSTALL_DIR}"
-    TMP_DEB="$(mktemp --suffix=.deb)"
-    if ! curl -sL -o "${TMP_DEB}" "${IVERILOG_DEB_URL}"; then
-        echo "ERROR: failed to download iverilog .deb from ${IVERILOG_DEB_URL}" >&2
+    # TMP_DEB LIVES BESIDE THE INSTALL, NOT IN $TMPDIR (fixed 2026-11-07).
+    #
+    # It used to be `mktemp --suffix=.deb`, which honours $TMPDIR.  In the
+    # automation sandbox $TMPDIR resolves onto a filesystem that has been
+    # 100 % full for twelve consecutive sessions, so curl could not write the
+    # 1.8 MB .deb and exited nonzero -- and this script reported
+    # "failed to download", which is a NETWORK diagnosis for a DISK fault.
+    # Measured that day: the same URL fetched fine with curl by hand, 200 and
+    # 1858972 bytes, while the script kept failing.  Three consecutive
+    # sessions had recorded "no toolchain installed" as a deliberate choice;
+    # a session that had tried would have been sent to the network by this
+    # message.  The install directory is already on /tmp by default, so
+    # putting the download there removes the dependence on $TMPDIR entirely.
+    TMP_DEB="${IVERILOG_INSTALL_DIR}/iverilog.deb.partial"
+    CURL_RC=0
+    curl -sSL -o "${TMP_DEB}" "${IVERILOG_DEB_URL}" 2> "${IVERILOG_INSTALL_DIR}/curl.err" || CURL_RC=$?
+    if [ "${CURL_RC}" -ne 0 ] || [ ! -s "${TMP_DEB}" ]; then
+        # SAY WHICH FAULT IT WAS.  curl exits 23 on a write error and 6/7/28
+        # on name-resolution, connection and timeout faults; the free space
+        # on the target filesystem distinguishes them even when it does not.
+        FREE_KB="$(df -Pk "${IVERILOG_INSTALL_DIR}" 2>/dev/null | awk 'NR==2{print $4}')"
+        echo "ERROR: could not fetch the iverilog .deb to ${TMP_DEB}" >&2
+        echo "       curl exit ${CURL_RC}; $(wc -c < "${TMP_DEB}" 2>/dev/null || echo 0) bytes written; ${FREE_KB:-unknown} KB free on that filesystem" >&2
+        if [ "${CURL_RC}" = "23" ] || [ "${FREE_KB:-1000000}" -lt 4096 ] 2>/dev/null; then
+            echo "       This is a DISK fault, not a network one: there is no room to" >&2
+            echo "       write the download.  Free space, or set IVERILOG_INSTALL_DIR" >&2
+            echo "       to a filesystem that has some." >&2
+        else
+            echo "       curl.err: $(tr -d '\n' < "${IVERILOG_INSTALL_DIR}/curl.err" 2>/dev/null | tail -c 200)" >&2
+        fi
+        rm -f "${TMP_DEB}"
         return 1 2>/dev/null || exit 1
     fi
     if ! dpkg-deb -x "${TMP_DEB}" "${IVERILOG_INSTALL_DIR}"; then
@@ -72,12 +100,58 @@ fi
 
 IVL_LIB_DIR="${IVERILOG_INSTALL_DIR}/usr/lib/x86_64-linux-gnu/ivl"
 
+# THE TOOLCHAIN NEEDS A WRITABLE TMPDIR AT COMPILE TIME TOO (2026-11-07).
+#
+# Fixing the download's TMPDIR was only half of it.  `iverilog` writes its own
+# preprocessor scratch files into $TMPDIR on every compile, so with $TMPDIR on
+# a full filesystem the INSTALL succeeds and then every compile dies with
+#
+#     iverilog: Error opening temporary file /.../ivrlg5194391
+#
+# which, like the download message it replaced, names a symptom and not the
+# cause.  Measured 2026-11-07 by deliberately pointing TMPDIR at the full
+# filesystem after the download fix landed -- i.e. the second fault was found
+# by testing the first fix rather than by reading.
+#
+# IVL_TMPDIR is a directory inside the install, which is on the same
+# filesystem the binaries were just written to and is therefore writable by
+# construction.  It is used only when the inherited $TMPDIR is not writable,
+# so a caller who has set a good TMPDIR keeps it.
+IVL_TMPDIR="${IVERILOG_INSTALL_DIR}/tmp"
+mkdir -p "${IVL_TMPDIR}"
+
+ivl_tmpdir() {
+    # Echo a TMPDIR that is actually writable: the inherited one if it is,
+    # otherwise the install's own.
+    #
+    # THE PROBE WRITES BYTES, AND THAT IS THE WHOLE POINT.  `test -w` is true
+    # on a full filesystem, and so is `: > file` -- a zero-length create needs
+    # an inode and no data block, so it SUCCEEDS at 0 bytes free.  The first
+    # version of this probe did exactly that, reported the full filesystem as
+    # writable, never took the fallback, and the compile then failed one layer
+    # down with "ivlpp: No input files given" -- a third misattributed message
+    # for the same disk fault.  Caught 2026-11-07 by re-running the
+    # verification against the REAL full directory after a first run had
+    # "passed" against a path that merely did not exist.
+    if [ -n "${TMPDIR:-}" ] \
+       && head -c 4096 /dev/zero > "${TMPDIR}/.ivl_probe.$$" 2>/dev/null \
+       && [ "$(wc -c < "${TMPDIR}/.ivl_probe.$$" 2>/dev/null)" = "4096" ]; then
+        rm -f "${TMPDIR}/.ivl_probe.$$"
+        printf '%s' "${TMPDIR}"
+    else
+        rm -f "${TMPDIR:-/nonexistent}/.ivl_probe.$$" 2>/dev/null
+        printf '%s' "${IVL_TMPDIR}"
+    fi
+}
+
 iverilog() {
-    "${IVERILOG_INSTALL_DIR}/usr/bin/iverilog" -B "${IVL_LIB_DIR}" "$@"
+    TMPDIR="$(ivl_tmpdir)" "${IVERILOG_INSTALL_DIR}/usr/bin/iverilog" \
+        -B "${IVL_LIB_DIR}" "$@"
 }
 
 vvp() {
-    "${IVERILOG_INSTALL_DIR}/usr/bin/vvp" -M "${IVL_LIB_DIR}" "$@"
+    TMPDIR="$(ivl_tmpdir)" "${IVERILOG_INSTALL_DIR}/usr/bin/vvp" \
+        -M "${IVL_LIB_DIR}" "$@"
 }
 
 # NOTE: these functions are deliberately NOT exported with `export -f`.
@@ -120,12 +194,37 @@ vvp() {
 # ---------------------------------------------------------------------
 IVERILOG_BIN_DIR="${IVERILOG_INSTALL_DIR}/bin"
 mkdir -p "${IVERILOG_BIN_DIR}"
+# The wrapper SCRIPTS carry the TMPDIR fallback too, and they are the ones
+# that matter most: a child process (make, cocotb, a mutation runner) resolves
+# these and never sees the shell functions above.
 cat > "${IVERILOG_BIN_DIR}/iverilog" <<EOF
 #!/bin/sh
+# The probe WRITES BYTES: a zero-length create succeeds on a full
+# filesystem, so `: > file` reports it writable when it is not (2026-11-07).
+if [ -z "\${TMPDIR:-}" ] \\
+   || ! head -c 4096 /dev/zero > "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null \\
+   || [ "\$(wc -c < "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null)" != "4096" ]; then
+    rm -f "\${TMPDIR:-/nonexistent}/.ivl_probe.\$\$" 2>/dev/null
+    TMPDIR="${IVL_TMPDIR}"
+else
+    rm -f "\${TMPDIR}/.ivl_probe.\$\$"
+fi
+export TMPDIR
 exec "${IVERILOG_INSTALL_DIR}/usr/bin/iverilog" -B "${IVL_LIB_DIR}" "\$@"
 EOF
 cat > "${IVERILOG_BIN_DIR}/vvp" <<EOF
 #!/bin/sh
+# The probe WRITES BYTES: a zero-length create succeeds on a full
+# filesystem, so `: > file` reports it writable when it is not (2026-11-07).
+if [ -z "\${TMPDIR:-}" ] \\
+   || ! head -c 4096 /dev/zero > "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null \\
+   || [ "\$(wc -c < "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null)" != "4096" ]; then
+    rm -f "\${TMPDIR:-/nonexistent}/.ivl_probe.\$\$" 2>/dev/null
+    TMPDIR="${IVL_TMPDIR}"
+else
+    rm -f "\${TMPDIR}/.ivl_probe.\$\$"
+fi
+export TMPDIR
 exec "${IVERILOG_INSTALL_DIR}/usr/bin/vvp" -M "${IVL_LIB_DIR}" "\$@"
 EOF
 chmod +x "${IVERILOG_BIN_DIR}/iverilog" "${IVERILOG_BIN_DIR}/vvp"
