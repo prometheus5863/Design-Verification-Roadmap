@@ -1,0 +1,107 @@
+==============================================================
+MUTATION TEST -- the STATUS.rx_avail SYNC_ONLY classification
+  bench : examples/phase6_crv_uart/uart_crv_cov_tb.v
+  date  : 2026-11-07   seeds: 1 3 5 7   modes: 0 1 (0=random, 1=steered)
+==============================================================
+
+G1  baseline: the suite must PASS on the unmodified RTL, every seed,
+    every mode
+    steer=0  detected 0/4   (0 of N is what a clean baseline means)
+    steer=1  detected 0/4   (0 of N is what a clean baseline means)
+    OK -- the unmodified RTL passes all seeds in both modes.
+
+G2  THE CENSUS'S PREMISE, CHECKED RATHER THAN QUOTED: no check in the
+    bench names rx_avail or st[3].  The whole adjudication below rests
+    on this, so it is measured here and not assumed.
+    CONFIRMED -- 0 of 11 check_eq calls in the bench
+    mention rx_avail or st[3].  SYNC_ONLY's precondition holds.
+    and the sequencing read the census names IS present:
+      PRESENT  "if (st[3]) begin"  -- the drain loop's gate
+
+G2b neutrality control: a COMMENT-ONLY edit must compile and ESCAPE
+    steer=0  detected 0/4   (must be 0/4)
+    steer=1  detected 0/4   (must be 0/4)
+    OK -- a comment-only edit escapes in both modes.
+
+G3  every mutant must actually CHANGE the file it claims to change
+
+--------------------------------------------------------------
+DETECTION MATRIX -- seeds 1 3 5 7, both stimulus modes
+--------------------------------------------------------------
+
+  ID   mutant                                       steer=0      steer=1     
+  --   ------                                       random       cov-driven  
+  R1   STATUS decode: rx_avail stuck CLEAR          4/4          4/4         
+  R2   STATUS decode: rx_avail stuck SET            4/4          4/4         
+  R3   STATUS decode: rx_avail one entry LATE       4/4          4/4         
+  R4   WIRE: rx_avail one entry late (rx_pop too)   4/4          4/4         
+
+
+--------------------------------------------------------------
+ADJUDICATION -- is SYNC_ONLY the right class?
+  consistent with SYNC_ONLY = detected, by a check that does NOT
+  name rx_avail.  The inverse of the tx_empty runner's test.
+--------------------------------------------------------------
+
+  R1  STATUS decode: rx_avail stuck CLEAR        [VERDICT-BEARING]
+      the census predicts the per-burst WATCHDOG, because a drain loop
+      steer=0  detected 4/4   first failing check: burst watchdog: 0 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+      steer=1  detected 4/4   first failing check: burst watchdog: 0 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+
+  R2  STATUS decode: rx_avail stuck SET        [VERDICT-BEARING]
+      the census predicts the DATA COMPARISON: a read with nothing to read
+      steer=0  detected 4/4   first failing check: loopback byte matches reference model
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+      steer=1  detected 4/4   first failing check: loopback byte matches reference model
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+
+  R3  STATUS decode: rx_avail one entry LATE        [VERDICT-BEARING]
+      late by one entry is wrong only at occupancy 1, so it needs a burst
+      steer=0  detected 4/4   first failing check: burst watchdog: 3 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+      steer=1  detected 4/4   first failing check: burst watchdog: 3 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+
+  R4  WIRE: rx_avail one entry late (rx_pop too)        [CONTROL -- does not move the verdict]
+      the control: rx_pop gates on rx_avail, so this changes DUT behaviour
+      steer=0  detected 4/4   first failing check: burst watchdog: 3 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+      steer=1  detected 4/4   first failing check: burst watchdog: 3 of 4 bytes returned (parity=2 stop2=1 div=3 len=4)
+                 CONSISTENT WITH SYNC_ONLY -- the bench
+                 mis-sequenced and a data-path check noticed.
+
+--------------------------------------------------------------
+WHAT THIS MEASURES
+--------------------------------------------------------------
+
+  SYNC_ONLY is CONFIRMED for STATUS.rx_avail, and the census's
+  exposure argument is now a measurement.  Every mutant is caught,
+  none by a check naming the signal -- which is exactly what
+  'read to sequence, never checked, but not unexposed' means.
+
+  R4 is deliberately uninformative about the classification.  rx_pop
+  gates on rx_avail, so mutating the WIRE stops the RTL popping the
+  last byte: a detection there is the data path noticing the DUT
+  changed, not the bench noticing its sequencing gate lied.  Had the
+  matrix reported only DETECTED, this row would have read as a fourth
+  success for a claim it never tested.
+
+  AND R3 AND R4 ARE INDISTINGUISHABLE IN THIS MATRIX.  Both report the
+  same first failing check with the same byte count, because both make
+  the last byte unreadable -- R3 by stopping the bench asking for it,
+  R4 by stopping the RTL popping it.  The mechanisms differ and this
+  instrument cannot tell them apart, which bounds what the control
+  establishes: it shows a wire mutation is detected, not that it is
+  detected DIFFERENTLY.  Separating them needs a check that observes
+  rx_cnt directly, and that is logged rather than claimed here.
+
+RESULT: PASS  (all controls green)
