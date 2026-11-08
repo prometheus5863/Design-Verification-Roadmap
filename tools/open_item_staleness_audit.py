@@ -1190,10 +1190,28 @@ def s7_controls():
         '2026-01-02', ['ITEM BETA'],
         extra='- **RETIRED FROM THE LIST:** ITEM ALPHA')
     _p, _c, r3 = s7_newest_transition(log3, '# none\n')
+    # SUPERSEDED DETAIL STRING, CORRECTED 2026-11-08 and the old wording kept
+    # verbatim below.  It read:
+    #
+    #     'the ONLY exercise of this route; no committed entry uses the
+    #      convention yet'
+    #
+    # That became FALSE on 2026-11-07, when two bullets were retired by the
+    # NOTED route for the first time, and it stayed false through 11-08's own
+    # NOTED retirement -- which the live S7 row printed EIGHT LINES ABOVE this
+    # check, in the same transcript.  A detail string asserting that a route is
+    # unexercised, printed directly beneath a measurement of that route being
+    # exercised, is the 2026-10-18 fault class: a claim carried in prose beside
+    # the number that refutes it.  It is corrected to say what the control
+    # actually establishes, which does not depend on the live log at all.
     out.append(('C3 or a removal note in the entry that dropped it',
                 [x[0] for x in r3] == ['NOTED'],
-                'rows %r -- the ONLY exercise of this route; no committed '
-                'entry uses the convention yet'
+                'rows %r -- a PLANTED exercise of the NOTED route, '
+                'independent of whether any committed entry uses it.  The '
+                'superseded wording claimed it was the only exercise and no '
+                'committed entry used the convention; that was true when '
+                'written on 2026-11-05, became false on 11-07 and is printed '
+                'above as part of the live S7 row'
                 % [(x[0], x[1]) for x in r3]))
     # C4 THE ZERO CASE: nothing departs, so there is nothing to account for.
     log4 = mk('2026-01-01', ['ITEM ALPHA']) + mk('2026-01-02',

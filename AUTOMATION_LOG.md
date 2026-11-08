@@ -14077,3 +14077,67 @@ did, so each transition exercises one:
 **Commits this run:** 1 before this entry — the census with its transcript —
 and this `AUTOMATION_LOG.md` entry with `progress.md` and the refreshed
 adjudication makes **2**, with the post-entry audit transcript making **3**.
+
+### 5. Addendum, written after the entry above landed: the 11-07 prediction HOLDS, and the audit was printing a claim its own live row refutes
+
+The staleness audit was re-run against the committed 11-08 entry, as the
+ranked-first item asks. **56 passed, 0 failed, exit 0.**
+
+**THE PREDICTION HOLDS, AND EXACTLY.** 11-06 built the compression repair and
+11-07 predicted that the 11-07 → 11-08 transition would be the first in which
+the folded `THE REST OF THE STANDING LIST` bullet **does not depart at all**,
+because its head no longer changes when its payload does. The newest
+transition reads:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`newest transition: 2026-11-07 -> 2026-11-08   2 departures`
+&nbsp;&nbsp;&nbsp;&nbsp;`  NOTED        classify every control as verdict-bearing or not`
+&nbsp;&nbsp;&nbsp;&nbsp;`  ADJUDICATED  classify every cmp -s as verdict-bearing or control-bearing`
+
+**Two departures, both of them deliberate retirements, and the folded bullet is
+not among them** — against a history in which it departed on essentially every
+transition and in which the worst single transition shows 31 departures that
+are almost all format churn. `ADJUDICATED=1 NOTED=1 REWORDED=0 LOST=0`, so both
+retirement routes are exercised by one transition, which is why they were
+chosen that way.
+
+**And the re-run found something the entry above could not have predicted,
+eight lines below the row that proves it.** `C3`'s detail string read:
+
+> *"the ONLY exercise of this route; no committed entry uses the convention
+> yet"*
+
+That was true when written on 2026-11-05. It became **false on 11-07**, when
+two bullets were retired by the `NOTED` route for the first time, and it is
+false again today. **The transcript printed that sentence directly beneath a
+live `S7` row showing a committed `NOTED` departure** — a claim carried in
+prose beside the number that refutes it, in the same output, which is the
+2026-10-18 fault class and the one this repository has the most instances of.
+
+Corrected in place, with the superseded wording kept verbatim in the comment
+and in the new detail string itself, and re-worded to say what the control
+actually establishes: a **planted** exercise of the `NOTED` route, whose value
+does not depend on the live log at all. That is the right form for a control —
+the old wording made a planted check's detail string into an assertion about
+the repository, which is exactly the coupling that goes stale.
+
+**One more instance for the one-way channel**, and the cheapest yet: nothing
+about this was deducible from the list, from the module, or from the diff. The
+audit printed it, in the run the item asked for, two inches from its own
+refutation.
+
+**Added to the list by this addendum:**
+
+- **AUDIT EVERY DETAIL STRING IN THIS REPOSITORY FOR A CLAIM ABOUT THE LIVE
+  TREE** — created today, **ranked second for the next session** behind the
+  17 comparisons, cheap, blocked on nothing. `C3`'s was not wrong by accident:
+  a planted control's detail string described the state of the repository, so
+  it had to go stale. The population is every `check(...)` detail string that
+  asserts a count, a "first", an "only", or a "not yet", and the instrument is
+  the same shape as the standing **A REPOSITORY-WIDE DETAIL-STRING CENSUS**
+  item — which has been carried with "no such tool exists" against it since it
+  was created, and which now has both a motive and a worked example.
+  **This item should absorb that one.**
+
+**Commits this run:** 3, as the entry above predicted — the census; the entry
+with `progress.md` and the adjudication; and this addendum with the refreshed
+audit transcript and the `C3` correction.
