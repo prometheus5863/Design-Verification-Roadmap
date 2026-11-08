@@ -3690,3 +3690,54 @@ the work turned out to be auditing the wrong list.
 
 - **`tools/open_item_staleness_audit.py`: 56 passed, 0 failed, exit 0.**
   Phase 4 UVM remains in progress; `S7` is now unblocked for widening.
+
+### 2026-11-08
+
+- [x] **The 11-07 standing item's own claim, measured instead of assumed —
+  and it is OVERSTATED.** `tools/verdict_bearing_census.py` (14/14) classifies
+  every one of the 17 tracked mutation runners by whether its adjudicator
+  mixes controls into a verdict. The `MIXED_IMPLICIT` population is **zero**:
+  one `EXPLICIT` (rx_avail, the 11-07 repair), one `VERDICT_NO_CONTROL`, six
+  `REPORT_ONLY`, nine `NO_ADJUDICATOR`. The class the item's wording omits is
+  `REPORT_ONLY` — an adjudicator that writes no verdict variable cannot be
+  contaminated by a control, because it decides nothing — and six runners are
+  that, so reading them as instances would have produced six repairs with no
+  defect behind them.
+
+- [x] **`run_tx_empty_mutation_tests.sh` does NOT carry the defect**, which is
+  the opposite of what the census was written expecting. It is the template
+  rx_avail was written from two days earlier, but its `adj()` only prints
+  `ATTRIBUTABLE` / `NOT ATTRIBUTABLE` and writes nothing, so its `T4` control
+  can move nothing. The 11-07 defect needed rx_avail's adjudicator to *have* a
+  claim verdict to fold rows into. Pinned as anchor `A2` rather than left as a
+  remark.
+
+- [x] **The `cmp -s` item, carried since 2026-10-25, is absorbed and
+  answered.** 45 occurrences over 20 files: **21 MENTION, 5 CONTROL,
+  2 VERDICT, 17 REQUIRES_READING**. The residue is printed as a named
+  worklist rather than folded into a clean number.
+
+- [x] **A verdict variable is not what the exit code reads.** The census's
+  first definition said it was, and under it the one file *known* to carry the
+  11-07 repair classified `REPORT_ONLY` — the census would have reported the
+  defect existing nowhere. These runners produce **two** verdicts: whether the
+  harness is sound (the exit code, gated on controls) and whether the claim
+  under test holds (a printed adjudication). `sync_only_holds` is the second
+  and the exit code never reads it. A control contaminating the claim verdict
+  is the worse of the two, because nothing downstream re-derives it.
+
+- [x] **Four defects in the census, all four caught by a plant or an anchor
+  and none by reading**: the def-line regex rejecting a trailing comment; the
+  narrow verdict definition above; the `cmp -s` window wrong in both
+  directions (too wide, then too narrow); and a mention counted as a use, which
+  inflated the population by 88 %. Each is kept as a comment on the line it
+  broke. Mutation tested — four mutants, each required to turn a **named**
+  check red, all four caught.
+
+- [x] **The ranked item re-run: 11-07 → 11-08.** See the log entry; the
+  prediction concerned the folded bullet's stability across the first
+  transition where both sides have a stable head.
+
+- **`tools/verdict_bearing_census.py`: 14 passed, 0 failed, exit 0.** Phase 4
+  UVM remains in progress; `S7` is still unblocked for widening and was not
+  widened today.

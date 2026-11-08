@@ -13798,3 +13798,282 @@ the clearest statement of why a head must not carry its payload.
   a property needing a strengthening invariant; the SVA sequence layer
   (09-20); code coverage measurement (Icarus has none, 09-18); Phase 6 lint,
   regression infra, coverage merge, CDC basics, interview prep.
+
+---
+
+## 2026-11-08 — the standing item's own claim was the thing worth measuring, and it is overstated; the census was wrong four times first, and every one was caught by a control
+
+One commit before this entry. The ranked-first item is the audit re-run and it
+comes after this entry lands, as it must.
+
+### 1. The item that commissioned the work, and the claim inside it
+
+11-07 found a real defect — `run_rx_avail_mutation_tests.sh`'s adjudication
+folded all four rows into `sync_only_holds`, `R4` included, and `R4` is the
+control — and generalised it into a standing item carrying a sentence:
+
+> *"Every other runner here has controls mixed into the same loop as its
+> mutants; none of them says which carry the verdict."*
+
+That sentence is a **population claim written from one instance**, which is
+the shape this repository has recorded under several names, so
+`tools/verdict_bearing_census.py` (**14/14**) was written to test it rather
+than to illustrate it.
+
+**THE CLAIM IS OVERSTATED.** Over 17 tracked mutation runners the
+`MIXED_IMPLICIT` population — a verdict-writing adjudicator called with a
+prose-declared control and no per-case flag — is **zero**:
+
+| class | n |
+|---|---|
+| `NO_ADJUDICATOR` | 9 |
+| `REPORT_ONLY` | 6 |
+| `EXPLICIT` (the 11-07 repair) | 1 |
+| `VERDICT_NO_CONTROL` | 1 |
+| **`MIXED_IMPLICIT` (the defect)** | **0** |
+
+What the claim's wording omits is `REPORT_ONLY`: **an adjudicator that writes
+no verdict variable cannot be contaminated by a control, because it decides
+nothing.** Six runners are that. Reading them as instances of the defect would
+have produced six repairs with no defect behind them — and six commits that
+each looked like progress.
+
+**The sharpest case is the one the census was written expecting to indict.**
+`run_tx_empty_mutation_tests.sh` is the template `rx_avail` was written from
+two days earlier; the obvious reading was that it carries the same defect
+verbatim. It does not. Its `adj()` prints `ATTRIBUTABLE` / `NOT ATTRIBUTABLE`
+and writes nothing, so its `T4` control can move nothing. **The 11-07 defect
+required `rx_avail`'s adjudicator to have a claim verdict to fold rows into,
+and `tx_empty`'s does not have one.** That is pinned as anchor `A2` with the
+reasoning in its detail string, rather than left as a remark — and its answer
+is known from the git history, not from plausibility, which is what makes it an
+anchor.
+
+### 2. The `cmp -s` item, carried since 10-25, absorbed and answered — and its dichotomy is incomplete
+
+11-07 said the two items are the same question asked of different objects, so
+they are answered by one instrument. 45 occurrences over 20 files:
+
+| class | n | what it is |
+|---|---|---|
+| `MENTION` | 21 | prose — mostly comments explaining why a `cmp -s` guard was REPLACED |
+| `REQUIRES_READING` | 17 | a real comparison whose branch neither decides nor reports a control |
+| `CONTROL` | 5 | the branch only reports, inside a block its own text names a control |
+| `VERDICT` | 2 | the branch assigns to, or increments, a verdict variable |
+
+**The 10-28 adjudication entry is confirmed and sharpened.** It said the
+item's "one remaining, down from four" was a number no instrument here could
+reproduce, because nothing distinguished a control comparison from a verdict
+one, and that a plain `grep` returning ten files proved nothing. Both halves
+hold, and the grep number was worse than unverifiable: **21 of its 45 hits are
+prose**, so that population was inflated by 88 %.
+
+**And the item's own two-valued question has a third answer, which is the new
+result.** Of the 24 real uses, **17 are neither** verdict- nor
+control-bearing: they are injection guards whose branch reports
+`INJECTION FAILED` and `continue`s, or hands a flag to a caller. Requiring a
+two-valued answer would have forced 17 guesses. They are printed as a named
+worklist instead — the 10-25 rule, and the same three-valued shape the outcome
+axis has. The successor item is on the list.
+
+### 3. The census was wrong four times, and no reading found any of them
+
+Each defect is kept as a comment on the line it broke. Three of the four are
+faults this repository has already recorded elsewhere, which is the argument
+for the controls rather than for the care.
+
+1. **The def-line regex required `{` at end of line**, so every runner writing
+   `adj () {    # $1 id ...` — `tx_empty` and `run_mutation_tests` among them
+   — classified `NO_ADJUDICATOR`. A census that silently fails to find what it
+   counts reports a **smaller** population, and a smaller defect population
+   reads as good news. Caught by anchor `A2`.
+2. **A VERDICT VARIABLE WAS DEFINED AS WHAT THE EXIT CODE READS, and this is
+   the better finding.** The variable the 11-07 defect contaminated is
+   `sync_only_holds`, which the exit code never reads: it gates a printed
+   **claim** (`SYNC_ONLY is CONFIRMED …`). `fail_count`, which the exit code
+   does read, only counts control failures. Under the narrow definition the one
+   file *known* to carry the repair classified `REPORT_ONLY`, and the census
+   would have reported that the defect exists nowhere — a clean answer, from an
+   instrument that could not see the thing it was measuring. **These runners
+   produce two verdicts**: whether the harness is sound, and whether the claim
+   under test holds. A control contaminating the second is the worse of the
+   two, because the second is the answer the run exists to produce and nothing
+   downstream re-derives it. Caught by anchor `A1`.
+3. **The `cmp -s` window was wrong in both directions.** Seven lines ahead
+   reached past the next comparison and scored a control as `VERDICT` on the
+   strength of its neighbour's assignment (caught by plant `P5`); three lines
+   could not reach an assignment four lines into the branch and reported
+   **zero** verdict-bearing comparisons on the whole tree (caught by `B2`). It
+   is now the branch extent — the unit that actually determines what a
+   comparison does. **Two opposite errors, two different controls, and neither
+   would have been found by the other.**
+4. **A MENTION WAS COUNTED AS A USE.** 2026-10-01 found this exact loophole in
+   `graphene_dead_name_sweep.py`'s sibling problem and fixed only half of it.
+   Here it inflated the population by 88 %. `MENTION` is now its own class
+   rather than a drop, because *how many places discuss this idiom* is a real
+   number — it is just not the number the item asked for.
+
+**Mutation tested, four mutants, each one of the four defects above
+reinstated, and each required to turn a NAMED check red** rather than merely
+to make the module exit nonzero — a mutation that breaks something else would
+otherwise read as a catch. All four caught, each turning exactly its named
+check red.
+
+`M1` and `M4` reported *"the anchor occurs 2 times, not once"* on their first
+run, because the anchor text appears both in the code and in the mutation
+table that names it. **A module that mutates itself must not mutate its own
+mutation table**; the replacement is now confined to the source above the
+table. The `PLANTED` guard is what turned a silent mis-mutation into a named
+failure instead of a passing control — the standing *a module must not plant
+the pattern it censuses* item, met from the other side.
+
+### 4. Environment
+
+`/sessions` **100 % full** (9.3 G of 9.8 G, 0 bytes free) for the
+**fourteenth** consecutive session; `mkdir $HOME/work` failed before anything
+ran and everything was done under `/tmp` on `/dev/sda1`. Today that fact
+stopped being only a nuisance: in the graphene repository the same full
+filesystem turned out to have been **corrupting a verdict for five sessions**,
+an ENOSPC death being reported as a code fault. Nothing here writes under
+`$TMPDIR` in the same way, but the audit of that is on the list and it applies
+to this repository too.
+
+No toolchain was needed today — the census is source-level — so the Icarus
+install was not exercised and the 11-07 toolchain findings are untested this
+session. The device bridge did not drop and the per-call cap stayed at 180 s.
+
+**Open items, with blockers named:**
+
+- **RE-RUN THE AUDIT AFTER THIS ENTRY LANDS** — **ranked first**, cheap,
+  mechanical, blocked on nothing. The 11-07 prediction was that the
+  11-07 → 11-08 transition is the first where **both** sides carry a stable
+  head, so the folded `THE REST OF THE STANDING LIST` bullet should **not
+  depart at all** even though its payload changes. This entry keeps that head
+  verbatim and changes the payload, which is the condition the prediction
+  needs. If it departs again, the head is still carrying something it should
+  not.
+- **ADJUDICATE THE 17 `REQUIRES_READING` COMPARISONS** — created today by §2,
+  **ranked second**, and it is a **specification decision and not a coding
+  task**: the census ranks them and quotes each line, but it cannot decide
+  whether an injection guard that reports and `continue`s is verdict-bearing
+  *by consequence*. That is the same question the three-valued outcome axis
+  settled for outcomes, asked of comparisons.
+- **WIDEN `S7` BEYOND THE NEWEST TRANSITION** — created 11-06, unblocked
+  since 11-07, and **not touched today**. The scan still measures 220+
+  departures over 50 transitions and every large figure is a format change;
+  the scope should move one transition at a time with `s7_history_scan` as the
+  evidence, starting from the first transition where both lists carry a stable
+  head — which, if the ranked item above holds, is the one this entry makes.
+- **AUDIT EVERY SCRATCH PATH IN THIS REPOSITORY AGAINST A FULL FILESYSTEM** —
+  created today, and it is the graphene repository's finding imported rather
+  than this one's. `/sessions` has been full for fourteen sessions here too,
+  and over there that produced five sessions of a verdict about the wrong
+  thing. The instrument is a census of scratch-path construction — `mktemp`,
+  `$TMPDIR`, literal `/tmp`, `WORK=` — against which of them a runner would
+  **notice** failing, and the sharp sub-question is whether any runner in this
+  repository would report a disk failure as a mutant escaping.
+- **RUN A MUTATION SUITE WITH THE TOOLCHAIN BROKEN IN A WAY THAT IS NOT THE
+  NETWORK** — carried from 11-07, and the item above is its generalisation:
+  a full filesystem is exactly such a way, and it is not hypothetical here.
+- **A CHECK THAT OBSERVES `rx_cnt` DIRECTLY** — carried from 11-07, the
+  successor of the `rx_avail` item, and still the only way this bench could
+  distinguish *the sequencing gate lied* from *the DUT changed*.
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02 through 11-07, still
+  a **specification decision**, and still the last thing between capstone
+  remainder (c) and a sign-off statement.
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — carried from 11-03,
+  blocker gone since 11-07's install. Today's graphene session is an argument
+  for prioritising it: a verdict exercised only by a synthetic probe is a
+  verdict nobody has seen answer, and over there one such check turned out to
+  have been answering the wrong question for five sessions. `PAC_MODE=evidence`
+  should abort **at the push the census predicts**, not merely abort.
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT** — capstone
+  remainder (b); Icarus 10.3 has no concurrent assertions and that blocker
+  stands. Still the largest remaining block of actual verification content.
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried; a full re-run exceeds the 180 s cap and needs splitting, and
+  11-07's 2.5 s-per-sim measurement is the number that would size it. **The
+  graphene repository split exactly this shape of problem today** — persist
+  per-case verdicts to a part file, assemble in a later call — so the pattern
+  now exists in a worked form rather than as a suggestion.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii),
+  adjudicated unblocked on 11-06, a paragraph of plan text, ten days carried.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27, unblocked and mechanical; what it needs is a decision
+  about what counts as evidence of authorship. Five dated reports now carry
+  the same unverified provenance.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'S CROSSES** —
+  carried, and §2 is a third argument for the axis's shape: a two-valued
+  question asked of 24 comparisons had 17 answers it could not give.
+- **AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — carried; the fault is 09-27's and has recurred twice.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, lost and
+  restored twice.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02, a sixth argument and no action.
+- **THE ODD START-BIT PHASES** — carried from 10-29; 11-04 supplied the form
+  of words it and its sibling were waiting for, and both should be
+  **rewritten** that way rather than re-argued.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29.
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds one:
+  `tools/verdict_bearing_census_output.txt`.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, fourteen-plus
+  sessions, named cause of three measured staleness incidents.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-two sessions old.
+- **A REPOSITORY-WIDE DETAIL-STRING CENSUS** — carried; no such tool exists,
+  and today's census is the nearest thing yet built to one.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT MAKES
+  S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); A diversity
+  TARGET; per-property coverage of the Phase 4 UVM environment (09-23); a less
+  greedy steering policy (09-24); widen the coverage model (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants
+  not yet attempted (interrupt enable combinations, reset asserted mid-frame);
+  a property needing a strengthening invariant; the SVA sequence layer
+  (09-20); code coverage measurement (Icarus has none, 09-18); Phase 6 lint,
+  regression infra, coverage merge, CDC basics, interview prep.
+
+**Retired from the list this session**, by both routes deliberately, as 11-07
+did, so each transition exercises one:
+
+- **ADJUDICATED:** CLASSIFY EVERY `cmp -s` AS VERDICT-BEARING OR
+  CONTROL-BEARING — its `OPEN` entry in `tools/open_item_adjudication.md` is
+  now `STALE` with the measurement in it and a `REPLACED-BY` naming the
+  17-comparison successor, which is the route the committed history uses and
+  the one `S7` gives precedence to.
+- **RETIRED FROM THE LIST:** CLASSIFY EVERY CONTROL AS VERDICT-BEARING OR NOT
+  — created 11-07, never had an adjudication entry, so `NOTED` is the right
+  route. Answered by §1: the population is zero, the claim inside the item was
+  overstated, and the class it omitted accounts for six of the runners it
+  accused.
+
+**Commits this run:** 1 before this entry — the census with its transcript —
+and this `AUTOMATION_LOG.md` entry with `progress.md` and the refreshed
+adjudication makes **2**, with the post-entry audit transcript making **3**.

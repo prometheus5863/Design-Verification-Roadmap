@@ -406,7 +406,52 @@ not an accident, and today is the second recorded instance, which makes it a
 pattern rather than a one-off:** any session that changes the item list owes
 the audit a re-adjudication before the caller can be green.
 
-## OPEN: CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING
+## STALE: CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING
+
+**Verdict changed OPEN -> STALE on 2026-11-08.** The work is done and the
+count this entry called unverifiable is now measured, by
+`tools/verdict_bearing_census.py` (14/14), which also absorbs the sibling item
+2026-11-07 created about *controls* -- 11-07 noted the two are the same
+question asked of different objects and that is how they were answered.
+
+**The measurement.** 45 occurrences over 20 files:
+
+| class | n | what it is |
+|---|---|---|
+| `MENTION` | 21 | prose, mostly comments explaining why a `cmp -s` guard was REPLACED |
+| `REQUIRES_READING` | 17 | a real comparison whose branch neither decides nor reports a control |
+| `CONTROL` | 5 | the branch only reports, inside a block its own text names a control |
+| `VERDICT` | 2 | the branch assigns to, or increments, a verdict variable |
+
+**This entry's 2026-10-28 finding is CONFIRMED and sharpened.** It said the
+item's "one remaining, down from four" was a number no instrument here could
+reproduce, and that a plain `grep` returning ten files proved nothing because
+nothing distinguished a control comparison from a verdict one. Both halves
+hold. The grep number was worse than unverifiable: **21 of its 45 hits are
+prose**, so the population it reported was inflated by 88 per cent, and the two
+runners this repository names as worked references for having been *fixed*
+appear in it because their remaining comparisons are controls -- exactly as
+this entry argued without being able to show it.
+
+**AND THE ITEM'S OWN DICHOTOMY IS INCOMPLETE, WHICH IS THE NEW FINDING.** The
+item asks that every occurrence "be one or the other". Of the 24 real uses,
+**17 are neither**: they are injection guards whose branch reports
+`INJECTION FAILED` and `continue`s, or hands a flag to a caller, so the
+comparison neither decides a verdict nor reports a control within the branch
+it feeds. Requiring a two-valued answer would have forced 17 guesses. They are
+printed as a named worklist instead -- the 2026-10-25 rule, and the same
+three-valued shape the outcome axis has.
+
+> **REPLACED-BY:** ADJUDICATE THE 17 `REQUIRES_READING` COMPARISONS, created
+> 2026-11-08 and on the list below. The census ranks them and quotes each
+> line; what it cannot do is decide whether an injection guard that `continue`s
+> is verdict-bearing by consequence. That is a specification decision about
+> what "bearing" means when the bearing is indirect, and it is the same
+> question the three-valued outcome axis settled for outcomes.
+
+---
+
+## Superseded heading, kept: OPEN: CLASSIFY EVERY cmp -s AS VERDICT-BEARING OR CONTROL-BEARING
 
 **Heading corrected again 2026-10-28.** It read *"THE ONE REMAINING `cmp -s`
 RUNNER — phase6_uvm_crv_uart"*, which named a COUNT this entry's own verdict
