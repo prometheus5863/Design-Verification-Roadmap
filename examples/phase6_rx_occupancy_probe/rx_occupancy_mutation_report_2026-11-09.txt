@@ -1,0 +1,166 @@
+==============================================================
+MUTATION TEST -- the direct rx_cnt occupancy probe
+  bench : examples/phase6_rx_occupancy_probe/uart_rx_occupancy_tb.v
+  date  : 2026-11-09
+  discharges: A CHECK THAT OBSERVES rx_cnt DIRECTLY (carried 11-07)
+==============================================================
+
+G0  the toolchain, and the disk it writes through
+    TMPDIR=/tmp
+    /dev/sda1 7223708 used of 9974088, 2733996 free (73%)
+    iverilog: Icarus Verilog version 10.3 (stable) ()
+    the unmodified RTL compiles -- so a later failure is about
+    the mutant or the disk, and G0 can tell those apart.
+
+G1  baseline: the bench must PASS on unmodified RTL in all three
+    configurations, or no row below means anything
+    A  +gate=0 +decode=0    PASS
+    B  +gate=1 +decode=0    PASS
+    C  +gate=1 +decode=1    PASS
+    OK.
+
+G1b the zero-length limit: a burst of 0 bytes must issue no RX read and
+    leave the probe at exactly 0.  A limit that must give zero, which is
+    the kind of check that caught a real bug on 2026-09-17.
+    OK -- 0 errors at len=0.
+
+G2  THE PREMISE, MEASURED.  The 11-07 adjudication rests on 'no check
+    names rx_avail or st[3]'.  That premise is FALSE of this bench by
+    design, and configuration-dependent, so both halves are checked.
+    CONFIRMED -- this bench DOES contain a check naming rx_avail (K5),
+    which is why it is a separate bench and not four rows added to
+    uart_crv_cov_tb.v, whose SYNC_ONLY row it would invalidate.
+    and K5 is gated on +decode, so A and B satisfy the 11-07 premise
+    in its LITERAL form: no check in them names rx_avail or st[3].
+    BUT A IS THE 11-07 GATE, NOT THE 11-07 BENCH, and the difference is
+    stated here rather than discovered later.  K2, V1-V3b read the probe
+    and are active in every configuration, so A has an occupancy
+    observer that uart_crv_cov_tb.v does not have.  That is visible in
+    the matrix below: R2 fails V3b in A -- a conservation identity that
+    names rx_cnt, not rx_avail, catches 'stuck SET' without violating the
+    premise.  FINDING 1 is therefore a reproduction of what the GATE
+    forces, which is all it claims.
+    the probe itself reaches into the DUT, as it must:
+      39:// THE PROBE IS WHITE-BOX AND THAT IS DELIBERATE.  dut.rx_cnt is an internal
+      46:// RACE DISCIPLINE.  dut.rx_cnt and dut.rx_wptr are updated at posedge clk.
+      92:    wire [3:0] occ_live  = dut.rx_cnt;
+      93:    wire [2:0] wptr_live = dut.rx_wptr;
+      289:        $display("  gate   : %0s", gate_probe ? "PROBE (dut.rx_cnt != 0)"
+
+G2b neutrality control: a COMMENT-ONLY edit must compile and ESCAPE in
+    all three configurations
+    A  +gate=0 +decode=0    PASS
+    B  +gate=1 +decode=0    PASS
+    C  +gate=1 +decode=1    PASS
+    OK.
+
+G3  every mutant must actually change the file, and compile
+    R1  changed and compiles
+    R2  changed and compiles
+    R3  changed and compiles
+    R4  changed and compiles
+    R5  changed and compiles
+
+--------------------------------------------------------------
+DETECTION MATRIX -- verdict, and the SET of checks that failed
+--------------------------------------------------------------
+
+  ID   mutant                                     A      B      C     
+  --   ------                                     11-07  probe  probe 
+                                                  gate   only   +K5   
+  R1   STATUS decode: rx_avail stuck CLEAR        FAIL   PASS   FAIL  
+  R2   STATUS decode: rx_avail stuck SET          FAIL   PASS   FAIL  
+  R3   STATUS decode: rx_avail one entry LATE     FAIL   PASS   FAIL  
+  R4   WIRE: rx_avail one entry late (rx_pop too) FAIL   FAIL   FAIL  
+  R5   WIRE: rx_pop never asserts                 FAIL   FAIL   FAIL  
+
+  R1  STATUS decode: rx_avail stuck CLEAR
+      A +gate=0 +decode=0    FAIL   failing set: K6b,V3,burst watchdog
+      B +gate=1 +decode=0    PASS   failing set: <none>
+      C +gate=1 +decode=1    FAIL   failing set: K5
+  R2  STATUS decode: rx_avail stuck SET
+      A +gate=0 +decode=0    FAIL   failing set: K6,V3b
+      B +gate=1 +decode=0    PASS   failing set: <none>
+      C +gate=1 +decode=1    FAIL   failing set: K5
+  R3  STATUS decode: rx_avail one entry LATE
+      A +gate=0 +decode=0    FAIL   failing set: K6b,V3,burst watchdog
+      B +gate=1 +decode=0    PASS   failing set: <none>
+      C +gate=1 +decode=1    FAIL   failing set: K5
+  R4  WIRE: rx_avail one entry late (rx_pop too)
+      A +gate=0 +decode=0    FAIL   failing set: K6b,V3,burst watchdog
+      B +gate=1 +decode=0    FAIL   failing set: K2,K6,V3,V3b
+      C +gate=1 +decode=1    FAIL   failing set: K2,K5,K6,V3,V3b
+  R5  WIRE: rx_pop never asserts
+      A +gate=0 +decode=0    FAIL   failing set: K2,K6,V3,V3b
+      B +gate=1 +decode=0    FAIL   failing set: K2,K6,V3,V3b
+      C +gate=1 +decode=1    FAIL   failing set: K2,K6,V3,V3b
+
+--------------------------------------------------------------
+FINDING 1 -- configuration A REPRODUCES the 11-07 indistinguishability
+--------------------------------------------------------------
+
+  R3 first failing check: burst watchdog: 7 of 8 bytes returned (par=1 stop2=0 div=0 len=8)
+  R4 first failing check: burst watchdog: 7 of 8 bytes returned (par=1 stop2=0 div=0 len=8)
+
+  IDENTICAL, including the byte count, in a bench written eight
+  sessions later with a different stimulus and a different check set.
+  rx_avail_mutation_report_2026-11-07.txt reported
+  'burst watchdog: 3 of 4 bytes returned' for both arms at len=4;
+  this bench reports the same shape at len=8.  The 11-07 claim was
+  not an artefact of that bench -- it is a property of taking the
+  mutated flag as the SEQUENCING GATE, which is what A does too.
+  This is the overlapping limit, reproduced rather than asserted.
+
+--------------------------------------------------------------
+FINDING 2 -- K2 IS THE DISCRIMINATOR, and it is a set membership
+            question rather than a first-failure one
+--------------------------------------------------------------
+
+  The claim under test: the pop-effect check K2 fires for BOTH wire
+  mutants -- R4 (rx_pop late) and R5 (rx_pop never) -- and for no
+  decode-only mutant, in both probe configurations.
+  Both halves are required.  A check that fires for everything
+  discriminates nothing.
+  B  R4  K2 PRESENT   (a wire mutation changed DUT behaviour)
+  B  R5  K2 PRESENT   (a wire mutation changed DUT behaviour)
+  B  R1  K2 absent    (decode only: the datapath is intact)
+  B  R2  K2 absent    (decode only: the datapath is intact)
+  B  R3  K2 absent    (decode only: the datapath is intact)
+  C  R4  K2 PRESENT   (a wire mutation changed DUT behaviour)
+  C  R5  K2 PRESENT   (a wire mutation changed DUT behaviour)
+  C  R1  K2 absent    (decode only: the datapath is intact)
+  C  R2  K2 absent    (decode only: the datapath is intact)
+  C  R3  K2 absent    (decode only: the datapath is intact)
+
+  DISCHARGED.  K2 separates 'the sequencing gate lied' from 'the DUT
+  changed', which is exactly what the 11-07 report said was missing.
+
+  TWO mechanisms, not one: R4 delays rx_pop and R5 removes it, and K2
+  fires for both.  A check with one witness is a tripwire.
+
+  AND THE SEPARATION SURVIVES THE ORDERING TRAP.  In configuration C
+  the mutated wire trips K5 before K2, so R3 and R4 have the SAME
+  first failing check there -- a first-failure report would have
+  concluded the probe does not work.  Configuration B is the clean
+  statement: with nothing checking STATUS at all, the three
+  decode-only mutants ESCAPE and the wire mutant does not.
+
+--------------------------------------------------------------
+WHAT THIS DOES NOT ESTABLISH
+--------------------------------------------------------------
+
+  * The probe is WHITE-BOX.  K2 reads dut.rx_cnt and dut.rx_wptr, so it
+    is unavailable to any bench restricted to the APB port, and it is
+    not a substitute for the black-box checks -- it is an instrument for
+    attributing their failures.
+  * Configuration B's escapes are NOT a defect of the probe.  Nothing in
+    B reads STATUS, so a STATUS-decode mutant has no observer by
+    construction.  B is a negative control, not a coverage claim.
+  * One stimulus shape.  This bench runs a single deterministic burst,
+    not the 4-seed x 2-mode matrix of the 11-07 runner, so it measures
+    the DISCRIMINATION and inherits nothing about seed sensitivity.
+  * K5's own exercise is counted (V4) but its sampling is still tied to
+    the drain loop's pace; at a wider divisor the FIFO is non-empty for
+    a smaller fraction of the run, and V4 is what would notice.
+
+RESULT: PASS  (all controls green, item discharged)
