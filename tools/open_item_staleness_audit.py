@@ -1260,6 +1260,44 @@ def s7_controls():
     return out
 
 
+def unsuccessored_stale(entries, adj_text):
+    """STALE entries that name neither REPLACED-BY: nor NO-SUCCESSOR:.
+
+    ANCHORED ON THE HEADING, and that is the whole content of this function.
+    Until 2026-11-09 the scan located each STALE entry with
+    `adj_text.find(phrase)` -- the first occurrence of the heading text
+    ANYWHERE in the file -- and read the successor out of whatever followed.
+    This repository's own convention breaks that: a `REPLACED-BY:` line names
+    its successor by the successor's full item phrase, so the first occurrence
+    of a STALE entry's phrase is usually the predecessor's cross-reference,
+    several hundred lines above the entry itself.
+
+    Measured on 2026-11-09, on the entry added that session: the scan found
+    the phrase inside the rx_avail entry's `REPLACED-BY:` line, sliced from
+    there to the next `## ` heading, and reported NO SUCCESSOR NAMED for an
+    entry whose NO-SUCCESSOR: line was eleven lines further down.  The
+    false-RED was the visible half.  The false-GREEN is the half that matters:
+    because the slice began just AFTER the words `REPLACED-BY:` on that line,
+    a cross-reference sitting a little differently -- the phrase first, the
+    marker after -- would have satisfied the check on behalf of an entry that
+    names no successor at all.  C4c.2 is that case, planted.
+    """
+    out = []
+    for verdict, phrase in entries:
+        if verdict != 'STALE':
+            continue
+        m = re.search(r'^##[ \t]+STALE:[ \t]*' + re.escape(phrase) + r'[ \t]*$',
+                      adj_text, re.M)
+        if not m:
+            out.append(phrase)
+            continue
+        nxt = adj_text.find('\n## ', m.end())
+        body = adj_text[m.end():nxt if nxt > 0 else len(adj_text)]
+        if 'REPLACED-BY:' not in body and 'NO-SUCCESSOR:' not in body:
+            out.append(phrase)
+    return out
+
+
 def main():
     n_pass = n_fail = 0
 
@@ -1481,17 +1519,7 @@ def main():
     # and then not connected" failure one level up.
     adj_text = (open(ADJUDICATION, encoding='utf-8').read()
                 if os.path.exists(ADJUDICATION) else '')
-    stale_phrases = [p for v, p in entries if v == 'STALE']
-    unsuccessored = []
-    for phrase in stale_phrases:
-        i = adj_text.find(phrase)
-        if i < 0:
-            unsuccessored.append(phrase)
-            continue
-        nxt = adj_text.find('\n## ', i)
-        body = adj_text[i:nxt if nxt > 0 else len(adj_text)]
-        if 'REPLACED-BY:' not in body and 'NO-SUCCESSOR:' not in body:
-            unsuccessored.append(phrase)
+    unsuccessored = unsuccessored_stale(entries, adj_text)
     for phrase in unsuccessored:
         print('    NO SUCCESSOR NAMED  %s' % first_line(phrase, 66))
     # NAMES IN THE FAILURE TEXT, 2026-11-05, for the same reason the orphan
@@ -1508,6 +1536,49 @@ def main():
                                  % (len(unsuccessored),
                                     '; '.join(first_line(u, 52)
                                               for u in unsuccessored))))
+    # C4c -- PLANTED CONTROLS ON THE ANCHOR, both directions.  The old
+    # substring scan passes C4c.1 and FAILS C4c.2, which is why C4c.2 is here:
+    # a check that can be satisfied on an entry's behalf by text belonging to
+    # a different entry is worse than one that is merely noisy.
+    # The ORDER inside the predecessor is what makes C4c.2 bite, and it was
+    # got wrong once before being measured: with the marker written BEFORE the
+    # phrase, the old substring slice began past the marker and the row went
+    # red anyway, so the fixture agreed with the broken anchor.  Here the
+    # phrase comes first and the predecessor's own marker follows it, which is
+    # the ordinary shape of an entry that discusses its successor in prose and
+    # then records its verdict.  Measured 2026-11-09 against a reverted copy:
+    # old anchor -> C4c.2 GREEN (false), new anchor -> C4c.2 RED (correct).
+    plant_adj = (
+        '## STALE: THE PREDECESSOR\n\n'
+        'Body discussing THE SUCCESSOR ITEM at length in prose.\n\n'
+        '> **REPLACED-BY:** whatever inherits this one.\n\n'
+        '## STALE: THE SUCCESSOR ITEM\n\n'
+        'Body with no successor marker of its own at all.\n\n'
+        '## OPEN: SOMETHING ELSE\n\nBody.\n')
+    plant_ents = [('STALE', 'THE PREDECESSOR'),
+                  ('STALE', 'THE SUCCESSOR ITEM'),
+                  ('OPEN', 'SOMETHING ELSE')]
+    c4c = unsuccessored_stale(plant_ents, plant_adj)
+    report('THE PREDECESSOR' not in c4c,
+           'C4c.1 a STALE entry that names REPLACED-BY: in its own body is '
+           'successored')
+    report('THE SUCCESSOR ITEM' in c4c,
+           'C4c.2 THE FALSE-GREEN, PLANTED: a STALE entry naming no successor '
+           'of its own is NOT rescued by a REPLACED-BY: line belonging to an '
+           'earlier entry that mentions it  --  measured: the old substring '
+           'anchor calls that entry successored (wrongly), the heading anchor '
+           'calls it unsuccessored (correctly)')
+    plant_adj2 = plant_adj.replace(
+        '## STALE: THE SUCCESSOR ITEM\n\nBody with no successor marker of its '
+        'own at all.',
+        '## STALE: THE SUCCESSOR ITEM\n\n> **NO-SUCCESSOR:** answered.')
+    report('THE SUCCESSOR ITEM' not in unsuccessored_stale(plant_ents, plant_adj2),
+           'C4c.3 and the same entry WITH its own NO-SUCCESSOR: line is '
+           'successored, so C4c.2 is not just a matcher that never passes')
+    report(unsuccessored_stale([('STALE', 'A HEADING THAT IS NOT THERE')],
+                               plant_adj) == ['A HEADING THAT IS NOT THERE'],
+           'C4c.4 a STALE verdict with no matching heading is reported, not '
+           'silently skipped')
     n_stale = sum(1 for v, _p in entries if v == 'STALE')
     print('  verdicts: %d STALE, %d OPEN'
           % (n_stale, sum(1 for v, _p in entries if v == 'OPEN')))

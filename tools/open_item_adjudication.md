@@ -519,6 +519,13 @@ Report: `examples/phase6_crv_uart/rx_avail_mutation_report_2026-11-07.txt`.
 > *the DUT changed*, which this matrix cannot do because R3 and R4 produce
 > identical rows. The classification question this item asked is closed; the
 > instrument's resolution limit is what carries forward.
+>
+> **The successor was discharged on 2026-11-09** by
+> `examples/phase6_rx_occupancy_probe/`, and this entry's resolution limit is
+> no longer the repository's: `K2` separates the two arms. The limit as
+> described above remains **exactly true of this bench and this matrix** —
+> nothing here was corrected, and the separation required a different gate as
+> well as a different check.
 
 **Original reasoning, kept:**
 **It was OPEN, and confirmed as the census's weakest row.**
@@ -530,6 +537,46 @@ role is the census's claim that a signal is *read to sequence the bench* and
 never *checked*, which is exactly the claim a mutant tests: break the signal
 and the bench should hang or mis-sequence rather than report a mismatch. No
 mutant targets it. Untouched since creation.
+
+## STALE: A CHECK THAT OBSERVES `rx_cnt` DIRECTLY
+
+**Verdict: STALE as of 2026-11-09 — the check was built, and it
+discriminates.** Created 2026-11-07 as the `REPLACED-BY` successor of *A
+MUTANT FOR THE rx_avail SYNC_ONLY ROW*, inheriting the one thing that run left
+open: distinguishing *the sequencing gate lied* from *the DUT changed*.
+
+`examples/phase6_rx_occupancy_probe/` is the instrument. `K2`, the pop-effect
+check, reads `dut.rx_cnt` and `dut.rx_wptr` hierarchically and requires that a
+read of `RX_DATA` at occupancy ≥ 1 remove **exactly one** entry, with a push
+landing inside the access window accounted for by `rx_wptr` moving rather than
+by an improbability argument.
+
+**Measured, five arms, three configurations, all controls green.** `K2` fires
+for both wire mutants — `R4` (`rx_pop` late) and `R5` (`rx_pop` never) — and
+for none of the three decode-only mutants, in both probe configurations. In
+the configuration where nothing reads `STATUS` at all, the three decode-only
+mutants **escape** and both wire mutants do not.
+
+**Two things the run established that the item did not ask for**, and both are
+recorded because they bear on how much the discharge is worth:
+
+1. **The predecessor's claim was reproduced, not assumed.** In the
+   `STATUS`-gated configuration this bench reports an *identical* first
+   failing check for `R3` and `R4`, byte count included. The 11-07
+   indistinguishability was a property of gating on the mutated flag, not an
+   artefact of that bench.
+2. **The verdict had to become a SET.** Under the probe gate *with* the decode
+   check, the mutated wire trips `K5` before `K2`, so `R3` and `R4` share a
+   first failing check there. A first-failure-wins report would have concluded
+   the probe does not work — the 2026-10-21 lesson, recurring and caught.
+
+> **NO-SUCCESSOR:** the question this item asked is answered. What the run
+> bounded rather than closed is logged as new items of its own — the probe is
+> white-box and so unavailable to an APB-only bench, and `K5`'s sampling rate
+> is tied to the drain loop's pace — and neither inherits this item's
+> question.
+
+Report: `examples/phase6_rx_occupancy_probe/rx_occupancy_mutation_report_2026-11-09.txt`.
 
 ## OPEN: EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS
 

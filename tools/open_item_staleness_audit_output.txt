@@ -48,7 +48,7 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
 ------------------------------------------------------------------------------
 S4 -- the committed adjudication of the top 6
 ------------------------------------------------------------------------------
-  adjudication entries on disk: 30
+  adjudication entries on disk: 31
     OPEN    - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulat...
     OPEN    - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carrie...
     OPEN    - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan ...
@@ -88,6 +88,7 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
                no bullet matches, loosely or exactly
     ORPHAN     STALE A MUTANT FOR THE rx_avail SYNC_ONLY ROW
                no bullet matches, loosely or exactly
+    ALIGNED    STALE A CHECK THAT OBSERVES rx_cnt DIRECTLY
     ALIGNED    OPEN  EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS
     ORPHAN     STALE A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT CO...
                no bullet matches, loosely or exactly
@@ -116,7 +117,11 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
   [PASS] C4b.5 norm_head folds typography and whitespace only
   [PASS] C4b.6 and NOT meaning: dropping a term must change the key, or this comparison is just a slower token match
   [PASS] every STALE verdict names what inherits the work (REPLACED-BY) or states there is none (NO-SUCCESSOR)
-  verdicts: 11 STALE, 19 OPEN
+  [PASS] C4c.1 a STALE entry that names REPLACED-BY: in its own body is successored
+  [PASS] C4c.2 THE FALSE-GREEN, PLANTED: a STALE entry naming no successor of its own is NOT rescued by a REPLACED-BY: line belonging to an earlier entry that mentions it  --  measured: the old substring anchor calls that entry successored (wrongly), the heading anchor calls it unsuccessored (correctly)
+  [PASS] C4c.3 and the same entry WITH its own NO-SUCCESSOR: line is successored, so C4c.2 is not just a matcher that never passes
+  [PASS] C4c.4 a STALE verdict with no matching heading is reported, not silently skipped
+  verdicts: 12 STALE, 19 OPEN
 
 ------------------------------------------------------------------------------
 S5 -- controls on the ranker, and its mutation test
@@ -218,5 +223,5 @@ S7 -- every bullet that LEAVES the list is accounted for (2026-11-06)
   [PASS] C7 an unrelated ARRIVAL does not absorb a lost bullet -- the 0.75 threshold is read, not merely declared   [rows [('LOST', 'item alpha')]; added after a surviving mutant showed C1 never reaches the threshold]
 
 ==============================================================================
-RESULT: 56 passed, 0 failed
+RESULT: 60 passed, 0 failed
 ==============================================================================
