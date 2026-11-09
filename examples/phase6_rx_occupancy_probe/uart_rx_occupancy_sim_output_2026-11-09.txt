@@ -1,0 +1,123 @@
+Clean-RTL transcripts for examples/phase6_rx_occupancy_probe/uart_rx_occupancy_tb.v
+Generated 2026-11-09 with Icarus Verilog 10.3 against an unmodified rtl/uart_controller.v.
+Build: iverilog -g2012 -o sim rtl/uart_controller.v examples/phase6_rx_occupancy_probe/uart_rx_occupancy_tb.v
+
+################ vvp sim +gate=0 +decode=0
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : STATUS (st[3]) -- the 11-07 configuration
+  decode : K5 OFF -- the 11-07 premise: no check names rx_avail
+  config : len=8 div=0 par=1 stop2=0
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 8
+  reads that popped: 8
+  bytes returned  : 8 of 8
+  K5 non-trivial  : 0  (evaluations facing a non-empty FIFO)
+  checks          : 22
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
+################ vvp sim +gate=0 +decode=1
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : STATUS (st[3]) -- the 11-07 configuration
+  decode : K5 ACTIVE -- a check names rx_avail
+  config : len=8 div=0 par=1 stop2=0
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 8
+  reads that popped: 8
+  bytes returned  : 8 of 8
+  K5 non-trivial  : 8  (evaluations facing a non-empty FIFO)
+  checks          : 485
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
+################ vvp sim +gate=1 +decode=0
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : PROBE (dut.rx_cnt != 0)
+  decode : K5 OFF -- the 11-07 premise: no check names rx_avail
+  config : len=8 div=0 par=1 stop2=0
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 8
+  reads that popped: 8
+  bytes returned  : 8 of 8
+  K5 non-trivial  : 0  (evaluations facing a non-empty FIFO)
+  checks          : 22
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
+################ vvp sim +gate=1 +decode=1
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : PROBE (dut.rx_cnt != 0)
+  decode : K5 ACTIVE -- a check names rx_avail
+  config : len=8 div=0 par=1 stop2=0
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 8
+  reads that popped: 8
+  bytes returned  : 8 of 8
+  K5 non-trivial  : 8  (evaluations facing a non-empty FIFO)
+  checks          : 370
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
+################ vvp sim +gate=1 +decode=1 +len=0
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : PROBE (dut.rx_cnt != 0)
+  decode : K5 ACTIVE -- a check names rx_avail
+  config : len=0 div=0 par=1 stop2=0
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 0
+  reads that popped: 0
+  bytes returned  : 0 of 0
+  K5 non-trivial  : 0  (evaluations facing a non-empty FIFO)
+  checks          : 6
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
+################ vvp sim +gate=1 +decode=1 +div=2 +par=2 +stop2=1
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : PROBE (dut.rx_cnt != 0)
+  decode : K5 ACTIVE -- a check names rx_avail
+  config : len=8 div=2 par=2 stop2=1
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 8
+  reads that popped: 8
+  bytes returned  : 8 of 8
+  K5 non-trivial  : 13  (evaluations facing a non-empty FIFO)
+  checks          : 1169
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
+################ vvp sim +gate=1 +decode=1 +len=4 +div=3
+==============================================================
+RX OCCUPANCY PROBE -- a check that observes rx_cnt directly
+  gate   : PROBE (dut.rx_cnt != 0)
+  decode : K5 ACTIVE -- a check names rx_avail
+  config : len=4 div=3 par=1 stop2=0
+==============================================================
+--------------------------------------------------------------
+  RX reads issued : 4
+  reads that popped: 4
+  bytes returned  : 4 of 4
+  K5 non-trivial  : 6  (evaluations facing a non-empty FIFO)
+  checks          : 717
+  errors          : 0
+RESULT: PASS
+--------------------------------------------------------------
+
