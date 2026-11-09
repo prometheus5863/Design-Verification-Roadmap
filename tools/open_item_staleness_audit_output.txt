@@ -2,18 +2,18 @@
 OPEN-ITEM STALENESS AUDIT -- is the list that CHOOSES the work
 consistent with the file that records what is finished?  (2026-10-03)
 ==============================================================================
-  AUTOMATION_LOG.md: 58 "Not yet covered" lists; the STANDING list has 38 items
-    FULL        38 items   Open items, with blockers named:**
-  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 830277 > 822235), not to an older one
+  AUTOMATION_LOG.md: 59 "Not yet covered" lists; the STANDING list has 41 items
+    FULL        41 items   Open items, with blockers named:**
+  [PASS] S0 the standing list being audited belongs to the LAST session entry in the log (offset 854181 > 842595), not to an older one
   [PASS] the standing list is anchored on exactly one FULL list (found 1 at or after the most recent; the anchor must be unambiguous)
-  progress.md: 103 completed checkboxes, 18 unchecked
+  progress.md: 112 completed checkboxes, 18 unchecked
   [PASS] the most recent open-items list parses into items
   [PASS] progress.md parses into completed blocks
 
 ------------------------------------------------------------------------------
 S1 -- every backticked path an open item names exists in the tree
 ------------------------------------------------------------------------------
-  paths named: 5   resolved: 5   unresolved: 0
+  paths named: 6   resolved: 6   unresolved: 0
   An unresolved path is not automatically a fault: an item may name a file
   it asks a future session to CREATE.  Reported, not failed.
   [PASS] S1 ran and reported 0 unresolved path(s) for adjudication
@@ -33,14 +33,14 @@ S3 -- CONTRADICTION RANKING against progress.md's completed items
     score  open item
     0.833  - THE SVA FORM OF THESE FIFTEEN RULES — blocked on a simulator with concurrent asserti...  <-- adjudicate
     0.800  - EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT — carried from 10-25.  <-- adjudicate
-    0.727  - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan v14 (ii), adjudicated unbl...  <-- adjudicate
+    0.667  - A TX-SIDE F7 TIMING STATEMENT — carried from 10-29, vplan v14 (ii), adjudicated unbl...  <-- adjudicate
     0.600  - CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT — carried.  <-- adjudicate
     0.600  - THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING 0x40 — carried.  <-- adjudicate
     0.600  - A MUTANT ON budget_law_exhaustive.py's OWN STIMULUS GENERATOR — carried, created 09-...  <-- adjudicate
-    0.556  - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR — carried from...
-    0.500  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...
+    0.526  - A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR — carried from...
     0.500  - RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED — carried from 10-1...
-    0.429  - RUN A MUTATION SUITE WITH THE TOOLCHAIN BROKEN IN A WAY THAT IS NOT THE NETWORK — ca...
+    0.444  - NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE — carried from 10-22; "covera...
+    0.400  - THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ — carried from 10-20.
 
   top match for the highest-ranked item:
     - x All of S4's reporting cut adjudicated, with blockers stated. The SVA form of the fifteen rules (blocked — Icarus 10.3 has no concurrent assertions...
@@ -80,7 +80,8 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
                no bullet matches, loosely or exactly
     ALIGNED    OPEN  A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS
     ALIGNED    OPEN  MORE SEEDS ON THE CLOSURE DISTRIBUTION
-    ALIGNED    OPEN  A REPOSITORY-WIDE DETAIL-STRING CENSUS
+    MISALIGNED STALE A REPOSITORY-WIDE DETAIL-STRING CENSUS
+               reachable only through the 0.75 token matcher; the bullet head is "AUDIT EVERY DETAIL STRING IN THIS REPOSITORY FOR A CLAIM ABOUT THE LIVE TREE"
     ALIGNED    OPEN  MAKE run_all_harnesses.sh ITSELF REACHABLE
     ORPHAN     STALE RAL BASICS, ACTIVE/PASSIVE AGENTS, vplan v2 — the surviv...
                no bullet matches, loosely or exactly
@@ -88,7 +89,8 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
                no bullet matches, loosely or exactly
     ORPHAN     STALE A MUTANT FOR THE rx_avail SYNC_ONLY ROW
                no bullet matches, loosely or exactly
-    ALIGNED    STALE A CHECK THAT OBSERVES rx_cnt DIRECTLY
+    ORPHAN     STALE A CHECK THAT OBSERVES rx_cnt DIRECTLY
+               no bullet matches, loosely or exactly
     ALIGNED    OPEN  EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS
     ORPHAN     STALE A COSMETIC-EDIT POSITIVE CONTROL IN EVERY RUNNER THAT CO...
                no bullet matches, loosely or exactly
@@ -108,7 +110,7 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
                no bullet matches, loosely or exactly
     ALIGNED    OPEN  EXTEND S6 TO EVERY ITEM THAT ASSERTS FILE CONTENT
 
-  OPEN entries: 19 ALIGNED, 0 MISALIGNED, 0 ORPHAN
+  OPEN entries: 18 ALIGNED, 0 MISALIGNED, 0 ORPHAN
   [PASS] every OPEN entry's heading equals the head of some live bullet, so the orphan set is decidable without the loose matcher
   [PASS] C4b.1 a heading quoting a bullet head verbatim -> ALIGNED  (got ALIGNED)
   [PASS] C4b.2 a heading the token matcher still reaches, but which equals no bullet head -> MISALIGNED, not ALIGNED and not ORPHAN  (got MISALIGNED)
@@ -121,7 +123,7 @@ S4b -- does each OPEN entry's heading EQUAL the head of a bullet?
   [PASS] C4c.2 THE FALSE-GREEN, PLANTED: a STALE entry naming no successor of its own is NOT rescued by a REPLACED-BY: line belonging to an earlier entry that mentions it  --  measured: the old substring anchor calls that entry successored (wrongly), the heading anchor calls it unsuccessored (correctly)
   [PASS] C4c.3 and the same entry WITH its own NO-SUCCESSOR: line is successored, so C4c.2 is not just a matcher that never passes
   [PASS] C4c.4 a STALE verdict with no matching heading is reported, not silently skipped
-  verdicts: 12 STALE, 19 OPEN
+  verdicts: 13 STALE, 18 OPEN
 
 ------------------------------------------------------------------------------
 S5 -- controls on the ranker, and its mutation test
@@ -197,22 +199,22 @@ S7 -- every bullet that LEAVES the list is accounted for (2026-11-06)
 ------------------------------------------------------------------------------
   history scan, a REPORT and not a verdict -- it is the evidence
   for why S7 is scoped to the newest transition:
-    transitions with departures : 53
-    departures in total         : 227
+    transitions with departures : 54
+    departures in total         : 229
     worst single transition     : 2026-10-28 -> 2026-10-29, 31 departures
     recent entries with a SHORT list (<15 bullets): 2026-10-29, 2026-10-30, 2026-11-02, 2026-11-03
-    recent entries folding the tail into one bullet: 2026-10-28, 2026-11-04, 2026-11-05, 2026-11-06
+    recent entries folding the tail into one bullet: 2026-11-04, 2026-11-05, 2026-11-06
   A head diff cannot tell a format change from a loss, so the
-  227 above measures presentation and not work lost.  S7 itself
+  229 above measures presentation and not work lost.  S7 itself
   is scoped to the newest transition, where both lists are
   current and the question is decidable.
 
-  newest transition: 2026-11-07 -> 2026-11-08   2 departures
-    NOTED        classify every control as verdict-bearing or not
-                 the entry that dropped it carries a removal note
-    ADJUDICATED  classify every cmp -s as verdict-bearing or control-bearin
+  newest transition: 2026-11-08 -> 2026-11-09   2 departures
+    ADJUDICATED  a check that observes rx_cnt directly
                  a STALE adjudication entry quotes this head
-  [PASS] S7 no bullet left the newest list unaccounted for (2 departures: ADJUDICATED=1, NOTED=1, REWORDED=0, LOST=0)
+    ADJUDICATED  a repository-wide detail-string census
+                 a STALE adjudication entry quotes this head
+  [PASS] S7 no bullet left the newest list unaccounted for (2 departures: ADJUDICATED=2, NOTED=0, REWORDED=0, LOST=0)
 
   [PASS] C1 a bullet that vanishes with no trace is LOST   [rows [('LOST', 'item alpha')]]
   [PASS] C2 and ACCOUNTED once a STALE adjudication entry quotes it   [rows [('ADJUDICATED', 'item alpha')]]

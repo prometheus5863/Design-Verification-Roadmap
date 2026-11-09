@@ -277,8 +277,33 @@ or five-seed numbers quoted in the vplan as if characteristic. The item is
 resumable by construction, and its remaining value is a stated expectation
 with a spread, not another point.
 
-## OPEN: A REPOSITORY-WIDE DETAIL-STRING CENSUS
+## STALE: A REPOSITORY-WIDE DETAIL-STRING CENSUS
 
+**Verdict: STALE as of 2026-11-09 — absorbed, and the absorption had been
+PROPOSED but never recorded.** 11-08's addendum created *AUDIT EVERY DETAIL
+STRING IN THIS REPOSITORY FOR A CLAIM ABOUT THE LIVE TREE*, ranked it second,
+and closed with **"This item should absorb that one."** A proposal is not a
+route: the bullet was dropped from the 11-09 standing list with the absorption
+mentioned only in the successor's gloss, and the audit classified it **LOST**
+while `S4` separately reported this entry **MISALIGNED** — the orphan half of
+the same fault 11-07 hit, two sessions later and inherited rather than
+invented.
+
+**Caught by running the instrument on the entry that had just been
+committed**, not by reading the list. The prediction in the 11-09 entry was
+*exactly one departure*; the measurement was two, and the entry had already
+named a count other than 1 as meaning the retirement was not as clean as it
+claimed. It was not.
+
+> **REPLACED-BY:** AUDIT EVERY DETAIL STRING IN THIS REPOSITORY FOR A CLAIM
+> ABOUT THE LIVE TREE — created 2026-11-08, which is the same population
+> (every `check(...)` detail string) with the sharper predicate 11-08's `C3`
+> finding supplied: a detail string that asserts a count, a *first*, an
+> *only* or a *not yet* about the live tree. The general item's own framing —
+> *a detail string that describes a check's intent rather than its
+> measurement* — is the weaker form and is carried inside the successor.
+
+**Original reasoning, kept:**
 **Score 0.333, rank 4. Verdict: OPEN.** Created 10-10. Checked: there is no
 file in `tools/` that does this (`ls tools/ | grep -i detail` is empty), and
 the two worked instances remain the hand-derived C1/C3 strings in

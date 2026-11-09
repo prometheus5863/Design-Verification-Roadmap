@@ -14500,3 +14500,81 @@ exercise `NOTED` would be the padding this log keeps warning about.
 transcripts; the runner with its report; the audit repair with the refreshed
 adjudication and transcript — and this `AUTOMATION_LOG.md` entry with
 `progress.md` makes **4**, with the post-entry audit transcript making **5**.
+
+### 8. Addendum, written after the entry above landed: the prediction was FALSIFIED in its count, and the cause was an absorption 11-08 proposed and nobody recorded
+
+The ranked-first item was run against the committed 11-09 entry. **It went
+red: 58 passed, 2 failed.**
+
+The entry predicted **exactly one departure**, `ADJUDICATED=1 NOTED=0
+REWORDED=0 LOST=0`, and said in as many words that a count other than 1 would
+mean *"the one-route retirement above was not as clean as §7 claims."*
+**Measured: two departures, `ADJUDICATED=1 NOTED=0 REWORDED=0 LOST=1`.** It
+was not clean.
+
+&nbsp;&nbsp;&nbsp;&nbsp;`LOST  a repository-wide detail-string census`
+&nbsp;&nbsp;&nbsp;&nbsp;`      no adjudication, no removal note, no reworded arrival`
+
+plus a second red from `S4`: that item's `OPEN` adjudication entry was now
+**MISALIGNED**, matching no live bullet — the orphan half of the fault 11-07
+hit, two sessions later.
+
+**AND THE CAUSE WAS INHERITED RATHER THAN INVENTED, which is the part worth
+keeping.** 11-08's addendum created *AUDIT EVERY DETAIL STRING … FOR A CLAIM
+ABOUT THE LIVE TREE* and closed with **"This item should absorb that one."**
+Writing the 11-09 list, that sentence was honoured: the general item's bullet
+was dropped and the absorption recorded in the successor's gloss. **A proposal
+is not a route.** The three accounted routes are an adjudication entry, a
+removal note, and a reworded arrival; prose inside a *different* bullet is
+none of them, and the audit was right to call the bullet lost. A one-line
+instruction in a predecessor's addendum is exactly the kind of thing that
+reads as discharge and records nothing.
+
+Repaired by the route the committed history uses and the one `S7` gives
+precedence: the entry moved to `STALE` with the measurement in it and a
+`REPLACED-BY` naming the 11-08 successor, the superseded `OPEN` reasoning kept
+verbatim beneath it. **Re-run: 60 passed, 0 failed, exit 0**, and the
+transition now reads `ADJUDICATED=2 NOTED=0 REWORDED=0 LOST=0`.
+
+**The other half of the prediction HELD, and exactly.** The folded
+`THE REST OF THE STANDING LIST` bullet **did not depart**, for the **second
+consecutive transition** — 11-06 built the compression repair, 11-07 predicted
+the first clean transition, 11-08 measured it, and today is the confirmation
+that it was not a property of the session that invented it. Against a history
+of 229 departures over 54 transitions whose worst single transition is 31,
+two transitions in a row in which the only departures are deliberate
+retirements is the compression repair doing its job.
+
+**So the entry above was wrong about the count and right about what the count
+would mean**, and the §7 claim that one route was exercised *because nothing
+else was finished* was itself the error: something else had been retired, by
+accident, with no route at all.
+
+**Eleventh instance of the one-way channel**, and the second time the
+instrument has caught the session running it mid-discharge rather than
+catching a predecessor.
+
+**Added to the list by this addendum:**
+
+- **A CHECK THAT AN ABSORPTION WAS RECORDED AND NOT ONLY PROPOSED** — created
+  today, **ranked second for the next session** behind the audit re-run,
+  cheap, blocked on nothing. The population is every *"should absorb"*,
+  *"absorbs"*, *"supersedes"* and *"this item should probably absorb"*
+  sentence in this log — the standing list has carried at least three such
+  proposals — and the instrument is a grep over entries for those phrases
+  paired with a check that the named absorbed item either still has a live
+  bullet or has a `STALE` entry whose `REPLACED-BY` names the absorber. Today
+  is one measured instance of the gap; the question is how many more are
+  sitting in the log as sentences.
+- **`S7` SHOULD REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE** —
+  created today, and it is a **specification decision** before it is a coding
+  task. Each entry's ranked-first item now states a predicted departure count;
+  nothing compares it to the measurement, so today's falsification was caught
+  by a human reading two numbers. Whether a prediction belongs *in the
+  instrument* is the question — it would make the audit depend on prose it
+  cannot validate, which is the coupling `C3`'s detail string was corrected
+  for on 11-08.
+
+**Commits this run:** 4 before this addendum, and this addendum with the
+refreshed audit transcript and the re-adjudicated entry makes **5**, as §7
+predicted.
