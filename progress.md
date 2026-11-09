@@ -3741,3 +3741,70 @@ the work turned out to be auditing the wrong list.
 - **`tools/verdict_bearing_census.py`: 14 passed, 0 failed, exit 0.** Phase 4
   UVM remains in progress; `S7` is still unblocked for widening and was not
   widened today.
+
+## 2026-11-09 — the direct `rx_cnt` probe, and the successor check was anchored on a substring
+
+- [x] **A CHECK THAT OBSERVES `rx_cnt` DIRECTLY, carried since 2026-11-07,
+  is discharged.** `examples/phase6_rx_occupancy_probe/` — a bench whose `K2`
+  pop-effect check reads `dut.rx_cnt` and `dut.rx_wptr` hierarchically and
+  requires that a read of `RX_DATA` at occupancy ≥ 1 remove **exactly one**
+  entry. A push landing inside the 3-clock access window is accounted for by
+  `rx_wptr` moving, so the expectation is exact rather than an
+  improbability argument. Five arms, three configurations, all controls
+  green, exit 0.
+
+- [x] **`K2` separates *the sequencing gate lied* from *the DUT changed*,
+  which is the distinction the 11-07 matrix could not draw.** It fires for
+  both wire mutants — `R4` (`rx_pop` late) and `R5` (`rx_pop` never) — and
+  for none of the three decode-only mutants, in both probe configurations.
+  With nothing reading `STATUS` at all, the three decode-only mutants
+  **escape** and both wire mutants do not.
+
+- [x] **Separating them needed a new GATE as well as a new CHECK, and that
+  is the generalisable part.** `uart_crv_cov_tb.v` takes the mutated flag as
+  its sequencing gate, so under both `R3` and `R4` it never issues the read
+  that would expose the difference: `R4`'s changed behaviour is real but
+  *unexercised*, and no amount of checking reaches it.
+
+- [x] **The 11-07 claim reproduced rather than assumed.** In the
+  `STATUS`-gated configuration this bench reports an identical first failing
+  check for `R3` and `R4`, byte count included — `burst watchdog: 7 of 8` at
+  `len=8` against the 11-07 report's `3 of 4` at `len=4`. The runner asserts
+  that equality mechanically and would report `NOT REPRODUCED` on divergence.
+
+- [x] **The first version of `K5` escaped the mutant it was written for.**
+  Evaluated once per drain-loop pass *before* the gate, it compared 0 against
+  0 on essentially every pass, because under the probe gate the RX FIFO is
+  non-empty for only a few clocks of each ~176-clock frame. `R1` (stuck
+  CLEAR) passed; `R2` (stuck SET) was caught only because its failing case is
+  the common one. Repaired by an **ordering** whose sufficiency is exact, and
+  `V4` now refuses any run in which `K5` never faced a non-empty FIFO.
+
+- [x] **The 2026-10-21 first-failure lesson recurred and was caught.** Under
+  the probe gate *with* `K5`, the mutated wire trips `K5` before `K2`, so
+  `R3` and `R4` share a first failing check there. A first-failure-wins
+  report would have concluded the probe does not work. The verdict is the
+  failing **set**.
+
+- [x] **`S4`'s successor check could be satisfied by text belonging to a
+  different entry.** It located each `STALE` entry by the first occurrence of
+  its heading phrase anywhere in the file — and this repository's own
+  convention puts that first occurrence inside the *predecessor's*
+  `REPLACED-BY:` line. Re-anchored on the heading. The visible symptom was a
+  false red on today's own entry; the reachable one is a **false green**,
+  planted as `C4c.2` and measured against a reverted copy.
+
+- [x] **`C4c.2`'s first version agreed with the broken code.** Written with
+  the predecessor's marker before the phrase, it went red under both anchors
+  and proved nothing. Corrected, then mutation tested: substring anchor
+  **58 passed / 2 failed**, heading anchor **60 passed / 0 failed**.
+
+- [x] **`iverilog` reports a full disk as `ivlpp: No input files given`**, on
+  a valid file list, when `TMPDIR` resolves onto a full filesystem. Every
+  mutation runner here would score that as `COMPILE_ERROR`, which each of
+  them defines as an *injection failure* — a statement about the mutant, when
+  it is a statement about the disk. `G0` in the new runner probes writability
+  and greps for that exact string before naming a compile failure.
+
+- **`tools/open_item_staleness_audit.py`: 60 passed, 0 failed, exit 0.**
+  Phase 4 UVM remains in progress; `S7` was not widened today.

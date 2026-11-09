@@ -14141,3 +14141,362 @@ refutation.
 **Commits this run:** 3, as the entry above predicted — the census; the entry
 with `progress.md` and the adjudication; and this addendum with the refreshed
 audit transcript and the `C3` correction.
+
+---
+
+## 2026-11-09 — a check that observes `rx_cnt` directly, and separating the two mutants needed a new GATE and not only a new CHECK; the audit's successor row could be satisfied by another entry's text
+
+Three commits before this entry. The ranked-first item is the audit re-run and
+it comes after this entry lands, as it must.
+
+**This repository's last session of verification content was 11-07.** 11-08
+measured a claim inside a standing item, and the day's other session was in
+the graphene repository. Today's work is the carried item that adds **reach**
+rather than auditing existing reach, chosen over the three meta-items ranked
+above it for that reason.
+
+### 1. The item: separating *the sequencing gate lied* from *the DUT changed*
+
+11-07's `rx_avail` report closed by naming its own resolution limit:
+
+> *"AND R3 AND R4 ARE INDISTINGUISHABLE IN THIS MATRIX. Both report the same
+> first failing check with the same byte count, because both make the last
+> byte unreadable — R3 by stopping the bench asking for it, R4 by stopping the
+> RTL popping it. The mechanisms differ and this instrument cannot tell them
+> apart … Separating them needs a check that observes `rx_cnt` directly;
+> logged, not claimed."*
+
+`R1`–`R3` mutate the **STATUS decode** only: `rx_pop` keeps the true
+`rx_avail`, so the datapath is untouched and only a reader of `STATUS` can be
+misled. `R4` mutates the **wire**, which `rx_pop` gates on, so a read of
+`RX_DATA` at occupancy 1 pops nothing. An instrument that cannot tell those
+apart cannot say which of its own detections are about the RTL.
+
+**AND THE REASON THE 11-07 BENCH COULD NOT IS A MECHANISM, NOT A
+SHORTCOMING** — which is what decided the shape of today's work rather than
+being noticed after it. `uart_crv_cov_tb.v` takes `STATUS.rx_avail` as its
+**sequencing gate**: it reads `RX_DATA` only when `st[3]` is set. Both mutants
+clear `st[3]` at occupancy 1, so under **both** the bench never issues the
+read that would expose the difference. `R4`'s changed behaviour is real but
+**unexercised**, and no amount of checking reaches it. Separating the two
+therefore needs a new **observation** *and* a new **gate**. Had this been
+treated as a missing check alone, the session would have added `K5`, watched
+it fire for both arms, and concluded the item was discharged.
+
+`examples/phase6_rx_occupancy_probe/` is the instrument, and it is a **new
+bench rather than four checks added to the old one**, deliberately: the 11-07
+adjudication rests on the census premise that *no* check in `uart_crv_cov_tb.v`
+names `rx_avail` or `st[3]`, so adding one there would silently convert the
+`SYNC_ONLY` row that bench exists to measure into a `PREDICTED` one.
+
+`K2`, the pop-effect check, is the discriminator: a read of `RX_DATA` at
+occupancy ≥ 1 must remove **exactly one** entry. The expectation is exact
+rather than statistical — a push landing inside the 3-clock access window is
+detected by `rx_wptr` moving, giving
+`expected_after = before − 1 + (pushed_during ? 1 : 0)` instead of *"a frame
+is 176 clocks so a push is unlikely here"*.
+
+### 2. Measured: five arms, three configurations, and the verdict is a SET
+
+`A` = `+gate=0 +decode=0` (the 11-07 gate), `B` = `+gate=1 +decode=0` (the
+probe gates, nothing checks `STATUS`), `C` = `+gate=1 +decode=1`.
+
+| | mutant | A | B | C |
+|---|---|---|---|---|
+| `R1` | STATUS decode: `rx_avail` stuck CLEAR | FAIL | **PASS** | FAIL |
+| `R2` | STATUS decode: `rx_avail` stuck SET | FAIL | **PASS** | FAIL |
+| `R3` | STATUS decode: `rx_avail` one entry LATE | FAIL | **PASS** | FAIL |
+| `R4` | WIRE: `rx_avail` one entry late (`rx_pop` too) | FAIL | FAIL | FAIL |
+| `R5` | WIRE: `rx_pop` never asserts | FAIL | FAIL | FAIL |
+
+**`K2` fires for both wire mutants and for no decode-only mutant, in both
+probe configurations.** The failing sets in `C`:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`R1/R2/R3  {K5}` — the decode disagrees, the datapath is intact
+&nbsp;&nbsp;&nbsp;&nbsp;`R4        {K2,K5,K6,V3,V3b}` — the DUT changed
+&nbsp;&nbsp;&nbsp;&nbsp;`R5        {K2,K6,V3,V3b}`
+
+`B` is the cleanest statement: with nothing reading `STATUS` at all, the three
+decode-only mutants **escape** and both wire mutants do not.
+
+**AND THE 2026-10-21 FIRST-FAILURE LESSON RECURRED, AND WAS CAUGHT.** In `C`
+the mutated wire trips `K5` *before* `K2`, so `R3` and `R4` have the **same
+first failing check** there. A runner reporting first-failure-wins would have
+reproduced the 11-07 indistinguishability and concluded the probe does not
+work. It is the failing **set** that separates them, and that is the third
+time this repository has paid for first-failure-wins.
+
+**`R5` exists because a check with one witness is a tripwire.** `R4` delays
+`rx_pop`; `R5` removes it. `K2` fires for both, so its evidence is not the
+single mutant it was written against.
+
+### 3. The overlapping limit, reproduced rather than asserted
+
+In configuration `A`, `R3` and `R4` report an **identical** first failing
+check including the byte count:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`burst watchdog: 7 of 8 bytes returned (par=1 stop2=0 div=0 len=8)`
+
+against `rx_avail_mutation_report_2026-11-07.txt`'s `3 of 4 bytes returned` at
+`len=4` for both arms. Same shape, a different bench, different stimulus, a
+different check set, eight sessions later. **The 11-07 indistinguishability was
+not an artefact of that bench** — it is a property of taking the mutated flag
+as the sequencing gate, which is what `A` does too. The runner asserts the
+equality mechanically and prints `NOT REPRODUCED` if the arms diverge.
+
+**`G2` is narrowed in place rather than left to be discovered.** `A` satisfies
+the 11-07 premise *literally* — no check in it names `rx_avail` or `st[3]` —
+but **`A` is the 11-07 GATE, not the 11-07 BENCH**: `K2` and `V1`–`V3b` read
+the probe and are active in every configuration, so `A` has an occupancy
+observer `uart_crv_cov_tb.v` does not have. That is visible in the matrix:
+`R2` fails `V3b` in `A`, so a conservation identity naming `rx_cnt` catches
+*stuck SET* without touching the premise. The reproduction claims only what
+the gate forces.
+
+### 4. The first version of `K5` escaped the mutant it was written to catch
+
+`K5` (the `STATUS` decode against the probe) was evaluated once per drain-loop
+pass **before** the gate. Under the probe gate the RX FIFO is non-empty for
+only a few clocks of each ~176-clock frame, so essentially every evaluation
+compared 0 against 0. **Measured: `R1` — `rx_avail` stuck CLEAR, catchable
+only at occupancy ≥ 1 — PASSED at `+gate=1 +decode=1`**, while `R2` was caught
+because its failing case is the common one. A check whose predicate is almost
+always trivially true is not a weak check, it is an **absent** one, and
+nothing about this was visible in the source.
+
+The repair is an **ordering**, and its sufficiency is exact rather than
+probable: `K5` is now evaluated immediately after the probe reports non-empty,
+and occupancy can only fall via `rx_pop`, which only a read of `RX_DATA`
+causes. No such read is issued between the probe sample and the `STATUS` read,
+so `occ_at_read ≥ 1` is **guaranteed**. `V4` then refuses any run in which
+`k5_nontrivial` is 0 — a positive control on the check rather than a claim
+about it. `R1` is detected by `K5` after the repair.
+
+### 5. The audit's successor row could be satisfied by another entry's text
+
+Adding the adjudication entry for the discharged item turned `S4`'s successor
+row red — for an entry whose `NO-SUCCESSOR:` line sits eleven lines below its
+heading. The scan located each `STALE` entry with `adj_text.find(phrase)`, the
+first occurrence of the heading text **anywhere in the file**, and
+**this repository's own convention is what breaks that**: a `REPLACED-BY:`
+line names its successor by the successor's full item phrase, so that first
+occurrence is normally the *predecessor's* cross-reference, hundreds of lines
+above the entry.
+
+**The false RED was the visible half.** The half that matters is the false
+**GREEN**: the slice begins *at* the phrase, so a predecessor that mentions
+its successor in prose and records its own `REPLACED-BY:` verdict after that
+mention — the ordinary shape of such an entry — hands the check a marker
+belonging to a different entry, and an entry naming no successor at all
+passes. That is precisely the condition the row exists to prevent.
+
+Re-anchored on `^## STALE: <phrase>$` and factored into `unsuccessored_stale()`
+so it can be controlled rather than only read. Four planted controls, and
+**`C4c.2`'s first version agreed with the broken code**: written with the
+predecessor's marker *before* the phrase, the old anchor sliced past the
+marker and the row went red anyway, so the fixture passed under both anchors
+and established nothing. Corrected, then mutation tested against a reverted
+copy:
+
+| anchor | C4c.1 | C4c.2 | C4c.3 | C4c.4 | live row | total |
+|---|---|---|---|---|---|---|
+| substring (old) | PASS | **FAIL** | PASS | PASS | RED | 58 passed, 2 failed |
+| heading (new) | PASS | PASS | PASS | PASS | green | **60 passed, 0 failed** |
+
+The row's **scope** was not widened: it still asks only whether a marker is
+present, and the carried *which rule and which policy* question about what a
+successor must **say** is untouched.
+
+### 6. `iverilog` reports a full disk as a missing argument
+
+With `TMPDIR` left at its default — which in this sandbox resolves onto a
+filesystem **100 % full for the fifteenth consecutive session** — `iverilog`
+fails on a perfectly valid file list with
+
+&nbsp;&nbsp;&nbsp;&nbsp;`ivlpp: No input files given.`
+&nbsp;&nbsp;&nbsp;&nbsp;`No top level modules, and no -s option.`
+
+The preprocessor cannot write the temporary file holding that list and reports
+the symptom as an **absent argument**. **Every mutation runner in this
+repository would score that as `COMPILE_ERROR`, which each of them defines as
+an injection failure** — a statement about the mutant, when it is a statement
+about the disk. It cost two debugging calls before `TMPDIR` was pinned, and it
+is the standing *toolchain broken in a way that is not the network* item
+arriving by itself rather than being staged. `G0` in the new runner probes
+writability and greps for that exact string before naming a compile failure,
+distinguishing `DISK` from `COMPILE_ERROR`.
+
+**Tenth instance of the one-way channel**, and three of today's findings are
+in it: `K5`'s escape, the audit's anchor, and this. None was deducible from
+the list, the source, or the diff; each came from running the thing.
+
+### 7. Environment
+
+`/sessions` **100 % full (0 bytes free)** for the fifteenth consecutive
+session; `$HOME/work` could not be created at all, so everything ran on
+`/dev/sda1` (2.7 G free) under `/tmp/s1109`, cloned fresh. The Icarus install
+lives at `/tmp/iverilog_install`. The device bridge did not drop and the
+per-call cap stayed at 180 s. A single probe-bench sim is well under 1 s, so
+the 5-arm × 3-configuration matrix plus six controls fits in one call.
+
+**Retired from the list this session**, by one route only, and the asymmetry
+is deliberate rather than balanced: 11-07 and 11-08 each exercised both
+routes, but nothing else was *finished* today and retiring a second bullet to
+exercise `NOTED` would be the padding this log keeps warning about.
+
+- **ADJUDICATED:** A CHECK THAT OBSERVES `rx_cnt` DIRECTLY — its `STALE`
+  entry in `tools/open_item_adjudication.md` carries the measurement and a
+  `NO-SUCCESSOR:` line, and the `rx_avail` entry's `REPLACED-BY` block is
+  annotated in place: its resolution limit remains exactly true of that bench
+  and that matrix, and nothing in it was rewritten.
+
+**Open items, with blockers named:**
+
+- **RE-RUN THE AUDIT AFTER THIS ENTRY LANDS** — **ranked first**, cheap,
+  mechanical, blocked on nothing, and carrying a sharper prediction than
+  usual because today changed the checker as well as the list. The
+  11-08 → 11-09 transition should show **exactly one departure**,
+  `ADJUDICATED=1 NOTED=0 REWORDED=0 LOST=0`, with the folded
+  `THE REST OF THE STANDING LIST` bullet **not departing** for the second
+  consecutive transition. If the folded bullet departs, the head is carrying
+  payload again. If the count is not 1, the one-route retirement above was not
+  as clean as §7 claims.
+- **A SECOND WITNESS FOR THE AUDIT'S OWN ANCHORS** — created today, **ranked
+  second**, cheap, blocked on nothing. §5's defect was in a *location* step,
+  not a comparison, and it was the only one of its kind under control. `S4`'s
+  orphan check, `S4b`'s heading alignment and `S7`'s departure classifier all
+  locate entries or bullets by searching text; none has a planted control in
+  which the sought text also appears somewhere it should not. The instrument
+  is the `C4c.2` fixture generalised: for each locator, a fixture where a
+  decoy occurrence precedes the real one.
+- **ADJUDICATE THE 17 `REQUIRES_READING` COMPARISONS** — carried from 11-08,
+  a **specification decision and not a coding task**: whether an injection
+  guard that reports and `continue`s is verdict-bearing *by consequence*.
+- **WIDEN `S7` BEYOND THE NEWEST TRANSITION** — created 11-06, unblocked
+  since 11-07, **not touched on 11-08 or today**. One transition at a time
+  with `s7_history_scan` as the evidence.
+- **AUDIT EVERY SCRATCH PATH IN THIS REPOSITORY AGAINST A FULL FILESYSTEM** —
+  carried from 11-08 and **sharpened by §6 into something narrower and
+  worse**: the census was scoped to scratch paths *this repository
+  constructs* (`mktemp`, `$TMPDIR`, literal `/tmp`, `WORK=`), and §6 is a path
+  constructed by the **toolchain**, invisible to any such census. The sharp
+  sub-question is unchanged and now has one measured answer: a runner would
+  report this disk failure as an injection failure.
+- **RUN A MUTATION SUITE WITH THE TOOLCHAIN BROKEN IN A WAY THAT IS NOT THE
+  NETWORK** — carried from 11-07 and **not discharged by §6**, which was an
+  accident rather than an experiment and covered one runner's compile step.
+  The deliberate run across every runner is still open; what changed is that
+  it is now evidenced rather than hypothetical, and `G0` is a worked example
+  of the guard it would need.
+- **PORT `G0` TO THE OTHER MUTATION RUNNERS** — created today, mechanical,
+  blocked on nothing, and it should be sized before it is started: five or
+  more runners each define `COMPILE_ERROR` as an injection failure, and each
+  needs the disk probe §6 describes. The honest version of this item admits it
+  is a sweep, not an insight.
+- **THE EVIDENCE-MODE RAISE HAS NEVER FIRED IN ANGER** — carried from 11-03,
+  blocker gone since 11-07's install. `PAC_MODE=evidence` should abort **at
+  the push the census predicts**, not merely abort. Today is a third argument
+  for prioritising it: `K5` was a verdict exercised only where its predicate
+  was trivial, which is the same fault class as a verdict exercised only by a
+  synthetic probe.
+- **`K5`'S SAMPLING RATE AT WIDE DIVISORS** — created today, cheap. `V4`
+  guards against `k5_nontrivial == 0` but says nothing about how *small* the
+  non-trivial fraction is, and at a wider divisor the FIFO is non-empty for a
+  smaller share of the run. A divisor sweep with `k5_nontrivial` as the
+  reported quantity is the measurement, and it is the close sibling of the
+  carried **A DIVISOR SWEEP FOR T6**.
+- **THE PROBE IS WHITE-BOX, AND NOTHING BLACK-BOX DISTINGUISHES `R3` FROM
+  `R4`** — created today, and it is a **specification question** rather than
+  a coding task. `K2` reads `dut.rx_cnt`, so it is unavailable to any bench
+  restricted to the APB port. Whether the two mutants are distinguishable
+  *through the port at all* is unanswered, and the honest candidate — read
+  `RX_DATA` twice without an intervening push and require the bytes to differ
+  — needs the admissibility argument written before it is coded.
+- **BIND THE SVA PROTOCOL CHECKERS INTO THE UVM ENVIRONMENT** — capstone
+  remainder (b); Icarus 10.3 has no concurrent assertions and that blocker
+  stands. Still the largest remaining block of actual verification content.
+- **WHICH RULE *AND* WHICH POLICY** — carried from 11-02 through 11-08, still
+  a **specification decision**, and still the last thing between capstone
+  remainder (c) and a sign-off statement. §5 deliberately did not widen into
+  it.
+- **AUDIT EVERY DETAIL STRING IN THIS REPOSITORY FOR A CLAIM ABOUT THE LIVE
+  TREE** — carried from 11-08's addendum, where it was ranked second and
+  absorbed the standing repository-wide detail-string census item. Not touched
+  today.
+- **REGENERATE `examples/phase6_uvm_crv_uart/mutation_test_report_2026-10-27.txt`**
+  — carried; a full re-run exceeds the 180 s cap and needs splitting, and the
+  per-case part-file pattern now exists in worked form.
+- **A TX-SIDE F7 TIMING STATEMENT** — carried from 10-29, vplan v14 (ii),
+  adjudicated unblocked on 11-06, a paragraph of plan text, eleven days
+  carried.
+- **THE SVA FORM OF THESE FIFTEEN RULES** — blocked on a simulator with
+  concurrent assertions.
+- **A CHECK THAT A DATED REPORT WAS WRITTEN BY THE RUNNER IT IS NAMED FOR** —
+  carried from 10-27, unblocked and mechanical; what it needs is a decision
+  about what counts as evidence of authorship. **Today adds two** dated
+  reports with the same unverified provenance, making seven.
+- **APPLY THE THREE-VALUED OUTCOME AXIS TO `phase6_crv_uart`'S CROSSES** —
+  carried, and today is a further argument for it: the new runner's verdict is
+  a *set*, which is the axis's shape taken seriously.
+- **AUDIT EVERY REMAINING RUNNER FOR THE "GREPS A FILE IT DID NOT JUST WRITE"
+  PATTERN** — carried; the fault is 09-27's and has recurred twice.
+- **GIVE THE FIVE SUITES WITHOUT A CURRENT REPORT ONE** — carried, lost and
+  restored twice.
+- **CHECK EVERY OTHER SED IN EVERY RUNNER FOR THE M7 ESCAPING FAULT** —
+  carried.
+- **WHY THE T6 RELOCATION CHANGED THE WATCHDOG** — carried from 10-30, still
+  unexplained, experiment still cheap and still named.
+- **`g_first` INTO THE PLAN'S SHARED VOCABULARY** — carried from 10-30 and
+  11-02, a seventh argument and no action.
+- **THE ODD START-BIT PHASES** — carried from 10-29; 11-04 supplied the form
+  of words it and its sibling were waiting for, and both should be
+  **rewritten** that way rather than re-argued.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29, and today's `K5` sampling
+  item is its sibling; one sweep harness could serve both.
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds two:
+  `examples/phase6_rx_occupancy_probe/uart_rx_occupancy_sim_output_2026-11-09.txt`
+  and `rx_occupancy_mutation_report_2026-11-09.txt`.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, fifteen-plus
+  sessions, named cause of three measured staleness incidents, and today adds
+  a sixth runner it does not reach.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22; *"coverage closure is a pass criterion, not a report line"* remains
+  unevidenced rather than wrong, and `V4` is the nearest thing yet built to
+  the principle it states.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-four sessions old.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried, and
+  today's bench is a seventh file it does not cover.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, and
+  today's bench names `RX_DEPTH` and `TX_DEPTH` rather than writing 8, which
+  is the convention this item asks for applied without being asked.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT MAKES
+  S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); A diversity
+  TARGET; per-property coverage of the Phase 4 UVM environment (09-23); a less
+  greedy steering policy (09-24); widen the coverage model (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants
+  not yet attempted (interrupt enable combinations, reset asserted mid-frame);
+  a property needing a strengthening invariant; the SVA sequence layer
+  (09-20); code coverage measurement (Icarus has none, 09-18); Phase 6 lint,
+  regression infra, coverage merge, CDC basics, interview prep.
+
+**Commits this run:** 3 before this entry — the bench with its clean
+transcripts; the runner with its report; the audit repair with the refreshed
+adjudication and transcript — and this `AUTOMATION_LOG.md` entry with
+`progress.md` makes **4**, with the post-entry audit transcript making **5**.
