@@ -1,0 +1,88 @@
+########################################################
+# SKEW_UNIT_NS=0
+########################################################
+==========================================================
+PHASE 6 -- CDC BASICS.  SKEW_UNIT = 0 ns (0 = plain zero-delay sim)
+clk_a period 10 ns (source), clk_b period 34 ns (dest)
+==========================================================
+
+MEASURED
+  destination samples            : 417
+  incoherent binary samples      : 0
+  incoherent Gray samples        : 0
+  source pulses generated        : 85
+  pulses seen, naive crossing    : 25
+  pulses seen, toggle handshake  : 85
+  2FF latency, clk_b edges       : 2
+
+CHECKS
+  [PASS] L1 the 2FF synchroniser costs EXACTLY 2 destination edges
+         latency = 2 clk_b edges; exactly 2 is the only correct answer for a 2-flop synchroniser
+  [PASS] S1 the run actually sampled the crossing
+         samples = 417; a run that measured nothing would pass every check below vacuously
+  [PASS] K1 the skew mode actually elaborated matches the mode reported
+         SKEW_UNIT = 0, and bin_skewed disagreed with bin_a 0 times during the run (must be 0 iff no skew path was elaborated)
+  [PASS] G1 the Gray-coded crossing is coherent on EVERY sample
+         incoherent Gray samples = 0 of 417
+  [PASS] B1 zero-delay sim shows the BROKEN crossing as clean (the bug is invisible to simulation)
+         incoherent binary samples = 0 of 417 -- and this EXACT ZERO IS THE WARNING, not the result: a zero-delay sim cannot expose the bug
+  [PASS] P1 the naive pulse crossing LOSES pulses to the slower clock
+         generated = 85, seen = 25 (60 lost)
+  [PASS] P2 the toggle handshake loses NONE (exact equality)
+         generated = 85, seen = 85
+  [PASS] P3 and the handshake strictly beats the naive path (two-sided, so P2 is not an accident of timing)
+         naive 25 < handshake 85 = generated 85
+
+  8 passed, 0 failed
+
+CDC_TB_RESULT: ALL_PASS
+
+########################################################
+# SKEW_UNIT_NS=1
+########################################################
+==========================================================
+PHASE 6 -- CDC BASICS.  SKEW_UNIT = 1 ns (0 = plain zero-delay sim)
+clk_a period 10 ns (source), clk_b period 34 ns (dest)
+==========================================================
+
+MEASURED
+  destination samples            : 417
+  incoherent binary samples      : 28
+  incoherent Gray samples        : 0
+  source pulses generated        : 85
+  pulses seen, naive crossing    : 25
+  pulses seen, toggle handshake  : 85
+  2FF latency, clk_b edges       : 2
+  first binary incoherency       : t=425 ns, prev=20, sampled=16
+
+CHECKS
+  [PASS] L1 the 2FF synchroniser costs EXACTLY 2 destination edges
+         latency = 2 clk_b edges; exactly 2 is the only correct answer for a 2-flop synchroniser
+  [PASS] S1 the run actually sampled the crossing
+         samples = 417; a run that measured nothing would pass every check below vacuously
+  [PASS] K1 the skew mode actually elaborated matches the mode reported
+         SKEW_UNIT = 1, and bin_skewed disagreed with bin_a 2828 times during the run (must be 0 iff no skew path was elaborated)
+  [PASS] G1 the Gray-coded crossing is coherent on EVERY sample
+         incoherent Gray samples = 0 of 417
+  [PASS] B2 with per-bit skew modelled, the binary crossing BREAKS
+         incoherent binary samples = 28 of 417 with only 1 ns/bit of skew
+  [PASS] B3 and the Gray crossing survives the SAME skew (two-sided, so G1 is not vacuous)
+         binary 28 incoherent vs Gray 0 -- same skew, same stimulus, same synchroniser; the only difference is the encoding
+  [PASS] P1 the naive pulse crossing LOSES pulses to the slower clock
+         generated = 85, seen = 25 (60 lost)
+  [PASS] P2 the toggle handshake loses NONE (exact equality)
+         generated = 85, seen = 85
+  [PASS] P3 and the handshake strictly beats the naive path (two-sided, so P2 is not an accident of timing)
+         naive 25 < handshake 85 = generated 85
+
+  9 passed, 0 failed
+
+CDC_TB_RESULT: ALL_PASS
+
+########################################################
+# CROSS-MODE CHECKS
+########################################################
+  [PASS] X1 the zero-skew run reports B1: the BROKEN crossing simulates clean
+  [PASS] X2 the skewed run reports B2 and B3: it breaks, and Gray does not
+  [PASS] X3 the two modes are genuinely different runs, not one run twice
+RUNNER_RESULT: ALL_MODES_PASS
