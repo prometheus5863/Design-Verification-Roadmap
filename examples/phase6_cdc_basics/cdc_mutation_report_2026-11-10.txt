@@ -1,0 +1,38 @@
+==========================================================================
+MUTATION TEST -- examples/phase6_cdc_basics
+==========================================================================
+
+BASELINE (unmutated)
+  SKEW_UNIT_NS=0 : PASS
+  SKEW_UNIT_NS=1 : PASS
+
+mutant                                                     verdict
+--------------------------------------------------------------------------
+C1 the 2FF synchroniser becomes a 1FF (ff2 takes d_src dir DETECTED by L1 (0:FAIL,1:FAIL)
+C2 Gray encoder shifts by 2 instead of 1 (no longer a Gray DETECTED by G1 (1:FAIL)
+C3 Gray decoder drops the running XOR (b[i] = gray[i])     DETECTED by G1 (0:FAIL,1:FAIL)
+C4 Gray encoder becomes the identity (a plain binary cross DETECTED by G1 (1:FAIL)
+C5 the pulse toggle latches high instead of toggling       DETECTED by P2 (0:FAIL,1:FAIL)
+C6 the destination edge detector sees only RISING toggle e DETECTED by P2 (0:FAIL,1:FAIL)
+C7 the pulse synchroniser is bypassed (toggle used combina EXPECTED SURVIVOR
+--------------------------------------------------------------------------
+6 detected by the named check, 0 partial, 1 expected survivors, 0 unexpected survivors, 0 stale expectations, of 7
+
+EXPECTED SURVIVORS -- pinned, with the reason recorded, NOT silently tolerated:
+  - C7 the pulse synchroniser is bypassed (toggle used combinationally)
+      This mutant compares a SYNCHRONISED signal against the 
+      UNSYNCHRONISED source, which is a real and serious CDC defect -- it 
+      puts a metastable node straight into the destination's 
+      combinational logic. The bench cannot see it, and that is this 
+      example's own thesis arriving from a second direction: the bench 
+      measures FUNCTIONAL coherency and pulse accounting, and this defect 
+      is neither. It changes WHICH flop can go metastable, and no amount 
+      of zero-delay (or skew-modelled) simulation represents 
+      metastability at all. The pulse width it produces is also harmless 
+      to the counters here because source pulses are 160 ns apart against 
+      a 34 ns destination clock. A structural CDC checker catches this in 
+      one pass by noticing that toggle_src feeds destination logic on an 
+      unsynchronised path -- which is the argument for owning such a 
+      tool, made by a defect rather than by assertion.
+
+MUTATION_RESULT: AS_PINNED (6 detected by the named check, 1 expected survivor)
