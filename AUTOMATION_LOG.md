@@ -14578,3 +14578,334 @@ catching a predecessor.
 **Commits this run:** 4 before this addendum, and this addendum with the
 refreshed audit transcript and the re-adjudicated entry makes **5**, as §7
 predicted.
+
+---
+
+## 2026-11-10 — a Phase 6 item that was still unstarted, and its result is that simulation cannot see the bug it was built to show
+
+**Commits before this entry:** 3 — the CDC example with its two-mode
+runner and transcript; the mutation harness with its pinned survivor; the
+study notes with the interview-prep pass.
+
+### 0. A ranking judgement, recorded because it changed what this session did
+
+11-09's addendum ranked the `S7` audit re-run first and *a check that an
+absorption was recorded and not only proposed* second. This session took
+neither, and that departure gets stated rather than glossed.
+
+The reason is the same one recorded in the graphene repository's entry
+today. Reading back: **the last ten entries in this log are almost
+entirely about the standing list and the audit instruments that read it.**
+Over that stretch the repository acquired no new RTL, no new testbench
+against a DUT, and no new verification technique. Meanwhile
+`progress.md` carried **three unstarted Phase 6 items** — CDC basics, the
+surrounding-flow overview, and the interview-prep pass — each of which is
+a thing an interviewer asks about and none of which was blocked on
+anything.
+
+The test, stated so it can be disagreed with: this roadmap exists to build
+employable design-verification skill. An item that teaches a verification
+*technique* outranks an item that improves how the log *audits itself*,
+unless the second is blocking the first. The `S7` items block nothing.
+They are carried below, undone and unretired.
+
+### 1. What was built
+
+`examples/phase6_cdc_basics/` — four crossings side by side, two wrong and
+two right, so that every claim has its own counter-example in the same
+simulation:
+
+| # | crossing | verdict |
+|---|---|---|
+| 1 | 8-bit counter through **per-bit 2FF synchronisers** | WRONG |
+| 2 | same counter **Gray-coded** first | RIGHT |
+| 3 | one-cycle pulse sampled by a **3.4× slower clock** | WRONG |
+| 4 | same pulse as a **level toggle + edge detect** | RIGHT |
+
+8 checks in the zero-skew mode, 9 in the skewed mode, 3 cross-mode checks
+in the runner. All green. 6 of 7 mutants detected by the check named for
+each, one pinned expected survivor.
+
+### 2. THE RESULT, and it is a negative one
+
+> **A zero-delay RTL simulation shows the broken multi-bit crossing as
+> completely clean: 0 incoherent samples out of 417.**
+
+Every bit of the vector changes at the same simulation instant, so the
+per-bit synchronisers sample a coherent snapshot every cycle, forever. The
+textbook-broken crossing is green and stays green for as long as you care
+to run it.
+
+Check `B1` therefore reports that exact zero **as a warning, in its own
+name** — *"zero-delay sim shows the BROKEN crossing as clean (the bug is
+invisible to simulation)"* — rather than as a pass. This is the first check
+in this repository whose *passing* is the bad news, and writing it that way
+was the only honest option: a check named "the crossing is coherent" would
+have been true, green, and actively misleading.
+
+With 1 ns/bit of modelled arrival skew — less than a tenth of a source
+clock period, so physically ordinary rather than contrived:
+
+| | zero-delay | 1 ns/bit skew |
+|---|---|---|
+| incoherent, **binary** crossing (broken) | **0** / 417 | **28** / 417 |
+| incoherent, **Gray** crossing (correct) | 0 / 417 | **0** / 417 |
+| pulses seen, naive / toggle (of 85) | 25 / **85** | 25 / **85** |
+| 2FF latency, destination edges | **2** | **2** |
+
+**The Gray row is the control, and without it the skew model proves
+nothing.** If Gray also broke under skew, the model would be indicting the
+synchroniser rather than the encoding. It is 0, which is what makes the
+comparison mean something — `B3` gates exactly that pair.
+
+**And the naive pulse row loses 71 % of events with no skew model at
+all**, because pulse loss is a *sampling-rate* problem rather than a skew
+or timing one. That is worth separating out: of the three CDC failure
+mechanisms, **pulse loss is the only one plain simulation catches for
+free.** Knowing which of the three you get for nothing is more useful than
+the usual undifferentiated warning that CDC is hard.
+
+So: **CDC is a structural property and belongs to a static CDC checker,
+not to simulation.** The repository does not have one, and the case for
+building one is now made by a measurement rather than by assertion.
+
+### 3. THREE DEFECTS IN MY OWN TESTBENCH, and one of them is the nastiest shape yet
+
+**(a) A knob that silently did nothing, on the one knob the example turns.**
+`iverilog -PSKEW_UNIT=1` requires a hierarchical path (`-Ptb.SKEW_UNIT=1`),
+so the "skewed" run was in fact **a second zero-skew run**. It reported
+`ALL_PASS`. It was indistinguishable from a successful skew run **except
+that the `B2`/`B3` checks were quietly absent from the output** — i.e. the
+evidence of failure was a *missing* line, which is the hardest kind to
+notice and the kind this log has been bitten by before.
+
+Repaired on the principle rather than the instance: the knob is a macro, so
+a typo is a compile error; and `K1` **observes the knob's effect rather
+than its setting**, witnessing whether the skewed copy ever differs from
+its source (0 times vs 2828). The runner adds `X1`/`X2`/`X3` over both
+transcripts — the zero-skew run must report `B1`, the skewed run must
+report `B2`+`B3`, and the skewed run must *not* report `B1`. All four
+checks would have fired on this defect, and all four were written because
+of it.
+
+**The generalisation, which is new to this log:** a configuration knob that
+can fail silently needs a check that observes its **effect**, not its
+**value**. Reading the parameter back and asserting it equals what you set
+would have passed on this defect, because the parameter *was* 1 — in the
+wrong scope.
+
+**(b) An exact cross-domain comparison that failed by one, and the design
+was fine.** `P2` requires the toggle handshake to lose exactly zero
+pulses. First run: 86 of 87. The handshake was correct; the **bench** was
+comparing a source-domain counter against a destination-domain counter
+**with a pulse still in flight.** The end-of-test condition was
+ill-defined.
+
+This is the classic cross-domain bench bug and it has a classic wrong fix —
+relax the check to `>= gen_count - 1` and move on, which would have
+destroyed the only exact check in the pulse group. Fixed properly: quiesce
+the source, *then* drain, so the equality holds **by construction** rather
+than by luck with where the simulation happened to stop.
+
+**(c) A truncation that INVERTED a reported result.** The detail strings
+lived in `reg [1023:0]` — 128 characters — and Verilog truncates a
+too-long string **from the high bits, i.e. the start**. So
+
+&nbsp;&nbsp;&nbsp;&nbsp;`"incoherent binary samples = 0 of 417"`
+
+printed as
+
+&nbsp;&nbsp;&nbsp;&nbsp;`"coherent binary samples = 0 of 417"`
+
+**The report said the opposite of the measurement, and what survived was
+still a grammatical sentence**, so nothing looked wrong. The check's
+verdict was correct throughout; only its explanation lied. This is a worse
+shape than any of the eleven one-way-channel instances in this log: those
+were a verdict and its evidence disagreeing, where at least one side was
+checkable. Here the *verdict was right* and the prose beside it was
+negated, and no instrument in this repository reads prose.
+
+### 4. The mutation survivor is the example's own thesis, arriving from a second direction
+
+6 of 7 mutants detected **by the specific check named for each** — a mutant
+caught by the wrong check is reported as `PARTIAL`, because a control that
+fires for the wrong reason is not a control. Zero partials.
+
+`C7` survived. It compares a **synchronised** signal against the
+**unsynchronised** source — a real and serious CDC defect, since it feeds a
+metastable node straight into destination combinational logic. The bench
+cannot see it.
+
+**And it should not be expected to.** The bench measures functional
+coherency and pulse accounting; this defect is neither. It changes *which
+flop can go metastable*, and no simulation here — skewed or not —
+represents metastability at all, because metastability is a continuous-time
+behaviour and an event-driven simulator has discrete time and two-valued
+logic. So the survivor is not a hole to patch: it is §2's argument made by
+a defect instead of by an assertion, which is a stronger form of the same
+claim.
+
+Pinned as an **expected survivor** with that reasoning recorded in the
+harness, as a **membership and not a count** — this log has already been
+bitten by a count that hid a new member — and pinned **two-sidedly**: a
+survivor outside the set fails the run, **and a pinned survivor that starts
+being detected also fails it**, because that would mean the suite gained a
+power nobody recorded and the recorded reason has gone stale.
+
+### 5. A toolchain diagnosis worth adding to the two already logged
+
+The first run of the mutation harness reported `COMPILE_ERROR` on the
+**unmutated baseline**. The message was:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`ivlpp: No input files given` / `No top level modules`
+
+which names neither the cause nor anything near it. The cause: **iverilog's
+preprocessor writes a temp file, and `TMPDIR` was not writable** — the
+session filesystem was 100 % full. `tools/setup_iverilog.sh` already
+handles this through its `ivl_tmpdir` helper, which is why the shell
+functions worked while a direct call to the binary did not. The harness
+cannot source a bash function, so it pins `TMPDIR` itself and records why.
+
+This is the **third** distinct way this toolchain fails with a message that
+does not describe the fault, after (i) piping the setup script, which loses
+the functions, and (ii) `timeout vvp`, which cannot find a shell function.
+All three now have a committed note. The pattern is worth naming: **every
+failure mode of this toolchain so far has reported a *missing input* rather
+than the environmental fact that caused it.**
+
+### 6. Count
+
+8 + 9 + 3 checks, 0 failed. 6/7 mutants detected by the named check, 1
+pinned survivor, 0 partial, 0 stale expectations. Three testbench defects
+found and fixed. One Phase 6 item started and substantially done; one more
+(interview prep) started with its first topic.
+
+**Not yet covered (candidates for future runs):**
+
+- **A METASTABILITY-INJECTION SYNCHRONISER MODEL** — created today,
+  **ranked first**, and it is the single highest-value successor because it
+  is the only thing that would let *any* simulation in this repository say
+  anything about mechanism 1a, and the only thing that would let the bench
+  see mutant `C7`. A synchroniser whose first stage randomly delays
+  resolution by one extra destination cycle, seeded and swept. The
+  acceptance criterion is already written and already failing: `C7` must
+  become detected, at which point today's pinned expectation goes stale and
+  the harness says so by design.
+- **A CRUDE STRUCTURAL CDC CHECKER** — created today, ranked second, and
+  the item §2 argues the repository is missing. Parse the RTL, find signals
+  assigned under one clock and read under another, classify each crossing
+  (unsynchronised / multi-bit without handshake / synchronised recombined
+  with unsynchronised / reconvergent). It would catch `C7` in one pass.
+  **Its own first test is already available**: run it on
+  `examples/phase6_cdc_basics/cdc_crossings.v` with each of the seven
+  mutants applied, and require it to flag `C7` — a structural tool with a
+  mutation suite waiting for it before a line is written.
+- **A CHECK THAT OBSERVES A KNOB'S EFFECT, FOR EVERY KNOB IN THE
+  REPOSITORY** — created today by §3(a), ranked third, cheap, and the
+  generalisation of `K1`. Every harness here has configuration — seeds,
+  modes, `PAC_MODE`, steering policies, skew — and the question nobody has
+  asked is which of those settings would be detectably different if the
+  setting silently failed to apply. Today's instance was a `-P` scope bug;
+  an env var read with the wrong name, or a mode string compared against a
+  stale spelling, has the same shape and the same symptom (a green run
+  missing a line).
+- **NO INSTRUMENT IN THIS REPOSITORY READS A CHECK'S PROSE** — created
+  today by §3(c), and it is a *decision* before it is a task. The detail
+  string beside a verdict can be arbitrarily wrong — today it was the exact
+  negation of the measurement — and nothing notices, because every audit
+  here reads verdicts. Whether that is acceptable is the question: the
+  cheap partial answer is to require detail strings to be constructed from
+  the same variables the verdict is computed from, which is a convention
+  rather than a check.
+- **RESET-DOMAIN CROSSING** — created today, discussed in §6 of the notes
+  and deliberately **not** simulated, because it is a timing property and
+  faking a simulation of it would contradict the example's own argument.
+  The asynchronous-assert / synchronous-de-assert reset synchroniser is the
+  artefact; what it needs is either the injection model above or a
+  structural checker to say anything about it.
+- **AN ASYNC FIFO** — created today. The Gray pointer built today is its
+  main ingredient; full/empty generation and the pointer-comparison trick
+  are untouched. This is the natural capstone-adjacent successor and it
+  joins the existing FIFO formal work in `examples/phase5_formal_uart/`.
+- **THE `S7` AUDIT RE-RUN** and **A CHECK THAT AN ABSORPTION WAS RECORDED
+  AND NOT ONLY PROPOSED** — both carried from 11-09's addendum, where they
+  were ranked first and second; **de-ranked today with the reason recorded
+  in §0**, not dropped. Both still blocked on nothing.
+- **`S7` SHOULD REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE** —
+  carried from 11-09, still a specification decision before a coding task.
+- **THE ODD START-BIT PHASES** — carried from 10-29; 11-04 supplied the
+  form of words it and its sibling were waiting for, and both should be
+  **rewritten** that way rather than re-argued.
+- **A DIVISOR SWEEP FOR T6** — carried from 10-29, sibling of the `K5`
+  sampling item; one sweep harness could serve both.
+- **REGISTER THE NEW TRANSCRIPTS** — carried, and today adds two:
+  `examples/phase6_cdc_basics/cdc_sim_output_2026-11-10.txt` and
+  `cdc_mutation_report_2026-11-10.txt`.
+- **EXTEND `S6` TO EVERY ITEM THAT ASSERTS FILE CONTENT** — carried from
+  10-25.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, sixteen-plus
+  sessions, named cause of three measured staleness incidents, and today
+  adds **two** more runners it does not reach (`run_cdc_sim.sh` and
+  `cdc_mutation_test.py`).
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE** — carried from
+  10-22.
+- **MORE SEEDS ON THE CLOSURE DISTRIBUTION** and **SETTLE WHETHER THE CRV
+  SPEEDUP MOVED** — both carried, the first would settle the second.
+- **THE 40 COMMENT-ONLY EDGES, NOW CLASSIFIED BUT NOT READ** — carried from
+  10-20.
+- **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH IN THE VPLAN** —
+  carried.
+- **THE F7 CROSS CANNOT BE CLOSED WITHOUT DRAWING `0x40`** — carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17,
+  and today's harness has the three-valued outcome those four lack
+  (detected / expected survivor / stale expectation), so it is now a worked
+  model rather than a description.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried, created 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-five sessions old.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried, and
+  today's RTL is an eighth file it does not cover.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today's harness is the first that **does** check
+  for its toolchain up front and exits 3 with the fix in the message. One
+  instance; the item is about the others.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — created 10-11, and
+  today applies it unprompted: `SKEW_UNIT_NS`, `CLK_A_HALF`, `CLK_B_HALF`
+  all carry their units or their meaning in the name.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT
+  MAKES S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10) —
+  **and §3(c) today is the sharpest instance that item has ever had**; A
+  diversity TARGET; per-property coverage of the Phase 4 UVM environment
+  (09-23); a less greedy steering policy (09-24); widen the coverage model
+  (09-24); two transmitters at once (09-25); `abc pdr` as a second engine
+  (09-23); mutants not yet attempted (interrupt enable combinations, reset
+  asserted mid-frame); a property needing a strengthening invariant; the
+  SVA sequence layer (09-20); code coverage measurement (Icarus has none,
+  09-18); Phase 6 lint, regression infra, coverage merge.
+
+**Retired from the list this session:**
+
+- **CDC VERIFICATION BASICS** — a Phase 6 checklist item rather than a
+  standing-list item, unstarted since the phase was written. Marked `[x]`
+  in `progress.md` **with an explicit NOT-covered list inline**, so it
+  cannot be read as more complete than it is: no reset-domain crossing
+  simulated, no async FIFO, no metastability model, no structural checker.
+- **INTERVIEW-PREP PASS** moved to `[~]`, started with its first topic
+  (seven CDC questions with answers). One topic of several.
+
+**Predictions for the next session**, so this entry can be scored:
+
+1. The metastability-injection model, if built, makes `C7` **detected**,
+   which fails the mutation harness by design via the stale-expectation
+   path. A session that builds it and reports the harness green without
+   removing `C7` from `EXPECTED_SURVIVORS` will have mis-read its own
+   output.
+2. The knob-effect census finds **at least two** more settings in this
+   repository that would fail silently, and at least one of them is an
+   environment variable rather than a tool flag.
+3. `run_all_harnesses.sh` will still not reach either of today's two
+   runners, making it the **seventeenth** session for that item and the
+   eighth recorded growth in the set it does not cover.

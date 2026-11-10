@@ -477,8 +477,59 @@ measured rather than quietly dropped.
       unedited pending the standing decision about its twelve reports.
 - [ ] Surrounding flow overview (lint, regression infra, coverage merge,
       waveform debug, bug triage)
-- [ ] CDC verification basics
-- [ ] Interview-prep pass (common question patterns)
+- [x] **CDC verification basics** (2026-11-10,
+      `examples/phase6_cdc_basics/`, 8 checks in the zero-skew mode + 9 in
+      the skewed mode + 3 cross-mode checks in the runner, 6/7 mutants
+      detected by the check named for each, 1 pinned expected survivor;
+      notes in `notes/2026-11-10-cdc-what-rtl-simulation-can-and-cannot-show.md`):
+      four crossings side by side, two wrong and two right -- an 8-bit
+      counter through per-bit 2FF synchronisers (WRONG) against the same
+      counter Gray-coded (RIGHT), and a one-cycle pulse sampled by a 3.4x
+      slower clock (WRONG) against the same pulse carried as a level
+      toggle with edge detection (RIGHT).
+      **The headline result is a negative one: a zero-delay RTL simulation
+      shows the BROKEN multi-bit crossing as completely clean** -- 0
+      incoherent samples of 417 -- because every bit changes at the same
+      simulation instant, so the per-bit synchronisers always sample a
+      coherent snapshot. Check `B1` reports that exact zero as a WARNING
+      in its own name rather than as a pass. With 1 ns/bit of modelled
+      arrival skew (less than a tenth of a source clock period, so
+      physically ordinary rather than contrived) the binary crossing shows
+      28 incoherent samples of 417 and the Gray crossing still shows 0 --
+      same skew, same stimulus, same synchroniser, the only difference
+      being the encoding (`B2`/`B3`, two-sided). Exactly-checked rather
+      than range-checked: `L1` pins the 2FF latency at exactly 2
+      destination edges, `P2` requires the toggle handshake to lose
+      exactly 0 of 85 pulses where the naive path loses 60.
+      **The conclusion, which is the point of building it this way: CDC is
+      a structural property and belongs to a static CDC checker, not to
+      simulation.** A green simulation of a multi-bit crossing is evidence
+      of almost nothing.
+      **NOT covered, so this is not mistaken for complete:** reset-domain
+      crossing is discussed in the notes and deliberately NOT simulated
+      (it is a timing property, and faking a simulation of it would
+      contradict the example's own argument); no async FIFO is built,
+      though the Gray pointer here is its ingredient; there is no
+      metastability-injection synchroniser model, which is the only way
+      simulation could say anything about mechanism 1a and the only way
+      the bench could see mutant `C7`; and the repository still has no
+      structural CDC checker, whose case is now made by a measurement
+      rather than by assertion.
+      Three defects in the testbench itself were found and fixed rather
+      than lived with -- a `-P` override that silently did nothing and made
+      the skewed run a second zero-skew run reporting ALL_PASS, an exact
+      cross-domain pulse comparison that failed by one because the source
+      was never quiesced, and a `reg [1023:0]` detail string that
+      truncated from the LEFT and printed "coherent" where the
+      measurement said "incoherent". See the session note.
+- [~] Interview-prep pass (common question patterns) -- **started
+      2026-11-10** with the CDC topic, Section 6 of
+      `notes/2026-11-10-cdc-what-rtl-simulation-can-and-cannot-show.md`:
+      seven questions with short answers (synchroniser depth and the MTBF
+      shape, why per-bit synchronisers do not fix a bus, why async FIFO
+      pointers are Gray-coded, crossing a single-cycle pulse, why CDC
+      cannot simply be simulated, what a static CDC tool reports, reset
+      CDC). One topic of several; the remaining topics are untouched.
 - [ ] Capstone: UVM verification environment for register-mapped
       peripheral (UART/SPI controller with interrupt + FIFO datapath)
       - [~] Verification plan written -- early draft completed in Phase 3
