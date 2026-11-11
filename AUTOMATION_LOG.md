@@ -14909,3 +14909,270 @@ found and fixed. One Phase 6 item started and substantially done; one more
 3. `run_all_harnesses.sh` will still not reach either of today's two
    runners, making it the **seventeenth** session for that item and the
    eighth recorded growth in the set it does not cover.
+
+---
+
+## 2026-11-11 — the structural checker detects the mutant simulation pinned as unseeable, and the two instruments turn out to partition rather than overlap
+
+**Commits before this entry:** 4 — the checker; the mutation test of the
+checker's own source; the research note; the `progress.md` update.
+
+### 0. A ranking departure, recorded because it changed what this session did
+
+11-10 ranked **A METASTABILITY-INJECTION SYNCHRONISER MODEL** first and
+**A CRUDE STRUCTURAL CDC CHECKER** second. This session took the second.
+
+The reasons, all four of which are in the 11-10 entry's own text:
+
+1. Both items exist for one purpose — making mutant `C7` observable.
+2. This is the cheaper route: a file reader against a stochastic timing
+   model with seeds and sweeps.
+3. **Its acceptance test was already written**: *"run it on
+   `cdc_crossings.v` with each of the seven mutants applied, and require it
+   to flag `C7`"* — a tool with a mutation suite waiting for it before a
+   line exists.
+4. The injection model's acceptance criterion is that `C7` becomes
+   detected, which **by design** makes 11-10's own mutation harness go red
+   on its pinned expectation. Landing a new instrument and invalidating an
+   old one's pin on the same day makes both harder to read.
+
+The ranked-first item is carried, unretired, and sharpened in §5.
+
+### 1. The instrument
+
+`tools/cdc_structural_check.py`. Four rules, each a standard CDC lint check:
+
+- **R1 RECONVERGENCE** — a net feeding a synchroniser *and* read directly by
+  clocked logic in the same module.
+- **R2 SYNC_DEPTH** — a synchroniser under two flop stages.
+- **R3 MULTIBIT_SYNC** — a multi-bit 2FF crossing with no Gray encoder ahead.
+- **R4 UNSYNC_CROSSING** — a register in one domain read by a register in
+  another with nothing between.
+
+25/25 self-test; 9/9 mutants on its own source
+(`tools/cdc_structural_check_mutation.py`).
+
+### 2. The result the item was created for, on the first run
+
+11-10 pinned `C7` as an EXPECTED SURVIVOR and said why:
+
+> A structural CDC checker catches this in one pass by noticing that
+> `toggle_src` feeds destination logic on an unsynchronised path — which is
+> the argument for owning such a tool, made by a defect rather than by
+> assertion.
+
+R1 flags it, on the first run, at the line the mutant creates.
+
+### 3. The better result: the two instruments PARTITION the seven mutants
+
+| mutant | simulation | structure |
+|---|---|---|
+| C1 2FF becomes 1FF | detected (`L1`) | detected (**R2**) |
+| C2 Gray encoder shifts by 2 | detected (`G1`) | — |
+| C3 Gray decoder drops the XOR | detected (`G1`) | — |
+| C4 Gray encoder is the identity | detected (`G1`) | — |
+| C5 toggle latches | detected (`P2`) | — |
+| C6 rising edges only | detected (`P2`) | — |
+| C7 synchroniser bypassed | **expected survivor** | detected (**R1**) |
+
+Simulation 6, structure 2, **union 7, overlap exactly `C1`.**
+
+This is not an accident of these seven mutants. Simulation here measures
+*functional* properties — coherency, pulse accounting, latency — and C2–C6
+are functional defects in coding and decoding. `C7` changes *which flop can
+go metastable*, which is not a function of any waveform a zero-delay
+simulator can produce. `C1` is the only mutant that is both.
+
+**Check `6e` asserts the partition, not the detection.** A later change that
+makes the structural checker start claiming C2–C6 fails the suite — an
+instrument that flags everything catches `C7` too, and that is not the same
+achievement.
+
+### 4. On the repository: one finding, and the one beside it not flagged
+
+41 `.v` files, **one** finding: `u_sync_bin` in `cdc_crossings_tb.v`, the
+deliberate 8-bit binary crossing that the CDC example exists to be wrong
+about. The correct Gray crossing on the next line is **not** flagged. `7b`
+and `7c` assert both halves, because a checker that flagged both would look
+identical on the summary line and be useless.
+
+### 5. Six defects found by running it, two found only by the plants
+
+Running it found six. The one with a number attached: **name matching is not
+enough.** Over all 41 files the name test produced three findings, of which
+**two were `sync_fifo`** — a *synchronous FIFO*, matched because its name
+begins `sync_`. **33 % precision, both false positives the same module.**
+`is_synchroniser()` is now structural — a synchroniser is a flop chain whose
+every non-reset assignment copies one net — and `build_db()` lets an instance
+of a module defined in another file be judged structurally rather than by its
+name, with `[structural]` or `[name-only]` printed so a guess is never
+presented as a measurement.
+
+The other five: the instance regex had no word boundaries, so `if (!rst_n)
+begin` parsed as an instantiation of module `i` named `f` and then consumed
+every line to the next `);` — **three of five modules in `cdc_crossings.v`
+disappeared from the parse**, and a structural checker that silently loses
+modules reports a clean file; the reset arm never closed, so every assignment
+in `cdc_sync_2ff` was reset logic and R2 saw a zero-stage synchroniser; `else
+if (pulse_src) toggle_src <= ~toggle_src;` recorded its target as `else`;
+`initial` did not end the open always block, attributing a 200-line checking
+`initial`'s reads to a one-line `always @(posedge clk_b)` and producing two
+R1 false positives; and the Gray exemption compared against the encoder
+output net itself, so the testbench's safe crossing — fed from `gray_skewed`,
+the skew model's copy of `gray_a` — was reported unsafe, **the checker
+calling the textbook-correct half of a side-by-side right/wrong
+demonstration a defect.**
+
+Two more the planted controls found, which running on this repository could
+not have, because every module here happens to avoid both:
+
+- **A port line carrying two directions** gave every name the first one. So
+  `input wire [W-1:0] d_src, output wire [W-1:0] q_dst);` made `q_dst` an
+  **input**, the module had no outputs, and **R2 — whose entire job is to
+  walk from an output back to an input — never ran** on any module declared
+  that way. The suite read 25/25 with a dead rule in it.
+- **One line holding several statements** recorded the first and dropped the
+  rest, so a one-line reset style left the flop chain with no second stage.
+
+### 6. Mutation-testing the instrument, not the RTL
+
+11-10 mutation-tested the CDC RTL. This mutation-tests the checker: nine
+plausible defects in its own source, each required to turn `--selftest` red.
+9 detected, 0 survived, 0 anchors lost. Six of the nine are §5's defects,
+pinned so they cannot return silently.
+
+The motivation is §5's last two items. The checker reported 25/25 while R2
+could not run at all. **A self-test's score is evidence about the suite only
+once something has shown the suite can go red** — the 2026-09-17 lesson (a
+bench passing 55/55 against deliberately broken RTL) applied one level up, to
+the instrument rather than the design.
+
+Two deliberate properties, both of which earned themselves:
+
+- **A non-green baseline stops the run**, because every mutant verdict after
+  one is meaningless. It fired on the first attempt: the mutant copy lives in
+  a temp directory and the self-test walks the repository from `__file__`, so
+  the copy found no `.v` files. The checker grew a `--root` argument rather
+  than the harness growing a way to ignore the failure.
+- **`ANCHOR LOST` counts as a failure, not a skip.** Harness-versus-subject
+  drift is a recorded theme here and a silent skip is how it stays invisible.
+
+### 7. Count
+
+25 self-test checks, 0 failed. 9/9 mutants on the checker's own source. 8
+defects in the new instrument caught before commit, 2 of them by planted
+controls alone. One ranked-second item closed; the ranked-first item carried
+with its purpose changed.
+
+**Not yet covered (candidates for future runs):**
+
+- **THE METASTABILITY-INJECTION SYNCHRONISER MODEL** — carried from 11-10
+  where it was ranked first, **still ranked first, and its purpose has
+  changed**: it is no longer the way to make `C7` visible, because `C7` is
+  visible now. It is the way to measure **how often `C7` matters**, which
+  structure cannot say and which is the question a designer actually asks
+  about a CDC finding. Its acceptance criterion from 11-10 still stands and
+  still goes red by design.
+- **GIVE R4 A REAL INSTANCE** — created today, ranked second, and the
+  cheapest. R4 is a correct rule with a planted positive control, a planted
+  negative control, and **nothing in this repository to find**: every
+  crossing here is synchronised. The async FIFO already on the standing list
+  would give it one, which makes that item worth more than it was yesterday.
+- **EXERCISE THE `[name-only]` PATH ON A REAL FILE** — created today. Every
+  `.v` file here is scanned together, so `build_db` always has the module
+  body and the lower-confidence path has never run outside a plant. A
+  single-file invocation is the test, and the question it answers is what the
+  tool says when it genuinely does not know.
+- **RUN THE STRUCTURAL CHECKER OVER THE UART RTL AS A GATE, NOT A REPORT** —
+  created today. It runs over `rtl/uart_controller.v` today and finds
+  nothing, which is the right answer for a single-clock design; the item is
+  to make that a *committed* check so that a future multi-clock change cannot
+  land unexamined.
+- **MAKE `run_all_harnesses.sh` ITSELF REACHABLE** — carried, and today adds
+  **two** more runners it does not reach (`cdc_structural_check.py
+  --selftest` and `cdc_structural_check_mutation.py`), making this the
+  **seventeenth** session for the item and the **ninth** recorded growth in
+  the set it does not cover. 11-10's prediction (3) said exactly this and is
+  **scored correct** in §8.
+- **A STRUCTURAL CENSUS OF THE OTHER LINT CLASSES** — created today by the
+  `progress.md` scope note. Structural CDC lint is one rule family;
+  synthesis lint, latch inference, incomplete sensitivity lists, unused and
+  undriven nets and X-propagation are all absent, and the parser written
+  today is most of the machinery for the cheap ones.
+- **RUN THE OTHER REPOSITORY'S TOLERANCE CENSUS OVER THIS ONE** — created
+  today from the sibling repository, which built
+  `graphene_tolerance_census_audit.py` the same morning and whose
+  `census_repo()` takes a `root`. That entry predicts this returns more
+  `NO_QUOTE` rows than its own tree has in total and **zero** adjudicated
+  ones, because these suites check an RTL against a specification rather than
+  against published numbers. It is a cheap cross-repository test of someone
+  else's prediction, which is the most honest kind to run.
+- **THE `S7` AUDIT RE-RUN**, **A CHECK THAT AN ABSORPTION WAS RECORDED AND
+  NOT ONLY PROPOSED**, **`S7` SHOULD REPORT THE PREDICTED COUNT ALONGSIDE
+  THE MEASURED ONE** — all carried, all blocked on nothing.
+- **A CHECK THAT OBSERVES A KNOB'S EFFECT, FOR EVERY KNOB** — carried from
+  11-10 where it was ranked third; **untouched**, and 11-10's prediction (2)
+  about it is **unscored** in consequence.
+- **NO INSTRUMENT IN THIS REPOSITORY READS A CHECK'S PROSE** — carried from
+  11-10, a decision before a task.
+- **RESET-DOMAIN CROSSING** and **AN ASYNC FIFO** — both carried from 11-10;
+  the async FIFO is now also the way to give R4 an instance.
+- **THE ODD START-BIT PHASES**, **A DIVISOR SWEEP FOR T6**, **REGISTER THE
+  NEW TRANSCRIPTS** (today adds two more), **EXTEND `S6` TO EVERY ITEM THAT
+  ASSERTS FILE CONTENT** — all carried.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE**, **MORE SEEDS ON
+  THE CLOSURE DISTRIBUTION**, **SETTLE WHETHER THE CRV SPEEDUP MOVED**, **THE
+  40 COMMENT-ONLY EDGES**, **AUDIT EVERY "WHAT THIS DOES NOT CHANGE"
+  PARAGRAPH**, **THE F7 CROSS NEEDS `0x40` DRAWN** — all carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17,
+  and today's harness is a **second** worked model of the three-valued
+  outcome, this time applied to an instrument rather than to RTL.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried from 09-29, and today is the clearest precedent it has: mutating
+  the instrument rather than the subject found two dead rules.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-six sessions.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today's two runners need **no** toolchain at all,
+  which is a new point on that item rather than an instance of it.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — carried from 10-11.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT
+  MAKES S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); a
+  diversity target; per-property coverage of the Phase 4 UVM environment
+  (09-23); a less greedy steering policy (09-24); widen the coverage model
+  (09-24); two transmitters at once (09-25); `abc pdr` as a second engine
+  (09-23); mutants not yet attempted; a property needing a strengthening
+  invariant; the SVA sequence layer (09-20); code coverage measurement
+  (09-18); Phase 6 regression infra and coverage merge.
+
+**Retired from the list this session:**
+
+- **A CRUDE STRUCTURAL CDC CHECKER** — created 2026-11-10, ranked second,
+  closed in one session. `tools/cdc_structural_check.py`, four rules, 25/25,
+  9/9 mutants, one finding on 41 files and it is the right one. It met the
+  acceptance test written for it before it existed, and produced a result
+  that test did not ask for: the partition in §3.
+
+**Predictions for the next session**, so this entry can be scored:
+
+1. Giving **R4 a real instance** via the async FIFO will require relaxing R4,
+   not just writing the FIFO. A correct async FIFO crosses its Gray pointers
+   through synchronisers, so R4 stays silent; the crossing R4 is built to
+   catch will only appear if the FIFO is built *wrong* first. The prediction
+   is that the async FIFO item and the R4 item **cannot both be discharged by
+   one correct design**, and a session that believes it did both will have
+   written a positive control and called it a finding.
+2. Running the sibling repository's tolerance census over this one returns
+   **zero adjudicated rows**, as that entry predicts — but **not** more
+   `NO_QUOTE` rows than its own tree's 102, because this repository's Python
+   suites compare against *exact* expected values far more often than against
+   tolerances. The sibling's prediction (3) is right in its first half and
+   wrong in its second.
+3. The `[name-only]` path, when exercised, will reveal that **no finding this
+   repository can currently produce depends on it**, because every `.v` file
+   here that instantiates a synchroniser is in the same directory as the
+   module's definition. The item is still worth doing; its result will be a
+   negative one.
