@@ -1,0 +1,48 @@
+==========================================================================
+tools/cdc_structural_check.py -- self-test, 2026-11-11
+==========================================================================
+
+[1] negative controls: correct RTL must be silent
+  PASS  1a the clean two-flop crossing raises nothing
+  PASS  1b a correctly synchronised two-domain crossing raises nothing -- R4 must discriminate, not just fire
+  PASS  1c a SYNCHRONOUS FIFO whose name matches the synchroniser pattern raises nothing: the 33 % precision measurement that forced is_synchroniser() to be structural
+  PASS  1d and it is rejected for the stated reason -- its assignments are not plain copies, not because of some other accident
+
+[2] positive controls: every rule fires on its own plant
+  PASS  21 R1_RECONVERGENCE fires on its plant, and ONLY R1_RECONVERGENCE does
+  PASS  22 R2_SYNC_DEPTH fires on its plant, and ONLY R2_SYNC_DEPTH does
+  PASS  23 R3_MULTIBIT_SYNC fires on its plant, and ONLY R3_MULTIBIT_SYNC does
+  PASS  24 R4_UNSYNC_CROSSING fires on its plant, and ONLY R4_UNSYNC_CROSSING does
+  PASS  2e every declared rule has a positive control
+
+[3] the Gray exemption discriminates
+  PASS  3a an 8-bit crossing fed from a Gray encoder THROUGH an intermediate net is exempt: the indirection that made the checker call the correct half of cdc_crossings_tb a defect
+  PASS  3b but the same crossing fed from raw binary still fires
+
+[4] an unresolved width is not silently treated as 1
+  PASS  4a a width this reader cannot resolve is REPORTED, not assumed safe
+  PASS  4b and a literal 1 is silent
+
+[5] the parser keeps every module -- the backtracking bug
+  PASS  5a both modules of the clean plant survive the parse
+  PASS  5b `if (` is not read as an instantiation of module `i` named `f`
+  PASS  5c the reset arm closes, so the flop chain is two deep and not zero
+  PASS  5d an `initial` block ends the preceding always block
+
+[6] the seven CDC mutants -- the acceptance test written on 2026-11-10, before this tool existed
+  PASS  6a the UNMUTATED example is clean
+  PASS  6b C7 -- pinned as an EXPECTED SURVIVOR of the simulation bench on 2026-11-10 -- is DETECTED here, by R1
+  PASS  6c C1 is detected by R2
+  PASS  6d C2-C6 are NOT flagged: they are functional defects in coding and decoding, and a structural checker that claimed them would be flagging everything
+  PASS  6e so the two instruments PARTITION the seven mutants: simulation 6 (C1-C6), structure 2 (C1, C7), union 7, and the overlap is exactly C1
+
+[7] the repository
+    41 .v files scanned, 1 finding(s)
+      R3_MULTIBIT_SYNC cdc_crossings_tb.v:174 [cdc_crossings_tb] synchroniser `u_sync_bin` carries 8 bits and its data input `bin_skewed` is not driven by a Gray encoder: per-bit skew can present a value the source never held [structural]
+  PASS  7a every .v file in the repository parses without an exception
+  PASS  7b the only finding in the whole repository is the deliberate WRONG crossing of the CDC example -- the one the example exists to be wrong
+  PASS  7c and the CORRECT Gray crossing beside it is NOT flagged
+
+==========================================================================
+TOTAL: 25 passed, 0 failed
+==========================================================================
