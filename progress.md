@@ -475,8 +475,17 @@ measured rather than quietly dropped.
       the fix, refused to score it and still reported the run green. Three
       runners repaired in `c178222`; `run_mutation_tests.sh` is left
       unedited pending the standing decision about its twelve reports.
-- [ ] Surrounding flow overview (lint, regression infra, coverage merge,
-      waveform debug, bug triage)
+- [~] Surrounding flow overview (lint, regression infra, coverage merge,
+      waveform debug, bug triage) -- **moved to `[~]` on 2026-11-11 with
+      its scope stated inline, so the tick cannot be read as more than it
+      is.** STARTED: exactly one kind of lint, structural CDC lint,
+      `tools/cdc_structural_check.py` -- four rules, 41 `.v` files scanned,
+      one finding, 25/25 self-test, 9/9 mutants on its own source. NOT
+      STARTED, unchanged: every other lint class (synthesis lint, naming
+      and style rules, latch inference, incomplete sensitivity, unused and
+      undriven nets, X-propagation), regression infrastructure, coverage
+      merge, waveform debug and bug triage. One lint rule family of many,
+      and no part of the surrounding flow beyond it.
 - [x] **CDC verification basics** (2026-11-10,
       `examples/phase6_cdc_basics/`, 8 checks in the zero-skew mode + 9 in
       the skewed mode + 3 cross-mode checks in the runner, 6/7 mutants
@@ -515,6 +524,17 @@ measured rather than quietly dropped.
       the bench could see mutant `C7`; and the repository still has no
       structural CDC checker, whose case is now made by a measurement
       rather than by assertion.
+      **UPDATED 2026-11-11: the structural CDC checker now exists** --
+      `tools/cdc_structural_check.py`, 25/25 self-test, 9/9 mutants on its
+      own source -- and it detects `C7` by rule R1 on the first run, which
+      is what the sentence above predicted it would do. The two instruments
+      PARTITION the seven mutants: simulation 6 (`C1`-`C6`), structure 2
+      (`C1`, `C7`), union 7, overlap exactly `C1`. The rest of the NOT-covered
+      list above is unchanged and still not covered: no reset-domain
+      crossing simulated, no async FIFO, **no metastability-injection
+      model** -- that item is carried, and sharpened, since its purpose is
+      no longer to make `C7` visible but to measure how often it matters,
+      which structure cannot say.
       Three defects in the testbench itself were found and fixed rather
       than lived with -- a `-P` override that silently did nothing and made
       the skewed run a second zero-skew run reporting ALL_PASS, an exact
