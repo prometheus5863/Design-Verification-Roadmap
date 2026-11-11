@@ -1,0 +1,21 @@
+==========================================================================
+MUTATION TEST -- tools/cdc_structural_check.py's own self-test
+==========================================================================
+
+BASELINE (unmutated): rc=0, 0 failing check(s)
+
+id   mutant                                                         verdict
+--------------------------------------------------------------------------
+M1   is_synchroniser() answers from the NAME alone again            detected by 1d (2 fail)
+M2   R1 never fires (the reconvergence rule removed)                detected by 21 (3 fail)
+M3   R2 accepts a one-flop synchroniser (threshold off by one)      detected by 22 (3 fail)
+M4   R3 treats an unresolvable width as safe                        detected by 4a (1 fail)
+M5   the Gray exemption exempts everything                          detected by 23 (4 fail)
+M6   the instance regex loses its word boundaries (the `if (` bug)  detected by 21 (13 fail)
+M7   `initial` no longer ends the preceding always block            detected by 5d (2 fail)
+M8   a port line's second direction is ignored again                detected by 22 (1 fail)
+M9   multi-statement lines are not split                            detected by 21 (6 fail)
+--------------------------------------------------------------------------
+9 detected, 0 survived, 0 anchors lost, of 9
+
+MUTATION_RESULT: ALL_DETECTED (9/9)
