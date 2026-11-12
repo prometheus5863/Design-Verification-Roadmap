@@ -15176,3 +15176,284 @@ with its purpose changed.
    here that instantiates a synchroniser is in the same directory as the
    module's definition. The item is still worth doing; its result will be a
    negative one.
+
+## 2026-11-12 — the ranked item needed a caller rather than a verdict, and declaring the undeclared runners found a repair that had been installed where nothing called it
+
+**Commits before this entry:** 4 — the CDC gate and its mutation suite; the
+TMPDIR bypass across 20 sites plus the preflight guard; the manifest-gap
+closure; the research note.
+
+### 0. What was taken, and why
+
+11-11 created **RUN THE STRUCTURAL CHECKER OVER THE UART RTL AS A GATE, NOT A
+REPORT** and it was taken first, as ranked. **MAKE `run_all_harnesses.sh`
+ITSELF REACHABLE** (seventeen sessions, nine recorded growths) was taken second
+because the gate needed a manifest entry to be a gate at all, so the two items
+turned out to be one. Everything after §2 is what the second item uncovered and
+was not planned.
+
+### 1. The gate, and a premise measured rather than believed
+
+`tools/run_cdc_gate.sh` 9/9; `tools/run_cdc_gate_mutation.py` 5/5, every mutant
+caught by the section it was aimed at.
+
+The item read as though the checker had no verdict. It has always had one —
+`main()` ends `return 1 if findings else 0` — and measured without a pipe the
+contract is exactly right: 0 on the four shipped sources, 1 on all 41 `.v`
+files, 1 on the deliberate crossing alone, 2 bare. **What was missing was a
+caller.** My first measurement read `$?` through `| tail`, which is tail's exit
+status, so the checker looked like it always exited 0 and I nearly added a
+`--gate` flag it did not need — the logged 2026-09-17 pipe hazard in a new
+costume.
+
+The gate is a **partition**, not an expected-fail list: shipped sources clean
+(S2) **and** the deliberate crossing still firing (S3), with the finding set
+over the whole tree required to be exactly `{cdc_crossings_tb.v}` (S4) — a set
+identity, so a finding that *moves* into real RTL cannot net out to the same
+count. S3 is the half an expected-fail list throws away.
+
+**Mutant D2 was a no-op and the harness blamed the gate for it.** Anchor
+`.d(bin_skewed)` against a port spelled `.d_src(bin_skewed)`. An unanchored
+mutation is indistinguishable from a gate that cannot see it. The runner now
+digests the copied tree around each mutation and reports `NO-OP MUTANT` as a
+defect in itself.
+
+### 2. The manifest gap: a guard that was already red
+
+Section 1 had been **failing**: 46 discovered, 32 declared, 14 in neither class.
+A script whose purpose is that its exit code is load-bearing had been exiting
+nonzero structurally, and **a guard that is already red cannot go red**. Now
+49/49, green, sixteen entries with per-file reasons.
+
+### 3. And it was hiding two red harnesses
+
+- **`tools/verdict_bearing_census.py`** 13/14. `M4` requires `B2` red when the
+  branch window shrinks to one line, on the premise that "every real one assigns
+  several lines into its branch" — true 11-08, false now: under the mutant the
+  tree still yields `VERDICT 1, CONTROL 2` against 3 and 7 unmutated. **The
+  mutation asserts a property of the tree, not of the classifier.** Same class as
+  D2, from the other side.
+- **`tools/test_neutrality_controls.py`** red at `N0`, its own negative control,
+  which says "the COPY is broken, not the arm — every row below is meaningless".
+  That one was §4.
+
+### 4. THE FINDING: a repair installed on a path nothing called, at the third encounter
+
+Every Icarus harness failed today reporting `COMPILE_ERROR`. The repository was
+not broken: `TMPDIR` pointed at a filesystem 100 % full, `iverilog` could not
+write the command file it hands `ivlpp`, `ivlpp` got an empty list and said `No
+input files given`, and each runner turned that into `COMPILE_ERROR` and aborted
+its baseline — correctly.
+
+This repository had already met that fact **twice**:
+
+1. **11-07** wrote `bin/iverilog` and `bin/vvp`, which probe `TMPDIR` by writing
+   4096 real bytes (a zero-length create succeeds on a full filesystem) and fall
+   back inside the install. The wrappers are correct.
+2. **11-09** recorded the symptom in `progress.md` almost verbatim — a disk fault
+   that every runner would score as an injection failure — and put the `G0`
+   probe into **one** runner.
+
+Measured: **19 runner files, 20 invocation sites, every one on the raw `usr/bin`
+binaries. Zero on the wrappers. One runner with `G0`. Two grepping for the
+string.** The repair's installed surface and the repository's used surface were
+disjoint. Three encounters with one disk, and today is the first time anything
+reached every caller.
+
+It hid for five days because the wrappers and the raw binaries behave
+**identically whenever `TMPDIR` is writable**, which it was every day until
+today. Shown with `TMPDIR` forced unwritable: raw `rc=1` ("Error opening
+temporary file"), wrapper `rc=0`, same input, same environment. All 20 sites
+moved; `run_cdc_sim.sh` still passes; `test_neutrality_controls.py` went from
+failing in **zero** seconds to outrunning a 170-second budget, which is what a
+baseline that now compiles looks like.
+
+Same defect class as §1's verdict-with-no-caller and as the sibling graphene
+repository's "installed surface" items — and the sibling hit its own instance
+the same morning, a headline check computing its quantity inline instead of
+calling the module's public function. Two repositories, one morning, one class.
+
+**A second bug, found in `git status`.** Two zero-length files named `file`.
+An unescaped backticked `` `: > file` `` inside the unquoted wrapper heredoc ran
+at *generation* time, so sourcing `setup_iverilog.sh` created an empty `file` in
+the caller's working directory every session since 11-07 and stripped the
+backticked text from the comment it was explaining. **The comment warning that a
+zero-length create proves nothing was performing one.**
+
+### 5. The guard, and three defects in the guard
+
+`tools/toolchain_preflight.sh` 11/11: wrappers present and still probing by
+bytes; the inherited `TMPDIR` probed and **reported rather than judged**; a
+**forced** differential so the guard does not depend on being run on a broken
+day; the bypass set required **empty** as a set identity; end-to-end through the
+wrappers; and sourcing the setup script must write nothing. Verified against
+planted regressions both ways.
+
+Three defects in it, all found by running it, all kept in place: the bypass
+census came back **green** while three files still bypassed the wrappers, having
+built the path in two steps — *a census matching a concatenated string cannot see
+a concatenation*; section 6's second check **passed vacuously** on a bare
+`mktemp -d` that honoured the very `$TMPDIR` the file is about, so it inspected
+the empty path and could not tell "clean" from "never ran"; and the
+wrapper-content check ran *before* the probe source and reported on a stale
+artifact.
+
+### 6. The cross-repository census, and both predictions scored
+
+    census_repo(root=this repo, recursive=False)  ->  0 files, 0 rows
+    census_repo(root=this repo, recursive=True)   -> 47 files, 6 rows
+
+The sibling's instrument **returned the empty set**, being a flat `os.listdir`
+over a tree whose Python all lives under `tools/` and `examples/`. Fixed there.
+Recursively: 6 rows, all `NO_QUOTE`, **zero adjudicated**, in three files.
+
+- **This repository's 11-11 prediction (2)** — zero adjudicated, and *not* more
+  `NO_QUOTE` rows than the sibling's 102, because these suites compare against
+  exact expected values — is **right on both substantive halves, reason
+  included**. Its *meta*-claim, that the sibling's prediction was "right in its
+  first half and wrong in its second", is **inverted**: the sibling's first half
+  was the count, which failed.
+- **The sibling's prediction (3)** is **half right**: zero adjudicated holds, and
+  6 against 102 is wrong by 17x in the opposite direction.
+- Both were **unscorable as posed** until the recursion was fixed.
+
+### 7. Scoring the 11-10 and 11-11 predictions
+
+1. **11-11 (1), the async-FIFO/R4 prediction: not exercised.** Untouched.
+2. **11-11 (2): scored in §6.** Both substantive halves right, meta-claim
+   inverted.
+3. **11-11 (3), the `[name-only]` path: not exercised.**
+4. **11-10 (2), a check that observes a knob's effect: still unscored**, second
+   session running.
+
+### 8. Count
+
+Gate 9/9 and 5/5 mutants; preflight 11/11; manifest 49/49; `harness_file_closure`
+8 controls green. Two items closed, one seventeen-session item closed in its
+literal form, one cross-repository item closed. **Six defects found in my own
+work by running it** — D2's no-op mutant, the piped `$?`, the concatenation-blind
+census, the vacuous `mktemp` check, the stale-artifact ordering, and the
+backticked comment (that one was the repository's, not mine). Red set: two
+harnesses, named in §3 with what clears them.
+
+**Not yet covered (candidates for future runs):**
+
+- **RE-ANCHOR `M4` ON A CLASSIFIER PROPERTY** — created today, **ranked first**,
+  and the only thing standing between `run_all_harnesses.sh` and a green full
+  run besides a budget. Require the mutant to change the *tally* rather than to
+  turn `B2` red, or identify the now-one-line occurrences and decide whether the
+  window should matter for them. Cheap, and it has a worked sibling in today's
+  `NO-OP MUTANT` repair.
+- **RUN `test_neutrality_controls.py` TO COMPLETION UNDER THE CHUNKED
+  INVOCATION** — created today, **ranked second**. It now compiles and runs; all
+  that is missing is a budget that fits, which `--chunk` exists for. Until it
+  finishes, nothing knows whether the arms it tests are reachable.
+- **A CENSUS OF EVERY MUTANT WHOSE PREMISE IS ABOUT THE TREE** — created today,
+  **ranked third**, and the generalisation of both D2 and `M4`. Two instances in
+  one session, from opposite directions: a mutant can be dead because its anchor
+  drifted *or* because the property it asserts stopped being true of the
+  repository. `tools/audit_mutation_anchors.sh` covers the first for shell
+  harnesses only and the second not at all.
+- **THE OTHER THREE FILES THAT PROBE `TMPDIR` THEMSELVES** — created today.
+  `harness_file_closure_audit.py`, `run_property_coverage.sh` and
+  `cdc_mutation_test.py` each carry their own writability probe, and `G0` is a
+  fourth form in a fifth file. Five hand-rolled probes for one condition the
+  wrappers now handle centrally. The item is to decide which are still earning
+  their keep, not to delete them reflexively.
+- **A FULL `run_all_harnesses.sh` RUN, CHUNKED, WITH THE NEW ENTRIES** — created
+  today. Section 1 is green and sixteen new HARNESS entries have never been run
+  *through the caller*; today verified four CDC ones plus three tools ones. The
+  rest need two or three chunked calls.
+- **A STRUCTURAL CENSUS OF THE OTHER LINT CLASSES** — carried from 11-11.
+  Synthesis lint, latch inference, incomplete sensitivity lists, unused and
+  undriven nets, X-propagation; the parser is most of the machinery.
+- **MAKE THE `requires` COLUMN HONEST ABOUT SELF-SOURCING RUNNERS** — created
+  today. Most simulation runners declare `requires=-` and then source
+  `setup_iverilog.sh` themselves, while `mutate.sh` declares `requires=iverilog`
+  because it does not. Both are defensible per file and the manifest does not say
+  which is which, so a reader cannot tell a SKIP that means "no toolchain" from
+  one that means "this runner declines to install".
+- **GIVE `R4` A REAL INSTANCE VIA THE ASYNC FIFO** — carried from 11-10 with its
+  own prediction attached (that the two items cannot both be discharged by one
+  correct design). Untouched.
+- **RESET-DOMAIN CROSSING** — carried from 11-10, and now cheaper: the CDC gate
+  is the caller such a rule would be added behind.
+- **THE `[name-only]` PATH**, **THE `S7` AUDIT RE-RUN**, **A CHECK THAT AN
+  ABSORPTION WAS RECORDED AND NOT ONLY PROPOSED**, **`S7` SHOULD REPORT THE
+  PREDICTED COUNT ALONGSIDE THE MEASURED ONE** — all carried, all blocked on
+  nothing.
+- **A CHECK THAT OBSERVES A KNOB'S EFFECT, FOR EVERY KNOB** — carried from
+  11-10, **untouched for a second session**, and 11-10's prediction (2) about it
+  stays unscored in consequence.
+- **NO INSTRUMENT IN THIS REPOSITORY READS A CHECK'S PROSE** — carried from
+  11-10, a decision before a task, and today sharpened it: `M4`'s stated premise
+  is prose, it was false, and nothing could see that.
+- **THE ODD START-BIT PHASES**, **A DIVISOR SWEEP FOR T6**, **REGISTER THE NEW
+  TRANSCRIPTS** (today adds three), **EXTEND `S6` TO EVERY ITEM THAT ASSERTS
+  FILE CONTENT** — all carried.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE**, **MORE SEEDS ON
+  THE CLOSURE DISTRIBUTION**, **SETTLE WHETHER THE CRV SPEEDUP MOVED**, **THE 40
+  COMMENT-ONLY EDGES**, **AUDIT EVERY "WHAT THIS DOES NOT CHANGE" PARAGRAPH**,
+  **THE F7 CROSS NEEDS `0x40` DRAWN** — all carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17, and
+  today's gate mutation suite is a third worked model of the three-valued
+  outcome, this time with a fourth value (`NO-OP MUTANT`) for a defect in the
+  harness itself.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** — carried
+  from 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-seven sessions.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** — carried
+  from 10-16, and today is the strongest argument it has ever had: the toolchain
+  was *present* and the environment was broken, which is a third case neither
+  the manifest's two classes nor this item models.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — carried from 10-11.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT MAKES
+  S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); a diversity
+  target; per-property coverage of the Phase 4 UVM environment (09-23); a less
+  greedy steering policy (09-24); widen the coverage model (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants not
+  yet attempted; a property needing a strengthening invariant; the SVA sequence
+  layer (09-20); code coverage measurement (09-18); Phase 6 regression infra and
+  coverage merge.
+
+**Retired from the list this session:**
+
+- **RETIRED:** RUN THE STRUCTURAL CHECKER OVER THE UART RTL AS A GATE, NOT A
+  REPORT — created 2026-11-11, closed in one session. 9/9 and 5/5 mutants, and
+  it retired its own premise: the verdict was never missing, the caller was.
+- **RETIRED:** MAKE `run_all_harnesses.sh` ITSELF REACHABLE — created 2026-10-16,
+  seventeen sessions, **closed in its literal form**. Section 1 is green at
+  49/49. What remains of the item is a *full chunked run*, re-listed above as its
+  own entry rather than carried under the old name.
+- **RETIRED:** RUN THE OTHER REPOSITORY'S TOLERANCE CENSUS OVER THIS ONE —
+  created 2026-11-11. Closed, and it found a defect in the sibling's instrument
+  rather than in this tree.
+
+**Predictions for the next session**, so this entry can be scored:
+
+1. **Re-anchoring `M4` on the tally will turn up a second stale mutant in the
+   same file, not just repair `M4`.** `verdict_bearing_census.py` has four
+   mutants whose premises are all statements about the live tree, written on
+   11-08; one has already gone stale in four days, and the other three were
+   written from the same reading of the same tree on the same afternoon. The
+   risky half is "in the same file": the alternative is that `M4` was the only
+   one phrased as a tree property and the others are classifier properties
+   already.
+2. **A full chunked run will put the red set at THREE, not two.** Sixteen
+   HARNESS entries have never been run through the caller and only seven were
+   exercised today; the twelve simulation runners whose `IVL_BIN` moved onto the
+   wrappers this session have not been run end to end even once since the move.
+   The prediction is that at least one of them fails for a reason unrelated to
+   `TMPDIR` — most likely a budget, since four of them are declared at 300 s and
+   one at 600 s.
+3. **The decision about the other `TMPDIR` probes will keep at least two of
+   them.** `G0` and `cdc_mutation_test.py`'s probe do something the wrappers
+   cannot: they attribute a failure *in the runner's own report*, which is what
+   turns `COMPILE_ERROR` from a claim about the mutant into a claim about the
+   disk. The wrappers prevent the fault; only a probe inside the runner can
+   explain it. So the item should end in "keep, and give the other three the
+   same shape", not in deletion.

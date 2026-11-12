@@ -3879,3 +3879,85 @@ the work turned out to be auditing the wrong list.
 
 - **`tools/open_item_staleness_audit.py`: 60 passed, 0 failed, exit 0.**
   Phase 4 UVM remains in progress; `S7` was not widened today.
+
+## 2026-11-12 — the gate got a caller, the caller got its manifest, and the manifest found a repair nobody was calling
+
+**Checklist movement.** No Phase 4 or Phase 6 *content* box closes. Two
+infrastructure items close outright and one seventeen-session item closes in its
+literal form. Phase 4 UVM remains in progress.
+
+- [x] **The structural CDC checker is a gate, not a report.** Yesterday's
+  ranked item. `tools/run_cdc_gate.sh` 9/9, `tools/run_cdc_gate_mutation.py`
+  5/5 with every mutant caught by the section it was aimed at. The item's
+  premise was wrong and measuring it first is what showed that: the checker's
+  exit code has always been load-bearing (`return 1 if findings else 0`), and
+  what was missing was a **caller**. The first measurement of it read `$?`
+  through a `| tail` — tail's status, not the checker's — and nearly bought a
+  `--gate` flag that was not needed. That is the 2026-09-17 pipe hazard again.
+
+- [x] **The gate is a partition, not an expected-fail list.** The tree's one
+  finding is the deliberate crossing of the CDC example. So the shipped sources
+  must be clean **and** the deliberate crossing must still fire, and the set of
+  files carrying findings must be *exactly* `{cdc_crossings_tb.v}` — a set
+  identity, so a finding that **moves** from the demo into real RTL cannot net
+  out to the same count.
+
+- [x] **My own mutant D2 was a no-op and was reported as a hole in the gate.**
+  The anchor was `.d(bin_skewed)`; the port is `.d_src(bin_skewed)`. An
+  unanchored mutation is indistinguishable from a gate that cannot see it. The
+  runner now digests the copied tree before and after each mutation and reports
+  `NO-OP MUTANT` as a defect in *itself*.
+
+- [x] **`run_all_harnesses.sh` Section 1 had been FAILING.** 46 paths
+  discovered, 32 declared, 14 in neither class, across nine recorded growths. A
+  guard that is already red cannot go red. Now 49/49 and green, sixteen entries
+  added with per-file reasons — including `cdc_structural_check.py` declared
+  `NOT_A_HARNESS` *because it takes file arguments*, with its new caller
+  declared `HARNESS` beside it.
+
+- [x] **Declaring them found two harnesses that had been red unobserved.**
+  `tools/verdict_bearing_census.py` 13/14 and `tools/test_neutrality_controls.py`
+  red at its own negative control. Both named in the log with what clears them;
+  neither excused, and there is still no expected-fail list.
+
+- [x] **`verdict_bearing_census.py`'s `M4` asserts a property of the TREE, not
+  of the classifier.** It requires `B2` to go red when the branch window shrinks
+  to one line, on the premise that "every real one assigns several lines into its
+  branch" — true on 11-08, false now: under the mutant the live tree still yields
+  `VERDICT 1, CONTROL 2` against 3 and 7 unmutated. Same class as D2 above,
+  reached from the other side.
+
+- [x] **THE 2026-11-07 TMPDIR REPAIR WAS CALLED BY NOTHING, AND THIS IS THE
+  THIRD ENCOUNTER WITH THE SAME DISK.** 11-07 added `bin/iverilog` and
+  `bin/vvp`, which probe `TMPDIR` by writing 4096 real bytes and fall back into
+  the install. 11-09 recorded the symptom in this file in as many words and put
+  the `G0` probe into **one** runner. Measured today: **19 runner files, 20
+  invocation sites, all on the raw `usr/bin` binaries; zero on the wrappers; one
+  runner carrying `G0`; two grepping for `No input files given`.** The repair's
+  installed surface and the repository's used surface were disjoint. All 20 sites
+  moved. It hid for five days because the two paths behave identically whenever
+  `TMPDIR` is writable, which it was until today — a latent bypass cannot be told
+  from a working one until the environment turns.
+
+- [x] **The comment warning that a zero-length create proves nothing was
+  performing one.** An unescaped backticked `` `: > file` `` inside the unquoted
+  wrapper heredoc ran at generation time, so sourcing `setup_iverilog.sh` created
+  an empty file named `file` in the caller's working directory every session since
+  11-07, and deleted the backticked text from the comment it was explaining.
+  Found in `git status`, reproduced in a clean directory, escaped, and both halves
+  are now checks.
+
+- [x] **`tools/toolchain_preflight.sh`, 11/11, and three defects in it.** The
+  bypass census came back GREEN while three files still bypassed the wrappers —
+  they built the path in two steps, so the concatenated literal never appeared,
+  and *a census matching a concatenated string cannot see a concatenation*.
+  Section 6's second check PASSED VACUOUSLY on a bare `mktemp -d` that honoured
+  the very `$TMPDIR` the file is about, so it inspected the empty path. And the
+  wrapper-content check ran *before* the probe source and so reported on a stale
+  artifact.
+
+- **`tools/run_cdc_gate.sh` 9/9; `tools/run_cdc_gate_mutation.py` 5/5;
+  `tools/toolchain_preflight.sh` 11/11; `run_all_harnesses.sh --list` Section 1
+  PASS at 49/49; `tools/harness_file_closure_audit.py` 8 controls, 0 failed.**
+  Red: `verdict_bearing_census.py` (13/14) and `test_neutrality_controls.py`
+  (budget).
