@@ -80,6 +80,26 @@ LOGDIR="$(mktemp -d /tmp/run_all_harnesses.XXXXXX)"
 # ---------------------------------------------------------------------------
 # MANIFEST: path | kind | requires | budget_s | note
 # `requires` is a command that must be on PATH, or '-' for none.
+#
+# 2026-11-12: SIXTEEN ENTRIES ADDED AND THE MANIFEST_GAP CLOSED.  Section 1
+# had been FAILING with 14 gaps -- 46 paths discovered, 32 declared -- which
+# means this script, whose entire purpose is that its exit code is
+# load-bearing, has been exiting nonzero for structural reasons rather than
+# for a failing harness.  That is the standing item MAKE run_all_harnesses.sh
+# ITSELF REACHABLE in its most literal form: the caller was unrunnable.
+#
+# The gap set was not one oversight.  It accumulated across nine recorded
+# growths, and the reason is visible in the dates: every session that added a
+# runner added it where the work was, and the manifest is somewhere else.
+# The discovery rule was doing its job perfectly the whole time; what was
+# missing was any consequence for ignoring it, because a script that is
+# already red cannot go red.  A red guard is a guard nobody reads -- the same
+# shape as the 2026-10-15 finding about exit codes that started this file.
+#
+# Three of the sixteen are NOT_A_HARNESS and the reasons are per-file, not a
+# blanket exemption.  In particular cdc_structural_check.py is declared
+# NOT_A_HARNESS *because it takes file arguments*, with its caller declared
+# HARNESS beside it -- which is exactly what "a gate, not a report" meant.
 # ---------------------------------------------------------------------------
 read -r -d '' MANIFEST <<'EOM'
 tools/report_provenance_audit.py|HARNESS|-|120|runs FIRST: what re-runs each harness, and is its report about it
@@ -114,6 +134,23 @@ tools/mutation_controls.sh|NOT_A_HARNESS|-|0|library of shared mutation controls
 examples/phase5_property_coverage/run_one.sh|NOT_A_HARNESS|-|0|inner helper, invoked per property by run_property_coverage.sh
 examples/phase5_property_coverage/run_chunk.sh|NOT_A_HARNESS|-|0|inner helper, invoked per chunk by run_property_coverage.sh
 tools/run_all_harnesses.sh|NOT_A_HARNESS|-|0|this file: it is the caller, and running it from inside itself would recurse.  Declared rather than special-cased, because the discovery rule found it on its first run and an undeclared exception is the thing this script refuses
+tools/toolchain_preflight.sh|HARNESS|-|120|RUN IT EARLY: does the 2026-11-07 TMPDIR repair lie on the path the harnesses actually use?  A COMPILE_ERROR from any suite below means this first
+tools/cdc_structural_check_mutation.py|HARNESS|-|180|mutation suite of the structural CDC checker: 9 mutants, each required to make --selftest fail
+tools/run_cdc_gate.sh|HARNESS|-|120|the CDC gate: shipped sources clean, the deliberate crossing still firing, and the finding set exactly one file
+tools/run_cdc_gate_mutation.py|HARNESS|-|180|mutation suite of the CDC gate: 5 mutants, each naming the gate section that must go red
+tools/s7_classifier_mutation_test.py|HARNESS|-|120|mutation test of the S7 open-item classifier
+tools/test_neutrality_controls.py|HARNESS|-|300|is each ported neutrality arm REACHABLE, or green because it can never fire
+tools/verdict_bearing_census.py|HARNESS|-|120|which cases in a mutation runner carry the verdict and which sit outside it
+examples/phase6_cdc_basics/run_cdc_sim.sh|HARNESS|-|300|CDC basics bench in BOTH skew modes; either mode alone is misleading
+examples/phase6_crv_uart/run_equal_budget_control.sh|HARNESS|-|300|the equal-budget control for the 2026-10-21 CRV result, run where the movement was observed
+examples/phase6_crv_uart/run_mutation_tests_bimodal.sh|HARNESS|-|600|every CRV mutant in both stimulus modes, per seed, plus the mode-comparison control
+examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh|HARNESS|-|300|mutation suite for the census's SYNC_ONLY claim on STATUS.rx_avail
+examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh|HARNESS|-|300|mutation suite for the two LIVE tx_empty predictions
+examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh|HARNESS|-|300|rx_cnt direct-observation mutation suite
+examples/phase6_protocol_checker/mutate.sh|HARNESS|iverilog|300|protocol-checker mutation suite.  UNLIKE ITS NEIGHBOURS it expects setup_iverilog.sh to have been sourced ALREADY rather than sourcing it itself, so it declares the tool and is SKIPPED when absent instead of attempting an install inside a budget
+tools/cdc_structural_check.py|NOT_A_HARNESS|-|0|takes .v file arguments; a bare invocation exits 2 (usage), so this script could not run it even though its exit code has always been load-bearing.  Its caller is tools/run_cdc_gate.sh, declared HARNESS above -- which was the whole content of the 2026-11-11 item 'as a gate, not a report'
+tools/setup_cocotb.sh|NOT_A_HARNESS|-|0|environment setup for cocotb + uvm-python; run by hand like setup_iverilog.sh and setup_formal.sh
+tools/repo_freshness.sh|NOT_A_HARNESS|-|0|takes an owner/repo slug and queries the GitHub commits API; run bare it prints usage and exits 1, and its finding -- that the API is not a freshness oracle -- is recorded in the log rather than re-measured every run
 EOM
 
 # ---------------------------------------------------------------------------

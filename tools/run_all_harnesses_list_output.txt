@@ -1,0 +1,67 @@
+======================================================================
+RUN ALL HARNESSES -- 2026-11-12T05:19:13Z
+the first caller in this repository that reads a runner's exit code
+======================================================================
+  repo root : /tmp/wk1112/Design-Verification-Roadmap
+  logs      : /tmp/run_all_harnesses.4SWbzN
+
+----------------------------------------------------------------------
+SECTION 1 -- manifest vs repository
+----------------------------------------------------------------------
+  discovered by rule : 49
+  listed in manifest : 49
+  [PASS] every discovered path is declared HARNESS or NOT_A_HARNESS
+  [PASS] every declared path exists
+
+----------------------------------------------------------------------
+MANIFEST
+----------------------------------------------------------------------
+  HARNESS        tools/report_provenance_audit.py                           req=-               120s  runs FIRST: what re-runs each harness, and is its report about it
+  HARNESS        tools/harness_file_closure_audit.py                        req=-               120s  which files each harness actually reads
+  HARNESS        tools/shared_scratch_audit.py                              req=-               120s  no harness writes scratch to a fixed path another session can own
+  HARNESS        tools/free_name_audit.py                                   req=-                30s  every referenced global name is bound; a NameError no bench has to reach to find
+  HARNESS        tools/open_item_staleness_audit.py                         req=-               120s  open-item ages across both repositories
+  HARNESS        tools/scoreboard_dut_signal_census.py                      req=-               120s  every DUT signal a checker reads, and in what role
+  HARNESS        tools/audit_mutation_anchors.sh                            req=-                60s  every mutation sed anchor still matches its target
+  HARNESS        tools/test_mutation_controls.sh                            req=-               120s  self-test of the shared mutation-control library
+  HARNESS        examples/phase1_mutation/run_mutation_tests.py             req=-               120s  Phase 1 mutation suite
+  HARNESS        examples/phase4_ral/run_mutation_tests.sh                  req=cocotb-config   300s  Phase 4 RAL mutation suite; drives the DUT through uvm-python
+  HARNESS        examples/phase4_uvm_milestone/run_axis_audit.py            req=-               180s  coverage-axis audit of the UVM milestone
+  HARNESS        examples/phase4_uvm_milestone/run_phase4_uvm.sh            req=cocotb-config   600s  the UVM environment; needs cocotb + uvm-python
+  HARNESS        examples/phase5_csr_formal/run_csr_formal.sh               req=sby             600s  CSR formal properties
+  HARNESS        examples/phase5_csr_formal/run_reset_formal.sh             req=sby             600s  reset formal properties
+  HARNESS        examples/phase5_formal_uart/run_formal.sh                  req=sby             900s  UART formal properties
+  HARNESS        examples/phase5_property_coverage/run_property_coverage.sh req=sby             900s  per-property coverage sweep
+  HARNESS        examples/phase6_baud_error_coverage/run_baud_cov.sh        req=-               300s  baud-error coverage bench
+  HARNESS        examples/phase6_baud_error_coverage/run_mutation_tests.sh  req=-               300s  baud-error mutation suite
+  HARNESS        examples/phase6_bfm_equivalence/run_bfm_equiv.sh           req=-               300s  BFM-vs-pin equivalence bench
+  HARNESS        examples/phase6_bfm_equivalence/run_mutation_tests.sh      req=-               300s  BFM equivalence mutation suite
+  HARNESS        examples/phase6_crv_uart/run_crv_cov.sh                    req=-               300s  constrained-random UART coverage bench
+  HARNESS        examples/phase6_crv_uart/run_mutation_tests.sh             req=-               300s  CRV UART mutation suite
+  HARNESS        examples/phase6_divisor_window/run_divisor_window.sh       req=-               180s  divisor-window sweep
+  HARNESS        examples/phase6_rx_pin_driver/run_mutation_tests.sh        req=-               300s  RX-pin driver mutation suite
+  HARNESS        examples/phase6_rx_pin_driver/run_rx_pin.sh                req=-               180s  RX-pin driver bench over a seed sweep
+  HARNESS        examples/phase6_uvm_crv_uart/run_mutation_tests.sh         req=cocotb-config   300s  UVM CRV UART mutation suite; drives the DUT through uvm-python
+  NOT_A_HARNESS  tools/setup_iverilog.sh                                    req=-                 0s  environment setup; defines shell functions and must be SOURCED, not run
+  NOT_A_HARNESS  tools/setup_formal.sh                                      req=-                 0s  environment setup for yosys/SymbiYosys; sourced, not run
+  NOT_A_HARNESS  tools/mutation_controls.sh                                 req=-                 0s  library of shared mutation controls; sourced by the mutation runners
+  NOT_A_HARNESS  examples/phase5_property_coverage/run_one.sh               req=-                 0s  inner helper, invoked per property by run_property_coverage.sh
+  NOT_A_HARNESS  examples/phase5_property_coverage/run_chunk.sh             req=-                 0s  inner helper, invoked per chunk by run_property_coverage.sh
+  NOT_A_HARNESS  tools/run_all_harnesses.sh                                 req=-                 0s  this file: it is the caller, and running it from inside itself would recurse.  Declared rather than special-cased, because the discovery rule found it on its first run and an undeclared exception is the thing this script refuses
+  HARNESS        tools/toolchain_preflight.sh                               req=-               120s  RUN IT EARLY: does the 2026-11-07 TMPDIR repair lie on the path the harnesses actually use?  A COMPILE_ERROR from any suite below means this first
+  HARNESS        tools/cdc_structural_check_mutation.py                     req=-               180s  mutation suite of the structural CDC checker: 9 mutants, each required to make --selftest fail
+  HARNESS        tools/run_cdc_gate.sh                                      req=-               120s  the CDC gate: shipped sources clean, the deliberate crossing still firing, and the finding set exactly one file
+  HARNESS        tools/run_cdc_gate_mutation.py                             req=-               180s  mutation suite of the CDC gate: 5 mutants, each naming the gate section that must go red
+  HARNESS        tools/s7_classifier_mutation_test.py                       req=-               120s  mutation test of the S7 open-item classifier
+  HARNESS        tools/test_neutrality_controls.py                          req=-               300s  is each ported neutrality arm REACHABLE, or green because it can never fire
+  HARNESS        tools/verdict_bearing_census.py                            req=-               120s  which cases in a mutation runner carry the verdict and which sit outside it
+  HARNESS        examples/phase6_cdc_basics/run_cdc_sim.sh                  req=-               300s  CDC basics bench in BOTH skew modes; either mode alone is misleading
+  HARNESS        examples/phase6_crv_uart/run_equal_budget_control.sh       req=-               300s  the equal-budget control for the 2026-10-21 CRV result, run where the movement was observed
+  HARNESS        examples/phase6_crv_uart/run_mutation_tests_bimodal.sh     req=-               600s  every CRV mutant in both stimulus modes, per seed, plus the mode-comparison control
+  HARNESS        examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh    req=-               300s  mutation suite for the census's SYNC_ONLY claim on STATUS.rx_avail
+  HARNESS        examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh    req=-               300s  mutation suite for the two LIVE tx_empty predictions
+  HARNESS        examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh req=-               300s  rx_cnt direct-observation mutation suite
+  HARNESS        examples/phase6_protocol_checker/mutate.sh                 req=iverilog        300s  protocol-checker mutation suite.  UNLIKE ITS NEIGHBOURS it expects setup_iverilog.sh to have been sourced ALREADY rather than sourcing it itself, so it declares the tool and is SKIPPED when absent instead of attempting an install inside a budget
+  NOT_A_HARNESS  tools/cdc_structural_check.py                              req=-                 0s  takes .v file arguments; a bare invocation exits 2 (usage), so this script could not run it even though its exit code has always been load-bearing.  Its caller is tools/run_cdc_gate.sh, declared HARNESS above -- which was the whole content of the 2026-11-11 item 'as a gate, not a report'
+  NOT_A_HARNESS  tools/setup_cocotb.sh                                      req=-                 0s  environment setup for cocotb + uvm-python; run by hand like setup_iverilog.sh and setup_formal.sh
+  NOT_A_HARNESS  tools/repo_freshness.sh                                    req=-                 0s  takes an owner/repo slug and queries the GitHub commits API; run bare it prints usage and exits 1, and its finding -- that the API is not a freshness oracle -- is recorded in the log rather than re-measured every run
