@@ -54,7 +54,10 @@ cd "$ROOT"
 source tools/setup_iverilog.sh > /dev/null 2>&1
 # shellcheck disable=SC1091
 source tools/mutation_controls.sh
-IVL_BIN="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/bin"
+# the WRAPPERS in bin/, not the raw binaries in usr/bin: only the wrappers carry
+# the TMPDIR fallback added 2026-11-07, and NOTHING in this repository called them
+# until 2026-11-12 -- see tools/toolchain_preflight.sh
+IVL_BIN="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/bin"
 IVL_LIB="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/lib/x86_64-linux-gnu/ivl"
 TB=examples/phase6_rx_pin_driver/uart_rx_pin_tb.v
 # ADDED 2026-10-14, and the omission is the finding of the session.  On

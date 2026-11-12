@@ -1,0 +1,53 @@
+======================================================================
+TOOLCHAIN PREFLIGHT -- 2026-11-12T05:21:14Z
+does the TMPDIR repair of 2026-11-07 lie on the path the harnesses use?
+======================================================================
+  install   : /tmp/iverilog_install
+  raw       : /tmp/iverilog_install/usr/bin
+  wrappers  : /tmp/iverilog_install/bin
+
+----------------------------------------------------------------------
+SECTION 4 -- the bypass set must be empty
+----------------------------------------------------------------------
+  [PASS] no runner references the raw usr/bin binaries
+  [PASS] and setup_iverilog.sh still names the raw binaries, as the file that wraps them must
+
+----------------------------------------------------------------------
+SECTION 1 -- the wrappers exist
+----------------------------------------------------------------------
+  [PASS] /tmp/iverilog_install/bin/iverilog exists and is executable
+  [PASS] /tmp/iverilog_install/bin/vvp exists and is executable
+  [PASS] the wrapper probes TMPDIR BY WRITING BYTES, not with a zero-length create
+
+------------------------------------------------------------------
+SECTION 2 -- the inherited TMPDIR, reported and not judged
+------------------------------------------------------------------
+  inherited TMPDIR = /sessions/rcw-01bqqmutlzusukmywwefhieg/tmp  -- NOT USABLE (the 4096-byte probe failed)
+  this is the 2026-11-12 condition.  Every raw-path invocation
+  in this repository would report COMPILE_ERROR right now.
+    /dev/sdc        9.8G  9.3G     0 100% /sessions
+  [PASS] the inherited TMPDIR was probed by writing bytes and reported above
+
+------------------------------------------------------------------
+SECTION 3 -- THE DIFFERENTIAL, forced: raw must fail, wrapper must not
+------------------------------------------------------------------
+  with TMPDIR pointed at a path that does not exist:
+    raw     rc=1   /tmp/iverilog_install/usr/bin/iverilog: Error opening temporary file /tmp/iverilog_install/tmp/preflight.UWQSh0/not_a_writable_dir/ivrlg240c4ce
+    wrapper rc=0
+  [PASS] the raw binary FAILS with an unusable TMPDIR (rc=1)
+  [PASS] the wrapper SUCCEEDS in the same environment, which is the whole repair
+
+------------------------------------------------------------------
+SECTION 5 -- end to end through the wrappers
+------------------------------------------------------------------
+  [PASS] a trivial module compiles AND runs through bin/iverilog + bin/vvp
+
+----------------------------------------------------------------------
+SECTION 6 -- sourcing the setup script must not WRITE anything
+----------------------------------------------------------------------
+  [PASS] sourcing tools/setup_iverilog.sh in a verified empty directory leaves it empty
+  [PASS] and the wrapper just regenerated CONTAINS the backticked ': > file' text, so no command substitution ran at generation time
+
+======================================================================
+TOTAL: 11 passed, 0 failed, 0 skipped
+======================================================================

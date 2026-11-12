@@ -70,7 +70,12 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 IVL = os.environ.get('IVERILOG_INSTALL_DIR', '/tmp/iverilog_install')
-IVL_BIN = os.path.join(IVL, 'usr/bin')
+# the WRAPPERS in bin/, not the raw binaries in usr/bin: only the
+# wrappers carry the TMPDIR fallback added 2026-11-07, and nothing in
+# this repository called them until 2026-11-12.  This path was built
+# in two steps, which is why tools/toolchain_preflight.sh's first
+# census missed it -- see that file's section 4.
+IVL_BIN = os.path.join(IVL, 'bin')
 IVL_LIB = os.path.join(IVL, 'usr/lib/x86_64-linux-gnu/ivl')
 
 RUNNER_A = 'examples/phase6_crv_uart/run_mutation_tests.sh'

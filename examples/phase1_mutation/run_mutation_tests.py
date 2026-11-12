@@ -96,7 +96,12 @@ RTL = os.path.join(ROOT, 'examples/phase1_milestone/sync_fifo.v')
 TB = os.path.join(ROOT, 'examples/phase1_milestone/sync_fifo_directed_tb.v')
 
 IVL = os.environ.get('IVERILOG_INSTALL_DIR', '/tmp/iverilog_install')
-IVL_BIN = os.path.join(IVL, 'usr/bin')
+# the WRAPPERS in bin/, not the raw binaries in usr/bin: only the
+# wrappers carry the TMPDIR fallback added 2026-11-07, and nothing in
+# this repository called them until 2026-11-12.  This path was built
+# in two steps, which is why tools/toolchain_preflight.sh's first
+# census missed it -- see that file's section 4.
+IVL_BIN = os.path.join(IVL, 'bin')
 IVL_LIB = os.path.join(IVL, 'usr/lib/x86_64-linux-gnu/ivl')
 
 # ---------------------------------------------------------------------------

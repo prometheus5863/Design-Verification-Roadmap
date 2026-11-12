@@ -26,7 +26,7 @@ source "$REPO_ROOT/tools/setup_iverilog.sh" > /tmp/cdc_setup.log 2>&1 || {
 
 # iverilog/vvp are shell FUNCTIONS, not binaries, so `timeout vvp ...` fails
 # with "No such file or directory". Call the real binary to wrap it.
-VVP_BIN="$IVERILOG_INSTALL_DIR/usr/bin/vvp"
+VVP_BIN="$IVERILOG_INSTALL_DIR/bin/vvp"
 VVP_M="$IVERILOG_INSTALL_DIR/usr/lib/x86_64-linux-gnu/ivl"
 
 RC=0

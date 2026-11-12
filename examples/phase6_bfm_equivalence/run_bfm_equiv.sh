@@ -28,7 +28,7 @@ iverilog -g2012 -o equiv_sim \
     "${ROOT}/bfm/uart_rx_pin_bfm.v" \
     "${ROOT}/bfm/uart_rx_pin_legacy_ref.v" || exit 1
 
-timeout 170 "${IVL_DIR}/usr/bin/vvp" \
+timeout 170 "${IVL_DIR}/bin/vvp" \
     -M "${IVL_DIR}/usr/lib/x86_64-linux-gnu/ivl" equiv_sim
 rc=$?
 rm -f equiv_sim

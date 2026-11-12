@@ -34,7 +34,7 @@ iverilog -g2012 -o "${HERE}/.sim_divwin.$$" \
     "${ROOT}/bfm/uart_rx_pin_bfm.v" || {
     echo "FAIL: compile error"; exit 1; }
 
-"${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/bin/vvp" \
+"${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/bin/vvp" \
     -M "${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/lib/x86_64-linux-gnu/ivl" \
     "${HERE}/.sim_divwin.$$" > "${LOG}" 2>&1
 

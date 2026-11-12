@@ -44,7 +44,10 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 source tools/setup_iverilog.sh > /dev/null 2>&1   # NOT piped -- 2026-09-17
-IVL_BIN="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/bin"
+# the WRAPPERS in bin/, not the raw binaries in usr/bin: only the wrappers carry
+# the TMPDIR fallback added 2026-11-07, and NOTHING in this repository called them
+# until 2026-11-12 -- see tools/toolchain_preflight.sh
+IVL_BIN="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/bin"
 IVL_LIB="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/lib/x86_64-linux-gnu/ivl"
 
 WORK="$(mktemp -d /tmp/uart_eqb.XXXXXX)"

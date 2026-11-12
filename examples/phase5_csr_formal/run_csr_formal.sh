@@ -73,7 +73,7 @@ if [ -f "$ROOT/examples/phase4_rtl_bringup/uart_controller_tb.v" ]; then
     ( cd "$ROOT" && source tools/setup_iverilog.sh >/dev/null 2>&1
       iverilog -g2012 -o "$WORK/uart_tb.out" rtl/uart_controller.v \
                examples/phase4_rtl_bringup/uart_controller_tb.v 2>&1 | sed 's/^/  iverilog: /'
-      /tmp/iverilog_install/usr/bin/vvp \
+      /tmp/iverilog_install/bin/vvp \
           -M /tmp/iverilog_install/usr/lib/x86_64-linux-gnu/ivl \
           "$WORK/uart_tb.out" ) > "$WORK/regress.log" 2>&1
     line=$(grep -E '^=== SUMMARY:' "$WORK/regress.log" | tail -1)

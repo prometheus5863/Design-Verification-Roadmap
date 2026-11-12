@@ -200,7 +200,14 @@ mkdir -p "${IVERILOG_BIN_DIR}"
 cat > "${IVERILOG_BIN_DIR}/iverilog" <<EOF
 #!/bin/sh
 # The probe WRITES BYTES: a zero-length create succeeds on a full
-# filesystem, so `: > file` reports it writable when it is not (2026-11-07).
+# filesystem, so \`: > file\` reports it writable when it is not
+# (2026-11-07).  THE BACKTICKS ARE ESCAPED, AND ON 2026-11-12 THEY WERE
+# NOT: this heredoc is unquoted (it must expand the install paths), so
+# bash ran the command substitution at GENERATION time.  Sourcing this
+# script created a zero-length file named 'file' in the caller's working
+# directory -- every runner, every session -- and deleted the backticked
+# text from the comment it was explaining.  The comment warning that a
+# zero-length create proves nothing was performing one.
 if [ -z "\${TMPDIR:-}" ] \\
    || ! head -c 4096 /dev/zero > "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null \\
    || [ "\$(wc -c < "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null)" != "4096" ]; then
@@ -215,7 +222,14 @@ EOF
 cat > "${IVERILOG_BIN_DIR}/vvp" <<EOF
 #!/bin/sh
 # The probe WRITES BYTES: a zero-length create succeeds on a full
-# filesystem, so `: > file` reports it writable when it is not (2026-11-07).
+# filesystem, so \`: > file\` reports it writable when it is not
+# (2026-11-07).  THE BACKTICKS ARE ESCAPED, AND ON 2026-11-12 THEY WERE
+# NOT: this heredoc is unquoted (it must expand the install paths), so
+# bash ran the command substitution at GENERATION time.  Sourcing this
+# script created a zero-length file named 'file' in the caller's working
+# directory -- every runner, every session -- and deleted the backticked
+# text from the comment it was explaining.  The comment warning that a
+# zero-length create proves nothing was performing one.
 if [ -z "\${TMPDIR:-}" ] \\
    || ! head -c 4096 /dev/zero > "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null \\
    || [ "\$(wc -c < "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev/null)" != "4096" ]; then

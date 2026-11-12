@@ -22,7 +22,10 @@ set -u
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 WORK="${TMPDIR:-/tmp}/pchk_mut.$$"
-IVL_BIN=/tmp/iverilog_install/usr/bin
+# the WRAPPERS in bin/, not the raw binaries in usr/bin: only the wrappers carry
+# the TMPDIR fallback added 2026-11-07, and NOTHING in this repository called them
+# until 2026-11-12 -- see tools/toolchain_preflight.sh
+IVL_BIN=/tmp/iverilog_install/bin
 IVL_LIB=/tmp/iverilog_install/usr/lib/x86_64-linux-gnu/ivl
 mkdir -p "$WORK"
 

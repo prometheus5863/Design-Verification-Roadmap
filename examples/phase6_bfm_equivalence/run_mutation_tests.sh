@@ -32,8 +32,8 @@ source "${ROOT}/tools/setup_iverilog.sh" > /dev/null 2>&1
 # shellcheck disable=SC1091
 source "${ROOT}/tools/mutation_controls.sh"
 IVL_DIR="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}"
-IVERILOG="${IVL_DIR}/usr/bin/iverilog"
-VVP="${IVL_DIR}/usr/bin/vvp"
+IVERILOG="${IVL_DIR}/bin/iverilog"
+VVP="${IVL_DIR}/bin/vvp"
 IVL_LIB="${IVL_DIR}/usr/lib/x86_64-linux-gnu/ivl"
 
 WORK="$(mktemp -d)"

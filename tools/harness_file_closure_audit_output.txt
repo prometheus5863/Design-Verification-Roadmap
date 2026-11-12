@@ -3,9 +3,9 @@ HARNESS FILE-CLOSURE AUDIT -- can each harness compile at all?
 created 2026-10-14, out of a runner that had not compiled since 09-27
 ==============================================================================
 
-  Verilog files indexed : 43
-  modules defined       : 26
-  harness scripts found : 21
+  Verilog files indexed : 49
+  modules defined       : 36
+  harness scripts found : 29
 
   modules defined in MORE THAN ONE file (a closure built from the
   index alone would be ambiguous for these, so they are named):
@@ -24,7 +24,7 @@ PER HARNESS
 
   examples/phase4_ral/run_mutation_tests.sh                      OK
       .v files named      : rtl/uart_controller.v
-      UNRESOLVED_PATHS    : HERE/../../rtl/uart_controller.v, n.v, uart_controller_M3.v   (built from variables;
+      UNRESOLVED_PATHS    : HERE/../../rtl/uart_controller.v, WORK/uart_controller_NEU.v, n.v, uart_controller_M3.v   (built from variables;
                             invisible to this audit, not a pass)
 
   examples/phase4_uvm_milestone/run_axis_audit.py                OK
@@ -62,7 +62,7 @@ PER HARNESS
 
   examples/phase6_baud_error_coverage/run_mutation_tests.sh      OK
       .v files named      : bfm/uart_rx_pin_bfm.v, examples/phase6_baud_error_coverage/uart_baud_cov_tb.v, rtl/uart_controller.v
-      UNRESOLVED_PATHS    : i.v   (built from variables;
+      UNRESOLVED_PATHS    : WORK/neutral.v, i.v, neutral.v   (built from variables;
                             invisible to this audit, not a pass)
 
   examples/phase6_bfm_equivalence/run_bfm_equiv.sh               OK
@@ -71,16 +71,41 @@ PER HARNESS
                             invisible to this audit, not a pass)
 
   examples/phase6_bfm_equivalence/run_mutation_tests.sh          OK
-      .v files named      : bfm/uart_rx_pin_bfm.v, bfm/uart_rx_pin_legacy_ref.v, examples/phase6_bfm_equivalence/bfm_equiv_tb.v
-      UNRESOLVED_PATHS    : bfm_equiv_tb.v, golden.v, mut.v   (built from variables;
+      .v files named      : bfm/uart_rx_pin_bfm.v, bfm/uart_rx_pin_legacy_ref.v, examples/phase6_bfm_equivalence/bfm_equiv_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : bfm_equiv_tb.v, golden.v, mut.v, neutral.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_cdc_basics/run_cdc_sim.sh                      OK
+      .v files named      : (none)
+      UNRESOLVED_PATHS    : cdc_crossings.v, cdc_crossings_tb.v   (built from variables;
                             invisible to this audit, not a pass)
 
   examples/phase6_crv_uart/run_crv_cov.sh                        OK
       .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
 
+  examples/phase6_crv_uart/run_equal_budget_control.sh           OK
+      .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : WORK/t3.v   (built from variables;
+                            invisible to this audit, not a pass)
+
   examples/phase6_crv_uart/run_mutation_tests.sh                 OK
       .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
-      UNRESOLVED_PATHS    : WORK/mut.v   (built from variables;
+      UNRESOLVED_PATHS    : WORK/broken.v, WORK/mut.v, WORK/neutral.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_crv_uart/run_mutation_tests_bimodal.sh         OK
+      .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : WORK/m7_committed.v, WORK/mut.v, WORK/neutral.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh        OK
+      .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : 1.v, WORK/neutral.v   (built from variables;
+                            invisible to this audit, not a pass)
+
+  examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh        OK
+      .v files named      : examples/phase6_crv_uart/uart_crv_cov_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : 1.v, WORK/neutral.v   (built from variables;
                             invisible to this audit, not a pass)
 
   examples/phase6_divisor_window/run_divisor_window.sh           OK
@@ -88,9 +113,14 @@ PER HARNESS
       UNRESOLVED_PATHS    : uart_divisor_window_tb.v   (built from variables;
                             invisible to this audit, not a pass)
 
+  examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh OK
+      .v files named      : examples/phase6_rx_occupancy_probe/uart_rx_occupancy_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : 1.v, WORK/neutral.v, uart_crv_cov_tb.v   (built from variables;
+                            invisible to this audit, not a pass)
+
   examples/phase6_rx_pin_driver/run_mutation_tests.sh            OK
       .v files named      : bfm/uart_rx_pin_bfm.v, examples/phase6_rx_pin_driver/uart_rx_pin_tb.v, rtl/uart_controller.v
-      UNRESOLVED_PATHS    : i.v   (built from variables;
+      UNRESOLVED_PATHS    : WORK/neutral.v, i.v, neutral.v   (built from variables;
                             invisible to this audit, not a pass)
 
   examples/phase6_rx_pin_driver/run_rx_pin.sh                    OK
@@ -98,11 +128,27 @@ PER HARNESS
 
   examples/phase6_uvm_crv_uart/run_mutation_tests.sh             OK
       .v files named      : rtl/uart_controller.v
-      UNRESOLVED_PATHS    : NAME.v, ROOT/rtl/uart_controller.v   (built from variables;
+      UNRESOLVED_PATHS    : NAME.v, ROOT/rtl/uart_controller.v, WORK/uart_controller_NEUTRAL.v   (built from variables;
                             invisible to this audit, not a pass)
 
   tools/run_all_harnesses.sh                                     OK
       .v files named      : (none)
+
+  tools/run_cdc_gate.sh                                          INCOMPLETE
+      .v files named      : examples/phase6_cdc_basics/cdc_crossings_tb.v, rtl/uart_controller.v
+      UNRESOLVED_PATHS    : cdc_crossings_tb.v   (built from variables;
+                            invisible to this audit, not a pass)
+      MISSING, and the repository HAS them:
+          bin2gray                   defined in examples/phase6_cdc_basics/cdc_crossings.v
+          cdc_pulse_toggle_dst       defined in examples/phase6_cdc_basics/cdc_crossings.v
+          cdc_pulse_toggle_src       defined in examples/phase6_cdc_basics/cdc_crossings.v
+          cdc_sync_2ff               defined in examples/phase6_cdc_basics/cdc_crossings.v
+          gray2bin                   defined in examples/phase6_cdc_basics/cdc_crossings.v
+
+  tools/run_cdc_gate_mutation.py                                 OK
+      .v files named      : (none)
+      UNRESOLVED_PATHS    : cdc_crossings_tb.v, injected_extra_crossing.v, uart_controller.v   (built from variables;
+                            invisible to this audit, not a pass)
 
 ------------------------------------------------------------------------------
 CONFIRMATION BY REAL ELABORATION
@@ -120,9 +166,15 @@ CONFIRMATION BY REAL ELABORATION
   examples/phase6_baud_error_coverage/run_mutation_tests.sh  ELABORATES
   examples/phase6_bfm_equivalence/run_mutation_tests.sh      ELABORATES
   examples/phase6_crv_uart/run_crv_cov.sh                    ELABORATES
+  examples/phase6_crv_uart/run_equal_budget_control.sh       ELABORATES
   examples/phase6_crv_uart/run_mutation_tests.sh             ELABORATES
+  examples/phase6_crv_uart/run_mutation_tests_bimodal.sh     ELABORATES
+  examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh    ELABORATES
+  examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh    ELABORATES
+  examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh ELABORATES
   examples/phase6_rx_pin_driver/run_mutation_tests.sh        ELABORATES
   examples/phase6_rx_pin_driver/run_rx_pin.sh                ELABORATES
+  tools/run_cdc_gate.sh                                      FAILS: examples/phase6_cdc_basics/cdc_crossings_tb.v:125: error: Un
 
 ------------------------------------------------------------------------------
 CONTROLS
@@ -144,7 +196,7 @@ CONTROLS
          scratch is <TMP>/harness_closure_* (suffix redacted: it is random, and a transcript must not record where the audit ran)
 
 ==============================================================================
-RESULT: 21 harness scripts audited, 11 elaborated, 0 FAILED to elaborate
+RESULT: 29 harness scripts audited, 16 elaborated, 1 FAILED to elaborate
         0 could not be elaborated here at all (ENV -- a fact about the machine,
         not about the harness; see the note above elaborate())
 CONTROLS: 8 passed, 0 failed
