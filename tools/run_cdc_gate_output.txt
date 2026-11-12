@@ -1,0 +1,43 @@
+======================================================================
+CDC STRUCTURAL GATE -- 2026-11-12T05:04:50Z
+the first caller of tools/cdc_structural_check.py in this repository
+======================================================================
+  repo root : /tmp/wk1112/Design-Verification-Roadmap
+
+----------------------------------------------------------------------
+SECTION 1 -- the checker's own self-test
+----------------------------------------------------------------------
+  [PASS] self-test exits 0 -- TOTAL: 25 passed, 0 failed
+  [PASS] and it is still the 25 checks the 2026-11-11 entry committed
+
+----------------------------------------------------------------------
+SECTION 2 -- GATE: the shipped sources must have zero findings
+----------------------------------------------------------------------
+  files gated (4): bfm/uart_rx_pin_bfm.v bfm/uart_rx_pin_legacy_ref.v checkers/uart_protocol_checker.v rtl/uart_controller.v 
+    4 file(s), 0 finding(s)
+  [PASS] zero structural CDC findings in rtl/ bfm/ checkers/ (rc 0)
+  [PASS] and the gated set is non-degenerate (4 files)
+
+----------------------------------------------------------------------
+SECTION 3 -- POSITIVE CONTROL: the deliberate crossing still fires
+----------------------------------------------------------------------
+  [PASS] examples/phase6_cdc_basics/cdc_crossings_tb.v still exits 1, so section 2's rc 0 means something
+
+----------------------------------------------------------------------
+SECTION 4 -- the finding set over the whole tree is exactly one file
+----------------------------------------------------------------------
+  files scanned          : 41
+  files carrying findings: cdc_crossings_tb.v 
+  expected               : cdc_crossings_tb.v
+  [PASS] exactly {cdc_crossings_tb.v} carries findings; no other file does
+  [PASS] and the scan still covers the tree (41 .v files)
+
+----------------------------------------------------------------------
+SECTION 5 -- the exit-code contract every section above relies on
+----------------------------------------------------------------------
+  [PASS] a bare invocation exits 2 (usage), so it cannot be mistaken for clean
+  [PASS] findings -> 1 and clean -> 0, measured in this run, not assumed
+
+======================================================================
+TOTAL: 9 passed, 0 failed
+======================================================================

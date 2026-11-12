@@ -1,0 +1,22 @@
+==========================================================================
+MUTATION TEST OF tools/run_cdc_gate.sh
+==========================================================================
+
+BASELINE (unmutated copy, 41 .v files)
+  rc = 0   TOTAL: 9 passed, 0 failed
+  baseline green, so a red result below is the mutant's doing
+
+--------------------------------------------------------------------------
+RESULTS
+--------------------------------------------------------------------------
+  DETECTED-AS-PREDICTED  rc=1  predicted S2  failed S1,S2,S4,S5   D1 a real unsynchronised two-domain cros
+  DETECTED-AS-PREDICTED  rc=1  predicted S3  failed S1,S3,S4,S5   D2 the deliberate wrong crossing repaire
+  DETECTED-AS-PREDICTED  rc=1  predicted S4  failed S1,S4         D3 the same defect in a NEW file outside
+  DETECTED-AS-PREDICTED  rc=1  predicted S1  failed S1,S3,S4,S5   D4 the checker blinded: it can no longer
+  DETECTED-AS-PREDICTED  rc=1  predicted S5  failed S5            D5 a bare invocation of the checker exit
+
+  5/5 detected, 5 by the predicted section, 0 no-op
+
+==========================================================================
+TOTAL: 5/5 mutants detected, all by the predicted section
+==========================================================================
