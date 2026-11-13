@@ -26,7 +26,8 @@
 set -u
 cd "$(dirname "$0")"
 ROOT=$(cd ../.. && pwd)
-WORK=$(mktemp -d)
+# Explicit base, 2026-11-13 -- see phase5_csr_formal/run_reset_formal.sh.
+WORK=$(mktemp -d /tmp/formal_uart.XXXXXX)
 trap 'rm -rf "$WORK"' EXIT
 PASS=0; FAIL=0
 

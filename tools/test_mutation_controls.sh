@@ -25,7 +25,8 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 . "$HERE/mutation_controls.sh"
 
-WORK="$(mktemp -d)"
+# A bare `mktemp -d` takes its base from TMPDIR invisibly; see mc_workdir.
+WORK="$(mc_workdir test_mc)" || exit 1
 trap 'rm -rf "$WORK"' EXIT
 
 pass=0; fail=0

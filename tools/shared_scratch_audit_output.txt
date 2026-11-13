@@ -38,12 +38,36 @@ accuse eleven harnesses of a fault none of them had
   planted p_tmpdir_var           expect SHARED   got SHARED
   [PASS]     plant p_tmpdir_var classifies SHARED
          rows=[(1, 'TMPDIR="/tmp"', 'SHARED', '')]
+  planted p_mention_echo         expect MENTION  got MENTION
+  [PASS]     plant p_mention_echo classifies MENTION
+         rows=[(1, 'echo "SETUP FAILED -- see /tmp/setup.log"', 'MENTION', 'the literal is inside a diagnostic message, not a path this line uses')]
+  planted p_mention_detail       expect MENTION  got MENTION
+  [PASS]     plant p_mention_detail classifies MENTION
+         rows=[(1, 'mc__detail "tried TMPDIR=${TMPDIR:-unset}, /tmp"', 'MENTION', 'the literal is inside a diagnostic message, not a path this line uses')]
+  planted p_read_is_use          expect SHARED   got SHARED
+  [PASS]     plant p_read_is_use classifies SHARED
+         rows=[(1, 'if grep -q PASS /tmp/cdc_mode0.txt; then', 'SHARED', '')]
+  planted p_redirect_is_use      expect SHARED   got SHARED
+  [PASS]     plant p_redirect_is_use classifies SHARED
+         rows=[(1, 'printf \'%s\' "$OUT" > "/tmp/cdc_mode.txt"', 'SHARED', '')]
+  planted p_df_is_use            expect SHARED   got SHARED
+  [PASS]     plant p_df_is_use classifies SHARED
+         rows=[(1, 'df -P "$TMPDIR" | tail -1', 'SHARED', '')]
 
 ------------------------------------------------------------------------------
 2.  THE REPOSITORY
 ------------------------------------------------------------------------------
-  examples/phase4_ral/run_mutation_tests.sh
-      80   PRIVATE  WORK="$(mktemp -d "${TMPDIR:-/tmp}/ral_mutants.XXXXX
+  examples/phase4_uvm_milestone/run_phase4_uvm.sh
+      65   PRIVATE  MLOG="$(mktemp /tmp/phase4_uvm_m.XXXXXX)"
+      97   PRIVATE  CLOG="$(mktemp /tmp/phase4_uvm_c.XXXXXX)"
+      135  PRIVATE  RLOG="$(mktemp /tmp/phase4_uvm_r.XXXXXX)"
+      155  PRIVATE  LOG="$(mktemp /tmp/phase4_uvm_l.XXXXXX)"
+  examples/phase5_csr_formal/run_csr_formal.sh
+      42   PRIVATE  WORK=$(mktemp -d /tmp/csr_formal.XXXXXX)
+  examples/phase5_csr_formal/run_reset_formal.sh
+      42   PRIVATE  WORK="$(mktemp -d /tmp/csr_reset_formal.XXXXXX)"
+  examples/phase5_formal_uart/run_formal.sh
+      30   PRIVATE  WORK=$(mktemp -d /tmp/formal_uart.XXXXXX)
   examples/phase5_property_coverage/run_chunk.sh
       16   SCOPED   WORK="${WORK:-/tmp/pcov-$(id -u)}"
            reason: stable path required for cross-shell resumability;
@@ -51,37 +75,148 @@ accuse eleven harnesses of a fault none of them had
       68   SCOPED   PCOV_BASE="${PCOV_BASE:-/tmp/pcov-$(id -u)}"
            reason: stable path required for cross-shell resumability;
   examples/phase6_baud_error_coverage/run_baud_cov.sh
-      21   PRIVATE  SIM="$(mktemp -u /tmp/baudcov_sim.XXXXXX)"
+      24   PRIVATE  SIM="$(mktemp -u /tmp/baudcov_sim.XXXXXX)"
+      52   PRIVATE  LOG="$(mktemp /tmp/baud_cov.XXXXXX)"
   examples/phase6_baud_error_coverage/run_mutation_tests.sh
-      50   PRIVATE  WORK="$(mktemp -d /tmp/baudmut.XXXXXX)"
+      53   PRIVATE  WORK="$(mktemp -d /tmp/baudmut.XXXXXX)"
+  examples/phase6_cdc_basics/cdc_mutation_test.py
+      113  SHARED   env["TMPDIR"] = os.environ.get("IVL_TMPDIR", "/tmp")
+  examples/phase6_cdc_basics/run_cdc_sim.sh
+      24   SHARED   source "$REPO_ROOT/tools/setup_iverilog.sh" > /tmp/c
+      25   MENTION  echo "SETUP FAILED -- see /tmp/cdc_setup.log"; exit 
+           reason: the literal is inside a diagnostic message, not a path this 
+      37   SHARED   SIM="/tmp/cdc_sim_skew$SK"
+      46   SHARED   printf '%s\n' "$OUT" > "/tmp/cdc_mode$SK.txt"
+      68   SHARED   if grep -q "\[PASS\] B1 " /tmp/cdc_mode0.txt 2>/dev/
+      73   SHARED   if grep -q "\[PASS\] B2 " /tmp/cdc_mode1.txt 2>/dev/
+      74   SHARED   && grep -q "\[PASS\] B3 " /tmp/cdc_mode1.txt 2>/dev/
+      79   SHARED   if grep -q "\[PASS\] B1 " /tmp/cdc_mode1.txt 2>/dev/
   examples/phase6_crv_uart/run_crv_cov.sh
-      23   PRIVATE  SIM="$(mktemp -u /tmp/crv_sim.XXXXXX)"
+      26   PRIVATE  SIM="$(mktemp -u /tmp/crv_sim.XXXXXX)"
+  examples/phase6_crv_uart/run_equal_budget_control.sh
+      53   PRIVATE  WORK="$(mktemp -d /tmp/uart_eqb.XXXXXX)"
   examples/phase6_crv_uart/run_mutation_tests.sh
-      32   PRIVATE  WORK="$(mktemp -d /tmp/uart_mut.XXXXXX)"
+      67   PRIVATE  WORK="$(mktemp -d /tmp/uart_mut.XXXXXX)"
+  examples/phase6_crv_uart/run_mutation_tests_bimodal.sh
+      97   PRIVATE  WORK="$(mktemp -d /tmp/uart_bimut.XXXXXX)"
+  examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh
+      78   PRIVATE  WORK="$(mktemp -d /tmp/uart_rxa_mut.XXXXXX)"
+  examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh
+      61   PRIVATE  WORK="$(mktemp -d /tmp/uart_txe_mut.XXXXXX)"
+  examples/phase6_protocol_checker/mutate.sh
+      24   SHARED   WORK="${TMPDIR:-/tmp}/pchk_mut.$$"
+           reason: uid-scoped but NO stated reason -- the marker is required
+  examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh
+      78   MENTION  echo "ABORT -- no writable scratch base; TMPDIR=$TMP
+           reason: the literal is inside a diagnostic message, not a path this 
+      162  MENTION  echo "    TMPDIR=$TMPDIR"
+           reason: the literal is inside a diagnostic message, not a path this 
+      163  SHARED   df -P "$TMPDIR" | tail -1 | awk '{printf "    %s %s 
   examples/phase6_rx_pin_driver/run_mutation_tests.sh
-      78   PRIVATE  WORK="$(mktemp -d /tmp/rxmut.XXXXXX)"
+      81   PRIVATE  WORK="$(mktemp -d /tmp/rxmut.XXXXXX)"
   examples/phase6_rx_pin_driver/run_rx_pin.sh
-      20   PRIVATE  SIM="$(mktemp -u /tmp/rxpin_sim.XXXXXX)"
+      23   PRIVATE  SIM="$(mktemp -u /tmp/rxpin_sim.XXXXXX)"
+      51   PRIVATE  LOG="$(mktemp /tmp/rx_pin.XXXXXX)"
   examples/phase6_uvm_crv_uart/run_mutation_tests.sh
-      40   PRIVATE  WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"
+      60   PRIVATE  WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"
+  tools/mutation_controls.sh
+      458  MENTION  "TMPDIR=${TMPDIR:-unset}, /tmp, the iverilog install
+           reason: the literal is inside a diagnostic message, not a path this 
   tools/run_all_harnesses.sh
       78   PRIVATE  LOGDIR="$(mktemp -d /tmp/run_all_harnesses.XXXXXX)"
+  tools/s7_classifier_mutation_test.py
+      23   SHARED   ROOT = '/tmp/s7mut%d' % os.getuid()
+           reason: uid-scoped but NO stated reason -- the marker is required
+  tools/setup_cocotb.sh
+      121  SHARED   COCOTB_VENV="${COCOTB_VENV:-/tmp/cocotb_venv}"
+      122  SHARED   COCOTB_WHEELHOUSE="${COCOTB_WHEELHOUSE:-/tmp/cocotb_
+      128  SHARED   export TMPDIR="${TMPDIR:-/tmp}"
+      306  SHARED   d="${TMPDIR}/cocotb_smoke.$$"
+           reason: uid-scoped but NO stated reason -- the marker is required
+  tools/setup_iverilog.sh
+      120  SHARED   IVL_TMPDIR="${IVERILOG_INSTALL_DIR}/tmp"
+      136  SHARED   if [ -n "${TMPDIR:-}" ] \
+      137  SHARED   && head -c 4096 /dev/zero > "${TMPDIR}/.ivl_probe.$$
+           reason: uid-scoped but NO stated reason -- the marker is required
+      138  SHARED   && [ "$(wc -c < "${TMPDIR}/.ivl_probe.$$" 2>/dev/nul
+           reason: uid-scoped but NO stated reason -- the marker is required
+      139  SHARED   rm -f "${TMPDIR}/.ivl_probe.$$"
+           reason: uid-scoped but NO stated reason -- the marker is required
+      140  MENTION  printf '%s' "${TMPDIR}"
+           reason: the literal is inside a diagnostic message, not a path this 
+      142  SHARED   rm -f "${TMPDIR:-/nonexistent}/.ivl_probe.$$" 2>/dev
+           reason: uid-scoped but NO stated reason -- the marker is required
+      211  SHARED   if [ -z "\${TMPDIR:-}" ] \\
+      212  SHARED   || ! head -c 4096 /dev/zero > "\${TMPDIR}/.ivl_probe
+      213  SHARED   || [ "\$(wc -c < "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev
+      214  SHARED   rm -f "\${TMPDIR:-/nonexistent}/.ivl_probe.\$\$" 2>/
+      217  SHARED   rm -f "\${TMPDIR}/.ivl_probe.\$\$"
+      233  SHARED   if [ -z "\${TMPDIR:-}" ] \\
+      234  SHARED   || ! head -c 4096 /dev/zero > "\${TMPDIR}/.ivl_probe
+      235  SHARED   || [ "\$(wc -c < "\${TMPDIR}/.ivl_probe.\$\$" 2>/dev
+      236  SHARED   rm -f "\${TMPDIR:-/nonexistent}/.ivl_probe.\$\$" 2>/
+      239  SHARED   rm -f "\${TMPDIR}/.ivl_probe.\$\$"
+  tools/toolchain_preflight.sh
+      152  SHARED   T="${TMPDIR:-/tmp}"
+      173  PRIVATE  WORK="$(mktemp -d "${IVL}/tmp/preflight.XXXXXX")"
+      243  PRIVATE  PROBE_DIR="$(mktemp -d "${IVL}/tmp/preflight_probe.X
+      246  PRIVATE  "mktemp failed under ${IVL}/tmp; this check is NOT r
 
-  tally: {'PRIVATE': 9, 'SCOPED': 2, 'SHARED': 0}
-  [PASS] R1 no harness writes scratch to a fixed path in a shared namespace
-         SHARED rows: []
+  tally: {'PRIVATE': 24, 'SCOPED': 2, 'SHARED': 32, 'MENTION': 5}
+  [FAIL] R1 no harness writes scratch to a fixed path in a shared namespace
+         SHARED rows: [('examples/phase6_cdc_basics/cdc_mutation_test.py', 113, 'env["TMPDIR"] = os.environ.get("IVL_TMPDIR", "/tmp")'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 24, 'source "$REPO_ROOT/tools/setup_iverilog.sh" > /tmp/cdc_setup.log 2>&1 || {'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 37, 'SIM="/tmp/cdc_sim_skew$SK"'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 46, 'printf \'%s\\n\' "$OUT" > "/tmp/cdc_mode$SK.txt"'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 68, 'if grep -q "\\[PASS\\] B1 " /tmp/cdc_mode0.txt 2>/dev/null; then'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 73, 'if grep -q "\\[PASS\\] B2 " /tmp/cdc_mode1.txt 2>/dev/null \\'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 74, '&& grep -q "\\[PASS\\] B3 " /tmp/cdc_mode1.txt 2>/dev/null; then'), ('examples/phase6_cdc_basics/run_cdc_sim.sh', 79, 'if grep -q "\\[PASS\\] B1 " /tmp/cdc_mode1.txt 2>/dev/null; then'), ('examples/phase6_protocol_checker/mutate.sh', 24, 'WORK="${TMPDIR:-/tmp}/pchk_mut.$$"'), ('examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh', 163, 'df -P "$TMPDIR" | tail -1 | awk \'{printf "    %s %s used of %s, %s free (%s)\\n",$1,$3,$2,$4,$5}\''), ('tools/s7_classifier_mutation_test.py', 23, "ROOT = '/tmp/s7mut%d' % os.getuid()"), ('tools/setup_cocotb.sh', 121, 'COCOTB_VENV="${COCOTB_VENV:-/tmp/cocotb_venv}"'), ('tools/setup_cocotb.sh', 122, 'COCOTB_WHEELHOUSE="${COCOTB_WHEELHOUSE:-/tmp/cocotb_wheels}"'), ('tools/setup_cocotb.sh', 128, 'export TMPDIR="${TMPDIR:-/tmp}"'), ('tools/setup_cocotb.sh', 306, 'd="${TMPDIR}/cocotb_smoke.$$"'), ('tools/setup_iverilog.sh', 120, 'IVL_TMPDIR="${IVERILOG_INSTALL_DIR}/tmp"'), ('tools/setup_iverilog.sh', 136, 'if [ -n "${TMPDIR:-}" ] \\'), ('tools/setup_iverilog.sh', 137, '&& head -c 4096 /dev/zero > "${TMPDIR}/.ivl_probe.$$" 2>/dev/null \\'), ('tools/setup_iverilog.sh', 138, '&& [ "$(wc -c < "${TMPDIR}/.ivl_probe.$$" 2>/dev/null)" = "4096" ]; then'), ('tools/setup_iverilog.sh', 139, 'rm -f "${TMPDIR}/.ivl_probe.$$"'), ('tools/setup_iverilog.sh', 142, 'rm -f "${TMPDIR:-/nonexistent}/.ivl_probe.$$" 2>/dev/null'), ('tools/setup_iverilog.sh', 211, 'if [ -z "\\${TMPDIR:-}" ] \\\\'), ('tools/setup_iverilog.sh', 212, '|| ! head -c 4096 /dev/zero > "\\${TMPDIR}/.ivl_probe.\\$\\$" 2>/dev/null \\\\'), ('tools/setup_iverilog.sh', 213, '|| [ "\\$(wc -c < "\\${TMPDIR}/.ivl_probe.\\$\\$" 2>/dev/null)" != "4096" ]; then'), ('tools/setup_iverilog.sh', 214, 'rm -f "\\${TMPDIR:-/nonexistent}/.ivl_probe.\\$\\$" 2>/dev/null'), ('tools/setup_iverilog.sh', 217, 'rm -f "\\${TMPDIR}/.ivl_probe.\\$\\$"'), ('tools/setup_iverilog.sh', 233, 'if [ -z "\\${TMPDIR:-}" ] \\\\'), ('tools/setup_iverilog.sh', 234, '|| ! head -c 4096 /dev/zero > "\\${TMPDIR}/.ivl_probe.\\$\\$" 2>/dev/null \\\\'), ('tools/setup_iverilog.sh', 235, '|| [ "\\$(wc -c < "\\${TMPDIR}/.ivl_probe.\\$\\$" 2>/dev/null)" != "4096" ]; then'), ('tools/setup_iverilog.sh', 236, 'rm -f "\\${TMPDIR:-/nonexistent}/.ivl_probe.\\$\\$" 2>/dev/null'), ('tools/setup_iverilog.sh', 239, 'rm -f "\\${TMPDIR}/.ivl_probe.\\$\\$"'), ('tools/toolchain_preflight.sh', 152, 'T="${TMPDIR:-/tmp}"')]
   [PASS] R2 every SCOPED row carries a stated reason
          2 scoped rows
   [PASS] R3 the sweep actually examined temp-namespace lines (not vacuously clean)
-         tally {'PRIVATE': 9, 'SCOPED': 2, 'SHARED': 0}
+         tally {'PRIVATE': 24, 'SCOPED': 2, 'SHARED': 32, 'MENTION': 5}
   [PASS] R4 the sweep looked at more than a handful of files
-         57 .sh/.py files
+         83 .sh/.py files
   [PASS] R5 run_mutation_tests.sh is PRIVATE
-         rows=[(40, 'WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"', 'PRIVATE', '')]
+         rows=[(60, 'WORK="$(mktemp -d /tmp/uvm_crv_mut.XXXXXX)"', 'PRIVATE', '')]
   [PASS] R6 the resumable sweep is SCOPED, not randomised (randomising it would break resumability and still pass R1)
          classes=['SCOPED']
+  [PASS] R7 THE MENTION CLASS, AND WHAT IT DOES NOT EXCUSE (2026-11-13): 5 row(s) are diagnostic messages naming a temp path and 32 are real uses.  R1 above is RED on those 32 and WAS RED BEFORE TODAY -- measured at HEAD before any of this session's edits: 35 SHARED, 15 controls passing, 1 failing.  So this module is a THIRD red harness that the 2026-11-12 red set (two) did not name
+         the 32 SHARED rows are printed above, file by file, and are the worklist; narrowing MENTION further would hide uses, which is why grep, cat, df and every redirect stay SHARED
+
+------------------------------------------------------------------------------
+4.  THE SCRATCH-BASE CENSUS -- a second question about the same
+    lines, and the collision census above cannot see it
+------------------------------------------------------------------------------
+  [PASS] S-b0.b_inherited_sh plant classifies BASE_INHERITED_SH
+         got 'BASE_INHERITED_SH'
+  [PASS] S-b0.b_inherited_py plant classifies BASE_INHERITED_PY
+         got 'BASE_INHERITED_PY'
+  [PASS] S-b0.b_explicit plant classifies BASE_EXPLICIT
+         got 'BASE_EXPLICIT'
+  [PASS] S-b0.b_tmpdir_bare plant classifies BASE_TMPDIR_BARE
+         got 'BASE_TMPDIR_BARE'
+  [PASS] S-b0.b_tmpdir_default plant classifies BASE_TMPDIR_BARE
+         got 'BASE_TMPDIR_BARE'
+  [PASS] S-b0.b_helper plant classifies BASE_HELPER
+         got 'BASE_HELPER'
+  [PASS] S-b0.b_pinned plant classifies BASE_PINNED
+         got 'BASE_PINNED'
+  [PASS] S-b0.b_comment plant classifies None
+         got None
+    BASE_HELPER             7
+    BASE_PINNED             3
+    BASE_EXPLICIT          23
+    BASE_INHERITED_PY      17
+  [PASS] S-b1 the base classification is EXHAUSTIVE over every creation site -- 50 site(s) in 4 class(es), and every one has a class
+         classes: {'BASE_INHERITED_PY': 17, 'BASE_HELPER': 7, 'BASE_EXPLICIT': 23, 'BASE_PINNED': 3}
+  [PASS] S-b2 THE GATE: no creation site takes its base from TMPDIR invisibly or without handling the failure.  On 2026-11-13 there were SIX bare sites and TWO unguarded TMPDIR sites, and two mutation suites were dark because of them
+         offending sites:
+  none
+  [PASS] S-b2b AND THE WORKLIST THE GATE DELIBERATELY EXCLUDES: 17 Python site(s) take their base from TMPDIR too, via tempfile.  They are named, not gated, because tempfile RAISES on a failed creation -- the run stops at the site with a traceback naming the directory, where the shell form assigns the empty string and carries on.  Loud and wrong is a different defect from silent and wrong
+         files: examples/phase1_mutation/run_mutation_tests.py, examples/phase4_uvm_milestone/mutation_test_coverage_axis.py, examples/phase4_uvm_milestone/mutation_test_reachable_cross.py, examples/phase4_uvm_milestone/mutation_test_signatures.py, examples/phase4_uvm_milestone/mutation_test_witnesses.py, examples/phase6_cdc_basics/cdc_mutation_test.py, examples/phase6_compile_error_audit/audit_compile_error_scoring.py, tools/cdc_structural_check_mutation.py
+  [PASS] S-b3 the collision census CANNOT see the class this one exists for: on a bare creation line it returns no rows at all, because its population is lines carrying a /tmp or $TMPDIR literal and this line carries neither.  Same shape as the 2026-11-12 finding that a census matching a concatenated string cannot see a concatenation
+         collision census rows: []; base census class: 'BASE_INHERITED_SH'
+  [PASS] S-b5 this module is OUTSIDE its own population: its plants are creation lines by construction, and the first run of this section reported 8 BASE_INHERITED_SH and 2 BASE_TMPDIR_BARE rows inside it -- its own controls, reported as findings about the repository
+         rows from excluded files: []
+  [PASS] S-b4 every site repaired on 2026-11-13 is NAMED here and is in the class the repair put it in -- 11 of them, five onto the mc_workdir helper and three onto an explicit base because they do not source tools/mutation_controls.sh
+         not as declared: []
 
 ==============================================================================
-RESULT: 57 files scanned, 11 with temp-namespace lines, 0 SHARED
-CONTROLS: 16 passed, 0 failed
+RESULT: 83 files scanned, 27 with temp-namespace lines, 32 SHARED
+CONTROLS: 35 passed, 1 failed
 ==============================================================================

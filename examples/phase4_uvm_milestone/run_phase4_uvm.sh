@@ -57,7 +57,12 @@ FAILED=0
 # Gated the same way as the simulator tests: a private log, an empty log counts
 # as failure, and exactly one RESULT line is required.
 echo "################ budget_law_exhaustive (model, no simulator) ################"
-MLOG="$(mktemp)"
+# Explicit scratch base, 2026-11-13: a bare `mktemp` takes its base
+# from TMPDIR invisibly and sets this variable to the EMPTY STRING
+# when that filesystem is full, after which every redirect into it
+# goes to the filesystem root.  See tools/shared_scratch_audit.py
+# section 4 and tools/mutation_controls.sh mc_workdir.
+MLOG="$(mktemp /tmp/phase4_uvm_m.XXXXXX)"
 timeout 170 python3 budget_law_exhaustive.py > "${MLOG}" 2>&1
 mrc=$?
 tail -32 "${MLOG}"
@@ -89,7 +94,7 @@ echo
 # RESULT line (the 2026-09-27 item-1 pattern -- never grep a file you did not
 # just write).
 echo "################ payload_coverage_model (model, no simulator) ################"
-CLOG="$(mktemp)"
+CLOG="$(mktemp /tmp/phase4_uvm_c.XXXXXX)"
 timeout 170 python3 payload_coverage_model.py > "${CLOG}" 2>&1
 crc=$?
 tail -34 "${CLOG}"
@@ -127,7 +132,7 @@ echo
 # Gated identically: private log, empty log counts as failure, exactly one
 # RESULT line.
 echo "################ run_axis_audit (model, no simulator) ################"
-RLOG="$(mktemp)"
+RLOG="$(mktemp /tmp/phase4_uvm_r.XXXXXX)"
 timeout 170 python3 run_axis_audit.py > "${RLOG}" 2>&1
 rrc=$?
 tail -22 "${RLOG}"
@@ -147,7 +152,7 @@ echo
 for t in "${TESTS[@]}"; do
   echo "################ ${t} ################"
   # Each invocation is a fresh process, so a fresh uvm_test_top.
-  LOG="$(mktemp)"
+  LOG="$(mktemp /tmp/phase4_uvm_l.XXXXXX)"
   timeout 170 make -s TESTCASE="${t}" 2>&1 | tee "${LOG}"
   # Same gate discipline as the phase6 runners after the 2026-09-27 fix: a
   # private log, an empty log counts as failure, and exactly one verdict line

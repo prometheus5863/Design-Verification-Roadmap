@@ -68,8 +68,14 @@ source tools/setup_iverilog.sh > /dev/null 2>&1
 IVL_BIN="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/bin"
 IVL_LIB="${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/usr/lib/x86_64-linux-gnu/ivl"
 
-WORK="$(mktemp -d "$TMPDIR/uart_rxocc.XXXXXX")" || {
-    echo "ABORT -- cannot create a scratch directory under TMPDIR=$TMPDIR."
+# 2026-11-13: this was the ONLY site that handled the failure correctly --
+# it aborted and named the disk.  Correct, and it still left the suite
+# DARK whenever TMPDIR was full, which on 2026-11-13 it was.  mc_workdir
+# keeps the naming and adds the fallback, so the suite runs instead.
+# shellcheck disable=SC1091
+source "${ROOT:-$(git rev-parse --show-toplevel)}/tools/mutation_controls.sh"
+WORK="$(mc_workdir uart_rxocc)" || {
+    echo "ABORT -- no writable scratch base; TMPDIR=$TMPDIR was tried."
     echo "        This is the disk fault G0 exists for, hit before G0 could run."
     exit 1
 }

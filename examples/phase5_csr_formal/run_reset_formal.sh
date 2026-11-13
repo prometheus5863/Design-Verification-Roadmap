@@ -35,7 +35,11 @@
 set -u
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 HERE="$ROOT/examples/phase5_csr_formal"
-WORK="$(mktemp -d)"
+# Explicit base, 2026-11-13: a bare `mktemp -d` inherits TMPDIR invisibly
+# and this repository has now been broken by a full TMPDIR four times.
+# This runner does not source tools/mutation_controls.sh, so it takes the
+# private-template form rather than mc_workdir.
+WORK="$(mktemp -d /tmp/csr_reset_formal.XXXXXX)"
 PASS=0; FAIL=0
 say() { echo "$@"; }
 hdr() { echo; echo "=============================================================="; echo "$@"; echo "=============================================================="; }

@@ -77,7 +77,12 @@ RTL="$HERE/../../rtl/uart_controller.v"
 # both this spelling and the os.path.join('/tmp', ...) that caused the incident
 # the audit was written about.  Like phase6_uvm_crv_uart this harness has no
 # resumability reason for a stable path, so it gets a private one.
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/ral_mutants.XXXXXX")"
+# `${TMPDIR:-/tmp}` does not defend against the fault that has now hit
+# this repository four times: TMPDIR is SET and its filesystem is FULL, so
+# the `:-` default never applies.  On 2026-11-13 this runner reported
+# "NORESULT on unmodified RTL" and pointed at /baseline.log -- an honest
+# refusal that named the wrong cause.  mc_workdir probes by writing bytes.
+WORK="$(mc_workdir ral_mutants)" || exit 1
 trap 'rm -rf "$WORK"' EXIT
 
 declare -a NAMES DESCS TARGETS SEDS

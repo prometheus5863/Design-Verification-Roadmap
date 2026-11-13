@@ -44,7 +44,12 @@ for s in $(seq 1 "$N"); do
     # NOTE: vvp is a shell FUNCTION here, not a binary, so `timeout vvp ...`
     # fails with "No such file or directory" -- call the real binary.
     # (Logged 2026-09-17; still true.)
-    LOG="$(mktemp)"
+    # Explicit scratch base, 2026-11-13: a bare `mktemp` takes its base
+# from TMPDIR invisibly and sets this variable to the EMPTY STRING
+# when that filesystem is full, after which every redirect into it
+# goes to the filesystem root.  See tools/shared_scratch_audit.py
+# section 4 and tools/mutation_controls.sh mc_workdir.
+LOG="$(mktemp /tmp/baud_cov.XXXXXX)"
     timeout 170 "$IVL_BIN/vvp" -M "$IVL_LIB" "$SIM" "+seed=$s" "+budget=$BUDGET" 2>&1 | tee "$LOG"
     n_result="$(grep -c '^RESULT:' "$LOG")"
     if [ ! -s "$LOG" ]; then

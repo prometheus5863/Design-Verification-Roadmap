@@ -369,13 +369,94 @@ mc_require_sites() {
 #
 # The comment text is also the needle tools/test_neutrality_controls.py
 # greps for, so changing it breaks that selftest loudly rather than quietly.
+# THE THREE WAYS THIS CAN FAIL ARE NOW THREE EXIT CODES (2026-11-13).
+#
+# Until today every failure returned 1, and every caller reported that one
+# code with the prose "the neutral copy is byte-identical; it controls
+# nothing".  On 2026-11-13 runner G aborted with exactly that message for a
+# reason that had nothing to do with neutrality: its `mktemp -d` had failed on
+# a full disk, `WORK` was the empty string, `cp "$src" "$WORK/neutral.v"`
+# became `cp "$src" "/neutral.v"` and was refused, and the copy therefore did
+# not exist.  A correct abort with a false diagnosis is worse than a crash,
+# because the message names a mechanism the reader will then go and audit.
+#
+#   1  the copy IS byte-identical -- the real neutrality failure
+#   2  the source file does not exist
+#   3  the copy could not be WRITTEN (an unwritable or nonexistent directory,
+#      which in this repository has meant a failed `mktemp` four times now)
+#
+# Callers that only test `|| return 1` keep working and keep their old prose;
+# callers that distinguish can say which happened.  The helper also prints the
+# reason itself, so even an undiscriminating caller's transcript carries it.
 mc_neutral_copy () {
     local src="$1" dest="$2" tag="$3"
-    [ -f "$src" ] || return 1
-    cp "$src" "$dest" || return 1
+    if [ ! -f "$src" ]; then
+        mc__detail "mc_neutral_copy: source does not exist: ${src}"
+        return 2
+    fi
+    local destdir
+    destdir="$(dirname -- "$dest")"
+    if [ ! -d "$destdir" ] || [ ! -w "$destdir" ]; then
+        mc__detail "mc_neutral_copy: destination directory is not writable:" \
+                   "${destdir} -- this is a DISK OR PATH failure and NOT a" \
+                   "neutrality failure"
+        return 3
+    fi
+    if ! cp "$src" "$dest" 2>/dev/null; then
+        mc__detail "mc_neutral_copy: cp failed writing ${dest} -- a DISK OR" \
+                   "PATH failure, not a neutrality failure"
+        return 3
+    fi
     printf '\n// G2b cosmetic-edit control, injected by %s\n' "$tag" >> "$dest"
     if cmp -s "$src" "$dest"; then
+        mc__detail "mc_neutral_copy: the copy is byte-identical to the" \
+                   "source, so the arm would control nothing"
         return 1
     fi
     return 0
+}
+
+
+# ---------------------------------------------------------------------------
+#   mc_workdir PREFIX
+#
+# Prints the path of a fresh private scratch directory, or prints nothing and
+# returns non-zero.  IT NEVER PRINTS AN EMPTY STRING AND RETURNS SUCCESS,
+# which is the whole point: `WORK="$(mktemp -d)"` on a failing disk sets WORK
+# to "" and keeps going, after which every "$WORK/x" in the runner is an
+# absolute path at the filesystem root and every error that follows is
+# attributed to whatever last touched it.
+#
+# THE FOURTH ENCOUNTER WITH THE SAME DISK, AND THE FIRST THE WRAPPERS CANNOT
+# HELP WITH.  2026-11-07 added bin/iverilog and bin/vvp, which probe TMPDIR by
+# writing real bytes and fall back into the install; 2026-11-09 recorded the
+# symptom; 2026-11-12 found the repair's installed surface and the
+# repository's used surface were disjoint and moved all 20 invocation sites
+# onto the wrappers.  None of that reaches a runner's OWN `mktemp -d`, which
+# is not an iverilog call.  So the probe is the same and the place is new.
+#
+# The base is chosen by WRITING REAL BYTES, not by testing -w: a full
+# filesystem is writable by permission and fails on write, which is exactly
+# the case that has now occurred four times.
+mc_workdir () {
+    local prefix="${1:-mc_work}" base d probe
+    for base in "${TMPDIR:-}" /tmp "${IVERILOG_INSTALL_DIR:-/tmp/iverilog_install}/tmp" "${HOME:-}"; do
+        [ -n "$base" ] || continue
+        [ -d "$base" ] || continue
+        d="$(mktemp -d "${base}/${prefix}.XXXXXX" 2>/dev/null)" || continue
+        [ -n "$d" ] && [ -d "$d" ] || continue
+        probe="${d}/.mc_probe"
+        if dd if=/dev/zero of="$probe" bs=4096 count=1 >/dev/null 2>&1 \
+                && [ -s "$probe" ]; then
+            rm -f "$probe"
+            printf '%s\n' "$d"
+            return 0
+        fi
+        rm -rf "$d" 2>/dev/null
+    done
+    mc__detail "mc_workdir: no writable scratch base found (tried" \
+               "TMPDIR=${TMPDIR:-unset}, /tmp, the iverilog install and" \
+               "HOME); this is a DISK failure and nothing downstream of it" \
+               "means anything"
+    return 1
 }

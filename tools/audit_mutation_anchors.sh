@@ -41,7 +41,8 @@ ROOT="$(cd "$HERE/.." && pwd)"
 # sit where the failure enters, and this one was reading a variable the thing
 # under audit could write.
 AUDIT_RTL="$ROOT/rtl/uart_controller.v"
-AUDIT_WORK="$(mktemp -d)"
+# A bare `mktemp -d` takes its base from TMPDIR invisibly; see mc_workdir.
+AUDIT_WORK="$(mc_workdir audit_anchors)" || exit 1
 trap 'rm -rf "$AUDIT_WORK"' EXIT
 [ -f "$AUDIT_RTL" ] || { echo "audit: $AUDIT_RTL not found" >&2; exit 2; }
 

@@ -36,9 +36,20 @@ IVERILOG="${IVL_DIR}/bin/iverilog"
 VVP="${IVL_DIR}/bin/vvp"
 IVL_LIB="${IVL_DIR}/usr/lib/x86_64-linux-gnu/ivl"
 
-WORK="$(mktemp -d)"
+# WORK was `mktemp -d` with no template until 2026-11-13, i.e. whatever
+# TMPDIR happened to be.  On a full TMPDIR it set WORK to the empty string and
+# the run continued: `cp ... "${WORK}/golden.v"` became `cp ... /golden.v`,
+# was refused, and the G2b arm then aborted with "the neutral copy is
+# byte-identical; it controls nothing" -- a correct refusal with a false
+# diagnosis.  mc_workdir probes its base by writing real bytes and never
+# returns an empty path; the `cp` is checked, because an unchecked one is how
+# the first failure travelled four lines before being noticed.
+WORK="$(mc_workdir bfm_equiv)" || exit 1
 trap 'rm -rf "${WORK}"' EXIT
-cp "${ROOT}/bfm/uart_rx_pin_bfm.v" "${WORK}/golden.v"
+cp "${ROOT}/bfm/uart_rx_pin_bfm.v" "${WORK}/golden.v" || {
+    echo "FATAL: could not write the golden copy into ${WORK}" >&2
+    exit 1
+}
 
 report="${HERE}/mutation_test_report_$(date -u +%F).txt"
 {
