@@ -15457,3 +15457,358 @@ harnesses, named in §3 with what clears them.
    disk. The wrappers prevent the fault; only a probe inside the runner can
    explain it. So the item should end in "keep, and give the other three the
    same shape", not in deletion.
+
+---
+
+## 2026-11-13 — the mutant's premise expired and nothing could see it, two mutation suites were dark, and one of them blamed its own neutrality arm for a full disk
+
+**Commits before this entry:** 3 — the `M4` re-anchor with the premise census;
+the `mc_workdir`/`mc_neutral_copy` repair with the scratch-base census; the
+progress update.
+
+### 0. What was taken, and why it was taken as ranked
+
+11-12 ranked **RE-ANCHOR `M4` ON A CLASSIFIER PROPERTY** first and **RUN
+`test_neutrality_controls.py` TO COMPLETION UNDER THE CHUNKED INVOCATION**
+second. Both were taken as ranked, in that order, and the order earned its
+keep: the first was a contained repair with a prediction attached, and the
+second is what exposed the session's real finding. Had the order been reversed
+the disk fault would have eaten the session and `M4` would be red for a fifth
+day.
+
+### 1. The first item: a requirement that rested on the tree
+
+`M4` planted `_branch_extent(..., cap=24)` → `cap=0` and required check `B2`
+to go red, on the premise that *"every real one assigns several lines into its
+branch"*. True on 2026-11-08. False by 2026-11-12: six non-mention occurrences
+now have a one-line branch, so under the mutant the live tree still yields
+`VERDICT 1, CONTROL 2` and `B2` stays green. **A mutant whose requirement
+rests on a property of the TREE dies silently when the tree moves**, and the
+row sat red for four days with nothing wrong in the classifier.
+
+Two repairs, and the second is the general one.
+
+**(a) `M4` is re-anchored on the CLASSIFIER.** The mutant must now CHANGE THE
+SECTION-4 TALLY, which a wrong window does by construction whatever the tree
+contains:
+
+    live            MENTION 40  REQUIRES_READING 23  CONTROL 7  VERDICT 3
+    under the mutant MENTION 40  REQUIRES_READING 30  CONTROL 2  VERDICT 1
+
+A mutant that prints no tally at all is reported as a FAULT IN THE TEST, in
+the same shape as the existing `PLANTED` guard, rather than reading as a catch.
+
+**(b) Section 6, the mutant premise census.** Every mutant's premise is moved
+out of its prose into a declared relation in `PREMISES` and checked against the
+live tree. This is the carried item **NO INSTRUMENT IN THIS REPOSITORY READS A
+CHECK'S PROSE** met from the only sound side: not by teaching an instrument to
+read prose, but by **taking the facts out of the prose**.
+
+**The premises are relations, not magnitudes, and that is the lesson from
+`M4`.** "Every real occurrence has a multi-line branch" expired in four days.
+"MOST non-mention occurrences have a multi-line branch" survives adding a file
+and still fails if the fact stops holding. The live magnitudes are REPORTED
+alongside each relation rather than asserted inside it — the carried item
+**`S7` SHOULD REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE** getting
+an instance. `M2`'s premise names a particular file and a particular dated
+repair and is not a relation over these numbers: it is a NAMED entry on a
+worklist (`C2`), the discipline `B1` already applies to `REQUIRES_READING`.
+
+`verdict_bearing_census.py`: 13/14 → **21/21**.
+
+### 2. Scoring 11-12's prediction (1): right on the file, wrong on the kind
+
+It predicted re-anchoring `M4` would turn up a **second stale mutant premise in
+the same file**, and called "in the same file" the risky half.
+
+`M3`'s premise *was* stale. It carried *"21 of the 45 occurrences ... 88 per
+cent"* from 2026-11-08 until today, by which time the live tree said **40 of 73
+and 121 per cent**. But it was stale **in prose no instrument reads**, so `M3`
+went on passing. `M4` died because its premise was load-bearing; `M3`'s was
+merely wrong.
+
+The generalisation the prediction did not reach (`C5`): of the four mutants,
+**three** had premises that are statements about the tree, and **two of those
+three had drifted in four days**.
+
+### 3. The second item, and what running it actually found
+
+`test_neutrality_controls.py` now runs to completion under the chunked
+invocation: **34 checks over seven runners, 0 failing** — B 5/5, D 5/5, E+F
+9/9, G 5/5, H 5/5, I 5/5. Getting there is the session's real content.
+
+**Runner G failed its `N0` NEGATIVE CONTROL in 0.07 s.** `WORK="$(mktemp -d)"`
+on a TMPDIR whose filesystem was full: `mktemp` failed, the shell set `WORK` to
+the **empty string**, the run continued, `cp "$src" "$WORK/golden.v"` became
+`cp "$src" "/golden.v"` and was refused — and the G2b arm then aborted with
+
+> `ABORT -- the neutral copy is byte-identical; it controls nothing.`
+
+**A correct refusal with a false diagnosis**, naming a mechanism a reader would
+then go and audit. Runner H failed the same way and reported "NORESULT on
+unmodified RTL ... see `/baseline.log`". Both suites were dark and neither said
+why. `N0` exists precisely to say *the copy is broken, not the arm* — it did its
+job, and the runner's own message contradicted it.
+
+### 4. The fourth and fifth encounters with the same disk
+
+- **2026-11-07** added `bin/iverilog` and `bin/vvp`, which probe `TMPDIR` by
+  writing real bytes and fall back into the install.
+- **2026-11-09** recorded the symptom in `progress.md` in as many words.
+- **2026-11-12** measured that the repair's installed surface and the
+  repository's used surface were **disjoint**, and moved all 20 invocation
+  sites onto the wrappers.
+- **Today, fourth:** none of that reaches a runner's **own** `mktemp`, which is
+  not an iverilog call. Same probe, new surface.
+- **Today, fifth, in the same session:** the documented 2026-09-06 uvm-python
+  install recipe also failed on this filesystem — through **pip's cache
+  directory**, which `TMPDIR` does not move and which that note does not
+  mention. `PIP_CACHE_DIR` is the missing piece; with it, `cocotb<2.0`,
+  `python-constraint --use-pep517`, `cocotb-coverage`, `cocotb-bus` and `regex`
+  install and `uvm-python` imports, which is what let H and I be measured at
+  all.
+
+Same disk, three surfaces, five sessions.
+
+### 5. The repairs
+
+- **`mc_workdir`** chooses its base by **writing real bytes** — a full
+  filesystem is writable by permission and fails on write, which is the case
+  that has now occurred five times — falls back `TMPDIR` → `/tmp` → the
+  iverilog install → `HOME`, and **never prints an empty path and returns
+  success**. That last clause is the whole defect: the empty string is what
+  turned a disk fault into a neutrality verdict.
+- **`mc_neutral_copy`'s three failure modes become three exit codes**: `1`
+  byte-identical (the real neutrality failure), `2` source missing, `3` the copy
+  could not be WRITTEN. It prints which, so even an undiscriminating caller's
+  transcript carries the right cause; callers testing `|| return 1` are
+  unaffected.
+- **Eleven creation sites repaired** — five onto `mc_workdir`, six onto an
+  explicit base because they do not source `mutation_controls.sh`.
+  `phase4_ral`'s `${TMPDIR:-/tmp}` is among them: **the `:-` default never
+  applies when `TMPDIR` is SET and its filesystem is FULL.**
+  `phase6_rx_occupancy_probe` was the only site that handled the failure
+  correctly — it aborted and named the disk — and that was still a dark suite,
+  so it keeps the naming and gains the fallback.
+
+**`phase6_bfm_equivalence`'s mutation suite ran to completion for the first
+time: 8 mutants, 7 detected, 0 escaped, 1 void.** The void is
+`stop_bit_delay_dropped`, whose sed matched nothing; reported as void rather
+than counted as a detection, which is the standing rule.
+
+### 6. The instrument that would have caught the class
+
+`shared_scratch_audit.py` asks whether a scratch path can **collide**, and
+finds its population by matching a `/tmp` or `$TMPDIR` literal. So
+
+    WORK="$(mktemp -d)"
+
+is invisible to it: there is no literal on the line. It is `PRIVATE`,
+uncollidable, and it is the line that broke two suites.
+
+Section 4 is a second census over the same lines, asking **where each creation
+site's base comes from** — `BASE_HELPER`, `BASE_PINNED`, `BASE_EXPLICIT`,
+`BASE_TMPDIR_GUARDED`, `BASE_TMPDIR_BARE`, `BASE_INHERITED_SH`,
+`BASE_INHERITED_PY` — with a plant per class and a gate at **zero** on the two
+dangerous ones. `S-b3` **demonstrates** the blind spot instead of asserting it:
+on the bare line the collision census returns no rows at all while the base
+census returns `BASE_INHERITED_SH`. Same shape as 11-12's finding that a census
+matching a concatenated string cannot see a concatenation.
+
+**It found a population five times the one the repair had addressed, and
+splitting it is the finding.** 33 inherited sites against the six that were
+known:
+
+- **20 are Python** `tempfile.mkdtemp()` / `TemporaryDirectory()`. They inherit
+  `TMPDIR` too, and they **raise** on a failed creation — the run stops at the
+  site with a traceback naming the directory. Loud and wrong is a different
+  defect from silent and wrong, so the gate is the shell class and the Python
+  class is a named worklist (`S-b2b`).
+- **Six were bare `mktemp` FILE temporaries with no `-d`**, in three runners
+  the repair had not looked at. Repaired.
+
+### 7. `R1` is a third red harness, and it was red before today
+
+Measured at HEAD **before any of this session's edits**: 35 `SHARED`, 15
+controls passing, 1 failing. The 11-12 red set named two.
+
+Most of `R1`'s population is the **MENTION-not-USE** defect the sibling
+repository fixed on 11-08: a path printed in a diagnostic message counted as a
+path the script writes to. A narrow `MENTION` class is added — `echo`, `printf`
+and this repository's `mc__detail` **only**, and explicitly **not** `grep`,
+`cat`, `df` or any redirect, because reading a stale fixed path in a shared
+namespace **is** the 2026-10-18 incident. That moves 5 rows out of `SHARED` and
+leaves **32 as a named worklist**. `R1` stays red on those 32, which is the
+right signal, and they are printed file by file.
+
+### 8. Three self-caught errors
+
+1. **The base census censused itself.** Its plants are creation lines by
+   construction and its prose quotes them, so the first full run reported 8
+   `BASE_INHERITED_SH` and 2 `BASE_TMPDIR_BARE` rows **inside it** — its own
+   controls, reported as findings about the repository. The sibling repository
+   hit the identical thing on the same day and generalised a `SELF`-only
+   exclusion into a declared class; `CENSUS_PLANTING_FILES` is the
+   shell-and-python form, with `S-b5` asserting it.
+2. **The first `MENTION` rule swallowed a real write.** It matched any line
+   beginning with `printf`, which included
+   `printf '%s' "$OUT" > "/tmp/cdc_mode.txt"` — the 2026-10-18 write this
+   module exists for. Caught by the plant `p_redirect_is_use`, **written before
+   the rule**. Redirects and pipes now disqualify the message form.
+3. **`tree_stats()` planted `M1`'s mutation anchor a second time.** Measuring
+   `M1`'s premise meant writing out the wide def-line regex, which put the
+   anchor in the source twice and would have made the `PLANTED` guard report
+   `M1` as a FAULT IN THE TEST instead of a control. It now uses the module's
+   own `FUNC_RE` and builds the narrow form by concatenation — the opposite of
+   11-12's finding that a census matching a concatenated string cannot see a
+   concatenation: there the concatenation hid a real site from an instrument,
+   here it keeps a measurement out of an instrument's own population.
+
+### 9. Count
+
+`verdict_bearing_census.py` 14 → 21 checks, 0 failing;
+`shared_scratch_audit.py` 16 → 36 controls, 1 failing (`R1`, pre-existing);
+`test_neutrality_controls.py` 34/34 over six chunks;
+`test_mutation_controls.sh` 12/12; `audit_mutation_anchors.sh` 0 failing;
+`phase6_bfm_equivalence` 8 mutants 7/0/1 for the first time;
+`phase4_ral` cocotb baseline PASS, 8/8 targeted RAL checks.
+Both ranked items closed, three defects repaired, one instrument given a second
+census, three self-caught errors, a third red harness named, and the red set
+down from two to one.
+
+**Not yet covered (candidates for future runs):**
+
+- **ADJUDICATE `R1`'s 32 SHARED ROWS** — created today, **ranked first**, and
+  the only item that stands between this repository and a green
+  `shared_scratch_audit.py`. The population is now measured and printed file by
+  file. Expect three kinds: deliberate probe writes in `setup_iverilog.sh` that
+  want the `scratch-shared-exempt` marker, genuine shared reads in
+  `phase6_cdc_basics` that are the 2026-10-18 shape and want repairing, and
+  rows the `MENTION` class should cover but deliberately does not.
+- **THE EXEMPTION MARKER ONLY WORKS ON A SESSION-SCOPED PATH** — created today,
+  **ranked second**, and found by trying to use it. `classify_file` consults
+  `scratch-shared-exempt` only inside the `SCOPING` branch, so a stated reason
+  on an unscoped line is read and then ignored. Two markers were written on
+  that assumption today and reverted when they turned out inert. Either the
+  marker should work everywhere a reason is legitimate, or it should be an
+  error to write one where it cannot apply — a decision before a task.
+- **THE TWENTY PYTHON `tempfile` SITES** — created today by `S-b2b`. Named, not
+  gated, because `tempfile` raises. The item is to decide whether a traceback
+  that names the directory is a good enough diagnosis, which is a lower bar
+  than the shell class had to meet, and to say so in one place rather than per
+  file.
+- **`mc_workdir` HAS NO PLANTED CONTROL** — created today, and the most
+  uncomfortable item on this list. It is a fallback chain with four arms and
+  this session exercised exactly one of them (the `/tmp` arm, because `TMPDIR`
+  was full). The other three are unexercised code in the middle of every
+  mutation runner. The shape to copy is `tools/toolchain_preflight.sh`, which
+  probes with a deliberately unwritable base.
+- **TEACH THE SCRATCH-BASE CENSUS ABOUT `mktemp -u`** — created today.
+  `phase6_baud_error_coverage/run_baud_cov.sh:24` uses `mktemp -u` to get a
+  NAME without creating anything, which is a different hazard again (a
+  predictable name in a shared namespace) and today's classifier scores it
+  `BASE_EXPLICIT` on the strength of its template.
+- **A CENSUS OF EVERY MUTANT WHOSE PREMISE IS ABOUT THE TREE** — carried from
+  11-12 where it was ranked third, and **half discharged today**: Section 6 is
+  that census for one file. The other mutation harnesses have the same
+  exposure and none of them has a `PREMISES` table.
+- **A FULL `run_all_harnesses.sh` RUN, CHUNKED, WITH THE NEW ENTRIES** —
+  carried from 11-12, **untouched**, and 11-12's prediction (2) about it is now
+  **partly scored from the side door**: it said a full run would put the red
+  set at THREE, not two. The count is right — `shared_scratch_audit.py` is the
+  third — and the reason is wrong: the prediction expected a budget on one of
+  the twelve runners whose `IVL_BIN` moved, and the third red was a harness
+  that had been red for days with nobody counting it.
+- **THE DECISION ABOUT THE OTHER `TMPDIR` PROBES** — carried from 11-12 with
+  its prediction (3), and today settles the prediction's reasoning in its
+  favour without the decision being taken: the probes that *name the disk in
+  the runner's own report* are the ones that made today's diagnosis possible,
+  and the sites that merely failed were the ones that mis-attributed. "Keep,
+  and give the others the same shape" is now the evidenced answer.
+- **MAKE THE `requires` COLUMN HONEST ABOUT SELF-SOURCING RUNNERS** — carried
+  from 11-12.
+- **GIVE `R4` A REAL INSTANCE VIA THE ASYNC FIFO** — carried from 11-10 with
+  its own prediction attached. Untouched.
+- **RESET-DOMAIN CROSSING** — carried from 11-10.
+- **THE `[name-only]` PATH**, **THE `S7` AUDIT RE-RUN**, **A CHECK THAT AN
+  ABSORPTION WAS RECORDED AND NOT ONLY PROPOSED** — all carried, all blocked on
+  nothing. `S7` SHOULD REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE
+  got an instance today in Section 6 and is otherwise carried.
+- **A CHECK THAT OBSERVES A KNOB'S EFFECT, FOR EVERY KNOB** — carried from
+  11-10, **untouched for a third session**, and 11-10's prediction (2) about it
+  stays unscored in consequence.
+- **NO INSTRUMENT IN THIS REPOSITORY READS A CHECK'S PROSE** — carried from
+  11-10, and today is its first worked instance: the answer was to move the
+  facts out of the prose, not to read it.
+- **THE ODD START-BIT PHASES**, **A DIVISOR SWEEP FOR T6**, **REGISTER THE NEW
+  TRANSCRIPTS** (today adds three), **EXTEND `S6` TO EVERY ITEM THAT ASSERTS
+  FILE CONTENT** — all carried.
+- **A STRUCTURAL CENSUS OF THE OTHER LINT CLASSES** — carried from 11-11.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE**, **MORE SEEDS ON
+  THE CLOSURE DISTRIBUTION**, **SETTLE WHETHER THE CRV SPEEDUP MOVED**, **THE
+  40 COMMENT-ONLY EDGES**, **AUDIT EVERY "WHAT THIS DOES NOT CHANGE"
+  PARAGRAPH**, **THE F7 CROSS NEEDS `0x40` DRAWN** — all carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, and note it is one of the twenty Python `tempfile` sites found
+  today, so two items now point at the same file.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** — carried
+  from 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-eight sessions.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today is the strongest argument it has ever had for
+  the second session running: the toolchain was present, the ENVIRONMENT was
+  broken, and two suites reported content-level verdicts about it.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — carried from 10-11.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT MAKES
+  S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); a diversity
+  target; per-property coverage of the Phase 4 UVM environment (09-23); a less
+  greedy steering policy (09-24); widen the coverage model (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants
+  not yet attempted; a property needing a strengthening invariant; the SVA
+  sequence layer (09-20); code coverage measurement (09-18); Phase 6 regression
+  infra and coverage merge.
+
+**Retired from the list this session:**
+
+- **RETIRED:** RE-ANCHOR `M4` ON A CLASSIFIER PROPERTY — created 2026-11-12,
+  ranked first, closed in one session, and it generalised on the way: the
+  repair is not one mutant's anchor but the FORM every mutant's premise takes.
+- **RETIRED:** RUN `test_neutrality_controls.py` TO COMPLETION UNDER THE
+  CHUNKED INVOCATION — created 2026-11-12, ranked second, closed. It needed no
+  budget work at all; what it needed was two runners that could start.
+- **RETIRED:** THE OTHER THREE FILES THAT PROBE `TMPDIR` THEMSELVES — created
+  2026-11-12, retired **as the wrong item**. It proposed deciding which
+  hand-rolled probes were still earning their keep, on the premise that the
+  wrappers now handled the condition centrally. They do not: a runner's own
+  `mktemp` is not an iverilog call. The item's successor is in the standing
+  list above as the decision about the probes, with today's evidence attached.
+
+**Predictions for the next session**, so this entry can be scored:
+
+1. **Adjudicating `R1`'s 32 rows will find that `phase6_cdc_basics` contains a
+   real instance of the 2026-10-18 incident — a stale shared file read as this
+   run's output — and that it is the only one.** `run_cdc_sim.sh` writes
+   `/tmp/cdc_mode$SK.txt` and then greps it back on three later lines, which is
+   the exact write-then-read-a-fixed-path shape, and nothing scopes the name.
+   The risky half is "the only one": the alternative is that
+   `tools/s7_classifier_mutation_test.py`'s `/tmp/s7mut%d % getuid()` is a
+   second, which is uid-scoped and therefore defensible but has no stated
+   reason.
+2. **Giving `mc_workdir` a planted control will show at least one of its three
+   unexercised arms does not work.** Four arms, one exercised. The prediction
+   names the HOME arm specifically: it is last, it is the only one that is not
+   a temp namespace, and nothing in this repository has ever written scratch
+   there — so it is the arm most likely to have been written from reasoning
+   rather than from a run.
+3. **The `tempfile` worklist will turn out to be smaller than twenty when the
+   `mktemp -u` item is also done.** Today's classifier is coarse in two
+   directions at once: it scores `mktemp -u` as `BASE_EXPLICIT` on the strength
+   of a template that creates nothing, and it may be counting `TemporaryDirectory()`
+   uses inside `with` blocks that never touch a path a caller supplied. The
+   prediction is that a sharper classifier moves rows OUT of the worklist
+   rather than into it — which, if it holds, means today's "five times the
+   expected population" was partly the instrument's coarseness and not only the
+   repository's exposure.
