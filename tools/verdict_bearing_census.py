@@ -411,6 +411,129 @@ def classify_cmp(path):
 
 
 # ---------------------------------------------------------------------------
+# THE MUTANT PREMISE CENSUS (2026-11-13)
+#
+# Created as the ranked-first item of the 2026-11-12 entry, which was created
+# by `M4` going stale.  `M4`'s requirement was that the mutant turn check `B2`
+# red, on the stated premise that "every real one assigns several lines into
+# its branch".  That premise was true on 2026-11-08 and false four days later:
+# six non-mention occurrences now have a one-line branch, so under the mutant
+# the live tree still yields a non-empty VERDICT and CONTROL class and `B2`
+# stays green.  A mutant whose requirement rests on a property of the TREE
+# dies silently when the tree moves.
+#
+# TWO REPAIRS, AND THE SECOND IS THE GENERAL ONE.
+#
+#   (a) `M4` is re-anchored on a property of the CLASSIFIER instead: the
+#       mutant must CHANGE THE SECTION-4 TALLY.  That is what a wrong window
+#       does by definition, whatever the tree happens to contain, and it
+#       cannot be satisfied by a tree that has drifted.
+#   (b) Every mutant's premise is moved OUT OF ITS PROSE and into a declared
+#       relation that is checked against the live tree.  This is the standing
+#       item NO INSTRUMENT IN THIS REPOSITORY READS A CHECK'S PROSE, met from
+#       the only sound side: not by teaching an instrument to read prose, but
+#       by taking the facts out of the prose.
+#
+# THE PREMISES ARE RELATIONS, NOT MAGNITUDES, AND THAT IS THE LESSON FROM
+# `M4`.  "Every real occurrence has a multi-line branch" is a magnitude-like
+# claim about a population and it expired.  "Most non-mention occurrences
+# have a multi-line branch" survives adding a file.  The live magnitudes are
+# REPORTED alongside each relation rather than asserted, which is the
+# repository's own carried item S7 SHOULD REPORT THE PREDICTED COUNT
+# ALONGSIDE THE MEASURED ONE getting an instance here.
+
+
+def tree_stats():
+    """Every number any mutant's premise depends on, measured once."""
+    out = subprocess.run(["git", "ls-files", "*.sh", "*.py"], cwd=REPO,
+                         capture_output=True, text=True).stdout
+    files = sorted(p for p in out.split("\n") if p.strip())
+    tally, total = {}, 0
+    multi, single = 0, 0
+    for p in files:
+        rows = classify_cmp(p)
+        for _n, k, _t in rows:
+            total += 1
+            tally[k] = tally.get(k, 0) + 1
+        if not rows:
+            continue
+        lines = open(os.path.join(REPO, p), encoding="utf-8",
+                     errors="replace").read().split("\n")
+        for i, line in enumerate(lines):
+            if "cmp -s" not in line:
+                continue
+            if _is_mention(line, line.index("cmp -s")):
+                continue
+            if len(_branch_extent(lines, i)) > 1:
+                multi += 1
+            else:
+                single += 1
+    # THE WIDE REGEX IS THE MODULE'S OWN `FUNC_RE`, NOT A COPY OF IT, AND THE
+    # NARROW ONE IS BUILT BY CONCATENATION.  Writing either literal out here
+    # would put `M1`'s mutation anchor in the source a second time, and the
+    # PLANTED guard would correctly report M1 as a FAULT IN THE TEST rather
+    # than as a control -- this module's own "a module must not plant the
+    # pattern it censuses" hazard, arriving in the measurement of a premise.
+    # Caught by running it.  The concatenation is deliberate here and is the
+    # opposite of the 2026-11-12 finding that a census matching a
+    # concatenated string cannot see a concatenation: there the concatenation
+    # hid a real site from an instrument, here it keeps a measurement out of
+    # an instrument's own population.
+    wide = FUNC_RE
+    narrow = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)"
+                        + r"\s*\(\)\s*\{\s*$")
+    trailing = 0
+    for p in tracked_shell_runners():
+        lines = open(os.path.join(REPO, p), encoding="utf-8",
+                     errors="replace").read().split("\n")
+        for l in lines:
+            st = l.strip()
+            if wide.match(st) and not narrow.match(st):
+                trailing += 1
+                break
+    return {"tally": tally, "total": total, "multi_branch": multi,
+            "single_branch": single, "trailing_comment_runners": trailing,
+            "runners": len(tracked_shell_runners())}
+
+
+# id -> (the premise as a RELATION, a function of tree_stats() -> bool,
+#        a function of tree_stats() -> the live magnitudes as a string)
+#
+# A premise of None is a mutant whose premise is not reducible to a relation
+# over these numbers.  Those are COUNTED and NAMED by check C2 rather than
+# left silent -- the same worklist discipline as REQUIRES_READING in B1.
+PREMISES = {
+    "M1": ("at least one tracked runner writes its adjudicator def-line with "
+           "a trailing comment, so the narrow regex would misclassify a real "
+           "runner",
+           lambda s: s["trailing_comment_runners"] >= 1,
+           lambda s: "%d of %d tracked runners do"
+                     % (s["trailing_comment_runners"], s["runners"])),
+    "M2": (None, None,
+           lambda s: "its premise names a particular file and a particular "
+                     "dated repair, which is not a relation over these "
+                     "numbers"),
+    "M3": ("prose occurrences are the LARGEST single class, so counting them "
+           "as uses inflates the population of real guards rather than "
+           "nudging it",
+           lambda s: (s["tally"].get("MENTION", 0)
+                      == max(s["tally"].values())),
+           lambda s: "MENTION %d of %d total; %d non-mention, so counting "
+                     "prose inflates the real population by %.0f per cent"
+                     % (s["tally"].get("MENTION", 0), s["total"],
+                        s["total"] - s["tally"].get("MENTION", 0),
+                        100.0 * s["tally"].get("MENTION", 0)
+                        / max(1, s["total"] - s["tally"].get("MENTION", 0)))),
+    "M4": ("MOST non-mention occurrences have a multi-line branch -- stated "
+           "as a majority and not as 'every', which is the form that expired",
+           lambda s: s["multi_branch"] > s["single_branch"],
+           lambda s: "%d multi-line against %d one-line; the one-line ones "
+                     "are why the old 'every' premise failed"
+                     % (s["multi_branch"], s["single_branch"])),
+}
+
+
+# ---------------------------------------------------------------------------
 # Planted files, whose answers are known BY CONSTRUCTION
 # ---------------------------------------------------------------------------
 PLANT_EXPLICIT = '''#!/bin/sh
@@ -689,16 +812,25 @@ def main():
              "    head = line[:pos]",
              "    return False\n    head = line[:pos]",
              "B1",
-             "21 of the 45 occurrences are prose -- comments explaining why a "
-             "`cmp -s` guard was REPLACED -- and counting them inflates the "
-             "population by 88 per cent"),
+             "prose occurrences -- comments explaining why a `cmp -s` guard "
+             "was REPLACED -- are the largest single class, and counting "
+             "them as uses reports a population that does not exist.  THE "
+             "NUMBERS ARE NOT WRITTEN HERE: this row carried '21 of the 45 "
+             "occurrences ... 88 per cent' from 2026-11-08 until 2026-11-13, "
+             "by which time the live tree said 39 of 72 and 118 per cent.  "
+             "The premise now lives in PREMISES['M3'] and is checked"),
             ("M4 the branch window shrinks back to one line",
              "def _branch_extent(lines, n, cap=24):",
              "def _branch_extent(lines, n, cap=0):",
-             "B2",
-             "the second wrong window, under which no `cmp -s` on the live "
-             "tree is verdict-bearing because every real one assigns several "
-             "lines into its branch"),
+             "TALLY",
+             "the second wrong window.  RE-ANCHORED 2026-11-13: this row "
+             "required `B2` to go red on the premise that every real "
+             "occurrence assigns several lines into its branch -- true on "
+             "2026-11-08, false by 2026-11-12, when six one-line branches "
+             "left `B2` green under the mutant and the row sat red for four "
+             "days.  The requirement is now a property of the CLASSIFIER: "
+             "the mutant must CHANGE THE SECTION-4 TALLY, which a wrong "
+             "window does by construction whatever the tree contains"),
         ]
         for label, old, new, want_red, why in mutants:
             if src.count(old) != 1:
@@ -718,13 +850,97 @@ def main():
                                    capture_output=True, text=True, env=env,
                                    timeout=300)
                 reds = re.findall(r"^  \[FAIL\]\s+(\S+)", r.stdout, re.M)
-                caught = want_red in reds
-                check(label, caught,
-                      "%s.\n        must turn %s red; red checks under the "
-                      "mutant: %s" % (why, want_red, reds or "NONE"))
+                if want_red == "TALLY":
+                    # A CLASSIFIER PROPERTY, NOT A TREE PROPERTY.  The
+                    # Section-4 tally lines are `    CLASS  n` and are the
+                    # only lines of that shape; the per-occurrence rows carry
+                    # a line number and so cannot be confused with them.
+                    mt = dict((k, int(v)) for k, v in re.findall(
+                        r"^    ([A-Z_]+)\s+(\d+)\s*$", r.stdout, re.M))
+                    if not mt:
+                        check(label + " -- PLANTED", False,
+                              "the mutant printed no Section-4 tally, so the "
+                              "requirement could not be evaluated: this row "
+                              "is a FAULT IN THE TEST and not a passing "
+                              "control.  stderr: %s"
+                              % (r.stderr.strip()[-300:] or "(none)"))
+                        continue
+                    caught = mt != tally
+                    check(label, caught,
+                          "%s.\n        must CHANGE the tally; live %r, "
+                          "under the mutant %r" % (why, tally, mt))
+                else:
+                    caught = want_red in reds
+                    check(label, caught,
+                          "%s.\n        must turn %s red; red checks under "
+                          "the mutant: %s" % (why, want_red, reds or "NONE"))
             finally:
                 if os.path.exists(mp):
                     os.remove(mp)
+
+    # -- Section 6: the mutant premise census -------------------------
+    #
+    # INSIDE THE NON-MUTANT GUARD ON PURPOSE.  Under a mutant these relations
+    # are statements about a deliberately broken classifier -- M4's mutant
+    # drives multi_branch to zero -- so running them there would add reds that
+    # no mutant row is asking about and would make every mutant run re-walk
+    # the tree.  The premises are properties of the LIVE tree and are checked
+    # once, here.
+    if os.environ.get("VBC_MUTANT") != "1":
+        print("\n" + "-" * 74)
+        print("SECTION 6 -- THE MUTANT PREMISE CENSUS.  A mutant whose "
+              "premise is")
+        print("a property of the TREE dies when the tree moves, and nothing "
+              "says so")
+        print("-" * 74)
+        st = tree_stats()
+        unmeasured = []
+        for mid in sorted(PREMISES):
+            prose, rel, report = PREMISES[mid]
+            if prose is None:
+                unmeasured.append(mid)
+                print("  %s  [not a relation] %s" % (mid, report(st)))
+                continue
+            check("C1.%s the premise of %s still holds on the live tree: %s"
+                  % (mid, mid, prose), bool(rel(st)), report(st))
+        check("C2 every mutant's premise is either a CHECKED RELATION or a "
+              "NAMED entry on this worklist -- %d of %d are not relations "
+              "over these numbers, and they are named rather than silent"
+              % (len(unmeasured), len(PREMISES)),
+              len(unmeasured) + len([m for m in PREMISES
+                                     if PREMISES[m][0] is not None])
+              == len(PREMISES),
+              "not reducible: %s" % (", ".join(unmeasured) or "none"))
+        check("C3 the live tally is REPORTED alongside every premise rather "
+              "than asserted inside one, which is the carried item S7 SHOULD "
+              "REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE getting "
+              "an instance",
+              st["total"] == sum(st["tally"].values())
+              and st["multi_branch"] + st["single_branch"]
+              == st["total"] - st["tally"].get("MENTION", 0),
+              "total %d = %r; non-mention %d = %d multi + %d one-line"
+              % (st["total"], st["tally"],
+                 st["total"] - st["tally"].get("MENTION", 0),
+                 st["multi_branch"], st["single_branch"]))
+        check("C4 SCORING THE 2026-11-12 PREDICTION (1).  It said re-anchoring "
+              "M4 would turn up a SECOND stale mutant premise in the same "
+              "file, and that the risky half was 'in the same file'.  RIGHT "
+              "ON THE FILE AND WRONG ON THE KIND: M3's premise was stale -- "
+              "it said 21 of 45 occurrences and 88 per cent where the live "
+              "tree says %d of %d and %.0f per cent -- but it was stale in "
+              "PROSE NO INSTRUMENT READS, so M3 went on passing.  M4 died "
+              "because its premise was load-bearing; M3's was merely wrong"
+              % (st["tally"].get("MENTION", 0), st["total"],
+                 100.0 * st["tally"].get("MENTION", 0)
+                 / max(1, st["total"] - st["tally"].get("MENTION", 0))),
+              st["tally"].get("MENTION", 0) != 21 or st["total"] != 45)
+        check("C5 and the generalisation the prediction did not reach: of the "
+              "four mutants, THREE had premises that are statements about the "
+              "tree and only one is a statement about a particular file.  "
+              "Two of the three had drifted in four days.  The repair is the "
+              "form of the premise -- a relation rather than a magnitude -- "
+              "and M4 is now anchored on the classifier instead",
+              len([m for m in PREMISES if PREMISES[m][0] is not None]) == 3)
 
     print("\n" + "=" * 74)
     print("SUMMARY")
