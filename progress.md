@@ -3961,3 +3961,69 @@ literal form. Phase 4 UVM remains in progress.
   PASS at 49/49; `tools/harness_file_closure_audit.py` 8 controls, 0 failed.**
   Red: `verdict_bearing_census.py` (13/14) and `test_neutrality_controls.py`
   (budget).
+
+## 2026-11-13 — the mutant whose premise expired, and the disk that was still winning on a surface nothing had looked at
+
+**Checklist movement.** No Phase 4 or Phase 6 *content* box closes. Both ranked
+items close. The red set goes from two to one — and a third red harness is
+found that the red set never named. Phase 4 UVM remains in progress.
+
+- [x] **`M4` is re-anchored on a property of the CLASSIFIER, and every mutant's
+  premise is moved out of its prose.** `M4` required the mutant to turn `B2`
+  red on the stated premise that "every real one assigns several lines into its
+  branch" — true on 11-08, false four days later, and the row sat red while
+  nothing was wrong with the classifier. The requirement is now that the mutant
+  CHANGE THE SECTION-4 TALLY, which a wrong window does by construction
+  whatever the tree contains. New Section 6 checks each mutant's premise as a
+  declared RELATION against the live tree, with the magnitudes reported
+  alongside rather than asserted inside: `verdict_bearing_census.py` 13/14 →
+  **21/21**.
+
+- [x] **`test_neutrality_controls.py` runs to completion, chunked: 34 checks
+  over seven runners, 0 failing.** B 5/5, D 5/5, E+F 9/9, G 5/5, H 5/5, I 5/5.
+  Transcript committed as `tools/neutrality_controls_chunked_2026-11-13.txt`.
+
+- [x] **TWO MUTATION SUITES WERE DARK, AND ONE OF THEM BLAMED ITS OWN
+  NEUTRALITY ARM.** `WORK="$(mktemp -d)"` on a full TMPDIR sets `WORK` to the
+  EMPTY STRING and the run continues; `phase6_bfm_equivalence` then aborted
+  with "the neutral copy is byte-identical; it controls nothing", and
+  `phase4_ral` with "NORESULT on unmodified RTL ... see /baseline.log". Correct
+  refusals with false diagnoses. `mc_workdir` probes its base by writing real
+  bytes and never returns an empty path; `mc_neutral_copy`'s three failure
+  modes are now three exit codes. Eleven creation sites repaired.
+  **`phase6_bfm_equivalence`'s mutation suite ran to completion for the first
+  time: 8 mutants, 7 detected, 0 escaped, 1 void.**
+
+- [x] **The scratch-base census, and it found a population five times the one
+  the repair had addressed.** `shared_scratch_audit.py` asks whether a path can
+  COLLIDE and finds its population by matching a `/tmp` literal, so a bare
+  `mktemp -d` is invisible to it. Section 4 classifies every creation site by
+  where its BASE comes from, with a plant per class and a gate at zero on the
+  two dangerous ones. 33 inherited sites against the six that were known: 20
+  are Python `tempfile`, which RAISES rather than returning the empty string
+  and is therefore a named worklist and not a gate; six more were bare `mktemp`
+  FILE temporaries with no `-d`, in three runners nobody had looked at.
+
+- **The fifth encounter with the same disk, in the same session.** The
+  documented 2026-09-06 uvm-python install recipe also fails on this
+  filesystem, through pip's **cache** directory — which `TMPDIR` does not move
+  and which that note does not mention. `PIP_CACHE_DIR` is the missing piece,
+  and with it `cocotb<2.0`, `python-constraint --use-pep517`,
+  `cocotb-coverage`, `cocotb-bus` and `regex` install and `uvm-python` imports.
+
+- **`R1` is a THIRD red harness and was red before today.** Measured at HEAD
+  before any of this session's edits: 35 SHARED, 15 controls passing, 1
+  failing. The 11-12 red set named two. Most of its population is the
+  MENTION-not-USE defect the sibling repository fixed on 11-08 — a path printed
+  in a diagnostic message counted as a path the script writes to. A narrow
+  MENTION class (echo/printf/`mc__detail` only; **not** grep, cat, df or any
+  redirect, because reading a stale fixed path IS the 2026-10-18 incident)
+  moves 5 rows out of SHARED and leaves **32 as a named worklist**.
+
+- **`tools/verdict_bearing_census.py` 21/21; `tools/test_mutation_controls.sh`
+  12/12; `tools/audit_mutation_anchors.sh` 0 failing;
+  `tools/test_neutrality_controls.py` 34/34 across six chunks;
+  `phase4_ral` cocotb baseline PASS with 8/8 targeted RAL checks;
+  `tools/shared_scratch_audit.py` 35 controls passing, 1 failing (`R1`,
+  pre-existing).** Red: `shared_scratch_audit.py`'s `R1` only. The three phase5
+  formal runners were converted but not run — no formal toolchain here.
