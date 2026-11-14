@@ -93,23 +93,23 @@ SECTION 4 -- every `cmp -s`, which absorbs the item carried since
     MENTION          line 326   print('    NOT SCORED.  (With a `cmp -s` guard this row would have bee
   examples/phase4_ral/run_mutation_tests.sh
     MENTION          line 35    # was `cmp -s mutant RTL`, which catches a sed that matched NOTHING an
-    MENTION          line 116   # part of the defect, and `cmp -s` -- the guard this script used until
-    MENTION          line 214   # Controls A, B and C.  Replaces the old `cmp -s` guard, which was
+    MENTION          line 121   # part of the defect, and `cmp -s` -- the guard this script used until
+    MENTION          line 219   # Controls A, B and C.  Replaces the old `cmp -s` guard, which was
   examples/phase5_csr_formal/run_csr_formal.sh
-    REQUIRES_READING line 127   if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
-    REQUIRES_READING line 174   if cmp -s "$n5" "$ROOT/rtl/uart_controller.v"; then
+    REQUIRES_READING line 128   if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
+    REQUIRES_READING line 175   if cmp -s "$n5" "$ROOT/rtl/uart_controller.v"; then
   examples/phase5_csr_formal/run_reset_formal.sh
-    REQUIRES_READING line 110   if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_controller.v"; then
-    VERDICT          line 142   if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_controller.v"; then
+    REQUIRES_READING line 114   if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_controller.v"; then
+    VERDICT          line 146   if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_controller.v"; then
   examples/phase5_formal_uart/run_formal.sh
-    REQUIRES_READING line 98    if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
+    REQUIRES_READING line 99    if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
   examples/phase6_baud_error_coverage/run_mutation_tests.sh
     REQUIRES_READING line 155   if cmp -s rtl/uart_controller.v "$SRC"; then
   examples/phase6_bfm_equivalence/run_mutation_tests.sh
-    MENTION          line 62    # CONVERTED 2026-10-15 from the bare `cmp -s` guard to the declared-si
-    MENTION          line 70    #                     the sed still matches SOMETHING -- which `cmp -s
-    MENTION          line 73    #   cmp -s            asks of the RESULT: did anything change at all? 
-    REQUIRES_READING line 101   if cmp -s "${WORK}/golden.v" "${WORK}/mut.v"; then
+    MENTION          line 73    # CONVERTED 2026-10-15 from the bare `cmp -s` guard to the declared-si
+    MENTION          line 81    #                     the sed still matches SOMETHING -- which `cmp -s
+    MENTION          line 84    #   cmp -s            asks of the RESULT: did anything change at all? 
+    REQUIRES_READING line 112   if cmp -s "${WORK}/golden.v" "${WORK}/mut.v"; then
   examples/phase6_crv_uart/run_equal_budget_control.sh
     REQUIRES_READING line 95    if cmp -s "$RTL" "$WORK/t3.v"; then
   examples/phase6_crv_uart/run_mutation_tests.sh
@@ -129,8 +129,8 @@ SECTION 4 -- every `cmp -s`, which absorbs the item carried since
   examples/phase6_protocol_checker/mutate.sh
     REQUIRES_READING line 71    if cmp -s "$MUT" "$RTL"; then
   examples/phase6_rx_occupancy_probe/run_rx_occupancy_mutation_tests.sh
-    REQUIRES_READING line 144   if cmp -s "$RTL" "$dst"; then echo ""; else echo "$dst"; fi
-    CONTROL          line 235   cmp -s "$RTL" "$WORK/neutral.v" && { echo "    ABORT -- neutral contro
+    REQUIRES_READING line 150   if cmp -s "$RTL" "$dst"; then echo ""; else echo "$dst"; fi
+    CONTROL          line 241   cmp -s "$RTL" "$WORK/neutral.v" && { echo "    ABORT -- neutral contro
   examples/phase6_rx_pin_driver/run_mutation_tests.sh
     MENTION          line 45    # what every mutant built on it injects.  `cmp -s` passes that; a decl
     REQUIRES_READING line 205   if cmp -s rtl/uart_controller.v "$SRC"; then
@@ -145,67 +145,86 @@ SECTION 4 -- every `cmp -s`, which absorbs the item carried since
     MENTION          line 200   mc__detail "HALF_INJECTED: the replaced pattern still occurs ${o_mut} 
     REQUIRES_READING line 245   if cmp -s "$orig" "$mut"; then
     MENTION          line 313   # would pass `cmp -s` and score.  With a declared count it stops the r
-    REQUIRES_READING line 377   if cmp -s "$src" "$dest"; then
+    CONTROL          line 411   if cmp -s "$src" "$dest"; then
   tools/open_item_staleness_audit.py
     MENTION          line 915   'checked 2026-10-26: it had controls A/B/C and cmp -s and no neutral '
   tools/test_mutation_controls.sh
     MENTION          line 18    # Case 3 is the one this file exists for.  `cmp -s` -- the only inject
-    MENTION          line 76    # first, so the mutant carries half the defect -- and `cmp -s` passes 
-    MENTION          line 90    "this is the row cmp -s passes: the mutant DOES differ, and half the d
-    MENTION          line 199   say "  the file: the existing harnesses' cmp -s check passes it."
+    MENTION          line 77    # first, so the mutant carries half the defect -- and `cmp -s` passes 
+    MENTION          line 91    "this is the row cmp -s passes: the mutant DOES differ, and half the d
+    MENTION          line 200   say "  the file: the existing harnesses' cmp -s check passes it."
   tools/test_neutrality_controls.py
     CONTROL          line 36    RTL.  The `cmp -s` guard must refuse: a control that changes nothing
     MENTION          line 145   _NEU_TAIL = 'cmp -s "$1" "$2" && return 1; return 0; }'
   tools/verdict_bearing_census.py
-    REQUIRES_READING line 51    AND EVERY `cmp -s`, WHICH ABSORBS THE CARRIED ITEM
-    MENTION          line 53    The standing list has carried "CLASSIFY EVERY `cmp -s` AS VERDICT-BEAR
-    REQUIRES_READING line 56    each `cmp -s` occurrence is classified by what its branch DOES --
-    MENTION          line 173   if "sed" in src and ("mutant" in src.lower() or "cmp -s" in src
-    REQUIRES_READING line 309   PAST the next `cmp -s` in the planted file and classified a control
-    REQUIRES_READING line 316   if cmp -s "$RTL" "$WORK/mut.v"; then
-    MENTION          line 335   if "cmp -s" in l:
-    MENTION          line 347   """True iff the `cmp -s` at `pos` is prose rather than a command.
-    MENTION          line 369   """[(line no, class, text)] for every `cmp -s` in the file."""
-    MENTION          line 376   if "cmp -s" not in line:
-    MENTION          line 383   # and a census that counts the comments explaining why a `cmp -s`
-    MENTION          line 384   # guard was REPLACED as instances of a `cmp -s` guard is reporting a
-    MENTION          line 388   if _is_mention(line, line.index("cmp -s")):
-    MENTION          line 463   if "cmp -s" not in line:
-    MENTION          line 465   if _is_mention(line, line.index("cmp -s")):
-    CONTROL          line 588   if cmp -s a b; then echo "    ABORT -- the control changed nothing"; f
-    VERDICT          line 589   if ! cmp -s c d; then bad=1; fi
-    REQUIRES_READING line 590   cmp -s e f
-    MENTION          line 633   check("  P5 the three planted `cmp -s` uses classify VERDICT, "
-    MENTION          line 636   "got %s.  The third is a bare `cmp -s` whose result nothing "
-    MENTION          line 639   check("  P6 a file with no `cmp -s` yields no rows at all",
-    MENTION          line 723   # -- Section 4: every `cmp -s` ------------------------------------
-    MENTION          line 725   print("SECTION 4 -- every `cmp -s`, which absorbs the item carried sin
-    MENTION          line 745   print("  %d `cmp -s` occurrence(s) over %d file(s)"
-    MENTION          line 768   # verdict variable, the `cmp -s` window (twice) and mention-versus-use
-    MENTION          line 815   "prose occurrences -- comments explaining why a `cmp -s` guard "
+    REQUIRES_READING line 51    AND EVERY `cmp -s`, WHICH ABSORBS THE CARRIED ITEM   [SELF-PLANT]
+    MENTION          line 53    The standing list has carried "CLASSIFY EVERY `cmp -s` AS VERDICT-BEAR   [SELF-PLANT]
+    REQUIRES_READING line 56    each `cmp -s` occurrence is classified by what its branch DOES --   [SELF-PLANT]
+    MENTION          line 182   if "sed" in src and ("mutant" in src.lower() or "cmp -s" in src   [SELF-PLANT]
+    REQUIRES_READING line 318   PAST the next `cmp -s` in the planted file and classified a control   [SELF-PLANT]
+    REQUIRES_READING line 325   if cmp -s "$RTL" "$WORK/mut.v"; then   [SELF-PLANT]
+    MENTION          line 344   if "cmp -s" in l:   [SELF-PLANT]
+    MENTION          line 356   """True iff the `cmp -s` at `pos` is prose rather than a command.   [SELF-PLANT]
+    MENTION          line 378   """[(line no, class, text)] for every `cmp -s` in the file."""   [SELF-PLANT]
+    MENTION          line 385   if "cmp -s" not in line:   [SELF-PLANT]
+    MENTION          line 392   # and a census that counts the comments explaining why a `cmp -s`   [SELF-PLANT]
+    MENTION          line 393   # guard was REPLACED as instances of a `cmp -s` guard is reporting a   [SELF-PLANT]
+    MENTION          line 397   if _is_mention(line, line.index("cmp -s")):   [SELF-PLANT]
+    MENTION          line 472   if "cmp -s" not in line:   [SELF-PLANT]
+    MENTION          line 474   if _is_mention(line, line.index("cmp -s")):   [SELF-PLANT]
+    CONTROL          line 597   if cmp -s a b; then echo "    ABORT -- the control changed nothing"; f   [SELF-PLANT]
+    VERDICT          line 598   if ! cmp -s c d; then bad=1; fi   [SELF-PLANT]
+    REQUIRES_READING line 599   cmp -s e f   [SELF-PLANT]
+    MENTION          line 642   check("  P5 the three planted `cmp -s` uses classify VERDICT, "   [SELF-PLANT]
+    MENTION          line 645   "got %s.  The third is a bare `cmp -s` whose result nothing "   [SELF-PLANT]
+    MENTION          line 648   check("  P6 a file with no `cmp -s` yields no rows at all",   [SELF-PLANT]
+    MENTION          line 732   # -- Section 4: every `cmp -s` ------------------------------------   [SELF-PLANT]
+    MENTION          line 734   print("SECTION 4 -- every `cmp -s`, which absorbs the item carried sin   [SELF-PLANT]
+    MENTION          line 743   # B2/B2b/B3: this module's own planted shell snippets are `cmp -s`   [SELF-PLANT]
+    MENTION          line 766   print("  %d `cmp -s` occurrence(s) over %d file(s)"   [SELF-PLANT]
+    MENTION          line 788   #     if ! cmp -s c d; then bad=1; fi                      -> VERDICT   [SELF-PLANT]
+    MENTION          line 789   #     if cmp -s a b; then echo "    ABORT -- the control"   -> CONTROL   [SELF-PLANT]
+    MENTION          line 793   # survivor is `phase6_rx_occupancy_probe`'s `cmp -s ... && { ... }`.     [SELF-PLANT]
+    MENTION          line 836   'if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_cont'),   [SELF-PLANT]
+    MENTION          line 838   'if cmp -s "$RTL" "$WORK/mut.v"; then'),   [SELF-PLANT]
+    MENTION          line 842   'if cmp -s "$RTL" "$WORK/neutral.v"; then'),   [SELF-PLANT]
+    MENTION          line 844   'if cmp -s "$RTL" "$WORK/neutral.v"; then'),   [SELF-PLANT]
+    MENTION          line 846   'if cmp -s "$RTL" "$WORK/neutral.v"; then'),   [SELF-PLANT]
+    MENTION          line 848   'if cmp -s "$RTL" "$WORK/neutral.v"; then'),   [SELF-PLANT]
+    MENTION          line 851   'cmp -s "$RTL" "$WORK/neutral.v" && { echo " ABORT -- ne'),   [SELF-PLANT]
+    MENTION          line 853   "RTL. The `cmp -s` guard must refuse: a control that cha"),   [SELF-PLANT]
+    MENTION          line 858   'if cmp -s "$src" "$dest"; then'),   [SELF-PLANT]
+    MENTION          line 881   # verdict variable, the `cmp -s` window (twice) and mention-versus-use   [SELF-PLANT]
+    MENTION          line 928   "prose occurrences -- comments explaining why a `cmp -s` guard "   [SELF-PLANT]
 
-  73 `cmp -s` occurrence(s) over 22 file(s)
-    CONTROL           7
-    MENTION          40
-    REQUIRES_READING 23
+  86 `cmp -s` occurrence(s) over 22 file(s)
+    CONTROL           8
+    MENTION          53
+    REQUIRES_READING 22
     VERDICT           3
   [PASS] B1 the classification is EXHAUSTIVE -- every occurrence has a class, and the residue is a named worklist rather than a silence
-        73 occurrences, 73 classified, 23 needing a human read:
+        86 occurrences, 86 classified, 22 needing a human read:
           examples/phase1_mutation/run_mutation_tests.py:37  (1) EXPECTED_SITES INJECTION GUARD, not `cmp -s`.  The 2026-10-07 audi
-          examples/phase5_csr_formal/run_csr_formal.sh:127  if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
-          examples/phase5_csr_formal/run_csr_formal.sh:174  if cmp -s "$n5" "$ROOT/rtl/uart_controller.v"; then
-          examples/phase5_csr_formal/run_reset_formal.sh:110  if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_controller.v"; then
-          examples/phase5_formal_uart/run_formal.sh:98  if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
+          examples/phase5_csr_formal/run_csr_formal.sh:128  if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
+          examples/phase5_csr_formal/run_csr_formal.sh:175  if cmp -s "$n5" "$ROOT/rtl/uart_controller.v"; then
+          examples/phase5_csr_formal/run_reset_formal.sh:114  if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_controller.v"; then
+          examples/phase5_formal_uart/run_formal.sh:99  if cmp -s "$f" "$ROOT/rtl/uart_controller.v"; then
           examples/phase6_baud_error_coverage/run_mutation_tests.sh:155  if cmp -s rtl/uart_controller.v "$SRC"; then
-          examples/phase6_bfm_equivalence/run_mutation_tests.sh:101  if cmp -s "${WORK}/golden.v" "${WORK}/mut.v"; then
+          examples/phase6_bfm_equivalence/run_mutation_tests.sh:112  if cmp -s "${WORK}/golden.v" "${WORK}/mut.v"; then
           examples/phase6_crv_uart/run_equal_budget_control.sh:95  if cmp -s "$RTL" "$WORK/t3.v"; then
           examples/phase6_crv_uart/run_mutation_tests_bimodal.sh:280  ! cmp -s "$RTL" "$2"
           examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh:117  if cmp -s "$RTL" "$dst"; then echo ""; else echo "$dst"; fi
           examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh:110  if cmp -s "$RTL" "$dst"; then echo ""; else echo "$dst"; fi
           examples/phase6_protocol_checker/mutate.sh:71  if cmp -s "$MUT" "$RTL"; then
-          ... and 11 more
-  [PASS] B2 at least one occurrence in each of the two decided classes, or the classifier is not exercised on the live tree
-        VERDICT 3, CONTROL 7, REQUIRES_READING 23
+          ... and 10 more
+  [PASS] B2 at least one occurrence in each of the two decided classes FROM OUTSIDE THIS MODULE, or the classifier is not exercised on the live tree.  Self-excluded 2026-11-14: two of the three occurrences that survive the M4 mutant are this module's own one-line plants, so the un-excluded floor was partly self-met
+        foreign VERDICT 2, CONTROL 7, REQUIRES_READING 17  (including self-plants: VERDICT 3, CONTROL 8)
+  [PASS] B2b THE SELF-PLANT IS REAL, not described: this module contributes exactly one VERDICT and one CONTROL occurrence to its own census, and they are precisely the two that survive a window shrink
+        self contributes VERDICT 1, CONTROL 1
+  [PASS] B3 every site declared VERDICT or CONTROL on 2026-11-14 is still classified that way -- a SET identity on (path, text), so a site losing its class cannot be netted out by another gaining one, which a tally can be
+        lost VERDICT []; lost CONTROL []
+  [PASS] B3b and the declaration may only GROW: new decided sites are reported, never silently absorbed
+        gained VERDICT []; gained CONTROL []
 
 --------------------------------------------------------------------------
 SECTION 5 -- MUTATION.  Each defect must turn a NAMED check red
@@ -215,13 +234,13 @@ SECTION 5 -- MUTATION.  Each defect must turn a NAMED check red
                 must turn A2 red; red checks under the mutant: ['A2']
   [PASS] M2 a verdict variable is again only what the EXIT CODE reads
         the narrow definition, under which the one file known to carry the 11-07 repair classifies REPORT_ONLY and the census reports that the defect exists nowhere.
-                must turn A1 red; red checks under the mutant: ['A1']
+                must turn A1 red; red checks under the mutant: ['A1', 'B3']
   [PASS] M3 a mention counts as a use again
         prose occurrences -- comments explaining why a `cmp -s` guard was REPLACED -- are the largest single class, and counting them as uses reports a population that does not exist.  THE NUMBERS ARE NOT WRITTEN HERE: this row carried '21 of the 45 occurrences ... 88 per cent' from 2026-11-08 until 2026-11-13, by which time the live tree said 39 of 72 and 118 per cent.  The premise now lives in PREMISES['M3'] and is checked.
-                must turn B1 red; red checks under the mutant: ['B1']
+                must turn B1 red; red checks under the mutant: ['B1', 'B2b']
   [PASS] M4 the branch window shrinks back to one line
         the second wrong window.  RE-ANCHORED 2026-11-13: this row required `B2` to go red on the premise that every real occurrence assigns several lines into its branch -- true on 2026-11-08, false by 2026-11-12, when six one-line branches left `B2` green under the mutant and the row sat red for four days.  The requirement is now a property of the CLASSIFIER: the mutant must CHANGE THE SECTION-4 TALLY, which a wrong window does by construction whatever the tree contains.
-                must CHANGE the tally; live {'REQUIRES_READING': 23, 'MENTION': 40, 'VERDICT': 3, 'CONTROL': 7}, under the mutant {'CONTROL': 2, 'MENTION': 40, 'REQUIRES_READING': 30, 'VERDICT': 1}
+                must CHANGE the tally; live {'REQUIRES_READING': 22, 'MENTION': 53, 'VERDICT': 3, 'CONTROL': 8}, under the mutant {'CONTROL': 2, 'MENTION': 53, 'REQUIRES_READING': 30, 'VERDICT': 1}
 
 --------------------------------------------------------------------------
 SECTION 6 -- THE MUTANT PREMISE CENSUS.  A mutant whose premise is
@@ -231,14 +250,14 @@ a property of the TREE dies when the tree moves, and nothing says so
         8 of 20 tracked runners do
   M2  [not a relation] its premise names a particular file and a particular dated repair, which is not a relation over these numbers
   [PASS] C1.M3 the premise of M3 still holds on the live tree: prose occurrences are the LARGEST single class, so counting them as uses inflates the population of real guards rather than nudging it
-        MENTION 40 of 73 total; 33 non-mention, so counting prose inflates the real population by 121 per cent
+        MENTION 53 of 86 total; 33 non-mention, so counting prose inflates the real population by 161 per cent
   [PASS] C1.M4 the premise of M4 still holds on the live tree: MOST non-mention occurrences have a multi-line branch -- stated as a majority and not as 'every', which is the form that expired
         27 multi-line against 6 one-line; the one-line ones are why the old 'every' premise failed
   [PASS] C2 every mutant's premise is either a CHECKED RELATION or a NAMED entry on this worklist -- 1 of 4 are not relations over these numbers, and they are named rather than silent
         not reducible: M2
   [PASS] C3 the live tally is REPORTED alongside every premise rather than asserted inside one, which is the carried item S7 SHOULD REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE getting an instance
-        total 73 = {'REQUIRES_READING': 23, 'MENTION': 40, 'VERDICT': 3, 'CONTROL': 7}; non-mention 33 = 27 multi + 6 one-line
-  [PASS] C4 SCORING THE 2026-11-12 PREDICTION (1).  It said re-anchoring M4 would turn up a SECOND stale mutant premise in the same file, and that the risky half was 'in the same file'.  RIGHT ON THE FILE AND WRONG ON THE KIND: M3's premise was stale -- it said 21 of 45 occurrences and 88 per cent where the live tree says 40 of 73 and 121 per cent -- but it was stale in PROSE NO INSTRUMENT READS, so M3 went on passing.  M4 died because its premise was load-bearing; M3's was merely wrong
+        total 86 = {'REQUIRES_READING': 22, 'MENTION': 53, 'VERDICT': 3, 'CONTROL': 8}; non-mention 33 = 27 multi + 6 one-line
+  [PASS] C4 SCORING THE 2026-11-12 PREDICTION (1).  It said re-anchoring M4 would turn up a SECOND stale mutant premise in the same file, and that the risky half was 'in the same file'.  RIGHT ON THE FILE AND WRONG ON THE KIND: M3's premise was stale -- it said 21 of 45 occurrences and 88 per cent where the live tree says 53 of 86 and 161 per cent -- but it was stale in PROSE NO INSTRUMENT READS, so M3 went on passing.  M4 died because its premise was load-bearing; M3's was merely wrong
   [PASS] C5 and the generalisation the prediction did not reach: of the four mutants, THREE had premises that are statements about the tree and only one is a statement about a particular file.  Two of the three had drifted in four days.  The repair is the form of the premise -- a relation rather than a magnitude -- and M4 is now anchored on the classifier instead
 
 ==========================================================================
@@ -253,7 +272,10 @@ SUMMARY
   PASS  A1 the anchor: run_rx_avail_mutation_tests.sh classifies EXPLICIT
   PASS  A2 and its unrepaired sibling classifies REPORT_ONLY, not MIXED_IMPLICIT
   PASS  B1 the classification is EXHAUSTIVE -- every occurrence has a class, and the residue is a named worklist rather than a silence
-  PASS  B2 at least one occurrence in each of the two decided classes, or the classifier is not exercised on the live tree
+  PASS  B2 at least one occurrence in each of the two decided classes FROM OUTSIDE THIS MODULE, or the classifier is not exercised on the live tree.  Self-excluded 2026-11-14: two of the three occurrences that survive the M4 mutant are this module's own one-line plants, so the un-excluded floor was partly self-met
+  PASS  B2b THE SELF-PLANT IS REAL, not described: this module contributes exactly one VERDICT and one CONTROL occurrence to its own census, and they are precisely the two that survive a window shrink
+  PASS  B3 every site declared VERDICT or CONTROL on 2026-11-14 is still classified that way -- a SET identity on (path, text), so a site losing its class cannot be netted out by another gaining one, which a tally can be
+  PASS  B3b and the declaration may only GROW: new decided sites are reported, never silently absorbed
   PASS  M1 the def-line regex stops allowing a trailing comment
   PASS  M2 a verdict variable is again only what the EXIT CODE reads
   PASS  M3 a mention counts as a use again
@@ -263,7 +285,7 @@ SUMMARY
   PASS  C1.M4 the premise of M4 still holds on the live tree: MOST non-mention occurrences have a multi-line branch -- stated as a majority and not as 'every', which is the form that expired
   PASS  C2 every mutant's premise is either a CHECKED RELATION or a NAMED entry on this worklist -- 1 of 4 are not relations over these numbers, and they are named rather than silent
   PASS  C3 the live tally is REPORTED alongside every premise rather than asserted inside one, which is the carried item S7 SHOULD REPORT THE PREDICTED COUNT ALONGSIDE THE MEASURED ONE getting an instance
-  PASS  C4 SCORING THE 2026-11-12 PREDICTION (1).  It said re-anchoring M4 would turn up a SECOND stale mutant premise in the same file, and that the risky half was 'in the same file'.  RIGHT ON THE FILE AND WRONG ON THE KIND: M3's premise was stale -- it said 21 of 45 occurrences and 88 per cent where the live tree says 40 of 73 and 121 per cent -- but it was stale in PROSE NO INSTRUMENT READS, so M3 went on passing.  M4 died because its premise was load-bearing; M3's was merely wrong
+  PASS  C4 SCORING THE 2026-11-12 PREDICTION (1).  It said re-anchoring M4 would turn up a SECOND stale mutant premise in the same file, and that the risky half was 'in the same file'.  RIGHT ON THE FILE AND WRONG ON THE KIND: M3's premise was stale -- it said 21 of 45 occurrences and 88 per cent where the live tree says 53 of 86 and 161 per cent -- but it was stale in PROSE NO INSTRUMENT READS, so M3 went on passing.  M4 died because its premise was load-bearing; M3's was merely wrong
   PASS  C5 and the generalisation the prediction did not reach: of the four mutants, THREE had premises that are statements about the tree and only one is a statement about a particular file.  Two of the three had drifted in four days.  The repair is the form of the premise -- a relation rather than a magnitude -- and M4 is now anchored on the classifier instead
 
-TOTAL: 21 passed, 0 failed
+TOTAL: 24 passed, 0 failed

@@ -85,6 +85,15 @@ import re
 import subprocess
 import sys
 
+# THIS MODULE'S OWN NAME, AS A LITERAL AND NOT AS basename(__file__).
+#
+# Needed by Section 4's self-exclusion (B2/B2b/B3), and a literal because
+# under the mutation harness this module runs as `_vbc_mutant.py`: a
+# self-exclusion written `basename(__file__)` matches nothing there and so
+# switches itself off in exactly the run it exists for.  Found by running it,
+# 2026-11-14 -- B2 stayed green while B2b went red.
+SELF_CENSUS = "verdict_bearing_census.py"
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 
@@ -730,15 +739,27 @@ def main():
     allfiles = sorted(p for p in out.split("\n") if p.strip())
     tally, residue = {}, []
     total = 0
+    # SELF-EXCLUDED TALLY AND DECIDED-SITE SET, ADDED 2026-11-14.  See
+    # B2/B2b/B3: this module's own planted shell snippets are `cmp -s`
+    # occurrences in a file `git ls-files *.py` returns.
+    foreign, decided_sites = {}, {}
     for p in allfiles:
         rows = classify_cmp(p)
         if not rows:
             continue
         print("  %s" % p)
+        is_self = os.path.basename(p) in (SELF_CENSUS,
+                                          os.path.basename(__file__))
         for n, k, text in rows:
             total += 1
             tally[k] = tally.get(k, 0) + 1
-            print("    %-16s line %-5d %s" % (k, n, text[:70]))
+            if not is_self:
+                foreign[k] = foreign.get(k, 0) + 1
+                if k in ("VERDICT", "CONTROL"):
+                    decided_sites.setdefault(k, set()).add(
+                        (p, " ".join(text.split())[:55]))
+            print("    %-16s line %-5d %s%s"
+                  % (k, n, text[:70], "   [SELF-PLANT]" if is_self else ""))
             if k == "REQUIRES_READING":
                 residue.append("%s:%d  %s" % (p, n, text[:70]))
     print()
@@ -755,12 +776,104 @@ def main():
              "\n".join("  " + r for r in residue[:12])
              + ("\n  ... and %d more" % (len(residue) - 12)
                 if len(residue) > 12 else "")))
-    check("B2 at least one occurrence in each of the two decided classes, or "
-          "the classifier is not exercised on the live tree",
-          tally.get("VERDICT", 0) >= 1 and tally.get("CONTROL", 0) >= 1,
-          "VERDICT %d, CONTROL %d, REQUIRES_READING %d"
-          % (tally.get("VERDICT", 0), tally.get("CONTROL", 0),
-             tally.get("REQUIRES_READING", 0)))
+    # B2 WAS BEING SATISFIED, IN PART, BY THIS MODULE'S OWN PLANTS -- AND THE
+    # 2026-11-13 ENTRY'S COUNT FOR THAT IS WRONG.
+    #
+    # 11-13 re-anchored M4 on the Section-4 TALLY, which is a classifier
+    # property and works.  Its stated mechanism was that "six one-line
+    # branches left `B2` green under the mutant".  MEASURED 2026-11-14 on this
+    # tree, the mutant leaves **three** decided occurrences standing, and
+    # **two of the three are this module's own planted snippets**:
+    #
+    #     if ! cmp -s c d; then bad=1; fi                      -> VERDICT
+    #     if cmp -s a b; then echo "    ABORT -- the control"   -> CONTROL
+    #
+    # Both are ONE-LINERS, so a one-line window still contains their whole
+    # branch, and `git ls-files *.py` returns this file.  The only FOREIGN
+    # survivor is `phase6_rx_occupancy_probe`'s `cmp -s ... && { ... }`.  So
+    # under the mutant the foreign decided set is VERDICT 0, CONTROL 1: a
+    # self-excluded B2 goes red on its own, without needing the tally.
+    #
+    # THIRD INSTANCE here of A MODULE MUST NOT PLANT THE PATTERN IT CENSUSES,
+    # after the 10-17 original and this module's own mutation-table guard.
+    # The sibling graphene repository has hit it twice in its own censuses.
+    # The count and the attribution are corrected here; 11-13's repair is not
+    # undone, and its TALLY anchor still stands below.
+    check("B2 at least one occurrence in each of the two decided classes "
+          "FROM OUTSIDE THIS MODULE, or the classifier is not exercised on "
+          "the live tree.  Self-excluded 2026-11-14: two of the three "
+          "occurrences that survive the M4 mutant are this module's own "
+          "one-line plants, so the un-excluded floor was partly self-met",
+          foreign.get("VERDICT", 0) >= 1 and foreign.get("CONTROL", 0) >= 1,
+          "foreign VERDICT %d, CONTROL %d, REQUIRES_READING %d  "
+          "(including self-plants: VERDICT %d, CONTROL %d)"
+          % (foreign.get("VERDICT", 0), foreign.get("CONTROL", 0),
+             foreign.get("REQUIRES_READING", 0),
+             tally.get("VERDICT", 0), tally.get("CONTROL", 0)))
+    check("B2b THE SELF-PLANT IS REAL, not described: this module contributes "
+          "exactly one VERDICT and one CONTROL occurrence to its own census, "
+          "and they are precisely the two that survive a window shrink",
+          tally.get("VERDICT", 0) - foreign.get("VERDICT", 0) == 1
+          and tally.get("CONTROL", 0) - foreign.get("CONTROL", 0) == 1,
+          "self contributes VERDICT %d, CONTROL %d"
+          % (tally.get("VERDICT", 0) - foreign.get("VERDICT", 0),
+             tally.get("CONTROL", 0) - foreign.get("CONTROL", 0)))
+
+    # B3: THE DECIDED SITES AS A SET, NOT A COUNT.
+    #
+    # 11-13's TALLY anchor requires the mutant to CHANGE the tally, which is
+    # the right kind of requirement and is still the anchor.  It is a
+    # count-level requirement, so a site that silently swaps class while
+    # another swaps back satisfies it.  B3 forbids that: the foreign decided
+    # sites are declared, keyed on (path, normalised text) and never on line
+    # number, so a site keeps its identity when it moves within its file and
+    # loses the check when it changes class.  Frozen 2026-11-14 with the
+    # measurement that produced it; B3b reports growth and forbids loss.
+    # Same shape as the CDC gate's S4.
+    DECIDED_1114 = {
+        "VERDICT": {
+            ("examples/phase5_csr_formal/run_reset_formal.sh",
+             'if cmp -s "$dir/uart_controller.v" "$ROOT/rtl/uart_cont'),
+            ("examples/phase6_crv_uart/run_mutation_tests.sh",
+             'if cmp -s "$RTL" "$WORK/mut.v"; then'),
+        },
+        "CONTROL": {
+            ("examples/phase6_crv_uart/run_mutation_tests.sh",
+             'if cmp -s "$RTL" "$WORK/neutral.v"; then'),
+            ("examples/phase6_crv_uart/run_mutation_tests_bimodal.sh",
+             'if cmp -s "$RTL" "$WORK/neutral.v"; then'),
+            ("examples/phase6_crv_uart/run_rx_avail_mutation_tests.sh",
+             'if cmp -s "$RTL" "$WORK/neutral.v"; then'),
+            ("examples/phase6_crv_uart/run_tx_empty_mutation_tests.sh",
+             'if cmp -s "$RTL" "$WORK/neutral.v"; then'),
+            ("examples/phase6_rx_occupancy_probe/"
+             "run_rx_occupancy_mutation_tests.sh",
+             'cmp -s "$RTL" "$WORK/neutral.v" && { echo " ABORT -- ne'),
+            ("tools/test_neutrality_controls.py",
+             "RTL. The `cmp -s` guard must refuse: a control that cha"),
+            # Added by 2026-11-13's mc_neutral_copy repair, and found by B3b
+            # reporting it as a GAIN on this set's first run -- which is what
+            # B3b is for.
+            ("tools/mutation_controls.sh",
+             'if cmp -s "$src" "$dest"; then'),
+        },
+    }
+    _lost = dict((k, sorted(DECIDED_1114[k] - decided_sites.get(k, set())))
+                 for k in DECIDED_1114)
+    _gained = dict((k, sorted(decided_sites.get(k, set()) - DECIDED_1114[k]))
+                   for k in DECIDED_1114)
+    check("B3 every site declared VERDICT or CONTROL on 2026-11-14 is still "
+          "classified that way -- a SET identity on (path, text), so a site "
+          "losing its class cannot be netted out by another gaining one, "
+          "which a tally can be",
+          not any(_lost.values()),
+          "lost VERDICT %r; lost CONTROL %r"
+          % (_lost["VERDICT"], _lost["CONTROL"]))
+    check("B3b and the declaration may only GROW: new decided sites are "
+          "reported, never silently absorbed",
+          True,
+          "gained VERDICT %r; gained CONTROL %r"
+          % (_gained["VERDICT"], _gained["CONTROL"]))
 
     # -- Section 5: mutation ------------------------------------------
     # A CENSUS THAT CANNOT FAIL IS NOT EVIDENCE, and this one was WRONG FOUR
