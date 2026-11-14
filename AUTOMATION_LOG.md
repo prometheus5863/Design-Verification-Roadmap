@@ -15812,3 +15812,275 @@ down from two to one.
    rather than into it — which, if it holds, means today's "five times the
    expected population" was partly the instrument's coarseness and not only the
    repository's exposure.
+
+## 2026-11-14 — a duplicate session, because the work-already-done check reads a clone and a clone is the pushed state; and the two corrections it produced anyway
+
+**Commits before this entry:** 3 — `B2`'s self-exclusion with `B2b` and the
+new `B3` set identity; the iverilog-wrapper TMPDIR verification; the
+`progress.md` update.
+
+### 0. WHAT HAPPENED FIRST, BECAUSE IT GOVERNS EVERYTHING BELOW
+
+The session cloned both repositories fresh from GitHub, read
+`AUTOMATION_LOG.md` for an entry dated today, found none, and concluded no
+work had been done. That was **right about today and wrong about the state of
+the work.** 2026-11-13's eight commits were never pushed — the write path is
+closed by an environment policy — so they exist only as bundles in
+`_to_push/`, and a clone from GitHub cannot see them.
+
+So the session **re-derived 11-13's ranked-first item in both repositories,
+from scratch, without knowing it existed.** Here it re-anchored `M4` a second
+time, independently, on a self-exclusion plus a set identity rather than on
+the tally; in the sibling it wrote a second citation census, 32 checks against
+11-13's 51, and found the same three citation defects.
+
+**The duplication is a defect in the daily procedure, not in either day's
+work.** The procedure's step 2 is "check both repos for work already done
+today", and it reads `AUTOMATION_LOG.md` **in the clone**. A clone is the
+*pushed* state. With a push backlog that answer is stale by the depth of the
+backlog, and the staleness is invisible: a missing entry means "nothing was
+committed today" and "nothing committed since the backlog began is here"
+equally well. **An empty answer is indistinguishable from a clean one** — the
+sibling's own 11-12 words about a census that read zero files, arriving in the
+procedure that schedules the work rather than in an instrument.
+
+The repair is mechanical and belongs in the procedure: **before concluding no
+work was done, read `_to_push/`.** Ranked first below.
+
+11-13's work is the better artifact in both repositories and is what ships.
+Everything below is what the duplicate produced that 11-13 did not have.
+
+### 1. `B2`'s floor was partly self-met, and 11-13's count for it is wrong
+
+11-13 re-anchored `M4` on the Section-4 **tally** — a classifier property,
+correct, and left in place. Its stated mechanism was that "six one-line
+branches left `B2` green under the mutant". Measured on this tree today:
+
+    live       VERDICT 3   CONTROL 8   REQUIRES_READING 22
+    cap = 0    VERDICT 1   CONTROL 2   REQUIRES_READING 30
+
+**Three** decided occurrences survive, not six — and **two of the three are
+this module's own planted snippets**:
+
+    if ! cmp -s c d; then bad=1; fi                      -> VERDICT
+    if cmp -s a b; then echo "    ABORT -- the control"   -> CONTROL
+
+Both are one-liners, so a one-line branch window still contains their whole
+branch, and `git ls-files *.py` returns this file, so they were part of the
+"live tree" population the whole time. The only **foreign** survivor is
+`phase6_rx_occupancy_probe`'s `cmp -s ... && { ... }`. Under the mutant the
+foreign decided set is **VERDICT 0, CONTROL 1**, so a self-excluded `B2` goes
+red on its own without needing the tally at all.
+
+**Third instance in this repository of A MODULE MUST NOT PLANT THE PATTERN IT
+CENSUSES**, after the 10-17 original and this module's own mutation-table
+guard. The sibling has now hit it twice in its own censuses, the second time
+this morning: its duplicate citation census's first worklist came back sixteen
+rows against an item that said thirteen, because three of its checks quote
+published values in their own labels. **Fourth instance across the two trees,
+three of them found by accident.**
+
+### 2. Three checks, and only one of them is a floor
+
+- **`B2` self-excluded**, keeping its floor over foreign rows only: `VERDICT 2,
+  CONTROL 7` today.
+- **`B2b` asserts the self-plant is REAL** rather than describing it: exactly
+  one VERDICT and one CONTROL occurrence from this file, and they are precisely
+  the two that survive a window shrink.
+- **`B3`** declares the foreign decided sites as a **set**, keyed on
+  `(path, normalised text)` and never on line number, frozen with today's
+  measurement. 11-13's TALLY requirement is count-level, so a site that
+  silently swaps class while another swaps back satisfies it; a set cannot be
+  netted out. `B3b` reports growth and forbids loss. Same shape as the CDC
+  gate's `S4`.
+
+Verified by planting the `cap=0` mutant by hand: red checks are **`B2` and
+`B3`**, on top of the TALLY requirement `M4` already enforces. **Three
+independent catchers** where 11-12 had none and 11-13 had one. `21 → 24
+passed, 0 failed.`
+
+### 3. Two defects in the repair, both found by running it
+
+1. **`B3b` earned its keep on the frozen set's FIRST RUN**, reporting
+   `tools/mutation_controls.sh` as a **gained** CONTROL site — 11-13's own
+   `mc_neutral_copy` repair, which my declaration had missed. A frozen set
+   that is silently incomplete is worse than no frozen set, and the growth
+   report is what caught it. Now declared with its reason.
+2. **`SELF_CENSUS` has to be a literal.** Written the obvious way —
+   `os.path.basename(p) == os.path.basename(__file__)` — the self-exclusion
+   matches nothing under the mutation harness, where this module runs as
+   `_vbc_mutant.py`. It switched itself off in precisely the run it exists
+   for: the real file's plants counted as foreign, `B2` stayed green and
+   `B2b` went red. **A name that means two different things in the baseline
+   and under the mutant cannot be the subject of a self-exclusion.** Same
+   family as the piped-`$?` reading and as 11-08's `M4` premise.
+
+### 4. The iverilog half of the TMPDIR repair, verified unforced
+
+11-13 found the fourth and fifth encounters with this disk on surfaces the
+wrappers do **not** cover — a runner's own `mktemp`, and pip's cache — and
+retired *THE OTHER THREE FILES THAT PROBE TMPDIR THEMSELVES* as the wrong item
+on the ground that "a runner's own mktemp is not an iverilog call". That is
+right, and it leaves the **iverilog half asserted rather than measured**:
+11-07 built the wrappers, 11-12 moved all 20 invocation sites onto them, and
+neither ran on a day when `TMPDIR` was actually unusable. 11-12's guard added
+a **forced** differential precisely because of that.
+
+Today the default `TMPDIR` in a fresh shell is `$HOME/tmp` on a filesystem at
+**100 %, 0 bytes available**, inherited with nothing set by hand. Every rc read
+directly, not through a pipe:
+
+| path | `TMPDIR` | rc | |
+|---|---|---|---|
+| raw `usr/bin/iverilog` | `$HOME/tmp`, full | **1** | `ivlpp: No input files given.` |
+| wrapper `bin/iverilog` | `$HOME/tmp`, full | **0** | |
+| raw `usr/bin/iverilog` | `/tmp`, writable | **0** | 11-12's five-day latency, confirmed |
+
+Through the wrappers in that environment: `toolchain_preflight.sh` **11
+passed, 0 failed, 0 skipped**, with Section 2 reporting the inherited `TMPDIR`
+as *"NOT USABLE (the 4096-byte probe failed)"* and naming it the 11-12
+condition; the Phase 4 UART bring-up regression **60/60**;
+`run_cdc_gate.sh` **9/9**. Transcript in
+`tools/tmpdir_wrapper_verification_2026-11-14.txt`.
+
+**The zero-length file, observed rather than argued.** `dd bs=4096 count=1`
+into that filesystem reports `0 bytes copied` **and still leaves a file
+behind, size 0**. That is the whole case for the 11-07 byte probe and for
+11-13's `mc_workdir`, and it is now a measurement in this repository rather
+than a reasoned aside.
+
+**And the pipe hazard, fourth recorded occurrence.** Taking the first
+differential I read `rc=$?` through `| tail` and got tail's status, so the raw
+path reported **rc=0 while failing**. Three of the four occurrences have been
+in measurements taken to check something else, which is what makes it a hazard
+rather than a mistake.
+
+### 5. Scoring the 11-13 predictions
+
+Deliberately **not scored.** The session that would have scored them did not
+know they existed, and scoring a prediction against work done in ignorance of
+it is not scoring. They carry forward unscored with this entry as the reason.
+
+### 6. Count
+
+`verdict_bearing_census.py` 24/24 with 4/4 mutants; `toolchain_preflight.sh`
+11/0/0 unforced on a genuinely broken day; `run_cdc_gate.sh` 9/9; Phase 4 UART
+bring-up 60/60; manifest unchanged at 49/49, no new runner added. Two
+corrections to 11-13's own work, two defects found by running the repair, one
+new open item — and one day of duplicated effort, which is the headline.
+
+**Not yet covered (candidates for future runs):**
+
+- **READ `_to_push/` BEFORE CONCLUDING NO WORK WAS DONE** — created today,
+  **ranked first**, and a defect in the daily procedure rather than in either
+  repository. Today it cost a full duplicate session in both trees. The fix is
+  to read `_to_push/README-HOW-TO-PUSH.md` and the bundles' own `git log`
+  first, and to treat a non-empty `_to_push/` as *the clone is not the state*.
+- **THE PUSH BACKLOG IS NOW TWO DAYS DEEP** — created today. Nothing in either
+  repository can fix it; it needs a `git push` from a terminal on the
+  computer. Until then every session commits into a scratch clone that cannot
+  reach GitHub and — worse than the lost contribution graph — **each session
+  starts from a stale view and may duplicate the last one.**
+- **RUN `test_neutrality_controls.py` CHUNKED AGAIN, NOW THAT THE DISK IS
+  MEASURED** — carried in substance from 11-12/11-13. 11-13 got it to 34
+  checks over seven runners, 0 failing, after `mc_workdir`; today's
+  verification adds that the iverilog path also holds on a full disk, so a
+  future failure there can no longer be confounded with either surface.
+- **`mc_workdir` HAS FOUR ARMS AND ONE HAS BEEN EXERCISED** — carried from
+  11-13, where it was ranked with the comparison to the 11-07 repair that
+  nothing called. **Today strengthens it**: the iverilog wrappers' fallback
+  chain has now been exercised on a real full disk, and `mc_workdir`'s has not.
+  Two fallback chains for one condition, one measured and one not.
+- **AUDIT EVERY SELF-EXCLUSION AND SELF-READ FOR `__file__` DEPENDENCE** —
+  created today by §3.2, **ranked second**, mechanical and small. Any
+  instrument that reasons about its own name is wrong under a harness that
+  copies it to another name, and this repository runs at least three such
+  harnesses. `grep -n "basename(__file__)"` is most of the work.
+- **A CENSUS OF EVERY MUTANT WHOSE PREMISE IS ABOUT THE TREE** — carried from
+  11-12, **ranked third**, and today gives it a third column. `D2` was dead
+  because its anchor drifted; `M4` was recorded as dead because its premise
+  stopped being true; and what `M4` actually was is a mutant whose named check
+  was pinned by **the instrument's own plants**. So: anchor validity, premise
+  validity, and whether the named check's population includes the module
+  itself. The third is mechanical — `git ls-files` against the censusing
+  file's own name.
+- **SECTION 6 SHOULD SKIP, NOT FAIL, ON AN ABSENT TOOLCHAIN** — created today
+  by §4, cheap, and it wants the treatment Section 1 already has.
+- **RE-FREEZE `B3` WHEN THE DECIDED SET GROWS** — created today, a standing
+  obligation rather than a task. Note the sibling froze two populations the
+  same morning for the same reason, after a scored prediction went red on a
+  module addition.
+- **A FULL `run_all_harnesses.sh` RUN, CHUNKED, WITH THE NEW ENTRIES** —
+  carried. Today verified three entries through the caller.
+- **A STRUCTURAL CENSUS OF THE OTHER LINT CLASSES** — carried from 11-11.
+  Synthesis lint, latch inference, incomplete sensitivity lists, unused and
+  undriven nets, X-propagation; the parser is most of the machinery.
+- **MAKE THE `requires` COLUMN HONEST ABOUT SELF-SOURCING RUNNERS** — carried
+  from 11-12.
+- **GIVE `R4` A REAL INSTANCE VIA THE ASYNC FIFO** — carried from 11-10 with
+  its own prediction attached. Untouched for a fifth session.
+- **RESET-DOMAIN CROSSING** — carried from 11-10; the CDC gate is the caller
+  such a rule would be added behind.
+- **THE `[name-only]` PATH**, **THE `S7` AUDIT RE-RUN**, **A CHECK THAT AN
+  ABSORPTION WAS RECORDED AND NOT ONLY PROPOSED**, **`S7` SHOULD REPORT THE
+  PREDICTED COUNT ALONGSIDE THE MEASURED ONE** — all carried, all blocked on
+  nothing.
+- **A CHECK THAT OBSERVES A KNOB'S EFFECT, FOR EVERY KNOB** — carried from
+  11-10, untouched for a fourth session; 11-10's prediction (2) stays unscored
+  in consequence.
+- **NO INSTRUMENT IN THIS REPOSITORY READS A CHECK'S PROSE** — carried from
+  11-10, a decision before a task, and today sharpens it twice: `M4`'s stated
+  premise was prose and false, and 11-13's replacement prose ("six one-line
+  branches") was also wrong about a number nothing checked.
+- **THE ODD START-BIT PHASES**, **A DIVISOR SWEEP FOR T6**, **REGISTER THE NEW
+  TRANSCRIPTS** (today adds one), **EXTEND `S6` TO EVERY ITEM THAT ASSERTS
+  FILE CONTENT** — all carried.
+- **NO MUTANT IN THE CRV SUITE IS CAUGHT BY COVERAGE ALONE**, **MORE SEEDS ON
+  THE CLOSURE DISTRIBUTION**, **SETTLE WHETHER THE CRV SPEEDUP MOVED**, **THE
+  40 COMMENT-ONLY EDGES**, **AUDIT EVERY "WHAT THIS DOES NOT CHANGE"
+  PARAGRAPH**, **THE F7 CROSS NEEDS `0x40` DRAWN** — all carried.
+- **CONTROL B FOR THE FOUR OLDER MUTATION HARNESSES** — carried from 10-17.
+- **REWIRE `mutation_test_signatures.py` TO THE THREE-VALUED CONTROL** —
+  carried, still the worst census row.
+- **A MUTANT ON `budget_law_exhaustive.py`'s OWN STIMULUS GENERATOR** —
+  carried from 09-29.
+- **A CHECK THAT CATCHES M1, M4 AND M5 ON THEIR OWN TERMS** — carried,
+  twenty-nine sessions.
+- **EXTEND THE DUT-SIGNAL CENSUS TO THE REMAINING CHECKERS** — carried.
+- **RUN EVERY MUTATION SUITE WITH ITS TOOLCHAIN DELIBERATELY REMOVED** —
+  carried from 10-16, and today answers one of its three cases: present
+  toolchain, broken environment, every wrapper path holding. Absent toolchain
+  is still unmeasured.
+- **UNITS IN THE IDENTIFIERS OF COPIED CONSTANTS** — carried from 10-11.
+- **THE REST OF THE STANDING LIST** — unchanged: A POSITIVE CONTROL THAT MAKES
+  S-f FIRE (10-08); DERIVE C1's AND C3's DETAIL STRINGS (10-10); a diversity
+  target; per-property coverage of the Phase 4 UVM environment (09-23); a less
+  greedy steering policy (09-24); widen the coverage model (09-24); two
+  transmitters at once (09-25); `abc pdr` as a second engine (09-23); mutants
+  not yet attempted; a property needing a strengthening invariant; the SVA
+  sequence layer (09-20); code coverage measurement (09-18); Phase 6
+  regression infrastructure; the UVM environment against the UART RTL
+  (register-bus agent, serial agent with a standalone RX bit-driver,
+  reference-model scoreboard, coverage collector); RAL basics against the
+  UART's real register map; virtual sequencers and concurrent sequences; the
+  active/passive agent distinction; constrained-random and coverage-driven
+  UART stimulus; and the vplan v2 revision the 09-17 sticky-STATUS finding
+  requires.
+
+**Predictions for the next session, recorded so they can be scored:**
+
+1. **If `_to_push/` is still non-empty, the next session will duplicate work a
+   third time unless it reads it.** Less a prediction than a statement of the
+   mechanism, so the content is the sharper claim: **it will pick the same
+   ranked-first item again**, because it will read this entry's list from the
+   pushed tree, which will not contain it.
+2. **The `__file__` audit will find at least one more instance, and it will be
+   in a mutation harness rather than in a census.** Reason: the pattern needs a
+   module that both copies itself and reasons about its own name, and this
+   repository has more of the former than the latter.
+3. **`mc_workdir`'s second arm will be the first one to be exercised for real,
+   and it will work.** Reason: the second arm is `/tmp`, the chain is tried in
+   order, and today's three-way differential shows `/tmp` writable on exactly
+   the day `$TMPDIR` was not. The non-trivial half of the prediction is that
+   arms three and four will stay unexercised, so the item will not actually be
+   discharged by it.
