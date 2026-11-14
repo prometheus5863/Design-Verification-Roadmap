@@ -4027,3 +4027,98 @@ found that the red set never named. Phase 4 UVM remains in progress.
   `tools/shared_scratch_audit.py` 35 controls passing, 1 failing (`R1`,
   pre-existing).** Red: `shared_scratch_audit.py`'s `R1` only. The three phase5
   formal runners were converted but not run — no formal toolchain here.
+
+## 2026-11-14 — a duplicate session (the clone cannot see a push backlog), and the two corrections it produced anyway
+
+- [x] **THE SESSION SHOULD NOT HAVE RE-DONE 11-13's WORK, AND THE PROCEDURE IS
+  WHY.** It cloned both repositories fresh from GitHub, read `AUTOMATION_LOG.md`
+  for a 2026-11-14 entry, found none, and concluded no work had been done —
+  then re-derived **11-13's ranked-first item from scratch in both
+  repositories**, including its own `M4` re-anchor. 11-13's eight commits were
+  never pushed (the write path is closed by an environment policy), so they
+  live only in `_to_push/` and **a clone is the pushed state**. With a backlog
+  the "has today's work been done" check is stale by the depth of the backlog,
+  and the staleness is invisible: a missing entry means "nothing committed
+  today" and "nothing committed since the backlog began is here" equally well.
+  *An empty answer is indistinguishable from a clean one* — the sibling's own
+  11-12 words, about a census that read zero files, arriving in the procedure
+  that schedules the work.
+
+- [x] **`B2`'s floor was partly self-met, and 11-13's count for it is wrong.**
+  11-13 re-anchored `M4` on the Section-4 **tally**, which is a classifier
+  property, works, and is left in place. Its stated mechanism — "six one-line
+  branches left `B2` green under the mutant" — does not match this tree.
+  Measured today:
+
+  | | VERDICT | CONTROL | REQUIRES_READING |
+  |---|---|---|---|
+  | live | 3 | 8 | 22 |
+  | `cap = 0` | 1 | 2 | 30 |
+
+  **Three** decided occurrences survive, not six, and **two of the three are
+  this module's own planted snippets** — `if ! cmp -s c d; then bad=1; fi` and
+  `if cmp -s a b; then echo " ABORT -- the control"`. Both one-liners, so a
+  one-line window contains their whole branch, and `git ls-files *.py` returns
+  this file. The only **foreign** survivor is `phase6_rx_occupancy_probe`'s
+  `cmp -s ... && { ... }`, so the foreign decided set under the mutant is
+  VERDICT 0 / CONTROL 1 and **a self-excluded `B2` goes red on its own**.
+  Third instance here of *A MODULE MUST NOT PLANT THE PATTERN IT CENSUSES*.
+
+- [x] **Three checks, one of them a floor.** `B2` self-excluded (foreign
+  VERDICT 2, CONTROL 7); `B2b` asserting the self-plant is **real** rather than
+  described; `B3` declaring the foreign decided sites as a **set**, keyed on
+  `(path, normalised text)` and never on line number. 11-13's TALLY
+  requirement is count-level, so a site that silently swaps class while another
+  swaps back satisfies it; a set cannot be netted out. `B3b` reports growth and
+  forbids loss. Verified by planting the `cap=0` mutant by hand: red checks are
+  **`B2` and `B3`**, on top of the TALLY requirement. **Three independent
+  catchers** where 11-12 had none and 11-13 had one. **21 → 24 passed, 0
+  failed.**
+
+- [x] **`B3b` earned its keep on its first run**, reporting
+  `tools/mutation_controls.sh` as a **gained** CONTROL site — 11-13's own
+  `mc_neutral_copy` repair, which the declaration had missed. Now declared with
+  the reason.
+
+- [x] **`SELF_CENSUS` is a literal, not `basename(__file__)`.** Written the
+  obvious way the self-exclusion matches nothing under the mutation harness,
+  where this module runs as `_vbc_mutant.py` — so it switches itself off in
+  precisely the run it exists for, and `B2` stayed green while `B2b` went red.
+  Same family as the piped-`$?` reading: an instrument that differs between the
+  two runs being compared.
+
+- [x] **THE IVERILOG HALF OF THE TMPDIR REPAIR, VERIFIED UNFORCED.** 11-13
+  found the fourth and fifth encounters on surfaces the wrappers do *not*
+  cover and retired *THE OTHER THREE FILES THAT PROBE TMPDIR THEMSELVES* on the
+  ground that "a runner's own mktemp is not an iverilog call" — right, and it
+  left the iverilog half asserted rather than measured. Today's inherited
+  `TMPDIR` is `$HOME/tmp` on a filesystem at **100 %, 0 bytes**, and every rc
+  below was read directly rather than through a pipe:
+
+  | path | `TMPDIR` | rc | |
+  |---|---|---|---|
+  | raw `usr/bin/iverilog` | `$HOME/tmp`, full | **1** | `ivlpp: No input files given.` |
+  | wrapper `bin/iverilog` | `$HOME/tmp`, full | **0** | |
+  | raw `usr/bin/iverilog` | `/tmp`, writable | **0** | 11-12's latency, confirmed |
+
+  Through the wrappers: `toolchain_preflight.sh` **11/0/0 skipped** with its
+  differential unforced and Section 2 reporting the inherited `TMPDIR` "NOT
+  USABLE"; Phase 4 UART bring-up **60/60**; `run_cdc_gate.sh` **9/9**.
+  Transcript in `tools/tmpdir_wrapper_verification_2026-11-14.txt`.
+
+- [x] **The zero-length file, observed rather than argued.** `dd bs=4096
+  count=1` reports "0 bytes copied" **and still leaves a file behind, size 0** —
+  the whole case for the 11-07 byte probe and for 11-13's `mc_workdir`,
+  measured instead of reasoned.
+
+- [x] **The pipe hazard, fourth recorded occurrence, and mine this time.**
+  Three of the four have been in measurements taken to check something else.
+
+- [ ] **A defect in the guard, logged not repaired.** Section 1 SKIPs on a
+  missing `/tmp/iverilog_install` and names what needs it; Section 6 FAILs on
+  the identical precondition and blames `mktemp`. One precondition should not
+  produce two outcomes in one guard.
+
+- **`tools/verdict_bearing_census.py` 24/24 (was 21/21); `toolchain_preflight.sh`
+  11/11 unforced on a broken day; `run_cdc_gate.sh` 9/9; Phase 4 UART bring-up
+  60/60; manifest unchanged, no new runner.** Red set: unchanged from 11-13.
