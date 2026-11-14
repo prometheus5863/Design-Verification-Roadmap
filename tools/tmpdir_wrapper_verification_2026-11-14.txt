@@ -1,0 +1,103 @@
+======================================================================
+THE IVERILOG WRAPPER HALF OF THE TMPDIR REPAIR, VERIFIED UNFORCED
+2026-11-14 -- the same full disk, on the surface 2026-11-13 ruled out
+======================================================================
+
+2026-11-13 found the fourth and fifth encounters with this disk on
+surfaces the wrappers do NOT cover -- a runner's own mktemp, and pip's
+cache -- and retired THE OTHER THREE FILES THAT PROBE TMPDIR
+THEMSELVES as the wrong item, on the ground that "a runner's own
+mktemp is not an iverilog call".  That is right, and it leaves the
+iverilog half asserted rather than measured: 11-07 built the wrappers,
+11-12 moved all 20 invocation sites onto them, and neither ran on a day
+when TMPDIR was actually unusable.  11-12's guard added a FORCED
+differential precisely because of that.  Today it needs no forcing.
+
+----------------------------------------------------------------------
+1.  THE CONDITION, AS INHERITED (nothing set by hand)
+----------------------------------------------------------------------
+  default TMPDIR in a fresh shell on this machine: $HOME/tmp
+    Filesystem      Size  Used Avail Use% Mounted on
+    /dev/sdc        9.8G  9.3G     0 100% /sessions
+  a 4096-byte write into it:
+    dd: error writing '/sessions/rcw-01bqqmuuqi3p3edv1sltmtzk/tmp/probe.5': No space left on device
+    1+0 records in
+    0+0 records out
+    0 bytes copied, 4.4611e-05 s, 0.0 kB/s
+  and what that left behind:
+    -rw-r--r-- 1 rcw-01bqqmuuqi3p3edv1sltmtzk rcw-01bqqmuuqi3p3edv1sltmtzk 0 Nov 14 05:14 /sessions/rcw-01bqqmuuqi3p3edv1sltmtzk/tmp/probe.5
+
+  THE ZERO-LENGTH FILE IS THE WHOLE ARGUMENT FOR THE BYTE PROBE.
+  dd reports '0 bytes copied' and still creates a file, size 0.  The
+  11-07 wrapper comment says a zero-length create proves nothing on a
+  full filesystem; here that is observed rather than argued, and it is
+  the same fact 11-13's mc_workdir was built on.
+
+----------------------------------------------------------------------
+2.  THE THREE-WAY DIFFERENTIAL, every rc read WITHOUT a pipe
+----------------------------------------------------------------------
+  (a) RAW usr/bin/iverilog,  TMPDIR = $HOME/tmp (full)    rc=1
+        /tmp/iverilog_install/usr/lib/x86_64-linux-gnu/ivl/ivlpp: No input files given.
+        No top level modules, and no -s option.
+  (b) WRAPPER bin/iverilog,  TMPDIR = $HOME/tmp (full)    rc=0
+  (c) RAW usr/bin/iverilog,  TMPDIR = /tmp   (writable)   rc=0
+
+  (a) reproduces 11-12 section 4's mechanism exactly: iverilog cannot
+      write the command file it hands ivlpp, ivlpp gets an empty list,
+      and every runner would score that COMPILE_ERROR -- correctly, and
+      about the wrong thing.
+  (c) is 11-12's own explanation of the five-day latency, confirmed in
+      the same shell: on a writable day the two paths are
+      indistinguishable.
+
+  NOTE ON (a).  The first time I took this differential I read rc
+  through '| tail', which is tail's exit status, and the raw path
+  reported rc=0 WHILE FAILING.  That is the 2026-09-17 pipe hazard,
+  which 11-12 also hit, and this is its fourth recorded occurrence --
+  three of the four in measurements taken to check something else.
+
+----------------------------------------------------------------------
+3.  END TO END THROUGH THE WRAPPERS, ON THE BROKEN TMPDIR
+----------------------------------------------------------------------
+  vvp rc=0
+      PASS  frame_err cleared by previous read: 0
+    
+    === SUMMARY: 60 passed, 0 failed ===
+    REGRESSION PASSED
+  the Phase 4 UART bring-up regression, 60 self-checking cases,
+  compiled and run with TMPDIR on a filesystem that accepts no bytes.
+
+----------------------------------------------------------------------
+4.  THE GUARD AND THE GATE, SAME ENVIRONMENT
+----------------------------------------------------------------------
+  toolchain_preflight.sh rc=0
+    SECTION 2 -- the inherited TMPDIR, reported and not judged
+    ------------------------------------------------------------------
+      inherited TMPDIR = /sessions/rcw-01bqqmuuqi3p3edv1sltmtzk/tmp  -- NOT USABLE (the 4096-byte probe failed)
+      this is the 2026-11-12 condition.  Every raw-path invocation
+      in this repository would report COMPILE_ERROR right now.
+        /dev/sdc        9.8G  9.3G     0 100% /sessions
+      [PASS] the inherited TMPDIR was probed by writing bytes and reported above
+    ======================================================================
+    TOTAL: 11 passed, 0 failed, 0 skipped
+    ======================================================================
+  run_cdc_gate.sh rc=0
+    ======================================================================
+    TOTAL: 9 passed, 0 failed
+    ======================================================================
+
+======================================================================
+VERDICT: the iverilog half of the repair holds on a real broken day.
+The wrappers compile and run where the raw binaries cannot, the guard
+is 11/0/0 with its differential unforced, and 60/60 UART cases plus a
+9/9 CDC gate went through with TMPDIR at 0 bytes available.
+
+ONE DEFECT IN THE GUARD, found by running it before the toolchain was
+installed: Section 1 SKIPs when /tmp/iverilog_install is absent and
+names the sections that need it, while Section 6 FAILs on the identical
+precondition and attributes it to mktemp.  Refusing to report a pass is
+right -- it looked at nothing -- but one precondition should not produce
+a SKIP in one section and a FAIL in another.  Logged as an open item,
+not repaired, because today's real run had the toolchain and a fix made
+against an absent toolchain would itself be untested.
+======================================================================
